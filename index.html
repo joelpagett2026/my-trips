@@ -124,7 +124,10 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
 .dash-trip-row-date{font-size:10px;color:#3c3c43;opacity:0.45;margin-top:1px;}
 .dash-trip-flag-sm{width:20px;height:13px;border-radius:2px;object-fit:cover;flex-shrink:0;}
 
-/* Year group card */
+/* Year label & divider */
+.year-label{font-size:13px;font-weight:700;color:#3c3c43;opacity:0.35;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 10px 2px;}
+.year-divider{height:1px;background:rgba(0,0,0,0.08);margin:20px 20px;}
+
 .year-group{background:#f2f2f7;border-radius:12px;margin-bottom:8px;overflow:hidden;}
 .year-group-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.07);}
 .year-group-label{font-size:12px;font-weight:700;color:#007aff;letter-spacing:-0.1px;}
@@ -155,6 +158,8 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
 
   <div class="section" style="padding-top:16px;">
     <div class="section-title">Upcoming</div>
+
+    <div class="year-label">2027</div>
     <div class="trips-grid" id="upcoming-grid">
       <a class="trip-card" href="/canada.html">
         <div class="card-image-area">
@@ -190,9 +195,32 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
     </div>
   </div>
 
+  <div class="year-divider"></div>
+
   <div class="section">
     <div class="section-title">Completed</div>
+
+    <div class="year-label">2026</div>
     <div class="trips-grid" id="past-grid">
+      <a class="trip-card" href="/china.html">
+        <div class="card-image-area">
+          <div id="map-china" class="card-map"></div>
+          <div class="card-map-flags"><img src="https://flagcdn.com/w80/cn.png" alt="China"></div>
+          <div class="card-status-pill pill-past">Completed</div>
+        </div>
+        <div class="card-body">
+          <div class="card-dest">China</div>
+          <div class="card-dates">31 Mar – 17 Apr 2026 · 17 days</div>
+          <div class="card-cities"><span class="city-tag">Shanghai</span><span class="city-tag">Suzhou</span><span class="city-tag">Chengdu</span><span class="city-tag">Dujiangyan</span><span class="city-tag">Xi'an</span><span class="city-tag">Beijing</span></div>
+          <div class="card-footer"><span class="card-meta">17 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+    </div>
+
+    <div class="year-divider"></div>
+
+    <div class="year-label">2025</div>
+    <div class="trips-grid">
       <a class="trip-card" href="/dubai.html">
         <div class="card-image-area">
           <div id="map-dubai" class="card-map"></div>
@@ -217,19 +245,6 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
           <div class="card-dates">4 Apr – 21 Apr 2025 · 18 days</div>
           <div class="card-cities"><span class="city-tag">San José</span><span class="city-tag">Tortuguero</span><span class="city-tag">Puerto Viejo</span><span class="city-tag">Fortuna</span><span class="city-tag">Monteverde</span><span class="city-tag">Manuel Antonio</span><span class="city-tag">Uvita</span></div>
           <div class="card-footer"><span class="card-meta">18 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </a>
-      <a class="trip-card" href="/china.html">
-        <div class="card-image-area">
-          <div id="map-china" class="card-map"></div>
-          <div class="card-map-flags"><img src="https://flagcdn.com/w80/cn.png" alt="China"></div>
-          <div class="card-status-pill pill-past">Completed</div>
-        </div>
-        <div class="card-body">
-          <div class="card-dest">China</div>
-          <div class="card-dates">31 Mar – 17 Apr 2026 · 17 days</div>
-          <div class="card-cities"><span class="city-tag">Shanghai</span><span class="city-tag">Suzhou</span><span class="city-tag">Chengdu</span><span class="city-tag">Dujiangyan</span><span class="city-tag">Xi'an</span><span class="city-tag">Beijing</span></div>
-          <div class="card-footer"><span class="card-meta">17 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </a>
     </div>
