@@ -40,8 +40,8 @@
   <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);">
     <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
       <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value="China"></div>
-      <div class="th-g"><div class="th-lbl">Departure</div><input class="th-inp sm hdr-field" id="hdr-dep" value="31/03/2026"></div>
-      <div class="th-g"><div class="th-lbl">Return</div><input class="th-inp sm hdr-field" id="hdr-ret" value="17/04/2026"></div>
+      <div class="th-g"><div class="th-lbl">Departure</div><input type="date" class="th-inp sm hdr-field" id="hdr-dep" value="2026-03-31"></div>
+      <div class="th-g"><div class="th-lbl">Return</div><input type="date" class="th-inp sm hdr-field" id="hdr-ret" value="2026-04-17"></div>
       <div class="th-g"><div class="th-lbl">Travellers</div><input class="th-inp sm hdr-field" id="hdr-trav" style="width:60px" value="2"></div>
       <div style="margin-left:auto;display:flex;align-items:center;">
         <div id="save-status" class="saved"><div class="status-dot"></div><span id="save-label">All saved</span></div>
@@ -77,16 +77,39 @@ async function dbSave(payload) {
     setStatus('saved', 'All saved');
   } catch { setStatus('error', 'Save failed'); }
 }
+
+function toISO(dmy) {
+  if (!dmy) return '';
+  const p = dmy.split('/');
+  if (p.length !== 3) return dmy;
+  return p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
+}
+function fromISO(iso) {
+  if (!iso) return '';
+  const p = iso.split('-');
+  if (p.length !== 3) return iso;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+function inpDate(val) {
+  const i = document.createElement('input');
+  i.type = 'date';
+  i.className = 'cell-inp bold';
+  i.value = toISO(val || '');
+  i.dataset.key = 'date';
+  i.addEventListener('input', scheduleSave);
+  return i;
+}
+
 function scheduleSave() {
   setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => dbSave(collectState()), 1400);
 }
 function collectState() {
-  const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
+  const header = { dest: document.getElementById('hdr-dest').value, dep: fromISO(document.getElementById('hdr-dep').value), ret: fromISO(document.getElementById('hdr-ret').value), trav: document.getElementById('hdr-trav').value };
   const days = Array.from(document.querySelectorAll('.day-card')).map(card => {
     const obj = {};
-    card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.value; });
+    card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.type === 'date' ? fromISO(el.value) : el.value; });
     obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
@@ -161,7 +184,7 @@ function addDay(d) {
   dateSec.appendChild(dateBar);
   const dateRow = document.createElement('div'); dateRow.className = 'row-inner';
   dateRow.style.gridTemplateColumns = '0.7fr 1fr 1fr';
-  dateRow.appendChild(cell('Date', inp(d.date, 'date', 'bold', 'dd/mm/yyyy')));
+  dateRow.appendChild(cell('Date', inpDate(d.date)));
   dateRow.appendChild(cell('From', inp(d.from, 'from', 'bold', '')));
   dateRow.appendChild(cell('To', inp(d.to, 'to', 'bold', '')));
   dateSec.appendChild(dateRow); top.appendChild(dateSec); card.appendChild(top);
@@ -247,8 +270,8 @@ function recalc() {
 function restoreState(state) {
   if (state.header) {
     document.getElementById('hdr-dest').value = state.header.dest || '';
-    document.getElementById('hdr-dep').value  = state.header.dep  || '';
-    document.getElementById('hdr-ret').value  = state.header.ret  || '';
+    document.getElementById('hdr-dep').value  = toISO(state.header.dep  || '');
+    document.getElementById('hdr-ret').value  = toISO(state.header.ret  || '');
     document.getElementById('hdr-trav').value = state.header.trav || '';
   }
   if (state.days) state.days.forEach(d => addDay(d));

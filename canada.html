@@ -32,8 +32,8 @@
   <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);">
     <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
       <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value="Canada Road Trip"></div>
-      <div class="th-g"><div class="th-lbl">Departure</div><input class="th-inp sm hdr-field" id="hdr-dep" value=""></div>
-      <div class="th-g"><div class="th-lbl">Return</div><input class="th-inp sm hdr-field" id="hdr-ret" value=""></div>
+      <div class="th-g"><div class="th-lbl">Departure</div><input type="date" class="th-inp sm hdr-field" id="hdr-dep" value=""></div>
+      <div class="th-g"><div class="th-lbl">Return</div><input type="date" class="th-inp sm hdr-field" id="hdr-ret" value=""></div>
       <div class="th-g"><div class="th-lbl">Travellers</div><input class="th-inp sm hdr-field" id="hdr-trav" style="width:60px" value="2"></div>
       <div style="margin-left:auto;display:flex;align-items:center;">
         <div id="save-status" class="saved"><div class="status-dot"></div><span id="save-label">All saved</span></div>
@@ -54,6 +54,29 @@ let saveTimer=null;
 function setStatus(s,m){document.getElementById('save-status').className=s;document.getElementById('save-label').textContent=m;}
 async function dbLoad(){if(!SB_URL||!SB_KEY)return null;try{const r=await fetch(SB_URL+'/rest/v1/itinerary?id=eq.'+RECORD_ID+'&select=data',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});if(!r.ok)return null;const rows=await r.json();return rows.length?rows[0].data:null;}catch{return null;}}
 async function dbSave(p){if(!SB_URL||!SB_KEY)return;setStatus('saving','Saving…');try{const r=await fetch(SB_URL+'/rest/v1/itinerary',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:RECORD_ID,data:p,updated_at:new Date().toISOString()})});setStatus(r.ok?'saved':'error',r.ok?'All saved':'Save failed');}catch{setStatus('error','Save failed');}}
+
+function toISO(dmy) {
+  if (!dmy) return '';
+  const p = dmy.split('/');
+  if (p.length !== 3) return dmy;
+  return p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
+}
+function fromISO(iso) {
+  if (!iso) return '';
+  const p = iso.split('-');
+  if (p.length !== 3) return iso;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+function inpDate(val) {
+  const i = document.createElement('input');
+  i.type = 'date';
+  i.className = 'cell-inp bold';
+  i.value = toISO(val || '');
+  i.dataset.key = 'date';
+  i.addEventListener('input', scheduleSave);
+  return i;
+}
+
 function scheduleSave(){if(SB_URL&&SB_KEY)setStatus('saving','Unsaved changes');clearTimeout(saveTimer);saveTimer=setTimeout(()=>dbSave(collectState()),1400);}
 function collectState(){const header={dest:document.getElementById('hdr-dest').value,dep:document.getElementById('hdr-dep').value,ret:document.getElementById('hdr-ret').value,trav:document.getElementById('hdr-trav').value};const days=Array.from(document.querySelectorAll('.day-card')).map(card=>{const obj={};card.querySelectorAll('[data-key]').forEach(el=>{obj[el.dataset.key]=el.value;});obj._transport=Array.from(card.querySelectorAll('.trans-row')).map(row=>{const o={};row.querySelectorAll('[data-key]').forEach(el=>{o[el.dataset.key]=el.value;});return o;});obj._food=Array.from(card.querySelectorAll('.food-row')).map(row=>{const o={};row.querySelectorAll('[data-key]').forEach(el=>{o[el.dataset.key]=el.value;});return o;});obj._transRemoved=!card.querySelector('.s-trans');return obj;});return{header,days};}
 function inp(val,key,cls,ph){const i=document.createElement('input');i.type='text';i.value=val||'';if(ph)i.placeholder=ph;i.className='cell-inp'+(cls?' '+cls:'');if(key)i.dataset.key=key;i.addEventListener('input',()=>{recalc();scheduleSave();});return i;}
