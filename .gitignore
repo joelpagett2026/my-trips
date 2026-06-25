@@ -1,0 +1,4 @@
+.netlify/
+install.php
+config.php
+*.log
