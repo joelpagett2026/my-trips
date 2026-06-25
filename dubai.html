@@ -70,7 +70,6 @@ async function dbSave(p) {
     await window.dbSave(RECORD_ID, p);
     setStatus('saved', 'All saved');
   } catch { setStatus('error', 'Save failed'); }
-} catch { setStatus('error', 'Save failed'); }
 }
 function scheduleSave() {
   setStatus('saving', 'Unsaved changes');
