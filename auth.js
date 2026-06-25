@@ -102,15 +102,15 @@ function showPinOverlay() {
     overlay.id = 'pin-overlay';
     overlay.innerHTML = `
     <style>
-      #pin-overlay{position:fixed;inset:0;z-index:9999;background:#f2f2f7;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;}
-      #pin-logo{width:64px;height:64px;background:linear-gradient(135deg,#0a7c6e,#0d9e8c);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(10,124,110,0.3);}
-      #pin-title{font-size:22px;font-weight:700;color:#000;letter-spacing:-0.4px;margin-bottom:6px;}
-      #pin-sub{font-size:14px;color:#3c3c43;opacity:0.5;font-weight:500;margin-bottom:36px;}
+      #pin-overlay{position:fixed;inset:0;z-index:9999;background:#e8e8e8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;}
+      #pin-logo{width:64px;height:64px;background:linear-gradient(135deg,#0a6570,#0e7a87);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(10,124,110,0.3);}
+      #pin-title{font-size:22px;font-weight:700;color:#444444;letter-spacing:-0.4px;margin-bottom:6px;}
+      #pin-sub{font-size:14px;color:#666666;opacity:0.5;font-weight:500;margin-bottom:36px;}
       #pin-dots{display:flex;gap:14px;margin-bottom:36px;}
-      .pin-dot{width:14px;height:14px;border-radius:50%;background:#d1d1d6;transition:background 0.15s;}
-      .pin-dot.filled{background:#007aff;}.pin-dot.error{background:#ff3b30;}
+      .pin-dot{width:14px;height:14px;border-radius:50%;background:#b8b8b8;transition:background 0.15s;}
+      .pin-dot.filled{background:#0e7a87;}.pin-dot.error{background:#ff3b30;}
       #pin-grid{display:grid;grid-template-columns:repeat(3,72px);gap:12px;}
-      .pin-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:500;color:#000;box-shadow:0 1px 3px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06);transition:background 0.1s,transform 0.08s;display:flex;align-items:center;justify-content:center;}
+      .pin-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:500;color:#444444;box-shadow:0 1px 3px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06);transition:background 0.1s,transform 0.08s;display:flex;align-items:center;justify-content:center;}
       .pin-btn:active{background:#e5e5ea;transform:scale(0.94);}
       .pin-btn.del{background:transparent;box-shadow:none;}
       #pin-error{margin-top:20px;font-size:13px;font-weight:600;color:#ff3b30;opacity:0;transition:opacity 0.2s;}

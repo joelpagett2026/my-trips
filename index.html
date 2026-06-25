@@ -9,31 +9,31 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-height:100vh;}
+body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-height:100vh;}
 
-.nav{background:rgba(242,242,247,0.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.18);padding:0 20px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.nav-title{font-size:17px;font-weight:600;color:#000;}
+.nav{background:rgba(232,232,232,0.92);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.18);padding:0 20px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-title{font-size:17px;font-weight:600;color:#444444;}
 
 /* TWO COLUMN LAYOUT */
 .page-layout{display:grid;grid-template-columns:1fr 320px;gap:0;align-items:start;}
 .trips-col{min-width:0;}
-.dash-col{border-left:0.5px solid rgba(0,0,0,0.1);background:#fff;position:sticky;top:44px;height:calc(100vh - 44px);overflow-y:auto;align-self:start;scrollbar-width:none;}
+.dash-col{border-left:0.5px solid rgba(0,0,0,0.1);background:#ffffff;position:sticky;top:44px;height:calc(100vh - 44px);overflow-y:auto;align-self:start;scrollbar-width:none;}
 .dash-col::-webkit-scrollbar{display:none;}
 
 .large-title-area{padding:8px 20px 4px;}
-.large-title{font-size:34px;font-weight:700;letter-spacing:-0.5px;color:#000;line-height:1.1;}
+.large-title{font-size:34px;font-weight:700;letter-spacing:-0.5px;color:#444444;line-height:1.1;}
 
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;}
-.stat-card{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+.stat-card{background:#ffffff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
 .stat-val{font-size:24px;font-weight:700;line-height:1;}
-.stat-lbl{font-size:11px;color:#3c3c43;opacity:0.6;margin-top:3px;font-weight:500;}
-.sv-blue{color:#007aff;}.sv-green{color:#34c759;}.sv-orange{color:#ff9500;}.sv-purple{color:#af52de;}
+.stat-lbl{font-size:11px;color:#666666;opacity:0.6;margin-top:3px;font-weight:500;}
+.sv-blue{color:#0e7a87;}.sv-green{color:#34c759;}.sv-orange{color:#ff9500;}.sv-purple{color:#af52de;}
 
 .section{padding:0 20px 24px;}
-.section-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#000;margin-bottom:10px;}
+.section-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;margin-bottom:10px;}
 
 .trips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
-.trip-card{background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.05);transition:transform 0.18s ease,box-shadow 0.18s ease;}
+.trip-card{background:#ffffff;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.05);transition:transform 0.18s ease,box-shadow 0.18s ease;}
 .trip-card:hover{transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
 .trip-card:active{transform:scale(0.985);}
 .card-image-area{height:140px;position:relative;overflow:hidden;}
@@ -43,57 +43,57 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
 .card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:1000;}
 .card-map-flags img{width:32px;height:21px;object-fit:cover;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.95);}
 .card-status-pill{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;backdrop-filter:blur(12px);z-index:1000;font-family:'Montserrat',sans-serif;}
-.pill-upcoming{background:rgba(0,122,255,0.18);color:#007aff;border:1px solid rgba(0,122,255,0.25);}
+.pill-upcoming{background:rgba(14,122,135,0.18);color:#0e7a87;border:1px solid rgba(14,122,135,0.25);}
 .pill-planning{background:rgba(255,149,0,0.18);color:#c07000;border:1px solid rgba(255,149,0,0.25);}
-.pill-past{background:rgba(100,100,110,0.18);color:#48484a;border:1px solid rgba(100,100,110,0.2);}
+.pill-past{background:rgba(100,100,110,0.18);color:#666666;border:1px solid rgba(100,100,110,0.2);}
 .card-body{padding:12px 14px 14px;}
-.card-dest{font-size:15px;font-weight:700;color:#000;margin-bottom:2px;}
-.card-dates{font-size:11px;color:#3c3c43;opacity:0.6;font-weight:500;margin-bottom:8px;}
+.card-dest{font-size:15px;font-weight:700;color:#444444;margin-bottom:2px;}
+.card-dates{font-size:11px;color:#666666;opacity:0.6;font-weight:500;margin-bottom:8px;}
 .card-cities{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
-.city-tag{font-size:10px;background:#f2f2f7;color:#3c3c43;border-radius:5px;padding:2px 7px;font-weight:600;}
+.city-tag{font-size:10px;background:#e8e8e8;color:#666666;border-radius:5px;padding:2px 7px;font-weight:600;}
 .card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:0.5px solid rgba(60,60,67,0.12);}
-.card-meta{font-size:10px;color:#3c3c43;opacity:0.5;font-weight:500;}
-.card-chevron{color:#c7c7cc;}
-.add-card{background:#fff;border-radius:18px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.04);transition:transform 0.18s ease;border:2px dashed #d1d1d6;}
-.add-card:hover{transform:scale(1.015);border-color:#007aff;}
-.add-icon{width:40px;height:40px;background:#007aff;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-.add-label{font-size:14px;font-weight:700;color:#007aff;}
-.add-sub{font-size:11px;color:#3c3c43;opacity:0.5;font-weight:500;}
+.card-meta{font-size:10px;color:#666666;opacity:0.5;font-weight:500;}
+.card-chevron{color:#b8b8b8;}
+.add-card{background:#ffffff;border-radius:18px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.04);transition:transform 0.18s ease;border:2px dashed #b8b8b8;}
+.add-card:hover{transform:scale(1.015);border-color:#0e7a87;}
+.add-icon{width:40px;height:40px;background:#0e7a87;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.add-label{font-size:14px;font-weight:700;color:#0e7a87;}
+.add-sub{font-size:11px;color:#666666;opacity:0.5;font-weight:500;}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);transform:translateY(20px);transition:transform 0.25s ease;}
+.modal{background:#ffffff;border-radius:20px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);transform:translateY(20px);transition:transform 0.25s ease;}
 .modal-overlay.open .modal{transform:translateY(0);}
-.modal-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#000;margin-bottom:4px;}
-.modal-sub{font-size:13px;color:#3c3c43;opacity:0.55;margin-bottom:20px;font-weight:500;}
+.modal-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:#666666;opacity:0.55;margin-bottom:20px;font-weight:500;}
 .modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
-.modal-label{font-size:11px;font-weight:700;color:#3c3c43;text-transform:uppercase;letter-spacing:0.04em;}
-.modal-inp{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#000;}
-.modal-inp:focus{box-shadow:0 0 0 3px rgba(0,122,255,0.2);}
+.modal-label{font-size:11px;font-weight:700;color:#666666;text-transform:uppercase;letter-spacing:0.04em;}
+.modal-inp{background:#e8e8e8;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;}
+.modal-inp:focus{box-shadow:0 0 0 3px rgba(14,122,135,0.2);}
 .modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.modal-select{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#000;appearance:none;cursor:pointer;}
+.modal-select{background:#e8e8e8;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;appearance:none;cursor:pointer;}
 .modal-btns{display:flex;gap:10px;margin-top:20px;}
 .modal-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
-.modal-btn-cancel{background:#f2f2f7;color:#3c3c43;}
+.modal-btn-cancel{background:#e8e8e8;color:#666666;}
 .modal-btn-cancel:hover{opacity:0.7;}
-.modal-btn-create{background:#007aff;color:#fff;}
-.modal-btn-create:hover{background:#0066d6;}
+.modal-btn-create{background:#0e7a87;color:#fff;}
+.modal-btn-create:hover{background:#0a6570;}
 
 /* ── DASHBOARD ── */
 .dash-inner{padding:0 0 32px;}
 .dash-section{padding:16px 16px 0;}
-.dash-section-title{font-size:11px;font-weight:700;color:#3c3c43;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:10px;}
+.dash-section-title{font-size:11px;font-weight:700;color:#666666;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:10px;}
 
 /* Stats grid in dash */
 .dash-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
-.dash-stat{background:#f2f2f7;border-radius:12px;padding:12px 14px;}
-.dash-stat-val{font-size:22px;font-weight:700;color:#007aff;line-height:1;}
-.dash-stat-lbl{font-size:10px;color:#3c3c43;opacity:0.55;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+.dash-stat{background:#e8e8e8;border-radius:12px;padding:12px 14px;}
+.dash-stat-val{font-size:22px;font-weight:700;color:#0e7a87;line-height:1;}
+.dash-stat-lbl{font-size:10px;color:#666666;opacity:0.55;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
 .dash-stat-icon{font-size:16px;margin-bottom:4px;}
 
 /* Countdown */
-.dash-countdown{background:linear-gradient(135deg,#1a2a4a 0%,#0a1a3a 100%);border-radius:14px;padding:16px;margin:8px 16px 0;position:relative;overflow:hidden;}
+.dash-countdown{background:linear-gradient(135deg,#1a2a2a 0%,#0e3a3f 100%);border-radius:14px;padding:16px;margin:8px 16px 0;position:relative;overflow:hidden;}
 .dash-countdown-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
 .dash-countdown-dest{font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .dash-countdown-dest img{width:22px;height:15px;border-radius:2px;object-fit:cover;}
@@ -107,9 +107,9 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
 .dash-upcoming-trip{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);}
 .dash-upcoming-trip:last-child{border-bottom:none;}
 .dash-trip-flag{width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;}
-.dash-trip-name{font-size:13px;font-weight:600;color:#000;line-height:1.2;}
-.dash-trip-date{font-size:11px;color:#3c3c43;opacity:0.5;margin-top:1px;}
-.dash-trip-chevron{color:#c7c7cc;margin-left:auto;flex-shrink:0;}
+.dash-trip-name{font-size:13px;font-weight:600;color:#444444;line-height:1.2;}
+.dash-trip-date{font-size:11px;color:#666666;opacity:0.5;margin-top:1px;}
+.dash-trip-chevron{color:#b8b8b8;margin-left:auto;flex-shrink:0;}
 
 /* Flags grid */
 .flags-grid{display:flex;flex-wrap:wrap;gap:5px;}
@@ -119,20 +119,20 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
 /* Trip history list */
 .dash-trip-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.05);}
 .dash-trip-row:last-child{border-bottom:none;}
-.dash-trip-year{font-size:10px;font-weight:700;color:#007aff;min-width:30px;opacity:0.7;}
+.dash-trip-year{font-size:10px;font-weight:700;color:#0e7a87;min-width:30px;opacity:0.7;}
 .dash-trip-info{flex:1;min-width:0;}
-.dash-trip-row-name{font-size:12px;font-weight:600;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.dash-trip-row-date{font-size:10px;color:#3c3c43;opacity:0.45;margin-top:1px;}
+.dash-trip-row-name{font-size:12px;font-weight:600;color:#444444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-trip-row-date{font-size:10px;color:#666666;opacity:0.45;margin-top:1px;}
 .dash-trip-flag-sm{width:20px;height:13px;border-radius:2px;object-fit:cover;flex-shrink:0;}
 
 /* Year label & divider */
-.year-label{font-size:13px;font-weight:700;color:#3c3c43;opacity:0.35;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 10px 2px;}
+.year-label{font-size:13px;font-weight:700;color:#666666;opacity:0.35;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 10px 2px;}
 .year-divider{height:1px;background:rgba(0,0,0,0.08);margin:20px 20px;}
 
-.year-group{background:#f2f2f7;border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.year-group{background:#e8e8e8;border-radius:12px;margin-bottom:8px;overflow:hidden;}
 .year-group-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.07);}
-.year-group-label{font-size:12px;font-weight:700;color:#007aff;letter-spacing:-0.1px;}
-.year-group-count{font-size:10px;color:#3c3c43;opacity:0.4;font-weight:600;}
+.year-group-label{font-size:12px;font-weight:700;color:#0e7a87;letter-spacing:-0.1px;}
+.year-group-count{font-size:10px;color:#666666;opacity:0.4;font-weight:600;}
 .year-group-trips{padding:4px 0;}
 .year-group .dash-trip-row{padding:6px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);}
 .year-group .dash-trip-row:last-child{border-bottom:none;}
@@ -146,7 +146,7 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
   <div style="width:60px"></div>
   <div class="nav-title">My Trips</div>
   <div style="width:60px;text-align:right">
-    <a href="/settings.html" style="display:inline-flex;align-items:center;color:#007aff;">
+    <a href="/settings.html" style="display:inline-flex;align-items:center;color:#0e7a87;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </a>
   </div>
@@ -280,9 +280,9 @@ body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-heigh
 
         <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
           <!-- Map/fold icon matching Polarsteps -->
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
           <div class="dash-stat-lbl" style="flex:1;margin:0;">Trips taken</div>
-          <div class="dash-stat-val" style="color:#007aff;font-size:18px;" id="s-polarsteps-trips">58</div>
+          <div class="dash-stat-val" style="color:#0e7a87;font-size:18px;" id="s-polarsteps-trips">58</div>
         </div>
 
         <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
@@ -446,7 +446,7 @@ if (upcomingTrips.length > 0) {
 // ── PLANNED UPCOMING TRIPS in dashboard ───────────────────────────────
 const upcomingEl = document.getElementById('dash-upcoming-list');
 if (upcomingTrips.length === 0) {
-  upcomingEl.innerHTML = '<div style="font-size:12px;color:#3c3c43;opacity:0.4;padding:8px 0;">No upcoming trips planned</div>';
+  upcomingEl.innerHTML = '<div style="font-size:12px;color:#666666;opacity:0.4;padding:8px 0;">No upcoming trips planned</div>';
 } else {
   upcomingTrips.forEach((t, i) => {
     const a = document.createElement('a');
@@ -614,7 +614,7 @@ function makeYearGroup(year, yearTrips) {
   yearTrips.forEach(t => {
     const row = document.createElement('div'); row.className = 'dash-trip-row';
     const info = document.createElement('div'); info.className = 'dash-trip-info';
-    const badge = t.planned ? ' <span style="font-size:9px;background:#e8f0ff;color:#007aff;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;">Planned</span>' : '';
+    const badge = t.planned ? ' <span style="font-size:9px;background:#e8f0ff;color:#0e7a87;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;">Planned</span>' : '';
     info.innerHTML = `<div class="dash-trip-row-name">${t.name}${badge}</div><div class="dash-trip-row-date">${t.start}</div>`;
     const flags = document.createElement('div'); flags.style.cssText='display:flex;gap:3px;flex-shrink:0;';
     t.codes.slice(0,2).forEach(cc => {
@@ -637,7 +637,7 @@ function makeMap(id,center,zoom,points,color){
   L.polyline(points,{color,weight:2.5,opacity:0.85,dashArray:'6,4'}).addTo(map);
   points.forEach((p,i)=>L.circleMarker(p,{radius:i===0||i===points.length-1?6:4,fillColor:color,color:'#fff',weight:2,fillOpacity:1}).addTo(map));
 }
-makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#007aff');
+makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#0e7a87');
 makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#ff9500');
 makeMap('map-dubai',[24.4,54.8],7,[[48.8566,2.3522],[25.2532,51.6100],[25.2048,55.2708],[24.4539,54.3773],[25.2048,55.2708]],'#636366');
 makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#ff9500');
@@ -659,7 +659,7 @@ function buildDynamicCard(t){
   const statusLabel=t.status==='past'?'Completed':t.status==='planning'?'Planning':'Upcoming';
   const url=`/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&trav=${encodeURIComponent(t.trav)}&status=${encodeURIComponent(t.status)}&slug=${encodeURIComponent(t.slug)}`;
   const a=document.createElement('a');a.className='trip-card';a.href=url;
-  a.innerHTML=`<div class="card-image-area" style="background:#f2f2f7;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" aria-hidden="true"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg><div class="card-status-pill ${statusClass}">${statusLabel}</div></div><div class="card-body"><div class="card-dest">${t.dest}</div><div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div><div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
+  a.innerHTML=`<div class="card-image-area" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" aria-hidden="true"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg><div class="card-status-pill ${statusClass}">${statusLabel}</div></div><div class="card-body"><div class="card-dest">${t.dest}</div><div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div><div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
   return a;
 }
 function renderDynamicTrips(trips){
