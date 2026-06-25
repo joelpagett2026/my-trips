@@ -70,9 +70,10 @@ async function dbSave(p) {
     await window.dbSave(RECORD_ID, p);
     setStatus('saved', 'All saved');
   } catch { setStatus('error', 'Save failed'); }
+} catch { setStatus('error', 'Save failed'); }
 }
 function scheduleSave() {
-  if (SB_URL && SB_KEY) setStatus('saving', 'Unsaved changes');
+  setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => dbSave(collectState()), 1400);
 }
@@ -282,11 +283,12 @@ const DEFAULTS = [
 
 async function init() {
   let state = null;
-  if (SB_URL && SB_KEY) { state = await dbLoad(); }
+  try { state = await dbLoad(); } catch(e) { console.error('Load failed', e); }
   if (state && state.days && state.days.length) { restoreState(state); setStatus('saved', 'All saved'); }
   else { DEFAULTS.forEach(d => addDay(d)); setStatus('saving', 'Not yet saved'); }
   document.getElementById('loading').classList.add('hidden');
 }
+
 init();
 </script>
 </body>
