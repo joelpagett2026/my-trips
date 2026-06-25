@@ -195,10 +195,18 @@
       </div>
       <div class="pin-error-p" id="pin-panel-error"></div>
       <div class="pin-grid-p">
-        ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-btn-p" data-n="${n}">${n}</button>`).join('')}
+        <button class="pin-btn-p" data-n="1">1</button>
+        <button class="pin-btn-p" data-n="2">2</button>
+        <button class="pin-btn-p" data-n="3">3</button>
+        <button class="pin-btn-p" data-n="4">4</button>
+        <button class="pin-btn-p" data-n="5">5</button>
+        <button class="pin-btn-p" data-n="6">6</button>
+        <button class="pin-btn-p" data-n="7">7</button>
+        <button class="pin-btn-p" data-n="8">8</button>
+        <button class="pin-btn-p" data-n="9">9</button>
         <div></div>
         <button class="pin-btn-p" data-n="0">0</button>
-        <button class="pin-btn-p del" id="pp-del"><svg width="20" height="14" viewBox="0 0 24 18" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-6-6 6-6z"/><line x1="13" y1="7" x2="17" y2="11"/><line x1="17" y1="7" x2="13" y2="11"/></svg></button>
+        <button class="pin-btn-p del" id="pp-del"><svg width="20" height="14" viewBox="0 0 24 18" fill="none" stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-6-6 6-6z"/><line x1="13" y1="7" x2="17" y2="11"/><line x1="17" y1="7" x2="13" y2="11"/></svg></button>
       </div>
       <button class="panel-btn ghost" onclick="closePanel('pin')" style="margin-top:8px;">Cancel</button>
     </div>
