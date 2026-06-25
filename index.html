@@ -342,8 +342,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     <div class="modal-sub">Fill in the details and we'll set it up for you</div>
     <div class="modal-field"><div class="modal-label">Destination</div><input class="modal-inp" id="m-dest" placeholder="e.g. Japan" autocomplete="off"></div>
     <div class="modal-row">
-      <div class="modal-field"><div class="modal-label">Departure date</div><input class="modal-inp" type="date" id="m-dep" autocomplete="off"></div>
-      <div class="modal-field"><div class="modal-label">Return date</div><input class="modal-inp" type="date" id="m-ret" autocomplete="off"></div>
+      <div class="modal-field"><div class="modal-label">Departure date</div><input class="modal-inp dp-trigger" type="text" id="m-dep" placeholder="Select date" autocomplete="off" readonly></div>
+      <div class="modal-field"><div class="modal-label">Return date</div><input class="modal-inp dp-trigger" type="text" id="m-ret" placeholder="Select date" autocomplete="off" readonly></div>
     </div>
     <div class="modal-row">
       <div class="modal-field"><div class="modal-label">Travellers</div><input class="modal-inp" id="m-trav" placeholder="2" type="number" min="1" max="20" autocomplete="off"></div>
@@ -680,20 +680,10 @@ function openModal(e){
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(()=>{
     document.getElementById('m-dest').focus();
-    // Re-attach pickers now modal is visible
-    ['m-dep','m-ret'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        delete el.dataset.dpAttached;
-        el.style.display = '';
-        // Remove any existing wrapper
-        if (el.parentNode.classList.contains('dp-wrap')) {
-          el.parentNode.parentNode.insertBefore(el, el.parentNode);
-          el.parentNode.remove();
-        }
-        if (window.dpAttach) window.dpAttach(el);
-      }
-    });
+    if (window.dpAttachText) {
+      window.dpAttachText(document.getElementById('m-dep'));
+      window.dpAttachText(document.getElementById('m-ret'));
+    }
   }, 250);
 }
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
@@ -704,8 +694,8 @@ async function createTrip(){
   const btn=document.getElementById('create-btn');
   const dest=document.getElementById('m-dest').value.trim();
   if(!dest){document.getElementById('m-dest').focus();return;}
-  const depRaw=document.getElementById('m-dep').value.trim(); const dep=depRaw ? depRaw.split('-').reverse().join('/') : '';
-  const retRaw=document.getElementById('m-ret').value.trim(); const ret=retRaw ? retRaw.split('-').reverse().join('/') : '';
+  const dep=document.getElementById('m-dep').value.trim();
+  const ret=document.getElementById('m-ret').value.trim();
   const trav=document.getElementById('m-trav').value.trim()||'2';
   const status=document.getElementById('m-status').value;
   const slug=dest.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();

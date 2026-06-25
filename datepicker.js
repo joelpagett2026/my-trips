@@ -277,6 +277,27 @@ window.dpAttach = function(input) {
   attachPicker(input);
 };
 
+// For plain text inputs that just need the picker popup (no wrapping needed)
+window.dpAttachText = function(input) {
+  if (input.dataset.dpText) return;
+  input.dataset.dpText = '1';
+  input.readOnly = true;
+  input.style.cursor = 'pointer';
+
+  let currentDate = parseValue(input.value);
+
+  function onSelect(date) {
+    currentDate = date;
+    input.value = date ? formatDisplay(date) : '';
+    input.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+
+  input.addEventListener('focus', () => openPicker(input, currentDate, onSelect));
+  input.addEventListener('click', () => {
+    if (document.activeElement === input) openPicker(input, currentDate, onSelect);
+  });
+};
+
 // Re-run when new day cards are added dynamically
 const observer = new MutationObserver(() => {
   document.querySelectorAll('input[type="date"]:not([data-dp-attached])').forEach(input => {
