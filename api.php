@@ -30,7 +30,7 @@ $action = $_GET['action'] ?? '';
 
 if ($action !== 'auth') {
     $token = $_SERVER['HTTP_X_AUTH_TOKEN'] ?? '';
-    if ($token !== PIN_HASH) {
+    if ($token !== getActivePinHash()) {
         http_response_code(401);
         echo json_encode(['error' => 'Unauthorised']);
         exit;
