@@ -120,95 +120,83 @@ function openPicker(inputEl, currentDate, onSelect) {
 
   const today = new Date(); today.setHours(0,0,0,0);
 
-  function build() {
-    const popup = document.createElement('div');
-    popup.className = 'dp-popup';
+  // Build the popup once
+  const popup = document.createElement('div');
+  popup.className = 'dp-popup';
 
-    // Position relative to input
-    const rect = inputEl.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    popup.style.left = rect.left + 'px';
-    if (spaceBelow > 280) {
-      popup.style.top = (rect.bottom + 6) + 'px';
-    } else {
-      popup.style.top = (rect.top - 6) + 'px';
-      popup.style.transform = 'translateY(-100%)';
-    }
+  const rect = inputEl.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  popup.style.left = rect.left + 'px';
+  if (spaceBelow > 280) {
+    popup.style.top = (rect.bottom + 6) + 'px';
+  } else {
+    popup.style.top = (rect.top - 6) + 'px';
+    popup.style.transform = 'translateY(-100%)';
+  }
 
-    // Header
-    const hdr = document.createElement('div'); hdr.className = 'dp-header';
-    const lbl = document.createElement('div'); lbl.className = 'dp-month-label';
+  // Header
+  const hdr = document.createElement('div'); hdr.className = 'dp-header';
+  const lbl = document.createElement('div'); lbl.className = 'dp-month-label';
+
+  const nav = document.createElement('div'); nav.className = 'dp-nav';
+  const prev = document.createElement('button'); prev.className = 'dp-nav-btn';
+  prev.type = 'button';
+  prev.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>';
+  const next = document.createElement('button'); next.className = 'dp-nav-btn';
+  next.type = 'button';
+  next.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>';
+
+  nav.appendChild(prev); nav.appendChild(next);
+  hdr.appendChild(lbl); hdr.appendChild(nav);
+  popup.appendChild(hdr);
+
+  // Grid container — updated in place
+  const gridWrap = document.createElement('div');
+  popup.appendChild(gridWrap);
+
+  // Footer
+  const footer = document.createElement('div'); footer.className = 'dp-footer';
+  const clearBtn = document.createElement('button'); clearBtn.className = 'dp-btn-clear'; clearBtn.textContent = 'Clear'; clearBtn.type = 'button';
+  clearBtn.addEventListener('mousedown', e => { e.preventDefault(); onSelect(null); closePopup(); });
+  const todayBtn = document.createElement('button'); todayBtn.className = 'dp-btn-today'; todayBtn.textContent = 'Today'; todayBtn.type = 'button';
+  todayBtn.addEventListener('mousedown', e => { e.preventDefault(); onSelect(today); closePopup(); });
+  footer.appendChild(clearBtn); footer.appendChild(todayBtn);
+  popup.appendChild(footer);
+
+  function renderGrid() {
     lbl.textContent = MONTHS[viewDate.getMonth()] + ' ' + viewDate.getFullYear();
-
-    const nav = document.createElement('div'); nav.className = 'dp-nav';
-    const prev = document.createElement('button'); prev.className = 'dp-nav-btn';
-    prev.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>';
-    prev.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); viewDate.setMonth(viewDate.getMonth()-1); rebuild(); });
-
-    const next = document.createElement('button'); next.className = 'dp-nav-btn';
-    next.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>';
-    next.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); viewDate.setMonth(viewDate.getMonth()+1); rebuild(); });
-
-    nav.appendChild(prev); nav.appendChild(next);
-    hdr.appendChild(lbl); hdr.appendChild(nav);
-    popup.appendChild(hdr);
-
-    // Day headers
     const grid = document.createElement('div'); grid.className = 'dp-grid';
     DAYS.forEach(d => {
       const hd = document.createElement('div'); hd.className = 'dp-day-hd'; hd.textContent = d;
       grid.appendChild(hd);
     });
-
-    // Days
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
-    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-    const blanks = firstDay === 0 ? 6 : firstDay - 1; // Mon-start
+    const firstDay = new Date(year, month, 1).getDay();
+    const blanks = firstDay === 0 ? 6 : firstDay - 1;
     const daysInMonth = new Date(year, month+1, 0).getDate();
-
     for (let i = 0; i < blanks; i++) {
-      const em = document.createElement('div'); em.className = 'dp-day dp-day-empty';
-      grid.appendChild(em);
+      const em = document.createElement('div'); em.className = 'dp-day dp-day-empty'; grid.appendChild(em);
     }
-
     for (let d = 1; d <= daysInMonth; d++) {
-      const btn = document.createElement('button'); btn.className = 'dp-day';
+      const btn = document.createElement('button'); btn.className = 'dp-day'; btn.type = 'button';
       btn.textContent = d;
-      const thisDate = new Date(year, month, d);
-      thisDate.setHours(0,0,0,0);
+      const thisDate = new Date(year, month, d); thisDate.setHours(0,0,0,0);
       if (thisDate.getTime() === today.getTime()) btn.classList.add('dp-day-today');
-      if (currentDate && thisDate.getTime() === new Date(currentDate).setHours(0,0,0,0)) {
-        btn.classList.add('dp-day-selected');
-      }
-      btn.addEventListener('mousedown', e => {
-        e.preventDefault();
-        onSelect(thisDate);
-        closePopup();
-      });
+      if (currentDate && thisDate.getTime() === new Date(currentDate).setHours(0,0,0,0)) btn.classList.add('dp-day-selected');
+      btn.addEventListener('mousedown', e => { e.preventDefault(); onSelect(thisDate); closePopup(); });
       grid.appendChild(btn);
     }
-    popup.appendChild(grid);
-
-    // Footer
-    const footer = document.createElement('div'); footer.className = 'dp-footer';
-    const clearBtn = document.createElement('button'); clearBtn.className = 'dp-btn-clear'; clearBtn.textContent = 'Clear';
-    clearBtn.addEventListener('mousedown', e => { e.preventDefault(); onSelect(null); closePopup(); });
-    const todayBtn = document.createElement('button'); todayBtn.className = 'dp-btn-today'; todayBtn.textContent = 'Today';
-    todayBtn.addEventListener('mousedown', e => { e.preventDefault(); onSelect(today); closePopup(); });
-    footer.appendChild(clearBtn); footer.appendChild(todayBtn);
-    popup.appendChild(footer);
-
-    return popup;
+    gridWrap.innerHTML = '';
+    gridWrap.appendChild(grid);
   }
 
-  function rebuild() {
-    if (activePopup) activePopup.remove();
-    activePopup = build();
-    document.body.appendChild(activePopup);
-  }
+  prev.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); viewDate.setMonth(viewDate.getMonth()-1); renderGrid(); });
+  next.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); viewDate.setMonth(viewDate.getMonth()+1); renderGrid(); });
 
-  rebuild();
+  renderGrid();
+  activePopup = popup;
+  document.body.appendChild(popup);
 }
 
 // ── ATTACH TO ALL DATE INPUTS ────────────────────────────────────────
