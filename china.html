@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>China · 2026</title>
+<link rel="stylesheet" href="/itinerary-style.css">
+<script src="/auth.js"></script>
+<script src="/db.js"></script>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><div class="loading-text">Loading itinerary…</div></div>
+
+<div class="nav">
+  <a class="nav-back" href="/">
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M8.5 1.5L1.5 8l7 6.5" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    My Trips
+  </a>
+  <div class="nav-title">China 2026</div>
+  <div class="nav-actions"><button class="nav-save-btn" id="nav-save-btn" onclick="manualSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save</button><button class="nav-action" onclick="window.print()">Print</button></div>
+</div>
+
+  <div class="setup-banner-sub">Create a free project at supabase.com, run the SQL below, then paste your credentials.</div>
+  <div class="setup-sql">CREATE TABLE IF NOT EXISTS itinerary (id TEXT PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());</div>
+  <div class="setup-fields">
+    <input id="sb-url" class="setup-inp" placeholder="https://xxxxxxxxxxxx.supabase.co">
+    <input id="sb-key" class="setup-inp" placeholder="anon public key (eyJ...)">
+    <div class="setup-btns">
+      <button class="setup-btn" onclick="connectSupabase()">Connect & Save</button>
+      <button class="setup-btn setup-btn-ghost" onclick="dismissSetup()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<div class="large-title-area" style="padding-top:16px;">
+  <div class="large-title">China</div>
+  <div class="large-subtitle">31 Mar – 17 Apr 2026</div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
+  <div class="stat-card"><div class="stat-val sv-orange">4</div><div class="stat-lbl">Cities</div></div>
+  <div class="stat-card"><div class="stat-val sv-purple" id="s-acc">£0</div><div class="stat-lbl">Accommodation</div></div>
+  <div class="stat-card"><div class="stat-val sv-green" id="s-total">£0</div><div class="stat-lbl">Total cost</div></div>
+</div>
+
+<div style="padding:0 20px 16px;">
+  <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);">
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
+      <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value="China"></div>
+      <div class="th-g"><div class="th-lbl">Departure</div><input class="th-inp sm hdr-field" id="hdr-dep" value="31/03/2026"></div>
+      <div class="th-g"><div class="th-lbl">Return</div><input class="th-inp sm hdr-field" id="hdr-ret" value="17/04/2026"></div>
+      <div class="th-g"><div class="th-lbl">Travellers</div><input class="th-inp sm hdr-field" id="hdr-trav" style="width:60px" value="2"></div>
+      <div style="margin-left:auto;display:flex;align-items:center;">
+        <div id="save-status" class="saved"><div class="status-dot"></div><span id="save-label">All saved</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sec-hd">Day by day</div>
+<div class="days" id="days"></div>
+
+<button class="add-day" onclick="addDay()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Add Day
+</button>
+
+<script>
+const RECORD_ID = 'china-2026';
+let saveTimer = null;
+
+function setStatus(state, msg) {
+  document.getElementById('save-status').className = state;
+  document.getElementById('save-label').textContent = msg;
+}
+async function dbLoad() {
+  try { return await window.dbLoad(RECORD_ID); }
+  catch { return null; }
+}
+async function dbSave(payload) {
+  if (!SB_URL || !SB_KEY) return;
+  setStatus('saving', 'Saving…');
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/itinerary`, { method: 'POST', headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: RECORD_ID, data: payload, updated_at: new Date().toISOString() }) });
+    setStatus(r.ok ? 'saved' : 'error', r.ok ? 'All saved' : 'Save failed');
+  } catch { setStatus('error', 'Save failed'); }
+}
+function scheduleSave() {
+  if (SB_URL && SB_KEY) setStatus('saving', 'Unsaved changes');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => dbSave(collectState()), 1400);
+}
+function collectState() {
+  const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
+  const days = Array.from(document.querySelectorAll('.day-card')).map(card => {
+    const obj = {};
+    card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.value; });
+    obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
+    obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
+    obj._transRemoved = !card.querySelector('.s-trans');
+    return obj;
+  });
+  return { header, days };
+}
+function inp(val, key, cls, ph) {
+  const i = document.createElement('input'); i.type = 'text'; i.value = val || '';
+  if (ph) i.placeholder = ph;
+  i.className = 'cell-inp' + (cls ? ' ' + cls : '');
+  if (key) i.dataset.key = key;
+  i.addEventListener('input', () => { recalc(); scheduleSave(); });
+  return i;
+}
+function ta(val, key, ph) {
+  const t = document.createElement('textarea'); t.value = val || ''; t.className = 'cell-ta'; t.rows = 2;
+  if (ph) t.placeholder = ph;
+  if (key) t.dataset.key = key;
+  t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; scheduleSave(); });
+  return t;
+}
+function cell(lbl, el, xCls) {
+  const d = document.createElement('div'); d.className = 'cell' + (xCls ? ' ' + xCls : '');
+  const l = document.createElement('div'); l.className = 'cell-lbl'; l.textContent = lbl;
+  d.appendChild(l); d.appendChild(el); return d;
+}
+function delBtn(onDel) {
+  const d = document.createElement('div'); d.className = 'cell row-del';
+  const b = document.createElement('button'); b.className = 'row-del-btn'; b.title = 'Remove';
+  b.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  b.onclick = () => { onDel(); scheduleSave(); }; d.appendChild(b); return d;
+}
+function makeTransRow(data, container) {
+  data = data || {};
+  const row = document.createElement('div'); row.className = 'row-inner trans-row';
+  row.style.gridTemplateColumns = '1.1fr 1.1fr 0.6fr 0.6fr 0.7fr 0.8fr 32px';
+  row.appendChild(cell('Mode', inp(data.mode, 'mode', '', 'Flight / Train…')));
+  row.appendChild(cell('Route', inp(data.route, 'route', '', 'A → B')));
+  row.appendChild(cell('Depart', inp(data.depart, 'depart', '', '12:10')));
+  row.appendChild(cell('Arrive', inp(data.arrive, 'arrive', '', '15:40')));
+  row.appendChild(cell('Ref', inp(data.ref, 'ref', '', '#XXX')));
+  row.appendChild(cell('Notes', inp(data.notes, 'notes', '', '')));
+  row.appendChild(delBtn(() => row.remove()));
+  container.appendChild(row);
+}
+function makeFoodRow(data, container) {
+  data = data || {};
+  const row = document.createElement('div'); row.className = 'row-inner food-row';
+  row.style.gridTemplateColumns = '0.55fr 1.1fr 1.1fr 0.75fr 32px';
+  row.appendChild(cell('Meal', inp(data.meal, 'meal', '', 'Breakfast…')));
+  row.appendChild(cell('Restaurant / Place', inp(data.place, 'place', '', '')));
+  row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
+  row.appendChild(cell('Booking ref', inp(data.ref, 'ref', '', 'N/A')));
+  row.appendChild(delBtn(() => row.remove()));
+  container.appendChild(row);
+}
+function addDay(d) {
+  d = d || {};
+  const card = document.createElement('div'); card.className = 'day-card';
+  const top = document.createElement('div'); top.className = 'day-top';
+  const badge = document.createElement('div'); badge.className = 'day-badge';
+  const bNum = document.createElement('input'); bNum.type = 'text'; bNum.value = d.dayNum || ''; bNum.placeholder = '1';
+  bNum.className = 'day-badge-num'; bNum.dataset.key = 'dayNum';
+  bNum.addEventListener('input', scheduleSave);
+  const bLbl = document.createElement('div'); bLbl.className = 'db-label'; bLbl.textContent = 'Day';
+  badge.appendChild(bLbl); badge.appendChild(bNum); top.appendChild(badge);
+
+  const dateSec = document.createElement('div'); dateSec.className = 's-date'; dateSec.style.flex = '1';
+  const dateBar = document.createElement('div'); dateBar.className = 'sec-bar';
+  dateBar.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="sec-label">Date & Location</span>';
+  dateSec.appendChild(dateBar);
+  const dateRow = document.createElement('div'); dateRow.className = 'row-inner';
+  dateRow.style.gridTemplateColumns = '0.7fr 1fr 1fr';
+  dateRow.appendChild(cell('Date', inp(d.date, 'date', 'bold', 'dd/mm/yyyy')));
+  dateRow.appendChild(cell('From', inp(d.from, 'from', 'bold', '')));
+  dateRow.appendChild(cell('To', inp(d.to, 'to', 'bold', '')));
+  dateSec.appendChild(dateRow); top.appendChild(dateSec); card.appendChild(top);
+
+  if (!d._transRemoved) {
+    const ts = document.createElement('div'); ts.className = 's-trans';
+    const tb = document.createElement('div'); tb.className = 'sec-bar';
+    const aBtn = document.createElement('button'); aBtn.className = 'add-row-btn'; aBtn.textContent = '+ Add';
+    aBtn.onclick = () => { makeTransRow({}, tRows); scheduleSave(); };
+    const dBtn = document.createElement('button'); dBtn.className = 'del-sec-btn'; dBtn.textContent = 'Remove';
+    dBtn.onclick = () => { ts.remove(); scheduleSave(); };
+    tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label">Transport</span>';
+    tb.appendChild(aBtn); tb.appendChild(dBtn); ts.appendChild(tb);
+    const tRows = document.createElement('div'); ts.appendChild(tRows);
+    if (d._transport && d._transport.length) d._transport.forEach(t => makeTransRow(t, tRows));
+    card.appendChild(ts);
+  }
+
+  const as = document.createElement('div'); as.className = 's-acc';
+  const ab = document.createElement('div'); ab.className = 'sec-bar';
+  ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label">Accommodation</span>';
+  as.appendChild(ab);
+  const ar = document.createElement('div'); ar.className = 'row-inner';
+  ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr';
+  ar.appendChild(cell('Hotel / Airbnb', inp(d.hotel, 'hotel', 'bold', '')));
+  ar.appendChild(cell('Check-in', inp(d.checkin, 'checkin', '', '')));
+  ar.appendChild(cell('Check-out', inp(d.checkout, 'checkout', '', '')));
+  ar.appendChild(cell('Nightly cost (£)', inp(d.cost, 'cost', 'cost-inp', '')));
+  ar.appendChild(cell('Booking ref', inp(d.ref, 'ref', '', '')));
+  as.appendChild(ar); card.appendChild(as);
+
+  const fs = document.createElement('div'); fs.className = 's-food';
+  const fb = document.createElement('div'); fb.className = 'sec-bar';
+  const fBtn = document.createElement('button'); fBtn.className = 'add-row-btn'; fBtn.textContent = '+ Add meal';
+  fBtn.onclick = () => { makeFoodRow({}, fRows); scheduleSave(); };
+  fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label">Food & Drink</span>';
+  fb.appendChild(fBtn); fs.appendChild(fb);
+  const fRows = document.createElement('div'); fs.appendChild(fRows);
+  if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows));
+  card.appendChild(fs);
+
+  const is_ = document.createElement('div'); is_.className = 's-itin';
+  const ib = document.createElement('div'); ib.className = 'sec-bar';
+  ib.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="sec-label">Itinerary</span>';
+  is_.appendChild(ib);
+  ['morning','afternoon','evening'].forEach((period, i) => {
+    const row = document.createElement('div'); row.className = 'row-inner';
+    row.style.gridTemplateColumns = '0.42fr 2.4fr 1fr';
+    if (i < 2) row.style.borderBottom = '0.5px solid rgba(0,0,0,0.06)';
+    const pc = document.createElement('div'); pc.className = 'cell itin-period';
+    const pl = document.createElement('div'); pl.className = 'cell-lbl'; pl.textContent = 'Period';
+    const pi = document.createElement('input'); pi.type = 'text';
+    pi.value = d['period_'+period] || (period.charAt(0).toUpperCase()+period.slice(1));
+    pi.className = 'cell-inp bold'; pi.dataset.key = 'period_'+period;
+    pi.addEventListener('input', scheduleSave);
+    pc.appendChild(pl); pc.appendChild(pi);
+    const ac = document.createElement('div'); ac.className = 'cell';
+    const al = document.createElement('div'); al.className = 'cell-lbl'; al.textContent = 'Activities & Notes';
+    const at = ta(d['act_'+period]||'', 'act_'+period, "What's planned "+period+"?");
+    ac.appendChild(al); ac.appendChild(at);
+    const lc = document.createElement('div'); lc.className = 'cell';
+    const ll = document.createElement('div'); ll.className = 'cell-lbl'; ll.textContent = 'Ticket / Booking link';
+    const li = inp(d['link_'+period]||'', 'link_'+period, '', 'https://…');
+    li.style.color = '#007aff'; li.style.fontSize = '12px';
+    lc.appendChild(ll); lc.appendChild(li);
+    row.appendChild(pc); row.appendChild(ac); row.appendChild(lc);
+    is_.appendChild(row);
+  });
+  card.appendChild(is_);
+  document.getElementById('days').appendChild(card);
+  recalc();
+}
+
+function recalc() {
+  const cards = document.querySelectorAll('.day-card');
+  document.getElementById('s-days').textContent = cards.length;
+  let acc = 0;
+  cards.forEach(c => c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value)||0; }));
+  document.getElementById('s-acc').textContent = '£'+acc.toFixed(0);
+  document.getElementById('s-total').textContent = '£'+acc.toFixed(0);
+}
+
+function restoreState(state) {
+  if (state.header) {
+    document.getElementById('hdr-dest').value = state.header.dest || '';
+    document.getElementById('hdr-dep').value  = state.header.dep  || '';
+    document.getElementById('hdr-ret').value  = state.header.ret  || '';
+    document.getElementById('hdr-trav').value = state.header.trav || '';
+  }
+  if (state.days) state.days.forEach(d => addDay(d));
+}
+
+document.querySelectorAll(".hdr-field").forEach(el => el.addEventListener("input", scheduleSave));
+
+async function manualSave() {
+  const btn = document.getElementById('nav-save-btn');
+  const svgIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
+  btn.innerHTML = svgIcon + ' Saving…';
+  btn.className = 'nav-save-btn saving';
+  clearTimeout(saveTimer);
+  await dbSave(collectState());
+  const saved = document.getElementById('save-label').textContent === 'All saved';
+  btn.innerHTML = saved ? '✓ Saved' : '✗ Save failed';
+  btn.className = 'nav-save-btn ' + (saved ? 'saved' : 'error');
+  setTimeout(() => {
+    btn.innerHTML = svgIcon + ' Save';
+    btn.className = 'nav-save-btn';
+  }, 2000);
+}
+
+const DEFAULTS = [
+  {dayNum:'1',date:'31/03/2026',from:'London, UK',to:'Shanghai',_transRemoved:false,_transport:[{mode:'Flight',route:'Heathrow (LHR) → Shanghai Pudong (PVG)',depart:'12:10',arrive:'07:55 +1',ref:'',notes:'Overnight flight'}],hotel:'',checkin:'',checkout:'',cost:'',ref:'',_food:[{meal:'Breakfast',place:'Home',notes:'Before departure',ref:''},{meal:'Lunch / Dinner',place:'Heathrow / On flight',notes:'Airport & in-flight',ref:''}],act_morning:'',act_afternoon:'Pack & travel to Heathrow Terminal 2',act_evening:'Board flight 12:10 · Overnight to Shanghai',link_morning:'',link_afternoon:'',link_evening:''},
+  {dayNum:'2',date:'01/04/2026',from:'Shanghai',to:'Shanghai',_transRemoved:false,_transport:[],hotel:'Twelve at Hengshan, Luxury Collection',checkin:'Arrive ~10:00',checkout:'',cost:'117',ref:'#636076655',_food:[{meal:'Breakfast',place:'Twelve at Hengshan',notes:'Included',ref:''},{meal:'Lunch',place:'Local exploration',notes:'Street food near Fuxing Park',ref:''},{meal:'Dinner',place:'Yuanyuan Restaurant',notes:'',ref:''}],act_morning:"Arrive Shanghai · Check in · Xujiahui Park · Wukang Mansion · Fuxing Park",act_afternoon:"Nanjing Road · People's Park · The Bund Walking Tour (Puxi Side)",act_evening:'The Bund at night · Yuanyuan Restaurant',link_morning:'',link_afternoon:'',link_evening:''},
+  {dayNum:'3',date:'02/04/2026',from:'Shanghai',to:'Shanghai',_transRemoved:false,_transport:[],hotel:'Twelve at Hengshan, Luxury Collection',checkin:'',checkout:'',cost:'117',ref:'#636076655',_food:[{meal:'Breakfast',place:'Twelve at Hengshan',notes:'Included',ref:''},{meal:'Lunch',place:'Shanghai Disney Resort',notes:'Dining in the park',ref:''},{meal:'Dinner',place:'Shanghai Disney Resort',notes:'',ref:''}],act_morning:'Shanghai Disney Resort — full day',act_afternoon:'Shanghai Disney Resort',act_evening:'Shanghai Disney Resort · Return to hotel',link_morning:'https://www.shanghaidisneyresort.com',link_afternoon:'https://www.shanghaidisneyresort.com',link_evening:''},
+];
+
+async function init() {
+  if (SB_URL && SB_KEY) {
+    document.getElementById('setup-banner').classList.add('hidden');
+    document.getElementById('sb-url').value = SB_URL;
+    document.getElementById('sb-key').value = SB_KEY;
+  }
+  let state = null;
+  if (SB_URL && SB_KEY) { state = await dbLoad(); }
+  if (state && state.days && state.days.length) { restoreState(state); setStatus('saved', 'All saved'); }
+  else { DEFAULTS.forEach(d => addDay(d)); setStatus(SB_URL ? 'saving' : 'error', SB_URL ? 'Not yet saved' : 'Offline only'); }
+  document.getElementById('loading').classList.add('hidden');
+}
+
+init();
+</script>
+</body>
+</html>

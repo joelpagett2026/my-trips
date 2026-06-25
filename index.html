@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Trips</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-height:100vh;}
+
+.nav{background:rgba(242,242,247,0.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.18);padding:0 20px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-title{font-size:17px;font-weight:600;color:#000;}
+
+/* TWO COLUMN LAYOUT */
+.page-layout{display:grid;grid-template-columns:1fr 320px;gap:0;align-items:start;}
+.trips-col{min-width:0;}
+.dash-col{border-left:0.5px solid rgba(0,0,0,0.1);background:#fff;min-height:calc(100vh - 44px);position:sticky;top:44px;max-height:calc(100vh - 44px);overflow-y:auto;}
+
+.large-title-area{padding:8px 20px 4px;}
+.large-title{font-size:34px;font-weight:700;letter-spacing:-0.5px;color:#000;line-height:1.1;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;}
+.stat-card{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+.stat-val{font-size:24px;font-weight:700;line-height:1;}
+.stat-lbl{font-size:11px;color:#3c3c43;opacity:0.6;margin-top:3px;font-weight:500;}
+.sv-blue{color:#007aff;}.sv-green{color:#34c759;}.sv-orange{color:#ff9500;}.sv-purple{color:#af52de;}
+
+.section{padding:0 20px 24px;}
+.section-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#000;margin-bottom:10px;}
+
+.trips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+.trip-card{background:#fff;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.05);transition:transform 0.18s ease,box-shadow 0.18s ease;}
+.trip-card:hover{transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
+.trip-card:active{transform:scale(0.985);}
+.card-image-area{height:140px;position:relative;overflow:hidden;}
+.card-map{width:100%;height:100%;pointer-events:none;}
+.card-map .leaflet-control-container{display:none!important;}
+.card-map .leaflet-bottom,.card-map .leaflet-top{display:none!important;}
+.card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:1000;}
+.card-map-flags img{width:32px;height:21px;object-fit:cover;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.95);}
+.card-status-pill{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;backdrop-filter:blur(12px);z-index:1000;font-family:'Montserrat',sans-serif;}
+.pill-upcoming{background:rgba(0,122,255,0.18);color:#007aff;border:1px solid rgba(0,122,255,0.25);}
+.pill-planning{background:rgba(255,149,0,0.18);color:#c07000;border:1px solid rgba(255,149,0,0.25);}
+.pill-past{background:rgba(100,100,110,0.18);color:#48484a;border:1px solid rgba(100,100,110,0.2);}
+.card-body{padding:12px 14px 14px;}
+.card-dest{font-size:15px;font-weight:700;color:#000;margin-bottom:2px;}
+.card-dates{font-size:11px;color:#3c3c43;opacity:0.6;font-weight:500;margin-bottom:8px;}
+.card-cities{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.city-tag{font-size:10px;background:#f2f2f7;color:#3c3c43;border-radius:5px;padding:2px 7px;font-weight:600;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:0.5px solid rgba(60,60,67,0.12);}
+.card-meta{font-size:10px;color:#3c3c43;opacity:0.5;font-weight:500;}
+.card-chevron{color:#c7c7cc;}
+.add-card{background:#fff;border-radius:18px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.04);transition:transform 0.18s ease;border:2px dashed #d1d1d6;}
+.add-card:hover{transform:scale(1.015);border-color:#007aff;}
+.add-icon{width:40px;height:40px;background:#007aff;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.add-label{font-size:14px;font-weight:700;color:#007aff;}
+.add-sub{font-size:11px;color:#3c3c43;opacity:0.5;font-weight:500;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);transform:translateY(20px);transition:transform 0.25s ease;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#000;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:#3c3c43;opacity:0.55;margin-bottom:20px;font-weight:500;}
+.modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.modal-label{font-size:11px;font-weight:700;color:#3c3c43;text-transform:uppercase;letter-spacing:0.04em;}
+.modal-inp{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#000;}
+.modal-inp:focus{box-shadow:0 0 0 3px rgba(0,122,255,0.2);}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-select{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#000;appearance:none;cursor:pointer;}
+.modal-btns{display:flex;gap:10px;margin-top:20px;}
+.modal-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.modal-btn-cancel{background:#f2f2f7;color:#3c3c43;}
+.modal-btn-cancel:hover{opacity:0.7;}
+.modal-btn-create{background:#007aff;color:#fff;}
+.modal-btn-create:hover{background:#0066d6;}
+
+/* ── DASHBOARD ── */
+.dash-inner{padding:0 0 32px;}
+.dash-section{padding:16px 16px 0;}
+.dash-section-title{font-size:11px;font-weight:700;color:#3c3c43;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:10px;}
+
+/* Stats grid in dash */
+.dash-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
+.dash-stat{background:#f2f2f7;border-radius:12px;padding:12px 14px;}
+.dash-stat-val{font-size:22px;font-weight:700;color:#007aff;line-height:1;}
+.dash-stat-lbl{font-size:10px;color:#3c3c43;opacity:0.55;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+.dash-stat-icon{font-size:16px;margin-bottom:4px;}
+
+/* Countdown */
+.dash-countdown{background:linear-gradient(135deg,#1a2a4a 0%,#0a1a3a 100%);border-radius:14px;padding:16px;margin:8px 16px 0;position:relative;overflow:hidden;}
+.dash-countdown-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.dash-countdown-dest{font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.dash-countdown-dest img{width:22px;height:15px;border-radius:2px;object-fit:cover;}
+.dash-countdown-timer{display:flex;gap:6px;}
+.dash-cd-block{background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;text-align:center;flex:1;}
+.dash-cd-num{font-size:20px;font-weight:700;color:#fff;line-height:1;}
+.dash-cd-unit{font-size:9px;color:rgba(255,255,255,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
+.dash-countdown-stars{position:absolute;top:0;right:0;bottom:0;width:80px;background:radial-gradient(ellipse at right,rgba(255,255,255,0.04) 0%,transparent 70%);pointer-events:none;}
+
+/* Upcoming trips in dash */
+.dash-upcoming-trip{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);}
+.dash-upcoming-trip:last-child{border-bottom:none;}
+.dash-trip-flag{width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;}
+.dash-trip-name{font-size:13px;font-weight:600;color:#000;line-height:1.2;}
+.dash-trip-date{font-size:11px;color:#3c3c43;opacity:0.5;margin-top:1px;}
+.dash-trip-chevron{color:#c7c7cc;margin-left:auto;flex-shrink:0;}
+
+/* Flags grid */
+.flags-grid{display:flex;flex-wrap:wrap;gap:5px;}
+.flag-item{width:32px;height:22px;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.flag-item img{width:100%;height:100%;object-fit:cover;}
+
+/* Trip history list */
+.dash-trip-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.05);}
+.dash-trip-row:last-child{border-bottom:none;}
+.dash-trip-year{font-size:10px;font-weight:700;color:#007aff;min-width:30px;opacity:0.7;}
+.dash-trip-info{flex:1;min-width:0;}
+.dash-trip-row-name{font-size:12px;font-weight:600;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-trip-row-date{font-size:10px;color:#3c3c43;opacity:0.45;margin-top:1px;}
+.dash-trip-flag-sm{width:20px;height:13px;border-radius:2px;object-fit:cover;flex-shrink:0;}
+
+/* Year group card */
+.year-group{background:#f2f2f7;border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.year-group-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.year-group-label{font-size:12px;font-weight:700;color:#007aff;letter-spacing:-0.1px;}
+.year-group-count{font-size:10px;color:#3c3c43;opacity:0.4;font-weight:600;}
+.year-group-trips{padding:4px 0;}
+.year-group .dash-trip-row{padding:6px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);}
+.year-group .dash-trip-row:last-child{border-bottom:none;}
+</style>
+<script src="/auth.js"></script>
+<script src="/db.js"></script>
+</head>
+<body>
+
+<div class="nav">
+  <div style="width:60px"></div>
+  <div class="nav-title">My Trips</div>
+  <div style="width:60px;text-align:right">
+    <a href="/settings.html" style="display:inline-flex;align-items:center;color:#007aff;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="page-layout">
+
+<!-- ── LEFT: TRIPS ── -->
+<div class="trips-col">
+
+  <div class="section" style="padding-top:16px;">
+    <div class="section-title">Upcoming</div>
+    <div class="trips-grid" id="upcoming-grid">
+      <a class="trip-card" href="/canada.html">
+        <div class="card-image-area">
+          <div id="map-canada" class="card-map"></div>
+          <div class="card-map-flags"><img src="https://flagcdn.com/w80/ca.png" alt="Canada"></div>
+          <div class="card-status-pill pill-upcoming">Upcoming</div>
+        </div>
+        <div class="card-body">
+          <div class="card-dest">Canada Road Trip</div>
+          <div class="card-dates">Late Sept – Early Oct 2027 · 13 nights</div>
+          <div class="card-cities"><span class="city-tag">Toronto</span><span class="city-tag">Niagara Falls</span><span class="city-tag">Québec City</span><span class="city-tag">Montréal</span><span class="city-tag">Algonquin Park</span></div>
+          <div class="card-footer"><span class="card-meta">13 nights</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+      <a class="trip-card" href="/hong-kong-taiwan.html">
+        <div class="card-image-area">
+          <div id="map-hk" class="card-map"></div>
+          <div class="card-map-flags"><img src="https://flagcdn.com/w80/hk.png" alt="HK"><img src="https://flagcdn.com/w80/tw.png" alt="Taiwan"></div>
+          <div class="card-status-pill pill-planning">Planning</div>
+        </div>
+        <div class="card-body">
+          <div class="card-dest">Hong Kong & Taiwan</div>
+          <div class="card-dates">27 Mar – 12 Apr 2027 · 16 nights</div>
+          <div class="card-cities"><span class="city-tag">Hong Kong</span><span class="city-tag">Taiwan</span></div>
+          <div class="card-footer"><span class="card-meta">16 nights</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+      <a class="add-card" href="#" onclick="openModal(event)">
+        <div class="add-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="add-label">New Trip</div>
+        <div class="add-sub">Add an upcoming itinerary</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Completed</div>
+    <div class="trips-grid" id="past-grid">
+      <a class="trip-card" href="/dubai.html">
+        <div class="card-image-area">
+          <div id="map-dubai" class="card-map"></div>
+          <div class="card-map-flags"><img src="https://flagcdn.com/w80/ae.png" alt="UAE"></div>
+          <div class="card-status-pill pill-past">Completed</div>
+        </div>
+        <div class="card-body">
+          <div class="card-dest">Dubai & Abu Dhabi</div>
+          <div class="card-dates">26 Dec 2025 – 9 Jan 2026 · 15 days</div>
+          <div class="card-cities"><span class="city-tag">Paris</span><span class="city-tag">Dubai</span><span class="city-tag">Abu Dhabi</span></div>
+          <div class="card-footer"><span class="card-meta">15 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+      <a class="trip-card" href="/costa-rica.html">
+        <div class="card-image-area">
+          <div id="map-cr" class="card-map"></div>
+          <div class="card-map-flags"><img src="https://flagcdn.com/w80/cr.png" alt="Costa Rica"></div>
+          <div class="card-status-pill pill-past">Completed</div>
+        </div>
+        <div class="card-body">
+          <div class="card-dest">Costa Rica</div>
+          <div class="card-dates">4 Apr – 21 Apr 2025 · 18 days</div>
+          <div class="card-cities"><span class="city-tag">San José</span><span class="city-tag">Tortuguero</span><span class="city-tag">Puerto Viejo</span><span class="city-tag">Fortuna</span><span class="city-tag">Monteverde</span><span class="city-tag">Manuel Antonio</span><span class="city-tag">Uvita</span></div>
+          <div class="card-footer"><span class="card-meta">18 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+      <a class="trip-card" href="/china.html">
+        <div class="card-image-area">
+          <div id="map-china" class="card-map"></div>
+          <div class="card-map-flags"><img src="https://flagcdn.com/w80/cn.png" alt="China"></div>
+          <div class="card-status-pill pill-past">Completed</div>
+        </div>
+        <div class="card-body">
+          <div class="card-dest">China</div>
+          <div class="card-dates">31 Mar – 17 Apr 2026 · 17 days</div>
+          <div class="card-cities"><span class="city-tag">Shanghai</span><span class="city-tag">Suzhou</span><span class="city-tag">Chengdu</span><span class="city-tag">Dujiangyan</span><span class="city-tag">Xi'an</span><span class="city-tag">Beijing</span></div>
+          <div class="card-footer"><span class="card-meta">17 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div><!-- end trips-col -->
+
+<!-- ── RIGHT: DASHBOARD ── -->
+<div class="dash-col">
+  <div class="dash-inner">
+
+    <!-- Countdown to next trip -->
+    <div class="dash-countdown" id="dash-countdown">
+      <div class="dash-countdown-label">Next adventure</div>
+      <div class="dash-countdown-dest" id="cd-dest">
+        <img src="https://flagcdn.com/w80/hk.png" alt="" id="cd-flag">
+        <span id="cd-name">Hong Kong & Taiwan</span>
+      </div>
+      <div class="dash-countdown-timer">
+        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-days">—</div><div class="dash-cd-unit">days</div></div>
+        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-hrs">—</div><div class="dash-cd-unit">hrs</div></div>
+        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-min">—</div><div class="dash-cd-unit">min</div></div>
+        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-sec">—</div><div class="dash-cd-unit">sec</div></div>
+      </div>
+      <div class="dash-countdown-stars"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title">Stats</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+
+        <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
+          <!-- Map/fold icon matching Polarsteps -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          <div class="dash-stat-lbl" style="flex:1;margin:0;">Trips taken</div>
+          <div class="dash-stat-val" style="color:#007aff;font-size:18px;" id="s-polarsteps-trips">58</div>
+        </div>
+
+        <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
+          <!-- Globe with meridian lines -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2C8 6 8 18 12 22"/><path d="M12 2c4 4 4 16 0 20"/><path d="M2 12h20"/><path d="M3.5 7h17M3.5 17h17"/></svg>
+          <div class="dash-stat-lbl" style="flex:1;margin:0;">Countries visited</div>
+          <div class="dash-stat-val" style="color:#34c759;font-size:18px;" id="s-countries">33</div>
+        </div>
+
+        <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
+          <!-- Speedometer/odometer matching Polarsteps -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="#ff9500" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg>
+          <div class="dash-stat-lbl" style="flex:1;margin:0;">Miles travelled</div>
+          <div class="dash-stat-val" style="color:#ff9500;font-size:18px;" id="s-miles">205,021</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="dash-divider"></div>
+
+    <!-- Flags collected -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title" id="flags-title">Flags collected · 33 countries</div>
+      <div class="flags-grid" id="flags-grid"></div>
+    </div>
+
+    <div class="dash-divider"></div>
+
+    <!-- Upcoming from planner -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title">Planned upcoming trips</div>
+      <div id="dash-upcoming-list"></div>
+    </div>
+
+    <div class="dash-divider"></div>
+
+    <!-- Trip history -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title">All trips</div>
+      <div id="trip-history"></div>
+    </div>
+
+  </div>
+</div><!-- end dash-col -->
+
+</div><!-- end page-layout -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title">New Trip</div>
+    <div class="modal-sub">Fill in the details and we'll set it up for you</div>
+    <div class="modal-field"><div class="modal-label">Destination</div><input class="modal-inp" id="m-dest" placeholder="e.g. Japan" autocomplete="off"></div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="modal-label">Departure date</div><input class="modal-inp" id="m-dep" placeholder="dd/mm/yyyy" autocomplete="off"></div>
+      <div class="modal-field"><div class="modal-label">Return date</div><input class="modal-inp" id="m-ret" placeholder="dd/mm/yyyy" autocomplete="off"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="modal-label">Travellers</div><input class="modal-inp" id="m-trav" placeholder="2" type="number" min="1" max="20" autocomplete="off"></div>
+      <div class="modal-field"><div class="modal-label">Status</div><select class="modal-select" id="m-status"><option value="upcoming">Upcoming</option><option value="planning">Planning</option><option value="past">Completed</option></select></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn modal-btn-create" id="create-btn" onclick="createTrip()">Create itinerary →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+// ── PLANNED ITINERARY METADATA ────────────────────────────────────────
+// Polarsteps export already includes everything up to and including China (end: 17 Apr 2026).
+// Only trips starting AFTER that date should ever add to the stats.
+// addToStats: true = Claude will count this once it completes
+const PLANNED = {
+  'china-2026':     { name:'China',             endDate:'2026-04-17', startDate:'2026-03-30', countries:['cn'],      estimatedMiles:12790, flagPrimary:'cn', url:'/china.html',           addToStats: false },
+  'dubai-2025':     { name:'Dubai & Abu Dhabi', endDate:'2026-01-09', startDate:'2025-12-26', countries:['ae','fr'], estimatedMiles:7012,  flagPrimary:'ae', url:'/dubai.html',            addToStats: false },
+  'costa-rica-2025':{ name:'Costa Rica',        endDate:'2025-04-21', startDate:'2025-04-03', countries:['es','cr'], estimatedMiles:11911, flagPrimary:'cr', url:'/costa-rica.html',       addToStats: false },
+  'canada-2027':    { name:'Canada Road Trip',  endDate:'2027-10-10', startDate:'2027-09-25', countries:['ca'],      estimatedMiles:7820,  flagPrimary:'ca', url:'/canada.html',           addToStats: true  },
+  'hk-taiwan-2027': { name:'Hong Kong & Taiwan',endDate:'2027-04-12', startDate:'2027-03-27', countries:['hk','tw'], estimatedMiles:12802, flagPrimary:'hk', url:'/hong-kong-taiwan.html', addToStats: true  },
+};
+
+// Polarsteps historical baseline (countries already visited, miles already done)
+const PS_COUNTRIES = ['ae','at','be','ca','ch','cn','cr','cy','cz','de','dk','es','fi','fr','gb','gr','hr','hu','id','ie','it','je','jp','kr','lu','mc','my','nl','se','sg','tr','us','za'];
+const PS_MILES = 205021;
+const PS_TRIPS = 58;
+
+// ── COMPUTE LIVE STATS ────────────────────────────────────────────────
+// A planned trip "completes" on its endDate — that's when everything updates
+function isCompleted(endDateStr) {
+  return new Date(endDateStr) <= TODAY;
+}
+function isUpcoming(startDateStr) {
+  return new Date(startDateStr) > TODAY;
+}
+
+// Build the live country set and miles by merging PS baseline + completed Claude-managed trips only
+const liveCountries = new Set(PS_COUNTRIES);
+let liveMiles = PS_MILES;
+let liveCompletedPlanned = 0;
+
+Object.entries(PLANNED).forEach(([id, trip]) => {
+  if (trip.addToStats && isCompleted(trip.endDate)) {
+    trip.countries.forEach(cc => liveCountries.add(cc));
+    liveMiles += trip.estimatedMiles;
+    liveCompletedPlanned++;
+  }
+});
+
+const liveTotalTrips = PS_TRIPS + liveCompletedPlanned;
+const liveCountryCount = liveCountries.size;
+
+// Update stat cards
+document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString();
+document.getElementById('s-countries').textContent = liveCountryCount;
+document.getElementById('s-miles').textContent = liveMiles.toLocaleString();
+
+// ── FLAGS GRID ────────────────────────────────────────────────────────
+const flagsGrid = document.getElementById('flags-grid');
+const sortedFlags = Array.from(liveCountries).sort();
+document.getElementById('flags-title').textContent = `Flags collected · ${liveCountryCount} countries`;
+sortedFlags.forEach(cc => {
+  const div = document.createElement('div'); div.className = 'flag-item';
+  const d = div.cloneNode();
+  div.title = cc.toUpperCase();
+  div.innerHTML = `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
+  flagsGrid.appendChild(div);
+});
+
+// ── COUNTDOWN — to the next upcoming planned trip ─────────────────────
+const upcomingTrips = Object.values(PLANNED)
+  .filter(t => !isCompleted(t.endDate))
+  .sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+if (upcomingTrips.length > 0) {
+  const next = upcomingTrips[0];
+  document.getElementById('cd-name').textContent = next.name;
+  document.getElementById('cd-flag').src = `https://flagcdn.com/w80/${next.flagPrimary}.png`;
+  const targetDate = new Date(next.startDate);
+  function updateCountdown() {
+    const now = new Date();
+    const diff = targetDate - now;
+    if (diff <= 0) { document.getElementById('dash-countdown').style.display='none'; return; }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cd-days').textContent = d;
+    document.getElementById('cd-hrs').textContent  = String(h).padStart(2,'0');
+    document.getElementById('cd-min').textContent  = String(m).padStart(2,'0');
+    document.getElementById('cd-sec').textContent  = String(s).padStart(2,'0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+} else {
+  document.getElementById('dash-countdown').style.display = 'none';
+}
+
+// ── PLANNED UPCOMING TRIPS in dashboard ───────────────────────────────
+const upcomingEl = document.getElementById('dash-upcoming-list');
+if (upcomingTrips.length === 0) {
+  upcomingEl.innerHTML = '<div style="font-size:12px;color:#3c3c43;opacity:0.4;padding:8px 0;">No upcoming trips planned</div>';
+} else {
+  upcomingTrips.forEach((t, i) => {
+    const a = document.createElement('a');
+    a.href = t.url;
+    a.style.cssText = `text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;padding:10px 0;${i < upcomingTrips.length-1 ? 'border-bottom:0.5px solid rgba(0,0,0,0.06);' : ''}`;
+    a.innerHTML = `<img class="dash-trip-flag" src="https://flagcdn.com/w80/${t.flagPrimary}.png" alt="${t.flagPrimary}" style="width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;"><div><div class="dash-trip-name">${t.name}</div><div class="dash-trip-date">${t.startDate} → ${t.endDate}</div></div><svg style="margin-left:auto;flex-shrink:0;" width="7" height="11" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="#c7c7cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    upcomingEl.appendChild(a);
+  });
+}
+
+// ── TRIP HISTORY ──────────────────────────────────────────────────────
+const trips = [
+  {name:"China",start:"30 Mar 2026",codes:["cn"]},
+  {name:"Dubai & Abu Dhabi",start:"26 Dec 2025",codes:["ae","fr"]},
+  {name:"Paris",start:"16 Oct 2025",codes:["fr"]},
+  {name:"Athens & Hydra",start:"03 Oct 2025",codes:["gr"]},
+  {name:"Netherlands",start:"21 Aug 2025",codes:["nl"]},
+  {name:"Cyprus",start:"02 May 2025",codes:["cy"]},
+  {name:"Costa Rica",start:"03 Apr 2025",codes:["cr"]},
+  {name:"Freiberg",start:"30 Nov 2024",codes:["de"]},
+  {name:"Vienna",start:"08 Nov 2024",codes:["at"]},
+  {name:"Canada",start:"18 Sep 2024",codes:["ca"]},
+  {name:"Helsinki",start:"23 Aug 2024",codes:["fi"]},
+  {name:"Lyon",start:"23 May 2024",codes:["fr"]},
+  {name:"Singapore, Bali & KL",start:"28 Mar 2024",codes:["sg","id","my"]},
+  {name:"Japan & South Korea",start:"20 Dec 2023",codes:["jp","kr"]},
+  {name:"Paris",start:"11 Oct 2023",codes:["fr"]},
+  {name:"Barcelona",start:"24 Aug 2023",codes:["es"]},
+  {name:"Switzerland",start:"28 May 2023",codes:["ch"]},
+  {name:"Cologne",start:"04 May 2023",codes:["de"]},
+  {name:"South Africa",start:"26 Mar 2023",codes:["za"]},
+  {name:"Germany & Switzerland",start:"14 Dec 2022",codes:["de","ch"]},
+  {name:"Paris",start:"04 Nov 2022",codes:["fr"]},
+  {name:"Italy",start:"24 Sep 2022",codes:["it"]},
+  {name:"Stockholm",start:"25 Aug 2022",codes:["se"]},
+  {name:"French Riviera & Monaco",start:"01 Jun 2022",codes:["fr","mc"]},
+  {name:"Washington, New York & Chicago",start:"09 Apr 2022",codes:["us"]},
+  {name:"Dublin",start:"05 Nov 2021",codes:["ie"]},
+  {name:"Brussels, Luxembourg & Germany",start:"24 Aug 2021",codes:["be","lu","de"]},
+  {name:"Denmark",start:"29 Aug 2020",codes:["dk"]},
+  {name:"Rome",start:"09 Feb 2020",codes:["it"]},
+  {name:"Gothenburg",start:"17 Oct 2019",codes:["se"]},
+  {name:"Hamburg & Lubeck",start:"20 Sep 2019",codes:["de"]},
+  {name:"Japan",start:"12 Apr 2019",codes:["jp"]},
+  {name:"Bruges & Gent",start:"02 Nov 2018",codes:["be"]},
+  {name:"Croatia",start:"15 Sep 2018",codes:["hr"]},
+  {name:"LA, Nevada & San Francisco",start:"11 May 2018",codes:["us"]},
+  {name:"Prague",start:"09 Feb 2018",codes:["cz"]},
+  {name:"Germany",start:"29 Sep 2017",codes:["de"]},
+  {name:"Netherlands",start:"22 Jul 2017",codes:["nl"]},
+  {name:"Crete",start:"01 May 2017",codes:["gr"]},
+  {name:"Italy",start:"18 Sep 2016",codes:["it"]},
+  {name:"Germany",start:"19 Apr 2016",codes:["de"]},
+  {name:"Budapest",start:"12 Feb 2016",codes:["hu"]},
+  {name:"Barcelona",start:"05 Sep 2015",codes:["es"]},
+  {name:"Sweden",start:"29 Apr 2015",codes:["se"]},
+  {name:"Amsterdam",start:"24 Sep 2014",codes:["nl"]},
+  {name:"Istanbul",start:"20 Jun 2014",codes:["tr"]},
+  {name:"Paris",start:"10 Feb 2014",codes:["fr"]},
+  {name:"Belgium",start:"26 Nov 2013",codes:["be"]},
+  {name:"Edinburgh",start:"24 Aug 2013",codes:["gb"]},
+  {name:"Madrid",start:"07 Aug 2013",codes:["es"]},
+  {name:"Cyprus",start:"10 Aug 2012",codes:["cy"]},
+  {name:"Amsterdam",start:"03 Jun 2012",codes:["nl"]},
+  {name:"Florida",start:"06 Apr 2012",codes:["us"]},
+  {name:"Germany",start:"11 Sep 2011",codes:["de"]},
+  {name:"Cyprus",start:"31 Jul 2011",codes:["cy"]},
+  {name:"Tenerife",start:"23 May 2011",codes:["es"]},
+  {name:"Tenerife",start:"12 Apr 2010",codes:["es"]},
+  {name:"Oludeniz",start:"22 May 2009",codes:["tr"]},
+];
+
+// ── TRIP HISTORY ─────────────────────────────────────────────────────
+// Merge Polarsteps trips with any completed planned trips
+const psTripList = [
+  {name:"China",start:"30 Mar 2026",codes:["cn"]},
+  {name:"Dubai & Abu Dhabi",start:"26 Dec 2025",codes:["ae","fr"]},
+  {name:"Paris",start:"16 Oct 2025",codes:["fr"]},
+  {name:"Athens & Hydra",start:"03 Oct 2025",codes:["gr"]},
+  {name:"Netherlands",start:"21 Aug 2025",codes:["nl"]},
+  {name:"Cyprus",start:"02 May 2025",codes:["cy"]},
+  {name:"Costa Rica",start:"03 Apr 2025",codes:["cr"]},
+  {name:"Freiberg",start:"30 Nov 2024",codes:["de"]},
+  {name:"Vienna",start:"08 Nov 2024",codes:["at"]},
+  {name:"Canada",start:"18 Sep 2024",codes:["ca"]},
+  {name:"Helsinki",start:"23 Aug 2024",codes:["fi"]},
+  {name:"Lyon",start:"23 May 2024",codes:["fr"]},
+  {name:"Singapore, Bali & KL",start:"28 Mar 2024",codes:["sg","id","my"]},
+  {name:"Japan & South Korea",start:"20 Dec 2023",codes:["jp","kr"]},
+  {name:"Paris",start:"11 Oct 2023",codes:["fr"]},
+  {name:"Barcelona",start:"24 Aug 2023",codes:["es"]},
+  {name:"Switzerland",start:"28 May 2023",codes:["ch"]},
+  {name:"Cologne",start:"04 May 2023",codes:["de"]},
+  {name:"South Africa",start:"26 Mar 2023",codes:["za"]},
+  {name:"Germany & Switzerland",start:"14 Dec 2022",codes:["de","ch"]},
+  {name:"Paris",start:"04 Nov 2022",codes:["fr"]},
+  {name:"Italy",start:"24 Sep 2022",codes:["it"]},
+  {name:"Stockholm",start:"25 Aug 2022",codes:["se"]},
+  {name:"French Riviera & Monaco",start:"01 Jun 2022",codes:["fr","mc"]},
+  {name:"Washington, New York & Chicago",start:"09 Apr 2022",codes:["us"]},
+  {name:"Dublin",start:"05 Nov 2021",codes:["ie"]},
+  {name:"Brussels, Luxembourg & Germany",start:"24 Aug 2021",codes:["be","lu","de"]},
+  {name:"Denmark",start:"29 Aug 2020",codes:["dk"]},
+  {name:"Rome",start:"09 Feb 2020",codes:["it"]},
+  {name:"Gothenburg",start:"17 Oct 2019",codes:["se"]},
+  {name:"Hamburg & Lubeck",start:"20 Sep 2019",codes:["de"]},
+  {name:"Japan",start:"12 Apr 2019",codes:["jp"]},
+  {name:"Bruges & Gent",start:"02 Nov 2018",codes:["be"]},
+  {name:"Croatia",start:"15 Sep 2018",codes:["hr"]},
+  {name:"LA, Nevada & San Francisco",start:"11 May 2018",codes:["us"]},
+  {name:"Prague",start:"09 Feb 2018",codes:["cz"]},
+  {name:"Germany",start:"29 Sep 2017",codes:["de"]},
+  {name:"Netherlands",start:"22 Jul 2017",codes:["nl"]},
+  {name:"Crete",start:"01 May 2017",codes:["gr"]},
+  {name:"Italy",start:"18 Sep 2016",codes:["it"]},
+  {name:"Germany",start:"19 Apr 2016",codes:["de"]},
+  {name:"Budapest",start:"12 Feb 2016",codes:["hu"]},
+  {name:"Barcelona",start:"05 Sep 2015",codes:["es"]},
+  {name:"Sweden",start:"29 Apr 2015",codes:["se"]},
+  {name:"Amsterdam",start:"24 Sep 2014",codes:["nl"]},
+  {name:"Istanbul",start:"20 Jun 2014",codes:["tr"]},
+  {name:"Paris",start:"10 Feb 2014",codes:["fr"]},
+  {name:"Belgium",start:"26 Nov 2013",codes:["be"]},
+  {name:"Edinburgh",start:"24 Aug 2013",codes:["gb"]},
+  {name:"Madrid",start:"07 Aug 2013",codes:["es"]},
+  {name:"Cyprus",start:"10 Aug 2012",codes:["cy"]},
+  {name:"Amsterdam",start:"03 Jun 2012",codes:["nl"]},
+  {name:"Florida",start:"06 Apr 2012",codes:["us"]},
+  {name:"Germany",start:"11 Sep 2011",codes:["de"]},
+  {name:"Cyprus",start:"31 Jul 2011",codes:["cy"]},
+  {name:"Tenerife",start:"23 May 2011",codes:["es"]},
+  {name:"Tenerife",start:"12 Apr 2010",codes:["es"]},
+  {name:"Oludeniz",start:"22 May 2009",codes:["tr"]},
+];
+
+// Inject any completed planned trips that aren't in Polarsteps yet
+Object.entries(PLANNED).forEach(([id, t]) => {
+  if (isCompleted(t.endDate)) {
+    const alreadyIn = psTripList.some(p => p.name === t.name);
+    if (!alreadyIn) {
+      const d = new Date(t.startDate);
+      const start = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/\//g,' ');
+      psTripList.unshift({ name: t.name, start, codes: t.countries, planned: true });
+    }
+  }
+});
+
+// Group by year
+const byYear = {};
+psTripList.forEach(t => {
+  const year = t.start.split(' ')[2];
+  if (!byYear[year]) byYear[year] = [];
+  byYear[year].push(t);
+});
+
+const historyEl = document.getElementById('trip-history');
+const years = Object.keys(byYear).sort((a,b) => b-a);
+
+function makeYearGroup(year, yearTrips) {
+  const card = document.createElement('div'); card.className = 'year-group';
+  const hdr = document.createElement('div'); hdr.className = 'year-group-header';
+  hdr.innerHTML = `<span class="year-group-label">${year}</span><span class="year-group-count">${yearTrips.length} trip${yearTrips.length>1?'s':''}</span>`;
+  card.appendChild(hdr);
+  const body = document.createElement('div'); body.className = 'year-group-trips';
+  yearTrips.forEach(t => {
+    const row = document.createElement('div'); row.className = 'dash-trip-row';
+    const info = document.createElement('div'); info.className = 'dash-trip-info';
+    const badge = t.planned ? ' <span style="font-size:9px;background:#e8f0ff;color:#007aff;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;">Planned</span>' : '';
+    info.innerHTML = `<div class="dash-trip-row-name">${t.name}${badge}</div><div class="dash-trip-row-date">${t.start}</div>`;
+    const flags = document.createElement('div'); flags.style.cssText='display:flex;gap:3px;flex-shrink:0;';
+    t.codes.slice(0,2).forEach(cc => {
+      flags.innerHTML += `<img class="dash-trip-flag-sm" src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
+    });
+    row.appendChild(info); row.appendChild(flags);
+    body.appendChild(row);
+  });
+  card.appendChild(body);
+  return card;
+}
+
+years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
+
+// ── MAPS ─────────────────────────────────────────────────────────────
+const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:''});
+function makeMap(id,center,zoom,points,color){
+  const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
+  tiles().addTo(map);
+  L.polyline(points,{color,weight:2.5,opacity:0.85,dashArray:'6,4'}).addTo(map);
+  points.forEach((p,i)=>L.circleMarker(p,{radius:i===0||i===points.length-1?6:4,fillColor:color,color:'#fff',weight:2,fillOpacity:1}).addTo(map));
+}
+makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#007aff');
+makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#ff9500');
+makeMap('map-dubai',[24.4,54.8],7,[[48.8566,2.3522],[25.2532,51.6100],[25.2048,55.2708],[24.4539,54.3773],[25.2048,55.2708]],'#636366');
+makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#ff9500');
+makeMap('map-china',[33.5,109.0],4,[[31.2304,121.4737],[31.2989,120.5853],[30.5728,104.0668],[30.9964,103.6673],[34.3416,108.9398],[39.9042,116.4074]],'#af52de');
+
+// ── MODAL & REGISTRY ─────────────────────────────────────────────────
+const SB_URL = localStorage.getItem('sb_url')||'';
+const SB_KEY = localStorage.getItem('sb_key')||'';
+const REGISTRY_ID = 'trip-registry';
+
+async function loadRegistry(){
+  try{ return await window.dbLoadRegistry(); }catch{ return []; }
+}
+async function saveRegistry(trips){
+  try{ await window.dbSaveRegistry(trips); }catch{}
+}
+function buildDynamicCard(t){
+  const statusClass=t.status==='past'?'pill-past':t.status==='planning'?'pill-planning':'pill-upcoming';
+  const statusLabel=t.status==='past'?'Completed':t.status==='planning'?'Planning':'Upcoming';
+  const url=`/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&trav=${encodeURIComponent(t.trav)}&status=${encodeURIComponent(t.status)}&slug=${encodeURIComponent(t.slug)}`;
+  const a=document.createElement('a');a.className='trip-card';a.href=url;
+  a.innerHTML=`<div class="card-image-area" style="background:#f2f2f7;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" aria-hidden="true"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg><div class="card-status-pill ${statusClass}">${statusLabel}</div></div><div class="card-body"><div class="card-dest">${t.dest}</div><div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div><div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
+  return a;
+}
+function renderDynamicTrips(trips){
+  if(!trips.length) return;
+  const upGrid=document.getElementById('upcoming-grid');
+  const pastGrid=document.getElementById('past-grid');
+  trips.filter(t=>t.status!=='past').forEach(t=>upGrid.insertBefore(buildDynamicCard(t),upGrid.querySelector('.add-card')));
+  trips.filter(t=>t.status==='past').forEach(t=>pastGrid.appendChild(buildDynamicCard(t)));
+}
+loadRegistry().then(renderDynamicTrips);
+
+function openModal(e){e.preventDefault();document.getElementById('modal-overlay').classList.add('open');setTimeout(()=>document.getElementById('m-dest').focus(),250);}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+async function createTrip(){
+  const btn=document.getElementById('create-btn');
+  const dest=document.getElementById('m-dest').value.trim();
+  if(!dest){document.getElementById('m-dest').focus();return;}
+  const dep=document.getElementById('m-dep').value.trim();
+  const ret=document.getElementById('m-ret').value.trim();
+  const trav=document.getElementById('m-trav').value.trim()||'2';
+  const status=document.getElementById('m-status').value;
+  const slug=dest.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
+  btn.textContent='Saving…';btn.disabled=true;
+  const existing=await loadRegistry();
+  existing.push({dest,dep,ret,trav,status,slug,created:Date.now()});
+  await saveRegistry(existing);
+  window.location.href=`/new-trip.html?${new URLSearchParams({dest,dep,ret,trav,status,slug}).toString()}`;
+}
+</script>
+
+</body>
+</html>

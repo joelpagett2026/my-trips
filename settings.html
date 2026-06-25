@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings</title>
+<link rel="stylesheet" href="/itinerary-style.css">
+<script src="/auth.js"></script>
+<script src="/db.js"></script>
+<style>
+.settings-layout{display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - 44px);}.settings-left{padding:20px 24px 48px;background:#f2f2f7;}.settings-right{background:#fff;border-left:0.5px solid rgba(0,0,0,0.1);padding:24px;overflow-y:auto;}.settings-wrap{max-width:600px;}
+.settings-section{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);margin-bottom:24px;}
+.settings-row{display:flex;align-items:center;padding:14px 18px;border-bottom:0.5px solid rgba(0,0,0,0.06);}
+.settings-row:last-child{border-bottom:none;}
+.settings-row-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:14px;}
+.settings-row-icon.blue{background:#e8f0ff;}.settings-row-icon.green{background:#e8f8ed;}.settings-row-icon.orange{background:#fff3e0;}.settings-row-icon.red{background:#fef0f0;}.settings-row-icon.purple{background:#f3eeff;}
+.settings-row-label{font-size:15px;font-weight:600;color:#000;flex:1;}
+.settings-row-value{font-size:13px;color:#3c3c43;opacity:0.45;font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.settings-row-chevron{color:#c7c7cc;margin-left:8px;}
+.settings-row-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;width:100%;text-align:left;font-family:'Montserrat',sans-serif;padding:0;}
+.settings-group-label{font-size:11px;font-weight:700;color:#3c3c43;opacity:0.4;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 8px 4px;}
+
+/* Slide panel */
+.slide-panel{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;}
+.slide-panel-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);}
+.slide-panel-sheet{position:absolute;bottom:0;left:0;right:0;background:#f2f2f7;border-radius:20px 20px 0 0;padding:0 0 40px;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);}
+.slide-panel.open .slide-panel-sheet{transform:translateY(0);}
+.panel-handle{width:36px;height:4px;background:rgba(0,0,0,0.15);border-radius:2px;margin:10px auto 0;}
+.panel-title{font-size:17px;font-weight:700;color:#000;padding:18px 20px 0;letter-spacing:-0.3px;}
+.panel-sub{font-size:13px;color:#3c3c43;opacity:0.5;padding:4px 20px 16px;font-weight:500;line-height:1.5;}
+.panel-body{padding:0 20px;}
+.panel-label{font-size:11px;font-weight:700;color:#3c3c43;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin:0 0 6px 2px;}
+.panel-inp{background:#fff;border:none;border-radius:12px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:13px 14px;width:100%;outline:none;color:#000;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);margin-bottom:12px;}
+.panel-inp:focus{box-shadow:0 0 0 3px rgba(0,122,255,0.2);}
+.panel-inp.mono{font-family:ui-monospace,monospace;font-size:12px;}
+.panel-sql{background:#1c1c1e;color:#a8f5d3;font-family:ui-monospace,monospace;font-size:12px;padding:12px 14px;border-radius:10px;line-height:1.6;margin-bottom:16px;word-break:break-all;}
+.panel-btn{width:100%;background:#007aff;border:none;border-radius:12px;color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;padding:14px;cursor:pointer;margin-bottom:8px;transition:background 0.15s;}
+.panel-btn:hover{background:#0066d6;}
+.panel-btn.ghost{background:#f2f2f7;color:#007aff;box-shadow:0 0 0 1.5px rgba(0,122,255,0.3);}
+.panel-btn.ghost:hover{background:#e8f0ff;}
+.panel-btn.danger{background:#ff3b30;}
+.panel-btn.danger:hover{background:#d63027;}
+.status-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:12px;}
+.status-badge.ok{background:#e8f8ed;color:#1a9e50;}
+.status-badge.not{background:#fff3e0;color:#c07000;}
+.pin-dots-preview{display:flex;gap:10px;justify-content:center;padding:16px 0 4px;}
+.pin-dot-p{width:12px;height:12px;border-radius:50%;background:#d1d1d6;}
+.pin-dot-p.filled{background:#007aff;}
+.pin-grid-p{display:grid;grid-template-columns:repeat(3,60px);gap:10px;justify-content:center;margin:16px 0;}
+.pin-btn-p{width:60px;height:60px;border-radius:50%;background:#fff;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:500;color:#000;box-shadow:0 1px 3px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06);transition:background 0.1s,transform 0.08s;display:flex;align-items:center;justify-content:center;}
+.pin-btn-p:active{background:#e5e5ea;transform:scale(0.94);}
+.pin-btn-p.del{background:transparent;box-shadow:none;}
+.pin-step{font-size:13px;font-weight:600;color:#3c3c43;opacity:0.5;text-align:center;margin-bottom:4px;}
+.pin-error-p{text-align:center;font-size:12px;font-weight:600;color:#ff3b30;min-height:18px;margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div id="loading" class="hidden"></div>
+
+<div class="nav">
+  <a class="nav-back" href="/">
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M8.5 1.5L1.5 8l7 6.5" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    My Trips
+  </a>
+  <div class="nav-title">Settings</div>
+  <div style="width:80px"></div>
+</div>
+
+<div class="settings-layout"><div class="settings-left"><div class="settings-wrap">
+
+  <!-- DATABASE -->
+  <div class="settings-group-label">Database</div>
+  <div class="settings-section">
+    <div class="settings-row">
+      <div class="settings-row-icon blue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      </div>
+      <span class="settings-row-label">Database</span>
+      <span class="settings-row-value" id="sb-status-label">Not connected</span>
+      <button class="settings-row-btn" onclick="openPanel('supabase')" style="width:auto;padding:0;">
+        <svg class="settings-row-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECURITY -->
+  <div class="settings-group-label">Security</div>
+  <div class="settings-section">
+    <div class="settings-row">
+      <div class="settings-row-icon purple">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <span class="settings-row-label">Change PIN</span>
+      <button class="settings-row-btn" onclick="openPanel('pin')" style="width:auto;padding:0;">
+        <svg class="settings-row-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="settings-row">
+      <div class="settings-row-icon red">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <button class="settings-row-btn" onclick="signOut()">
+        <span class="settings-row-label" style="color:#ff3b30;">Lock & Sign Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="settings-group-label">About</div>
+  <div class="settings-section">
+    <div class="settings-row">
+      <div class="settings-row-icon green">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <span class="settings-row-label">Version</span>
+      <span class="settings-row-value">1.0</span>
+    </div>
+    <div class="settings-row">
+      <div class="settings-row-icon orange">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg>
+      </div>
+      <span class="settings-row-label">Built with Claude</span>
+      <span class="settings-row-value">Anthropic</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── DATABASE PANEL ── -->
+<div class="slide-panel" id="panel-supabase">
+  <div class="slide-panel-overlay" onclick="closePanel('supabase')"></div>
+  <div class="slide-panel-sheet">
+    <div class="panel-handle"></div>
+    <div class="panel-title">Database</div>
+    <div class="panel-sub">Your itinerary data is stored in MySQL via api.php on your server.</div>
+    <div class="panel-body">
+      <div id="sb-connected-badge" class="status-badge ok" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Connected to MySQL
+      </div>
+      <div id="sb-notconnected-badge" class="status-badge not">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Cannot reach api.php
+      </div>
+      <p style="font-size:13px;color:#3c3c43;opacity:0.6;margin-bottom:16px;line-height:1.6;">
+        To change database credentials, edit the constants at the top of <code>api.php</code> on your server. To recreate the tables, run <code>install.php</code> once.
+      </p>
+      <button class="panel-btn" onclick="refreshSbStatus();event.target.textContent='✓ Checked';setTimeout(()=>{event.target.textContent='Check connection';},1500);">Check connection</button>
+      <button class="panel-btn ghost" onclick="closePanel('supabase')" style="margin-top:4px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PIN CHANGE PANEL ── -->
+<div class="slide-panel" id="panel-pin">
+  <div class="slide-panel-overlay" onclick="closePanel('pin')"></div>
+  <div class="slide-panel-sheet">
+    <div class="panel-handle"></div>
+    <div class="panel-title" id="pin-panel-title">Change PIN</div>
+    <div class="panel-sub" id="pin-panel-sub">Enter your current PIN to continue</div>
+    <div class="panel-body">
+      <div class="pin-step" id="pin-step-label">Current PIN</div>
+      <div class="pin-dots-preview" id="pin-dots-row">
+        <div class="pin-dot-p" id="pd0"></div>
+        <div class="pin-dot-p" id="pd1"></div>
+        <div class="pin-dot-p" id="pd2"></div>
+        <div class="pin-dot-p" id="pd3"></div>
+      </div>
+      <div class="pin-error-p" id="pin-panel-error"></div>
+      <div class="pin-grid-p">
+        ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-btn-p" data-n="${n}">${n}</button>`).join('')}
+        <div></div>
+        <button class="pin-btn-p" data-n="0">0</button>
+        <button class="pin-btn-p del" id="pp-del"><svg width="20" height="14" viewBox="0 0 24 18" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-6-6 6-6z"/><line x1="13" y1="7" x2="17" y2="11"/><line x1="17" y1="7" x2="13" y2="11"/></svg></button>
+      </div>
+      <button class="panel-btn ghost" onclick="closePanel('pin')" style="margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONNECTION STATUS ─────────────────────────────────────────────────
+const statusLabel = document.getElementById('sb-status-label');
+
+async function refreshSbStatus() {
+  try {
+    const res = await fetch('/api.php?action=list', {
+      headers: { 'X-Auth-Token': getToken() }
+    });
+    const json = await res.json();
+    const connected = json.ok;
+    statusLabel.textContent = connected ? 'Connected' : 'Error';
+    statusLabel.style.color = connected ? '#34c759' : '#ff3b30';
+    document.getElementById('sb-connected-badge').style.display = connected ? 'flex' : 'none';
+    document.getElementById('sb-notconnected-badge').style.display = connected ? 'none' : 'flex';
+  } catch {
+    statusLabel.textContent = 'Unreachable';
+    statusLabel.style.color = '#ff3b30';
+  }
+}
+refreshSbStatus();
+
+function getToken() {
+  try { return JSON.parse(localStorage.getItem('jh_auth')||'null')?.token || ''; }
+  catch { return ''; }
+}
+
+function signOut() {
+  localStorage.removeItem('jh_auth');
+  window.location.href = '/';
+}
+
+// ── PANEL OPEN/CLOSE ─────────────────────────────────────────────────
+function openPanel(id) {
+  if (id === 'supabase') refreshSbStatus();
+  if (id === 'pin') initPinChange();
+  requestAnimationFrame(() => document.getElementById('panel-' + id).classList.add('open'));
+}
+function closePanel(id) {
+  document.getElementById('panel-' + id).classList.remove('open');
+}
+
+// ── PIN CHANGE ────────────────────────────────────────────────────────
+let pinStep = 'verify'; // verify → new → confirm
+let pinEntered = '';
+let newPinCandidate = '';
+
+function initPinChange() {
+  pinStep = 'verify';
+  pinEntered = '';
+  newPinCandidate = '';
+  updatePinUI();
+}
+
+function updatePinUI() {
+  const labels = {
+    verify:  { step: 'Current PIN', title: 'Change PIN', sub: 'Enter your current PIN to continue' },
+    new:     { step: 'New PIN', title: 'New PIN', sub: 'Choose a new 4-digit PIN' },
+    confirm: { step: 'Confirm PIN', title: 'Confirm PIN', sub: 'Re-enter your new PIN to confirm' },
+  };
+  const l = labels[pinStep];
+  document.getElementById('pin-step-label').textContent = l.step;
+  document.getElementById('pin-panel-title').textContent = l.title;
+  document.getElementById('pin-panel-sub').textContent = l.sub;
+  document.getElementById('pin-panel-error').textContent = '';
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('pd' + i);
+    d.className = 'pin-dot-p' + (i < pinEntered.length ? ' filled' : '');
+    d.style.background = '';
+  }
+}
+
+function flashDots(color, cb) {
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('pd' + i);
+    d.classList.add('filled');
+    d.style.background = color;
+  }
+  setTimeout(() => { pinEntered = ''; updatePinUI(); cb && cb(); }, 700);
+}
+
+async function handlePinDigit(n) {
+  if (pinEntered.length >= 4) return;
+  pinEntered += n;
+  updatePinUI();
+  if (pinEntered.length < 4) return;
+
+  await new Promise(r => setTimeout(r, 80));
+  const hash = await sha256(pinEntered);
+  const currentHash = localStorage.getItem(PIN_STORAGE_KEY) || PIN_HASH;
+
+  if (pinStep === 'verify') {
+    // Verify current PIN against server
+    try {
+      const res = await fetch('/api.php?action=auth', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin_hash: hash })
+      });
+      const json = await res.json();
+      if (json.ok) {
+        flashDots('#34c759', () => { pinStep = 'new'; updatePinUI(); });
+      } else { throw new Error(); }
+    } catch {
+      flashDots('#ff3b30', () => {
+        document.getElementById('pin-panel-error').textContent = 'Incorrect PIN';
+      });
+    }
+  } else if (pinStep === 'new') {
+    newPinCandidate = pinEntered;
+    flashDots('#007aff', () => { pinStep = 'confirm'; updatePinUI(); });
+  } else if (pinStep === 'confirm') {
+    if (pinEntered === newPinCandidate) {
+      const currentHash = await sha256(newPinCandidate); // already stored
+      const newHash = await sha256(pinEntered);
+      try {
+        // Update PIN on server (api.php stores new hash in settings table)
+        // We need to pass the session token — use current session
+        const token = getToken();
+        const res = await fetch('/api.php?action=auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+          body: JSON.stringify({ pin_hash: token, new_hash: newHash })
+        });
+        // Re-auth with new PIN to get fresh token
+        const authRes = await fetch('/api.php?action=auth', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin_hash: newHash })
+        });
+        const authJson = await authRes.json();
+        if (authJson.ok) {
+          localStorage.setItem('jh_auth', JSON.stringify({ token: authJson.data.token, ts: Date.now() }));
+        }
+        flashDots('#34c759', () => {
+          closePanel('pin');
+          setTimeout(() => alert('PIN changed successfully!'), 300);
+        });
+      } catch {
+        flashDots('#ff3b30', () => {
+          document.getElementById('pin-panel-error').textContent = 'Error saving PIN';
+        });
+      }
+    } else {
+      flashDots('#ff3b30', () => {
+        document.getElementById('pin-panel-error').textContent = "PINs don't match — try again";
+        pinStep = 'new'; newPinCandidate = ''; updatePinUI();
+      });
+    }
+  }
+}
+
+document.querySelectorAll('.pin-btn-p[data-n]').forEach(btn => {
+  btn.addEventListener('click', () => handlePinDigit(btn.dataset.n));
+});
+document.getElementById('pp-del').addEventListener('click', () => {
+  pinEntered = pinEntered.slice(0, -1);
+  updatePinUI();
+});
+</script>
+</body>
+</html>

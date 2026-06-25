@@ -1,0 +1,148 @@
+/* ── APPLE DESIGN SYSTEM ── shared across all itinerary pages */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:#f2f2f7;color:#000;min-height:100vh;}
+
+/* NAV */
+.nav{background:rgba(242,242,247,0.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.2);padding:0 16px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-back{display:flex;align-items:center;gap:4px;font-size:17px;font-weight:400;color:#007aff;text-decoration:none;cursor:pointer;}
+.nav-back svg{margin-right:2px;}
+.nav-title{font-size:17px;font-weight:600;letter-spacing:-0.4px;color:#000;}
+.nav-action{font-size:17px;font-weight:400;color:#007aff;cursor:pointer;background:none;border:none;font-family:inherit;}
+.nav-actions{display:flex;align-items:center;gap:14px;}
+.nav-save-btn{font-size:13px;font-weight:700;color:#fff;background:#007aff;border:none;border-radius:8px;padding:5px 13px;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
+.nav-save-btn:hover{background:#0066d6;}
+.nav-save-btn:active{transform:scale(0.97);}
+.nav-save-btn.saving{background:#ff9500;}
+.nav-save-btn.saved{background:#34c759;}
+.nav-save-btn.error{background:#ff3b30;}
+
+/* LARGE TITLE */
+.large-title-area{padding:8px 20px 0;}
+.large-title{font-size:34px;font-weight:700;letter-spacing:-0.5px;color:#000;line-height:1.1;}
+.large-subtitle{font-size:15px;color:#3c3c43;opacity:0.6;margin-top:4px;letter-spacing:-0.2px;}
+
+/* SETUP BANNER */
+#setup-banner{background:#fff;border-radius:16px;margin:16px 20px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+#setup-banner.hidden{display:none;}
+.setup-banner-title{font-size:15px;font-weight:600;letter-spacing:-0.2px;color:#000;margin-bottom:4px;}
+.setup-banner-sub{font-size:13px;color:#3c3c43;opacity:0.7;margin-bottom:12px;line-height:1.4;}
+.setup-sql{background:#f2f2f7;border-radius:8px;padding:8px 12px;font-size:11px;font-family:'Montserrat',sans-serif;color:#1c1c1e;margin-bottom:12px;word-break:break-all;line-height:1.5;}
+.setup-fields{display:flex;flex-direction:column;gap:8px;}
+.setup-inp{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:15px;padding:11px 14px;width:100%;outline:none;color:#000;}
+.setup-inp:focus{box-shadow:0 0 0 3px rgba(0,122,255,0.25);}
+.setup-btns{display:flex;gap:8px;margin-top:4px;}
+.setup-btn{flex:1;background:#007aff;border:none;border-radius:10px;color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;padding:11px;cursor:pointer;}
+.setup-btn:hover{background:#0066d6;}
+.setup-btn-ghost{background:#f2f2f7;color:#007aff;}
+.setup-btn-ghost:hover{background:#e5e5ea;}
+
+/* SAVE STATUS */
+#save-status{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;}
+#save-status.saved{color:#34c759;}
+#save-status.saving{color:#ff9500;}
+#save-status.error{color:#ff3b30;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 20px;}
+.stat-card{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+.stat-val{font-size:26px;font-weight:700;letter-spacing:-0.5px;line-height:1;}
+.stat-lbl{font-size:11px;color:#3c3c43;opacity:0.55;margin-top:2px;font-weight:500;}
+.sv-blue{color:#007aff;}.sv-green{color:#34c759;}.sv-orange{color:#ff9500;}.sv-purple{color:#af52de;}
+
+/* TRIP HEADER */
+.trip-hdr{padding:16px 20px;background:#fff;border-radius:16px;margin:0 20px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+.trip-hdr-grid{display:flex;flex-wrap:wrap;gap:20px;}
+.th-g{display:flex;flex-direction:column;gap:4px;}
+.th-lbl{font-size:11px;color:#3c3c43;opacity:0.5;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+.th-inp{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:17px;font-weight:600;color:#000;outline:none;padding:0;letter-spacing:-0.3px;width:200px;}
+.th-inp.sm{font-size:15px;font-weight:400;width:120px;color:#3c3c43;}
+.th-inp:focus{border-bottom:2px solid #007aff;margin-bottom:-2px;}
+
+/* SECTION LABEL */
+.sec-hd{font-size:20px;font-weight:700;letter-spacing:-0.4px;color:#000;padding:16px 20px 8px;}
+
+/* DAY CARDS */
+.days{padding:0 20px 16px;display:flex;flex-direction:column;gap:14px;}
+
+.day-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07),0 0 0 0.5px rgba(0,0,0,0.05);}
+
+/* Section bars within day cards */
+.sec-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;border-bottom:0.5px solid rgba(0,0,0,0.08);}
+.sec-bar .sec-label{flex:1;letter-spacing:0.04em;}
+.sec-bar .add-row-btn,.sec-bar .del-sec-btn{background:rgba(0,0,0,0.05);border:none;border-radius:6px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;color:inherit;transition:background 0.1s;}
+.sec-bar .add-row-btn:hover{background:rgba(0,122,255,0.12);color:#007aff;}
+.sec-bar .del-sec-btn:hover{background:rgba(255,59,48,0.1);color:#ff3b30;}
+
+/* Date — blue */
+.s-date .sec-bar{background:rgba(0,122,255,0.06);color:#007aff;}
+.s-date .row-inner{background:rgba(0,122,255,0.02);}
+.s-date .cell-lbl{color:#007aff;opacity:0.7;}
+
+/* Transport — indigo */
+.s-trans .sec-bar{background:rgba(88,86,214,0.06);color:#5856d6;}
+.s-trans .row-inner{background:rgba(88,86,214,0.02);}
+.s-trans .cell-lbl{color:#5856d6;opacity:0.7;}
+
+/* Accommodation — purple */
+.s-acc .sec-bar{background:rgba(175,82,222,0.07);color:#af52de;}
+.s-acc .row-inner{background:rgba(175,82,222,0.02);}
+.s-acc .cell-lbl{color:#af52de;opacity:0.7;}
+
+/* Food — orange */
+.s-food .sec-bar{background:rgba(255,149,0,0.07);color:#ff9500;}
+.s-food .row-inner{background:rgba(255,149,0,0.02);}
+.s-food .cell-lbl{color:#ff9500;opacity:0.8;}
+
+/* Itinerary — pink */
+.s-itin .sec-bar{background:rgba(255,45,85,0.06);color:#ff2d55;}
+.s-itin .row-inner{background:rgba(255,45,85,0.02);}
+.s-itin .cell-lbl{color:#ff2d55;opacity:0.7;}
+
+.row-inner{display:grid;}
+.cell{padding:8px 14px;border-right:0.5px solid rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:3px;}
+.cell:last-child{border-right:none;}
+.cell-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
+.cell-inp{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#1c1c1e;width:100%;outline:none;padding:0;letter-spacing:-0.1px;}
+.cell-inp.bold{font-weight:600;font-size:14px;letter-spacing:-0.2px;}
+.cell-inp::placeholder{color:#c7c7cc;}
+.cell-inp:focus{background:rgba(0,122,255,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
+.cell-ta{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#1c1c1e;width:100%;outline:none;padding:0;resize:none;line-height:1.5;min-height:36px;letter-spacing:-0.1px;}
+.cell-ta::placeholder{color:#c7c7cc;}
+.cell-ta:focus{background:rgba(0,122,255,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
+
+.row-del{display:flex;align-items:center;justify-content:center;padding:0 8px;border-right:none!important;}
+.row-del-btn{background:none;border:none;cursor:pointer;color:#c7c7cc;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all 0.1s;}
+.row-del-btn:hover{background:rgba(255,59,48,0.1);color:#ff3b30;}
+
+/* Day number badge */
+.day-badge{background:#007aff;color:#fff;min-width:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border-right:0.5px solid rgba(0,122,255,0.2);flex-shrink:0;}
+.day-badge .db-label{font-size:9px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.day-badge-num{font-size:20px;font-weight:700;letter-spacing:-0.5px;color:#fff;background:transparent;border:none;width:36px;text-align:center;outline:none;font-family:'Montserrat',sans-serif;}
+.day-top{display:flex;}
+
+.itin-period{background:rgba(255,45,85,0.04);border-right:2px solid rgba(255,45,85,0.15)!important;}
+.itin-period .cell-inp{color:#ff2d55;font-weight:600;}
+
+/* Add day button */
+.add-day{margin:0 20px 12px;background:#fff;border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:15px;font-weight:600;color:#007aff;font-family:'Montserrat',sans-serif;transition:all 0.15s;width:calc(100% - 40px);box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 0.5px rgba(0,0,0,0.05);}
+.add-day:hover{background:#e8f0ff;}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:rgba(242,242,247,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:999;}
+#loading.hidden{display:none;}
+.spinner{width:32px;height:32px;border:3px solid rgba(0,122,255,0.2);border-top-color:#007aff;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:15px;color:#3c3c43;font-weight:500;font-family:'Montserrat',sans-serif;opacity:0.7;}
+
+/* cost input colour */
+.cost-inp{color:#34c759!important;font-weight:600!important;}
+
+@media print{
+  .nav,.trip-hdr,.stats-row,.sec-hd,.add-day,.row-del-btn,.nav-action,.del-sec-btn,.add-row-btn,#setup-banner,#loading{display:none!important;}
+  body{background:white;}
+  .days{padding:0;gap:0;}
+  .day-card{border:none;border-radius:0;box-shadow:none;page-break-after:always;break-after:page;min-height:100vh;padding:28px 36px;}
+  .day-card:last-child{page-break-after:avoid;}
+}
