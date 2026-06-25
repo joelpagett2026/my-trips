@@ -143,11 +143,11 @@ function openPicker(inputEl, currentDate, onSelect) {
     const nav = document.createElement('div'); nav.className = 'dp-nav';
     const prev = document.createElement('button'); prev.className = 'dp-nav-btn';
     prev.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>';
-    prev.addEventListener('mousedown', e => { e.preventDefault(); viewDate.setMonth(viewDate.getMonth()-1); rebuild(); });
+    prev.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); viewDate.setMonth(viewDate.getMonth()-1); rebuild(); });
 
     const next = document.createElement('button'); next.className = 'dp-nav-btn';
     next.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>';
-    next.addEventListener('mousedown', e => { e.preventDefault(); viewDate.setMonth(viewDate.getMonth()+1); rebuild(); });
+    next.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); viewDate.setMonth(viewDate.getMonth()+1); rebuild(); });
 
     nav.appendChild(prev); nav.appendChild(next);
     hdr.appendChild(lbl); hdr.appendChild(nav);
