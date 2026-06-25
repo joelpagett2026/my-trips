@@ -271,6 +271,12 @@ if (document.readyState === 'loading') {
   initPickers();
 }
 
+// Expose for external use (e.g. modal re-init)
+window.dpAttach = function(input) {
+  if (!input.dataset.format) input.dataset.format = 'iso';
+  attachPicker(input);
+};
+
 // Re-run when new day cards are added dynamically
 const observer = new MutationObserver(() => {
   document.querySelectorAll('input[type="date"]:not([data-dp-attached])').forEach(input => {

@@ -675,7 +675,27 @@ function renderDynamicTrips(trips){
 }
 loadRegistry().then(renderDynamicTrips);
 
-function openModal(e){e.preventDefault();document.getElementById('modal-overlay').classList.add('open');setTimeout(()=>document.getElementById('m-dest').focus(),250);}
+function openModal(e){
+  e.preventDefault();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>{
+    document.getElementById('m-dest').focus();
+    // Re-attach pickers now modal is visible
+    ['m-dep','m-ret'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        delete el.dataset.dpAttached;
+        el.style.display = '';
+        // Remove any existing wrapper
+        if (el.parentNode.classList.contains('dp-wrap')) {
+          el.parentNode.parentNode.insertBefore(el, el.parentNode);
+          el.parentNode.remove();
+        }
+        if (window.dpAttach) window.dpAttach(el);
+      }
+    });
+  }, 250);
+}
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
