@@ -106,8 +106,59 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .cell-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
 .cell-inp{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#444444;width:100%;outline:none;padding:0;letter-spacing:-0.1px;}
 .cell-inp.bold{font-weight:600;font-size:14px;letter-spacing:-0.2px;}
-.cell-inp[type="date"]{color-scheme:light;}
-.th-inp[type="date"]{color-scheme:light;}
+/* ── DATE PICKER STYLING ── */
+input[type="date"] {
+  color-scheme: light;
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  color: #444444;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+  filter: invert(30%) sepia(60%) saturate(500%) hue-rotate(155deg);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.8;
+}
+/* Modal date inputs */
+.modal-inp[type="date"] {
+  background:#e8e8e8;
+  border:none;
+  border-radius:10px;
+  font-family:'Montserrat',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  padding:11px 14px;
+  width:100%;
+  outline:none;
+  color:#444444;
+}
+.modal-inp[type="date"]:focus {
+  box-shadow:0 0 0 3px rgba(14,122,135,0.2);
+}
+/* Header date inputs on itinerary pages */
+.th-inp[type="date"] {
+  font-size:15px;
+  font-weight:400;
+  width:140px;
+  color:#444444;
+}
+.th-inp[type="date"]:focus {
+  border-bottom:2px solid #0e7a87;
+  margin-bottom:-2px;
+}
+/* Day card date inputs */
+.cell-inp[type="date"] {
+  font-size:13px;
+  font-weight:600;
+  color:#444444;
+  width:100%;
+}
+
 .cell-inp:focus{background:rgba(14,122,135,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
 .cell-ta{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#444444;width:100%;outline:none;padding:0;resize:none;line-height:1.5;min-height:36px;letter-spacing:-0.1px;}
 .cell-ta::placeholder{color:#b8b8b8;}

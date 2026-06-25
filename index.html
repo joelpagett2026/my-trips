@@ -73,7 +73,11 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .modal-inp:focus{box-shadow:0 0 0 3px rgba(14,122,135,0.2);}
 .modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .modal-select{background:#e8e8e8;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;appearance:none;cursor:pointer;}
-.modal-btns{display:flex;gap:10px;margin-top:20px;}
+.modal-inp[type="date"]{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;}
+.modal-inp[type="date"]:focus{box-shadow:0 0 0 3px rgba(14,122,135,0.2);}
+input[type="date"]{color-scheme:light;font-family:'Montserrat',sans-serif;}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:0.4;cursor:pointer;filter:invert(30%) sepia(60%) saturate(500%) hue-rotate(155deg);}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 .modal-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 .modal-btn-cancel{background:#e8e8e8;color:#666666;}
 .modal-btn-cancel:hover{opacity:0.7;}
@@ -338,8 +342,8 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
     <div class="modal-sub">Fill in the details and we'll set it up for you</div>
     <div class="modal-field"><div class="modal-label">Destination</div><input class="modal-inp" id="m-dest" placeholder="e.g. Japan" autocomplete="off"></div>
     <div class="modal-row">
-      <div class="modal-field"><div class="modal-label">Departure date</div><input class="modal-inp" id="m-dep" placeholder="dd/mm/yyyy" autocomplete="off"></div>
-      <div class="modal-field"><div class="modal-label">Return date</div><input class="modal-inp" id="m-ret" placeholder="dd/mm/yyyy" autocomplete="off"></div>
+      <div class="modal-field"><div class="modal-label">Departure date</div><input class="modal-inp" type="date" id="m-dep" autocomplete="off"></div>
+      <div class="modal-field"><div class="modal-label">Return date</div><input class="modal-inp" type="date" id="m-ret" autocomplete="off"></div>
     </div>
     <div class="modal-row">
       <div class="modal-field"><div class="modal-label">Travellers</div><input class="modal-inp" id="m-trav" placeholder="2" type="number" min="1" max="20" autocomplete="off"></div>
@@ -659,7 +663,7 @@ function buildDynamicCard(t){
   const statusLabel=t.status==='past'?'Completed':t.status==='planning'?'Planning':'Upcoming';
   const url=`/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&trav=${encodeURIComponent(t.trav)}&status=${encodeURIComponent(t.status)}&slug=${encodeURIComponent(t.slug)}`;
   const a=document.createElement('a');a.className='trip-card';a.href=url;
-  a.innerHTML=`<div class="card-image-area" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" aria-hidden="true"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg><div class="card-status-pill ${statusClass}">${statusLabel}</div></div><div class="card-body"><div class="card-dest">${t.dest}</div><div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div><div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
+  a.innerHTML=`<div class="card-image-area" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;position:relative;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" aria-hidden="true"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg><div class="card-status-pill ${statusClass}">${statusLabel}</div></div><div class="card-body"><div class="card-dest">${t.dest}</div><div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div><div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
   return a;
 }
 function renderDynamicTrips(trips){
@@ -680,8 +684,8 @@ async function createTrip(){
   const btn=document.getElementById('create-btn');
   const dest=document.getElementById('m-dest').value.trim();
   if(!dest){document.getElementById('m-dest').focus();return;}
-  const dep=document.getElementById('m-dep').value.trim();
-  const ret=document.getElementById('m-ret').value.trim();
+  const depRaw=document.getElementById('m-dep').value.trim(); const dep=depRaw ? depRaw.split('-').reverse().join('/') : '';
+  const retRaw=document.getElementById('m-ret').value.trim(); const ret=retRaw ? retRaw.split('-').reverse().join('/') : '';
   const trav=document.getElementById('m-trav').value.trim()||'2';
   const status=document.getElementById('m-status').value;
   const slug=dest.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
