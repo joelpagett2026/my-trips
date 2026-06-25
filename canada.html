@@ -92,5 +92,6 @@ document.querySelectorAll('.hdr-field').forEach(el=>el.addEventListener('input',
 async function init(){let state=null;if(SB_URL&&SB_KEY){state=await dbLoad();}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{setStatus(SB_URL?'saving':'error',SB_URL?'Not yet saved':'Connect Supabase via the China page');}document.getElementById('loading').classList.add('hidden');}
 init();
 </script>
+<script src="/datepicker.js"></script>
 </body>
 </html>
