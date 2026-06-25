@@ -35,7 +35,7 @@ if ($return !== 0) {
 
 // ── COPY FILES TO PUBLIC_HTML ─────────────────────────────────────────
 $files = [
-    'api.php', 'auth.js', 'db.js', 'itinerary-style.css',
+    'api.php', 'auth.js', 'db.js', 'datepicker.js', 'itinerary-style.css',
     'index.html', 'settings.html', 'china.html', 'dubai.html',
     'costa-rica.html', 'canada.html', 'hong-kong-taiwan.html', 'new-trip.html'
 ];
