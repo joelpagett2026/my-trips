@@ -376,45 +376,33 @@ function parseAnyDate(str) {
   return null;
 }
 
-// Build list from PLANNED hardcoded trips
-const plannedUpcoming = Object.values(PLANNED).map(t => ({
-  name: t.name,
-  depDate: parseAnyDate(t.startDate),
-  retDate: parseAnyDate(t.endDate),
-  flagPrimary: t.flagPrimary,
-  url: t.url,
-  dep: t.startDate,
-  ret: t.endDate,
-}));
-
-// Merge with registry trips loaded async, then kick off countdown
+// Drive countdown entirely from registry (no hardcoded duplicates)
 async function initCountdown() {
-  let registryTrips = [];
+  let allTrips = [];
   try {
     const reg = await window.dbLoadRegistry();
-    registryTrips = (reg || []).map(t => ({
-      name: t.dest,
-      depDate: parseAnyDate(t.dep),
-      retDate: parseAnyDate(t.ret),
-      flagPrimary: null,
-      url: `/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&slug=${encodeURIComponent(t.slug)}`,
-      dep: t.dep,
-      ret: t.ret,
-    }));
+    allTrips = (reg || [])
+      .filter(t => !t.deleted)
+      .map(t => ({
+        name: t.dest,
+        depDate: parseAnyDate(t.dep),
+        retDate: parseAnyDate(t.ret),
+        flags: t.flags || [],
+        url: t.url || `/${t.slug}.html`,
+        dep: t.dep,
+        ret: t.ret,
+      }))
+      .filter(t => t.depDate && t.depDate > TODAY)
+      .sort((a, b) => a.depDate - b.depDate);
   } catch { /* no registry yet */ }
-
-  // Merge all trips, filter to those whose departure hasn't passed yet
-  const allTrips = [...plannedUpcoming, ...registryTrips]
-    .filter(t => t.depDate && t.depDate > TODAY)
-    .sort((a, b) => a.depDate - b.depDate);
 
   // COUNTDOWN — show the soonest upcoming trip
   if (allTrips.length > 0) {
     const next = allTrips[0];
     document.getElementById('cd-name').textContent = next.name;
     const flagEl = document.getElementById('cd-flag');
-    if (next.flagPrimary) {
-      flagEl.src = `https://flagcdn.com/w80/${next.flagPrimary}.png`;
+    if (next.flags && next.flags.length) {
+      flagEl.src = `https://flagcdn.com/w80/${next.flags[0]}.png`;
       flagEl.style.display = '';
     } else {
       flagEl.style.display = 'none';
@@ -441,8 +429,8 @@ async function initCountdown() {
       const a = document.createElement('a');
       a.href = t.url;
       a.style.cssText = `text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;padding:10px 0;${i < allTrips.length-1 ? 'border-bottom:0.5px solid rgba(0,0,0,0.06);' : ''}`;
-      const flagHtml = t.flagPrimary
-        ? `<img class="dash-trip-flag" src="https://flagcdn.com/w80/${t.flagPrimary}.png" alt="${t.flagPrimary}" style="width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;">`
+      const flagHtml = t.flags && t.flags.length
+        ? t.flags.map(cc => `<img class="dash-trip-flag" src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" style="width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;">`).join('')
         : `<div style="width:28px;height:19px;border-radius:3px;background:#e8e8e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="2"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg></div>`;
       a.innerHTML = `${flagHtml}<div><div class="dash-trip-name">${t.name}</div><div class="dash-trip-date">${t.dep} → ${t.ret}</div></div><svg style="margin-left:auto;flex-shrink:0;" width="7" height="11" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="#c7c7cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       upcomingEl.appendChild(a);
