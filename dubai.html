@@ -320,8 +320,10 @@ async function deleteTrip() {
   if (!confirm("Delete this itinerary? This cannot be undone.")) return;
   try {
     await window.dbDelete(RECORD_ID);
-    const trips = await window.dbLoadRegistry();
-    const updated = trips.filter(t => t.slug !== RECORD_ID);
+    const registry = await window.dbLoadRegistry();
+    // Remove the trip entry and add a deleted marker so it doesn't re-seed
+    const updated = registry.filter(t => t.slug !== RECORD_ID && t.deleted !== RECORD_ID);
+    updated.push({ deleted: RECORD_ID });
     await window.dbSaveRegistry(updated);
   } catch { /* silent — still redirect */ }
   window.location.href = "/";
