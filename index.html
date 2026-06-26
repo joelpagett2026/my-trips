@@ -852,17 +852,19 @@ async function createTrip(){
   btn.textContent='Creating…'; btn.disabled=true;
 
   try {
-    // Geocode destination to get map point and country flag
+    // Geocode destination (non-blocking — failure won't stop creation)
     let points = [], flags = [], cities = [dest];
-    const geo = await geocode(dest);
-    if (geo) {
-      points = [[geo.lat, geo.lon]];
-      if (geo.cc) flags = [geo.cc];
-    }
+    try {
+      const geo = await geocode(dest);
+      if (geo) {
+        points = [[geo.lat, geo.lon]];
+        if (geo.cc) flags = [geo.cc];
+      }
+    } catch(geoErr) { /* geocode failed silently, card will show without map */ }
 
     // Create the dedicated HTML page on the server
     const res = await apiCall('create_page', {}, {slug, dest, dep, ret, trav, status});
-    const url = res && res.url ? res.url : '/new-trip.html?' + new URLSearchParams({dest,dep,ret,trav,status,slug}).toString();
+    const url = res && res.url ? res.url : '/' + slug + '.html';
 
     // Register in trip registry with map data
     const existing = await loadRegistry();
@@ -871,6 +873,7 @@ async function createTrip(){
 
     window.location.href = url;
   } catch(e) {
+    console.error('createTrip error:', e);
     btn.textContent='Create itinerary →'; btn.disabled=false;
     alert('Could not create itinerary page. Please try again.');
   }
