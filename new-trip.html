@@ -294,11 +294,15 @@ async function manualSave() {
   }, 2000);
 }
 
-// Parse a date string like "29 Aug 2026" into a Date object
+// Parse a date string in dd/mm/yyyy format into a Date object
 function parseDisplayDate(str) {
   if (!str) return null;
-  const d = new Date(str);
-  return isNaN(d) ? null : d;
+  const parts = str.split('/');
+  if (parts.length === 3) {
+    const [d, m, y] = parts.map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return null;
 }
 
 // Format a Date as dd/mm/yyyy (matches datepicker format)
