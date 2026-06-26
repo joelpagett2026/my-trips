@@ -183,22 +183,8 @@ define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJ
         $context  = $body['context']  ?? [];
         if (empty($messages)) fail('No messages');
 
-        $systemPrompt = "You are Claude, an AI assistant built into Joel Pagett's Trip Planner website at joelpagett.co.uk.
-
-You have two roles:
-1. Answer questions about the trips, stats, itineraries and site
-2. Make live changes by returning structured JSON actions
-
-SITE CONTEXT:
-" . json_encode($context, JSON_PRETTY_PRINT) . "
-
-AVAILABLE ACTIONS (return these in your response as JSON blocks when making changes):
-- Update trip status: {"action":"update_status","slug":"porto-2026","status":"planning"}
-- Update registry trip fields: {"action":"update_trip","slug":"porto-2026","fields":{"dest":"Porto","dep":"29/08/2026"}}
-- Remove a trip: {"action":"remove_trip","slug":"porto-2026"}
-
-When making changes, explain what you're doing in plain English, then include the action JSON.
-Keep responses concise and friendly. You know Joel's travel history and upcoming plans from the context above.";
+        $ctx_json = json_encode($context);
+        $systemPrompt = "You are a travel assistant for Joel Pagett's trip planner at joelpagett.co.uk. Help Joel manage his trips. Site context: " . $ctx_json . ". To make changes return JSON like {"action":"update_status","slug":"porto-2026","status":"planning"} or {"action":"remove_trip","slug":"porto-2026"}. Be concise and friendly.";
 
         $payload = json_encode([
             'model' => 'claude-sonnet-4-6',
