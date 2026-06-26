@@ -161,7 +161,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .cell-inp:focus{background:rgba(14,122,135,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
-.cell-ta{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#333333;width:100%;outline:none;padding:0;resize:none;line-height:1.5;min-height:36px;letter-spacing:-0.1px;}
+.cell-ta{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#333333;width:100%;outline:none;padding:0;resize:none;line-height:1.5;min-height:36px;letter-spacing:-0.1px;overflow:hidden;}
 .cell-ta::placeholder{color:#b8b8b8;}
 .cell-ta:focus{background:rgba(14,122,135,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
 
