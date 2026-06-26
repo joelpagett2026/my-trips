@@ -313,6 +313,12 @@ const DEFAULTS = [
 ];
 
 async function init() {
+  // Read live status from registry so toggles persist
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip = trips.find(t => t.slug === RECORD_ID);
+    if (trip && trip.status) currentStatus = trip.status;
+  } catch { /* use baked status */ }
   let state = null;
   try { state = await dbLoad(); } catch(e) { console.error('Load failed', e); }
   if (state && state.days && state.days.length) { restoreState(state); setStatus('saved', 'All saved'); }

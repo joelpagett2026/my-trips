@@ -91,7 +91,13 @@ function addDay(d){d=d||{};const card=document.createElement('div');card.classNa
 function recalc(){const cards=document.querySelectorAll('.day-card');document.getElementById('s-days').textContent=cards.length;let acc=0;cards.forEach(c=>c.querySelectorAll('.cost-inp').forEach(i=>{acc+=parseFloat(i.value)||0;}));document.getElementById('s-acc').textContent='£'+acc.toFixed(0);document.getElementById('s-total').textContent='£'+acc.toFixed(0);}
 function restoreState(state){if(state.header){document.getElementById('hdr-dest').value=state.header.dest||'';document.getElementById('hdr-dep').value=state.header.dep||'';document.getElementById('hdr-ret').value=state.header.ret||'';document.getElementById('hdr-trav').value=state.header.trav||'';}if(state.days)state.days.forEach(d=>addDay(d));}
 document.querySelectorAll('.hdr-field').forEach(el=>el.addEventListener('input',scheduleSave));
-async function init(){let state=null;if(SB_URL&&SB_KEY){state=await dbLoad();}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{setStatus(SB_URL?'saving':'error',SB_URL?'Not yet saved':'Connect Supabase via the China page');}document.getElementById('loading').classList.add('hidden');}
+async function init(){  // Read live status from registry so toggles persist
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip = trips.find(t => t.slug === RECORD_ID);
+    if (trip && trip.status) currentStatus = trip.status;
+  } catch { /* use baked status */ }
+let state=null;if(SB_URL&&SB_KEY){state=await dbLoad();}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{setStatus(SB_URL?'saving':'error',SB_URL?'Not yet saved':'Connect Supabase via the China page');}document.getElementById('loading').classList.add('hidden');}
 init();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 function renderStatusBadge() {

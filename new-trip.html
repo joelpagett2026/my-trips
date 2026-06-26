@@ -91,7 +91,7 @@ function renderStatusBadge() {
 }
 
 async function cycleStatus() {
-  if (currentStatus === 'past') return; // auto-set, not manually toggled
+  if (currentStatus === 'past') return;
   currentStatus = currentStatus === 'upcoming' ? 'planning' : 'upcoming';
   renderStatusBadge();
   // Update in registry
@@ -351,6 +351,7 @@ function restoreState(state) {
   if (state.days) state.days.forEach(d => addDay(d));
 }
 document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", scheduleSave); });
+renderStatusBadge(); // Show correct badge immediately on load
 
 async function manualSave() {
   const btn = document.getElementById('nav-save-btn');
@@ -398,6 +399,13 @@ function generateDaysFromDates() {
 }
 
 async function init() {
+  // Read live status from registry (overrides baked-in value so toggles persist)
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip = trips.find(t => t.slug === RECORD_ID);
+    if (trip && trip.status) currentStatus = trip.status;
+  } catch { /* use baked status */ }
+
   let state = null;
   try { state = await loadData(); } catch { /* silent */ }
   if (state && state.days && state.days.length) {
