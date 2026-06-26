@@ -822,31 +822,10 @@ async function renderDynamicTrips(trips) {
     grid.appendChild(card);
   }
 }
-// Seed known trips into registry if not already present
-const SEED_TRIPS = [
-  { dest:'Canada Road Trip',    dep:'25/09/2027', ret:'10/10/2027', trav:'2', status:'upcoming',  slug:'canada-2027',       url:'/canada.html' },
-  { dest:'Hong Kong & Taiwan',  dep:'27/03/2027', ret:'12/04/2027', trav:'2', status:'planning',  slug:'hk-taiwan-2027',    url:'/hong-kong-taiwan.html' },
-  { dest:'China',               dep:'31/03/2026', ret:'17/04/2026', trav:'2', status:'past',      slug:'china-2026',        url:'/china.html' },
-  { dest:'Dubai & Abu Dhabi',   dep:'26/12/2025', ret:'09/01/2026', trav:'2', status:'past',      slug:'dubai-2025',        url:'/dubai.html' },
-  { dest:'Costa Rica',          dep:'04/04/2025', ret:'21/04/2025', trav:'2', status:'past',      slug:'costa-rica-2025',   url:'/costa-rica.html' },
-];
-
 async function seedAndRender() {
-  let registry = await loadRegistry();
-  // Registry stores both trips (objects with slug) and deleted markers ({ deleted: slug })
-  const deletedSlugs = new Set(
-    registry.filter(r => r.deleted).map(r => r.deleted)
-  );
+  const registry = await loadRegistry();
+  // Filter out deleted markers, render remaining trips
   const trips = registry.filter(r => !r.deleted);
-  const slugs = new Set(trips.map(t => t.slug));
-  let changed = false;
-  for (const seed of SEED_TRIPS) {
-    if (!slugs.has(seed.slug) && !deletedSlugs.has(seed.slug)) {
-      trips.push({ ...seed, created: 0 });
-      changed = true;
-    }
-  }
-  if (changed) await saveRegistry([...trips, ...Array.from(deletedSlugs).map(s => ({ deleted: s }))]);
   renderDynamicTrips(trips);
 }
 
