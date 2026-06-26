@@ -426,7 +426,12 @@ async function init() {
     document.getElementById('loading').classList.add('hidden');
   }
 }
-init();
+// Wait for auth before initialising
+if (typeof isAuthed === 'function' && isAuthed()) {
+  init();
+} else {
+  document.addEventListener('mytrips:authed', init, { once: true });
+}
 async function deleteTrip() {
   if (!confirm("Delete this itinerary? This cannot be undone.")) return;
   try {
