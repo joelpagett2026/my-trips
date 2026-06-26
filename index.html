@@ -264,12 +264,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     <!-- Countdown to next trip -->
     <div class="dash-countdown" id="dash-countdown">
       <div class="dash-countdown-label">Next adventure</div>
-      <div class="dash-countdown-dest" id="cd-dest">
-        <img src="https://flagcdn.com/w80/hk.png" alt="" id="cd-flag">
-        <span id="cd-name">Hong Kong & Taiwan</span>
-      </div>
-      <div class="dash-countdown-timer">
-        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-days">—</div><div class="dash-cd-unit">days to go</div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div class="dash-countdown-dest" id="cd-dest" style="margin-bottom:0;">
+          <img src="https://flagcdn.com/w80/hk.png" alt="" id="cd-flag">
+          <span id="cd-name">Hong Kong & Taiwan</span>
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+          <div class="dash-cd-num" id="cd-days" style="font-size:24px;font-weight:700;color:#fff;line-height:1;">—</div>
+          <div class="dash-cd-unit" style="font-size:9px;color:rgba(255,255,255,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">days to go</div>
+        </div>
       </div>
       <div class="dash-countdown-stars"></div>
     </div>
