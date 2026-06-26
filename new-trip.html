@@ -29,8 +29,8 @@
     </div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="opacity:0.4;" disabled>Undo</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 
-<div class="large-title-area" style="padding-top:16px;">
-  <div class="large-title" id="page-title">New Trip</div>
+<div class="large-title-area">
+  <div class="large-title"><img id="page-flag" style="display:none;" class="page-title-flag"><span id="page-title">New Trip</span></div>
   <div class="large-subtitle" id="page-sub"></div>
 </div>
 
@@ -145,6 +145,19 @@ function checkAutoComplete() {
 
 // Pre-fill header
 document.getElementById('page-title').textContent = dest;
+// Load flag from registry
+(async () => {
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip = trips.find(t => t.slug === RECORD_ID);
+    const flags = trip && trip.flags;
+    if (flags && flags.length) {
+      const flagEl = document.getElementById('page-flag');
+      flagEl.src = 'https://flagcdn.com/w80/' + flags[0] + '.png';
+      flagEl.style.display = 'inline-block';
+    }
+  } catch {}
+})();
 const _nt = document.getElementById('nav-title'); if(_nt) _nt.textContent = dest;
 document.getElementById('page-sub').textContent   = [dep, ret].filter(Boolean).join(' – ');
 document.getElementById('hdr-dest').value = dest;

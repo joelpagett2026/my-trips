@@ -4,7 +4,7 @@
 body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-height:100vh;}
 
 /* NAV */
-.nav{background:rgba(232,232,232,0.92);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.2);padding:0 16px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav{background:rgba(232,232,232,0.95);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(0,0,0,0.08);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .nav-back{display:flex;align-items:center;gap:4px;font-size:17px;font-weight:400;color:#0e7a87;text-decoration:none;cursor:pointer;}
 .nav-back svg{margin-right:2px;}
 .nav-title{font-size:17px;font-weight:600;letter-spacing:-0.4px;color:#444444;}
@@ -19,9 +19,9 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .nav-status.error{color:#ff6b6b;}
 
 /* LARGE TITLE */
-.large-title-area{padding:8px 20px 0;}
-.large-title{font-size:34px;font-weight:700;letter-spacing:-0.5px;color:#444444;line-height:1.1;}
-.large-subtitle{font-size:15px;color:#666666;opacity:0.6;margin-top:4px;letter-spacing:-0.2px;}
+.large-title-area{padding:16px 20px 0;}
+.large-title{font-size:28px;font-weight:700;letter-spacing:-0.3px;color:#444444;line-height:1.1;display:flex;align-items:center;gap:12px;}
+.large-subtitle{font-size:13px;color:#555555;margin-top:4px;letter-spacing:-0.2px;font-weight:500;}
 
 /* SETUP BANNER */
 #setup-banner{background:#fff;border-radius:16px;margin:16px 20px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
@@ -219,3 +219,5 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .status-toggle-opt svg{flex-shrink:0;transition:transform 0.2s;}
 .status-toggle-opt.active-upcoming svg,.status-toggle-opt.active-planning svg{transform:scale(1.15);}
 .status-toggle.is-past{opacity:0.45;pointer-events:none;}
+
+.page-title-flag{width:32px;height:22px;border-radius:4px;object-fit:cover;box-shadow:0 1px 4px rgba(0,0,0,0.2);flex-shrink:0;}
