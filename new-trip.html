@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css">
+<link rel="stylesheet" href="/itinerary-style.css?v=2">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -18,7 +18,7 @@
     My Trips
   </a>
   <div class="nav-title" id="nav-title">New Trip</div>
-  <div class="nav-actions"><div class="nav-status saved" id="nav-status"><div class="status-dot"></div><span id="nav-status-label">All saved</span></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
+  <div class="nav-actions"><div class="nav-status saved" id="nav-status"><div class="status-dot"></div><span id="nav-status-label">All saved</span></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="opacity:0.4;" disabled>Undo</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 
 <div class="large-title-area" style="padding-top:16px;">
@@ -77,6 +77,25 @@ document.getElementById('hdr-trav').value = trav;
 document.title = dest + ' · Itinerary';
 
 let saveTimer = null;
+const undoStack = [];
+const UNDO_LIMIT = 10;
+function pushUndo() {
+  undoStack.push(JSON.stringify(collectState()));
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  document.getElementById('undo-btn').disabled = false;
+  document.getElementById('undo-btn').style.opacity = '1';
+}
+function undoState() {
+  if (!undoStack.length) return;
+  const prev = JSON.parse(undoStack.pop());
+  document.getElementById('days').innerHTML = '';
+  restoreState(prev);
+  scheduleSave();
+  if (!undoStack.length) {
+    document.getElementById('undo-btn').disabled = true;
+    document.getElementById('undo-btn').style.opacity = '0.4';
+  }
+}
 
 function setStatus(s, m) { const el = document.getElementById('nav-status'); if(el){ el.className = 'nav-status ' + s; } const lbl = document.getElementById('nav-status-label'); if(lbl) lbl.textContent = m; }
 
@@ -105,6 +124,7 @@ async function ensureRegistered() {
 }
 
 function scheduleSave() {
+  pushUndo();
   setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveData(collectState()), 1400);
