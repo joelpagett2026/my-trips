@@ -173,19 +173,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 <div class="trips-col">
 
   <div class="section" style="padding-top:16px;">
-    <div class="section-title">2027 <span style="font-size:13px;font-weight:500;color:#b8b8b8;letter-spacing:0;">Trips</span></div>
+    <div class="section-title">2027 <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div>
     <div class="trips-grid" id="year-grid-2027"></div>
   </div>
 
   <div class="year-divider"></div>
 
   <div class="section">
-    <div class="section-title">2026 <span style="font-size:13px;font-weight:500;color:#b8b8b8;letter-spacing:0;">Trips</span></div>
+    <div class="section-title">2026 <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div>
     <div class="trips-grid" id="year-grid-2026"></div>
 
     <div class="year-divider"></div>
 
-    <div class="section-title" style="padding:0 0 10px;">2025 <span style="font-size:13px;font-weight:500;color:#b8b8b8;letter-spacing:0;">Trips</span></div>
+    <div class="section-title" style="padding:0 0 10px;">2025 <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div>
     <div class="trips-grid" id="year-grid-2025"></div>
   </div>
 
@@ -854,7 +854,7 @@ function getOrCreateYearGrid(year) {
 
   const divider = document.createElement('div'); divider.className = 'year-divider';
   const section = document.createElement('div'); section.className = 'section'; section.dataset.year = year;
-  section.innerHTML = `<div class="section-title">${year} <span style="font-size:13px;font-weight:500;color:#b8b8b8;letter-spacing:0;">Trips</span></div><div class="trips-grid" id="${id}"></div>`;
+  section.innerHTML = `<div class="section-title">${year} <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div><div class="trips-grid" id="${id}"></div>`;
 
   tripsCol.insertBefore(divider, insertBefore);
   tripsCol.insertBefore(section, insertBefore);
