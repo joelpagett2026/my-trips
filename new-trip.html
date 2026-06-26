@@ -118,7 +118,7 @@ function checkAutoComplete() {
 
 // Pre-fill header
 document.getElementById('page-title').textContent = dest;
-document.getElementById('nav-title').textContent  = dest;
+const _nt = document.getElementById('nav-title'); if(_nt) _nt.textContent = dest;
 document.getElementById('page-sub').textContent   = [dep, ret].filter(Boolean).join(' – ');
 document.getElementById('hdr-dest').value = dest;
 document.getElementById('hdr-dep').value  = dep;
@@ -349,7 +349,7 @@ function restoreState(state) {
     document.getElementById('hdr-ret').value  = state.header.ret  || ret;
     document.getElementById('hdr-trav').value = state.header.trav || trav;
     document.getElementById('page-title').textContent = state.header.dest || dest;
-    document.getElementById('nav-title').textContent  = state.header.dest || dest;
+    const _nt2 = document.getElementById('nav-title'); if(_nt2) _nt2.textContent = state.header.dest || dest;
   }
   if (state.days) state.days.forEach(d => addDay(d));
 }
