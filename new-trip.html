@@ -135,11 +135,11 @@ async function setStatus_toggle(newStatus) {
 
 
 function checkAutoComplete() {
-  if (!ret) return;
-  const parts = ret.split('/');
+  if (!dep) return;
+  const parts = dep.split('/');
   if (parts.length !== 3) return;
-  const retDate = new Date(parts[2], parts[1]-1, parts[0]);
-  if (retDate < new Date()) currentStatus = 'past';
+  const depDate = new Date(parts[2], parts[1]-1, parts[0]);
+  if (depDate <= new Date()) currentStatus = 'past';
   renderStatusToggle();
 }
 
