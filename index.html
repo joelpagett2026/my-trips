@@ -786,18 +786,32 @@ function extractYear(dep) {
   return null;
 }
 
+function parseDepDate(dep) {
+  if (!dep) return new Date(0);
+  // dd/mm/yyyy
+  const m = dep.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(m[3], m[2]-1, m[1]);
+  return new Date(dep);
+}
+
 function renderDynamicTrips(trips) {
   if (!trips.length) return;
-  trips.sort((a, b) => {
-    const ya = extractYear(a.dep) || '0';
-    const yb = extractYear(b.dep) || '0';
-    return yb.localeCompare(ya);
-  });
+
+  // Group by year
+  const byYear = {};
   for (const t of trips) {
-    const card = buildDynamicCard(t);
     const year = extractYear(t.dep) || '0';
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(t);
+  }
+
+  // For each year, sort: latest departure date first (left), soonest last (right, next to completed)
+  for (const year of Object.keys(byYear).sort((a,b) => b-a)) {
+    byYear[year].sort((a, b) => parseDepDate(b.dep) - parseDepDate(a.dep));
     const grid = getOrCreateYearGrid(year);
-    grid.appendChild(card);
+    for (const t of byYear[year]) {
+      grid.appendChild(buildDynamicCard(t));
+    }
   }
 }
 async function seedAndRender() {
