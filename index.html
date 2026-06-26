@@ -269,10 +269,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
         <span id="cd-name">Hong Kong & Taiwan</span>
       </div>
       <div class="dash-countdown-timer">
-        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-days">—</div><div class="dash-cd-unit">days</div></div>
-        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-hrs">—</div><div class="dash-cd-unit">hrs</div></div>
-        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-min">—</div><div class="dash-cd-unit">min</div></div>
-        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-sec">—</div><div class="dash-cd-unit">sec</div></div>
+        <div class="dash-cd-block"><div class="dash-cd-num" id="cd-days">—</div><div class="dash-cd-unit">days to go</div></div>
       </div>
       <div class="dash-countdown-stars"></div>
     </div>
@@ -482,14 +479,7 @@ async function initCountdown() {
       const now = new Date();
       const diff = targetDate - now;
       if (diff <= 0) { document.getElementById('dash-countdown').style.display='none'; return; }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      document.getElementById('cd-days').textContent = d;
-      document.getElementById('cd-hrs').textContent  = String(h).padStart(2,'0');
-      document.getElementById('cd-min').textContent  = String(m).padStart(2,'0');
-      document.getElementById('cd-sec').textContent  = String(s).padStart(2,'0');
+      document.getElementById('cd-days').textContent = Math.ceil(diff / 86400000);
     }
     updateCountdown();
     setInterval(updateCountdown, 1000);
