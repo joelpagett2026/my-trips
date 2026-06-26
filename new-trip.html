@@ -25,6 +25,10 @@
   <div class="large-title" id="page-title">New Trip</div>
   <div class="large-subtitle" id="page-sub"></div>
 </div>
+<div class="status-badge-wrap">
+  <button class="status-badge-btn" id="status-badge" onclick="cycleStatus()"></button>
+  <span class="status-toggle-hint" id="status-hint"></span>
+</div>
 
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
@@ -65,6 +69,49 @@ const slug   = params.get('slug') || 'new-trip';
 
 // Use slug as the database record ID
 const RECORD_ID = slug;
+
+// ── STATUS BADGE ──────────────────────────────────────────────────────
+let currentStatus = status;
+
+function renderStatusBadge() {
+  const badge = document.getElementById('status-badge');
+  const hint  = document.getElementById('status-hint');
+  if (!badge) return;
+  badge.className = 'status-badge-btn ' + currentStatus;
+  if (currentStatus === 'upcoming') {
+    badge.textContent = '✈ Upcoming';
+    hint.textContent  = 'Click to mark as Planning';
+  } else if (currentStatus === 'planning') {
+    badge.textContent = '✦ Planning';
+    hint.textContent  = 'Click to mark as Upcoming';
+  } else {
+    badge.textContent = '✓ Completed';
+    hint.textContent  = '';
+  }
+}
+
+async function cycleStatus() {
+  if (currentStatus === 'past') return; // auto-set, not manually toggled
+  currentStatus = currentStatus === 'upcoming' ? 'planning' : 'upcoming';
+  renderStatusBadge();
+  // Update in registry
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip  = trips.find(t => t.slug === RECORD_ID);
+    if (trip) { trip.status = currentStatus; await window.dbSaveRegistry(trips); }
+  } catch { /* silent */ }
+}
+
+function checkAutoComplete() {
+  if (!ret) return;
+  const parts = ret.split('/');
+  if (parts.length !== 3) return;
+  const retDate = new Date(parts[2], parts[1]-1, parts[0]);
+  if (retDate < new Date()) {
+    currentStatus = 'past';
+  }
+  renderStatusBadge();
+}
 
 // Pre-fill header
 document.getElementById('page-title').textContent = dest;
@@ -361,6 +408,7 @@ async function init() {
     setStatus('saving', 'Not yet saved');
   }
   document.getElementById('loading').classList.add('hidden');
+  checkAutoComplete();
 }
 init();
 async function deleteTrip() {

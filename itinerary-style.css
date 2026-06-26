@@ -199,3 +199,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .day-card{border:none;border-radius:0;box-shadow:none;page-break-after:always;break-after:page;min-height:100vh;padding:28px 36px;}
   .day-card:last-child{page-break-after:avoid;}
 }
+
+/* ── STATUS BADGE ─────────────────────────────────────────────────── */
+.status-badge-wrap{padding:8px 20px 0;display:flex;align-items:center;gap:8px;}
+.status-badge-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;letter-spacing:0.04em;text-transform:uppercase;transition:all 0.15s;}
+.status-badge-btn.upcoming{background:rgba(14,122,135,0.12);color:#0e7a87;}
+.status-badge-btn.upcoming:hover{background:rgba(14,122,135,0.22);}
+.status-badge-btn.planning{background:rgba(255,149,0,0.12);color:#c07000;}
+.status-badge-btn.planning:hover{background:rgba(255,149,0,0.22);}
+.status-badge-btn.past{background:rgba(100,100,110,0.12);color:#666666;cursor:default;}
+.status-toggle-hint{font-size:11px;color:#b8b8b8;font-weight:500;}

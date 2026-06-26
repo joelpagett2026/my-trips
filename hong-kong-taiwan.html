@@ -22,6 +22,10 @@
   <div class="large-title">Hong Kong & Taiwan</div>
   <div class="large-subtitle">Mar – Apr 2027</div>
 </div>
+<div class="status-badge-wrap">
+  <button class="status-badge-btn" id="status-badge" onclick="cycleStatus()"></button>
+  <span class="status-toggle-hint" id="status-hint"></span>
+</div>
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
   <div class="stat-card"><div class="stat-val sv-orange">2</div><div class="stat-lbl">Cities</div></div>
@@ -89,6 +93,41 @@ function restoreState(state){if(state.header){document.getElementById('hdr-dest'
 document.querySelectorAll('.hdr-field').forEach(el=>el.addEventListener('input',scheduleSave));
 async function init(){let state=null;if(SB_URL&&SB_KEY){state=await dbLoad();}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{setStatus(SB_URL?'saving':'error',SB_URL?'Not yet saved':'Connect Supabase via the China page');}document.getElementById('loading').classList.add('hidden');}
 init();
+// ── STATUS BADGE ──────────────────────────────────────────────────────
+function renderStatusBadge() {
+  const badge = document.getElementById('status-badge');
+  const hint  = document.getElementById('status-hint');
+  if (!badge) return;
+  badge.className = 'status-badge-btn ' + currentStatus;
+  if (currentStatus === 'upcoming') {
+    badge.textContent = '✈ Upcoming';
+    hint.textContent  = 'Click to mark as Planning';
+  } else if (currentStatus === 'planning') {
+    badge.textContent = '✦ Planning';
+    hint.textContent  = 'Click to mark as Upcoming';
+  } else {
+    badge.textContent = '✓ Completed';
+    hint.textContent  = '';
+  }
+}
+async function cycleStatus() {
+  if (currentStatus === 'past') return;
+  currentStatus = currentStatus === 'upcoming' ? 'planning' : 'upcoming';
+  renderStatusBadge();
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip  = trips.find(t => t.slug === RECORD_ID);
+    if (trip) { trip.status = currentStatus; await window.dbSaveRegistry(trips); }
+  } catch { /* silent */ }
+}
+function checkAutoComplete() {
+  const parts = '12/04/2027'.split('/');
+  if (parts.length === 3) {
+    const retDate = new Date(parts[2], parts[1]-1, parts[0]);
+    if (retDate < new Date()) currentStatus = 'past';
+  }
+  renderStatusBadge();
+}
 async function deleteTrip() {
   if (!confirm("Delete this itinerary? This cannot be undone.")) return;
   try {
