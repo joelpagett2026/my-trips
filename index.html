@@ -695,7 +695,7 @@ function buildDynamicCard(t) {
     <div class="card-dest">${t.dest}</div>
     <div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div>
     ${cityTagsHtml ? `<div class="card-cities">${cityTagsHtml}</div>` : ''}
-    <div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="card-footer" style="margin-top:8px;"><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   </div>`;
 
   // Render map — use stored points if available, else geocode destination
