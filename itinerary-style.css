@@ -67,7 +67,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 /* DAY CARDS */
 .days{padding:0 20px 16px;display:flex;flex-direction:column;gap:14px;}
 
-.day-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07),0 0 0 0.5px rgba(0,0,0,0.05);}
+.day-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);}
 
 /* Section bars within day cards */
 .sec-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;border-bottom:0.5px solid rgba(0,0,0,0.08);}
@@ -77,29 +77,29 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .sec-bar .del-sec-btn:hover{background:rgba(255,59,48,0.1);color:#ff3b30;}
 
 /* Date — blue */
-.s-date .sec-bar{background:rgba(14,122,135,0.06);color:#0e7a87;}
+.s-date .sec-bar{background:rgba(14,122,135,0.07);color:#0e7a87;}
 .s-date .row-inner{background:rgba(14,122,135,0.02);}
 .s-date .cell-lbl{color:#0e7a87;opacity:0.7;}
 
 /* Transport — indigo */
-.s-trans .sec-bar{background:rgba(88,86,214,0.06);color:#5856d6;}
-.s-trans .row-inner{background:rgba(88,86,214,0.02);}
-.s-trans .cell-lbl{color:#5856d6;opacity:0.7;}
+.s-trans .sec-bar{background:rgba(14,122,135,0.07);color:#0e7a87;}
+.s-trans .row-inner{background:rgba(14,122,135,0.02);}
+.s-trans .cell-lbl{color:#0e7a87;opacity:0.7;}
 
 /* Accommodation — purple */
-.s-acc .sec-bar{background:rgba(175,82,222,0.07);color:#af52de;}
-.s-acc .row-inner{background:rgba(175,82,222,0.02);}
-.s-acc .cell-lbl{color:#af52de;opacity:0.7;}
+.s-acc .sec-bar{background:rgba(14,122,135,0.07);color:#0e7a87;}
+.s-acc .row-inner{background:rgba(14,122,135,0.02);}
+.s-acc .cell-lbl{color:#0e7a87;opacity:0.7;}
 
 /* Food — orange */
-.s-food .sec-bar{background:rgba(255,149,0,0.07);color:#ff9500;}
-.s-food .row-inner{background:rgba(255,149,0,0.02);}
-.s-food .cell-lbl{color:#ff9500;opacity:0.8;}
+.s-food .sec-bar{background:rgba(14,122,135,0.07);color:#0e7a87;}
+.s-food .row-inner{background:rgba(14,122,135,0.02);}
+.s-food .cell-lbl{color:#0e7a87;opacity:0.7;}
 
 /* Itinerary — pink */
-.s-itin .sec-bar{background:rgba(255,45,85,0.06);color:#ff2d55;}
-.s-itin .row-inner{background:rgba(255,45,85,0.02);}
-.s-itin .cell-lbl{color:#ff2d55;opacity:0.7;}
+.s-itin .sec-bar{background:rgba(14,122,135,0.07);color:#0e7a87;}
+.s-itin .row-inner{background:rgba(14,122,135,0.02);}
+.s-itin .cell-lbl{color:#0e7a87;opacity:0.7;}
 
 .row-inner{display:grid;}
 .cell{padding:8px 14px;border-right:0.5px solid rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:3px;}
@@ -170,13 +170,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .row-del-btn:hover{background:rgba(255,59,48,0.1);color:#ff3b30;}
 
 /* Day number badge */
-.day-badge{background:#0e7a87;color:#fff;min-width:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border-right:0.5px solid rgba(14,122,135,0.2);flex-shrink:0;}
+.day-badge{background:linear-gradient(135deg,#0e7a87,#0d9e8c);color:#fff;min-width:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;border-right:0.5px solid rgba(14,122,135,0.2);flex-shrink:0;}
 .day-badge .db-label{font-size:9px;opacity:0.7;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
 .day-badge-num{font-size:20px;font-weight:700;letter-spacing:-0.5px;color:#fff;background:transparent;border:none;width:36px;text-align:center;outline:none;font-family:'Montserrat',sans-serif;}
 .day-top{display:flex;}
 
 .itin-period{background:rgba(255,45,85,0.04);border-right:2px solid rgba(255,45,85,0.15)!important;}
-.itin-period .cell-inp{color:#ff2d55;font-weight:600;}
+.itin-period .cell-inp{color:#0e7a87;font-weight:600;}
 
 /* Add day button */
 .add-day{margin:0 20px 12px;background:#fff;border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:15px;font-weight:600;color:#0e7a87;font-family:'Montserrat',sans-serif;transition:all 0.15s;width:calc(100% - 40px);box-shadow:0 1px 3px rgba(0,0,0,0.07),0 0 0 0.5px rgba(0,0,0,0.05);}
