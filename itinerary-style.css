@@ -70,8 +70,8 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .day-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);}
 
 /* Section bars within day cards */
-.sec-bar{display:flex;align-items:center;gap:8px;padding:10px 14px 6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-bottom:2px solid #0e7a87;background:transparent;color:#333333;}
-.sec-bar .sec-label{flex:1;letter-spacing:0.08em;}
+.sec-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;border-bottom:0.5px solid rgba(0,0,0,0.07);background:#fff;color:#333333;}
+.sec-bar .sec-label{flex:1;display:inline-flex;align-items:center;gap:7px;}.sec-bar .sec-label-text{background:#0e7a87;color:#fff;border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;letter-spacing:0.05em;}
 .sec-bar .add-row-btn,.sec-bar .del-sec-btn{background:rgba(0,0,0,0.05);border:none;border-radius:6px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;color:inherit;transition:background 0.1s;}
 .sec-bar .add-row-btn:hover{background:rgba(14,122,135,0.12);color:#0e7a87;}
 .sec-bar .del-sec-btn:hover{background:rgba(255,59,48,0.1);color:#ff3b30;}
