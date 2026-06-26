@@ -56,12 +56,12 @@
   Add Day
 </button>
 <script>
-let SB_URL=localStorage.getItem('sb_url')||'',SB_KEY=localStorage.getItem('sb_key')||'';
+
 const RECORD_ID='canada-2027';
 let saveTimer=null;
 function setStatus(s,m){const el=document.getElementById('nav-status');if(el)el.className='nav-status '+s;const lbl=document.getElementById('nav-status-label');if(lbl)lbl.textContent=m;}
-async function dbLoad(){if(!SB_URL||!SB_KEY)return null;try{const r=await fetch(SB_URL+'/rest/v1/itinerary?id=eq.'+RECORD_ID+'&select=data',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});if(!r.ok)return null;const rows=await r.json();return rows.length?rows[0].data:null;}catch{return null;}}
-async function dbSave(p){if(!SB_URL||!SB_KEY)return;setStatus('saving','Saving…');try{const r=await fetch(SB_URL+'/rest/v1/itinerary',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:RECORD_ID,data:p,updated_at:new Date().toISOString()})});setStatus(r.ok?'saved':'error',r.ok?'All saved':'Save failed');}catch{setStatus('error','Save failed');}}
+async function dbLoad(){try{return await window.dbLoad(RECORD_ID);}catch{return null;}}
+async function dbSave(p){setStatus('saving','Saving…');try{await window.dbSave(RECORD_ID,p);setStatus('saved','All saved');}catch{setStatus('error','Save failed');}}
 
 function toISO(dmy) {
   if (!dmy) return '';
@@ -85,7 +85,7 @@ function inpDate(val) {
   return i;
 }
 
-function scheduleSave(){if(SB_URL&&SB_KEY)setStatus('saving','Unsaved changes');clearTimeout(saveTimer);saveTimer=setTimeout(()=>dbSave(collectState()),1400);}
+function scheduleSave(){setStatus('saving','Unsaved changes');clearTimeout(saveTimer);saveTimer=setTimeout(()=>dbSave(collectState()),1400);}
 function collectState(){const header={dest:document.getElementById('hdr-dest').value,dep:document.getElementById('hdr-dep').value,ret:document.getElementById('hdr-ret').value,trav:document.getElementById('hdr-trav').value};const days=Array.from(document.querySelectorAll('.day-card')).map(card=>{const obj={};card.querySelectorAll('[data-key]').forEach(el=>{obj[el.dataset.key]=el.value;});obj._transport=Array.from(card.querySelectorAll('.trans-row')).map(row=>{const o={};row.querySelectorAll('[data-key]').forEach(el=>{o[el.dataset.key]=el.value;});return o;});obj._food=Array.from(card.querySelectorAll('.food-row')).map(row=>{const o={};row.querySelectorAll('[data-key]').forEach(el=>{o[el.dataset.key]=el.value;});return o;});obj._transRemoved=!card.querySelector('.s-trans');return obj;});return{header,days};}
 function inp(val,key,cls,ph){const i=document.createElement('input');i.type='text';i.value=val||'';if(ph)i.placeholder=ph;i.className='cell-inp'+(cls?' '+cls:'');if(key)i.dataset.key=key;i.addEventListener('input',()=>{recalc();scheduleSave();});return i;}
 function ta(val,key,ph){const t=document.createElement('textarea');t.value=val||'';t.className='cell-ta';t.rows=2;if(ph)t.placeholder=ph;if(key)t.dataset.key=key;t.addEventListener('input',()=>{t.style.height='auto';t.style.height=t.scrollHeight+'px';scheduleSave();});return t;}
@@ -103,7 +103,7 @@ async function init(){  // Read live status from registry so toggles persist
     const trip = trips.find(t => t.slug === RECORD_ID);
     if (trip && trip.status) currentStatus = trip.status;
   } catch { /* use baked status */ }
-let state=null;if(SB_URL&&SB_KEY){state=await dbLoad();}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{setStatus(SB_URL?'saving':'error',SB_URL?'Not yet saved':'Connect Supabase via the China page');}document.getElementById('loading').classList.add('hidden');}
+let state=null;try{state=await dbLoad();}catch{}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{addDay({});setStatus('saving','Not yet saved');}document.getElementById('loading').classList.add('hidden');checkAutoComplete();}
 init();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 
