@@ -363,15 +363,23 @@ Object.entries(PLANNED).forEach(([id, trip]) => {
 
 // Registry trips that have departed — add to stats dynamically
 let liveCompletedRegistry = 0;
+// Slugs already fully accounted for in PS baseline or PLANNED addToStats
+const ALREADY_COUNTED = new Set([
+  'china-2026', 'dubai-2025', 'costa-rica-2025',
+  ...Object.entries(PLANNED).filter(([,t]) => t.addToStats).map(([id]) => id)
+]);
+
 function applyRegistryStats(trips) {
   trips.filter(t => !t.deleted).forEach(t => {
+    if (ALREADY_COUNTED.has(t.slug)) return; // already in baseline
     const dep = parseAnyDate(t.dep);
     if (!dep || dep > TODAY) return; // not departed yet
-    // Skip if already counted in PLANNED
-    if (PLANNED[t.slug] && PLANNED[t.slug].addToStats) return;
     const flags = t.flags || [];
+    // Only add countries not already in the live set
+    const newCountries = flags.filter(cc => !liveCountries.has(cc));
     flags.forEach(cc => liveCountries.add(cc));
-    liveMiles += estimateMilesForCountries(flags);
+    // Only count miles if this actually adds new ground (has flags)
+    if (flags.length) liveMiles += estimateMilesForCountries(flags);
     liveCompletedRegistry++;
   });
   renderStats();
