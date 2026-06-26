@@ -131,13 +131,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 
 /* Year label & divider */
 .year-label{font-size:13px;font-weight:700;color:#666666;opacity:0.35;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 10px 2px;}
-.year-divider{height:1px;background:rgba(0,0,0,0.08);margin:24px 20px;}
-.year-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 24px;}
-.year-row-header{padding:16px 20px 8px;display:flex;align-items:center;gap:12px;}
-.year-row-header .year-label{margin:0;font-size:18px;opacity:0.5;}
-.year-col-label{font-size:10px;font-weight:700;color:#b8b8b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
-.year-col .trip-card{margin-bottom:10px;}
-.year-col .trip-card:last-child{margin-bottom:0;}
+.year-divider{height:1px;background:rgba(0,0,0,0.08);margin:20px 20px;}
 
 .year-group{background:#e8e8e8;border-radius:12px;margin-bottom:8px;overflow:hidden;}
 .year-group-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.07);}
@@ -167,14 +161,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 <!-- ── LEFT: TRIPS ── -->
 <div class="trips-col">
 
-  <!-- ── 2027 ── -->
-  <div class="year-row-header">
+  <div class="section" style="padding-top:16px;">
+    <div class="section-title">Upcoming</div>
+
     <div class="year-label">2027</div>
-    <div class="year-divider" style="flex:1;margin:0;"></div>
-  </div>
-  <div class="year-row">
-    <div class="year-col">
-      <div class="year-col-label">Upcoming / Planning</div>
+    <div class="trips-grid" id="upcoming-grid">
       <a class="trip-card" href="/canada.html">
         <div class="card-image-area">
           <div id="map-canada" class="card-map"></div>
@@ -188,7 +179,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
           <div class="card-footer"><span class="card-meta">13 nights</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </a>
-      <a class="trip-card" href="/hong-kong-taiwan.html" style="margin-top:10px;display:block;">
+      <a class="trip-card" href="/hong-kong-taiwan.html">
         <div class="card-image-area">
           <div id="map-hk" class="card-map"></div>
           <div class="card-map-flags"><img src="https://flagcdn.com/w80/hk.png" alt="HK"><img src="https://flagcdn.com/w80/tw.png" alt="Taiwan"></div>
@@ -201,33 +192,21 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
           <div class="card-footer"><span class="card-meta">16 nights</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </a>
-      <div id="upcoming-grid" style="margin-top:10px;display:contents;"></div>
-      <a class="add-card" href="#" onclick="openModal(event)" style="margin-top:10px;display:flex;">
+      <a class="add-card" href="#" onclick="openModal(event)">
         <div class="add-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
         <div class="add-label">New Trip</div>
         <div class="add-sub">Add an upcoming itinerary</div>
       </a>
     </div>
-    <div class="year-col">
-      <div class="year-col-label">Completed</div>
-      <div id="past-grid-2027"></div>
-    </div>
   </div>
 
   <div class="year-divider"></div>
 
-  <!-- ── 2026 ── -->
-  <div class="year-row-header">
+  <div class="section">
+    <div class="section-title">Completed</div>
+
     <div class="year-label">2026</div>
-    <div class="year-divider" style="flex:1;margin:0;"></div>
-  </div>
-  <div class="year-row">
-    <div class="year-col">
-      <div class="year-col-label">Upcoming / Planning</div>
-      <div id="upcoming-grid-2026"></div>
-    </div>
-    <div class="year-col">
-      <div class="year-col-label">Completed</div>
+    <div class="trips-grid" id="past-grid">
       <a class="trip-card" href="/china.html">
         <div class="card-image-area">
           <div id="map-china" class="card-map"></div>
@@ -241,24 +220,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
           <div class="card-footer"><span class="card-meta">17 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </a>
-      <div id="past-grid" style="margin-top:10px;"></div>
     </div>
-  </div>
 
-  <div class="year-divider"></div>
+    <div class="year-divider"></div>
 
-  <!-- ── 2025 ── -->
-  <div class="year-row-header">
     <div class="year-label">2025</div>
-    <div class="year-divider" style="flex:1;margin:0;"></div>
-  </div>
-  <div class="year-row">
-    <div class="year-col">
-      <div class="year-col-label">Upcoming / Planning</div>
-      <div id="upcoming-grid-2025"></div>
-    </div>
-    <div class="year-col">
-      <div class="year-col-label">Completed</div>
+    <div class="trips-grid">
       <a class="trip-card" href="/dubai.html">
         <div class="card-image-area">
           <div id="map-dubai" class="card-map"></div>
@@ -272,7 +239,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
           <div class="card-footer"><span class="card-meta">15 days</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </a>
-      <a class="trip-card" href="/costa-rica.html" style="margin-top:10px;display:block;">
+      <a class="trip-card" href="/costa-rica.html">
         <div class="card-image-area">
           <div id="map-cr" class="card-map"></div>
           <div class="card-map-flags"><img src="https://flagcdn.com/w80/cr.png" alt="Costa Rica"></div>
@@ -854,16 +821,16 @@ async function buildDynamicCard(t) {
 
 async function renderDynamicTrips(trips) {
   if (!trips.length) return;
-  for (const t of trips) {
+  const upGrid = document.getElementById('upcoming-grid');
+  const pastGrid = document.getElementById('past-grid');
+  const addBtn = upGrid.querySelector('.add-card');
+  for (const t of trips.filter(t => t.status !== 'past')) {
     const card = await buildDynamicCard(t);
-    const year = t.dep ? t.dep.split('/')[2] || t.dep.split(' ')[2] : null;
-    if (t.status === 'past') {
-      const grid = document.getElementById('past-grid-' + year) || document.getElementById('past-grid');
-      if (grid) grid.appendChild(card);
-    } else {
-      const grid = document.getElementById('upcoming-grid-' + year) || document.getElementById('upcoming-grid');
-      if (grid) grid.appendChild(card);
-    }
+    upGrid.insertBefore(card, addBtn);
+  }
+  for (const t of trips.filter(t => t.status === 'past')) {
+    const card = await buildDynamicCard(t);
+    pastGrid.appendChild(card);
   }
 }
 loadRegistry().then(renderDynamicTrips);
