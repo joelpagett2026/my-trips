@@ -815,13 +815,13 @@ function buildDynamicCard(t) {
 
       const mapColor = t.status === 'planning' ? '#ff9500' : t.status === 'past' ? '#b8b8b8' : '#0e7a87';
       const bounds = L.latLngBounds(points);
-      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 11, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
+      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 5, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
       tiles().addTo(map);
       if (points.length > 1) {
-        map.fitBounds(bounds, {padding: [28, 28]});
+        map.fitBounds(bounds, {padding: [32, 32], maxZoom: 7});
         L.polyline(points, {color:mapColor, weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
       } else {
-        map.setView(points[0], 11);
+        map.setView(points[0], 6);
       }
       points.forEach((p, i) => {
         L.circleMarker(p, {radius: i===0||i===points.length-1 ? 6 : 4, fillColor:mapColor, color:'#fff', weight:2, fillOpacity:1}).addTo(map);
