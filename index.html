@@ -37,7 +37,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .trip-card:hover{transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
 .trip-card:active{transform:scale(0.985);}
 .card-image-area{height:140px;position:relative;overflow:hidden;isolation:isolate;}
-.card-map{width:100%;height:100%;pointer-events:none;}.leaflet-container{background:#e8e8e8!important;}.leaflet-tile{border:none!important;outline:none!important;}
+.card-map{width:100%;height:100%;pointer-events:none;}.leaflet-container{background:#e0e0e0!important;}.leaflet-tile{border:none!important;outline:none!important;}.map-tiles{filter:contrast(0.85) brightness(1.05);}
 .card-map .leaflet-control-container{display:none!important;}
 .card-map .leaflet-bottom,.card-map .leaflet-top{display:none!important;}
 .card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:450;}
@@ -712,7 +712,7 @@ function makeYearGroup(year, yearTrips) {
 years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
 
 // ── MAPS ─────────────────────────────────────────────────────────────
-const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:''});
+const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',className:'map-tiles'});
 function makeMap(id,center,zoom,points,color){
   const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
   tiles().addTo(map);
