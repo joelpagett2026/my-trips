@@ -362,10 +362,12 @@ function addDay(d) {
   const ib = document.createElement('div'); ib.className = 'sec-bar';
   ib.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="sec-label"><span class="sec-label-text">Itinerary</span></span>';
   is_.appendChild(ib);
+  const periodsRow = document.createElement('div');
+  periodsRow.style.cssText = 'display:flex;';
   ['morning', 'afternoon', 'evening'].forEach((period, i) => {
     // Vertical block per period
     const block = document.createElement('div');
-    block.style.cssText = 'padding:12px 16px;' + (i < 2 ? 'border-bottom:0.5px solid rgba(0,0,0,0.07);' : '');
+    block.style.cssText = 'padding:12px 16px;flex:1;' + (i < 2 ? 'border-right:0.5px solid rgba(0,0,0,0.07);' : '');
 
     // Period heading
     const heading = document.createElement('div');
@@ -388,8 +390,9 @@ function addDay(d) {
     li.style.cssText = 'font-size:11px;color:#aaa;flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;';
     linkWrap.appendChild(linkIcon); linkWrap.appendChild(li);
     block.appendChild(linkWrap);
-    is_.appendChild(block);
+    periodsRow.appendChild(block);
   });
+  is_.appendChild(periodsRow);
   card.appendChild(is_);
   document.getElementById('days').appendChild(card);
   recalc();
