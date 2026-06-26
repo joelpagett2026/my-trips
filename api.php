@@ -179,9 +179,19 @@ define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJ
         $fn = basename($body['filename'] ?? '');
         $fc = $body['content'] ?? '';
         if (!$fn || !$fc) fail('Missing params');
-        if (!in_array(pathinfo($fn, PATHINFO_EXTENSION), ['js','css'])) fail('Not allowed');
+        if (!in_array(pathinfo($fn, PATHINFO_EXTENSION), ['js','css','html','php'])) fail('Not allowed');
         if (file_put_contents(__DIR__ . '/' . $fn, $fc) === false) fail('Write failed');
         ok(['written' => $fn]);
+
+    // ── READ FILE ─────────────────────────────────────────────────────
+    case 'read_file':
+        $fn = basename($body['filename'] ?? '');
+        if (!$fn) fail('Missing filename');
+        $allowed_read = ['js','css','html','php'];
+        if (!in_array(pathinfo($fn, PATHINFO_EXTENSION), $allowed_read)) fail('Not allowed');
+        $path = __DIR__ . '/' . $fn;
+        if (!file_exists($path)) fail('File not found');
+        ok(['filename' => $fn, 'content' => file_get_contents($path)]);
 
     // ── CLAUDE CHAT PROXY ────────────────────────────────────────────
     // POST /api.php?action=chat  { "messages": [...], "context": {...} }
@@ -193,7 +203,34 @@ define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJ
         if (empty($messages)) fail('No messages');
 
         $ctx_json = json_encode($context);
-        $systemPrompt = 'You are a travel assistant for Joel Pagett trip planner at joelpagett.co.uk. Help Joel manage his trips. Site context: ' . $ctx_json . '. To make changes include JSON action blocks like {"action":"update_status","slug":"porto-2026","status":"planning"} or {"action":"remove_trip","slug":"porto-2026"}. Be concise and friendly.';
+        $systemPrompt = 'You are the AI assistant built into Joel Pagett\'s Trip Planner at joelpagett.co.uk. You have FULL ability to make changes to the site.
+
+SITE INFO:
+- Hosting: 20i shared Linux, files at /home/sites/31a/d/dbd40dd264/public_html/
+- Design: Montserrat font, teal #0e7a87 accent, background #e8e8e8
+- Pages: index.html, china.html, dubai.html, costa-rica.html, canada.html, hong-kong-taiwan.html, new-trip.html, settings.html, itinerary-style.css, chat-widget.js, db.js, auth.js, datepicker.js, api.php
+- Dynamic trip pages: porto-2026.html, gothenburg-2026.html, cyprus-2026.html (generated from new-trip.html template)
+- PIN: 0103, session stored in localStorage as jh_auth
+
+CURRENT TRIPS CONTEXT:
+' . $ctx_json . '
+
+AVAILABLE ACTIONS — include these JSON blocks in your response to make changes:
+
+Registry changes (immediate):
+{"action":"update_status","slug":"porto-2026","status":"planning|upcoming|past"}
+{"action":"update_trip","slug":"porto-2026","fields":{"dest":"...","dep":"dd/mm/yyyy","ret":"dd/mm/yyyy","flags":["pt"],"points":[[41.15,-8.62]],"cities":["Porto"]}}
+{"action":"remove_trip","slug":"porto-2026"}
+{"action":"add_trip","trip":{"dest":"Japan","dep":"01/05/2027","ret":"15/05/2027","slug":"japan-2027","url":"/japan-2027.html","flags":["jp"],"points":[[35.67,139.65]],"cities":["Tokyo"],"status":"upcoming","trav":"2"}}
+
+File changes (writes directly to server):
+{"action":"write_file","filename":"itinerary-style.css","content":"/* full file content */"}
+{"action":"write_file","filename":"index.html","content":"<!DOCTYPE html>..."}
+{"action":"write_file","filename":"chat-widget.js","content":"(function(){...})();"}
+
+When writing files, always write the COMPLETE file content — never partial.
+When asked to change something visual or functional, read the current file from context first if provided, make the targeted change, and write the whole file back.
+Be concise in explanations. Execute changes directly — do not ask for confirmation unless destructive.';
 
         $payload = json_encode([
             'model' => 'claude-sonnet-4-6',
