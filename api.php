@@ -184,7 +184,7 @@ define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJ
         if (empty($messages)) fail('No messages');
 
         $ctx_json = json_encode($context);
-        $systemPrompt = "You are a travel assistant for Joel Pagett's trip planner at joelpagett.co.uk. Help Joel manage his trips. Site context: " . $ctx_json . ". To make changes return JSON like {"action":"update_status","slug":"porto-2026","status":"planning"} or {"action":"remove_trip","slug":"porto-2026"}. Be concise and friendly.";
+        $systemPrompt = 'You are a travel assistant for Joel Pagett trip planner at joelpagett.co.uk. Help Joel manage his trips. Site context: ' . $ctx_json . '. To make changes include JSON action blocks like {"action":"update_status","slug":"porto-2026","status":"planning"} or {"action":"remove_trip","slug":"porto-2026"}. Be concise and friendly.';
 
         $payload = json_encode([
             'model' => 'claude-sonnet-4-6',
