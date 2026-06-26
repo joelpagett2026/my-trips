@@ -33,14 +33,11 @@
   
 </div>
 
-<div class="large-title-area">
-  <div class="large-title"><img class="page-title-flag" src="https://flagcdn.com/w80/cn.png" alt="cn"><span>China</span></div>
-  <div class="large-subtitle">31 Mar – 17 Apr 2026</div>
+<div class="large-subtitle">31 Mar – 17 Apr 2026</div>
 </div>
 
 
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
+<div class="stat-lbl">Days</div></div>
   <div class="stat-card"><div class="stat-val sv-orange">31/03/2026</div><div class="stat-lbl">Departure</div></div>
   <div class="stat-card"><div class="stat-val sv-green">17/04/2026</div><div class="stat-lbl">Return</div></div>
 </div>
@@ -49,18 +46,33 @@
   <div class="stat-card"><div class="stat-val sv-green" id="s-total">£0</div><div class="stat-lbl">Total cost</div></div>
 </div>
 
-<div style="padding:0 20px 16px;">
-  <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);">
-    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
-      <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value="China"></div>
-      <div class="th-g"><div class="th-lbl">Departure</div><input type="date" class="th-inp sm hdr-field" id="hdr-dep" value="2026-03-31"></div>
-      <div class="th-g"><div class="th-lbl">Return</div><input type="date" class="th-inp sm hdr-field" id="hdr-ret" value="2026-04-17"></div>
-      <input type="hidden" id="hdr-trav" value="2">
-    </div>
-    </div>
-  </div>
+
 </div>
 
+<div style="padding:14px 20px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <img class="page-title-flag" src="https://flagcdn.com/w80/cn.png" alt="cn" style="height:22px;width:auto;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.2);flex-shrink:0;">
+  <span style="font-size:20px;font-weight:700;color:#444;flex:1;" id="page-title">China</span>
+  <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Days</span>
+      <span style="font-size:16px;font-weight:700;color:#0e7a87;" id="s-days">0</span>
+    </div>
+    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
+    <div style="display:flex;flex-direction:column;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Departure</span>
+      <span style="font-size:13px;font-weight:600;color:#444;">31/03/2026</span>
+    </div>
+    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
+    <div style="display:flex;flex-direction:column;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Return</span>
+      <span style="font-size:13px;font-weight:600;color:#444;">17/04/2026</span>
+    </div>
+  </div>
+  <input type="hidden" id="hdr-dest" value="China">
+  <input type="hidden" id="hdr-dep" value="2026-03-31">
+  <input type="hidden" id="hdr-ret" value="2026-04-17">
+  <input type="hidden" id="hdr-trav" value="2">
+</div>
 <div class="sec-hd">Day by day</div>
 <div class="days" id="days"></div>
 

@@ -29,28 +29,27 @@
     </div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="opacity:0.4;" disabled>Undo</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 
-<div class="large-title-area">
-  <div class="large-title"><img id="page-flag" style="display:none;" class="page-title-flag"><span id="page-title">New Trip</span></div>
-  <div class="large-subtitle" id="page-sub"></div>
-</div>
-
-
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
-  <div class="stat-card"><div class="stat-val sv-orange" id="s-dep">—</div><div class="stat-lbl">Departure</div></div>
-  <div class="stat-card"><div class="stat-val sv-green" id="s-ret">—</div><div class="stat-lbl">Return</div></div>
-</div>
-
-<div style="padding:0 20px 16px;">
-  <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);">
-    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
-      <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value=""></div>
-      <div class="th-g"><div class="th-lbl">Departure</div><input class="th-inp sm hdr-field" id="hdr-dep" value=""></div>
-      <div class="th-g"><div class="th-lbl">Return</div><input class="th-inp sm hdr-field" id="hdr-ret" value=""></div>
-      <input type="hidden" id="hdr-trav" value="2">
-
+<div style="padding:14px 20px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <img id="page-flag" style="display:none;height:22px;width:auto;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.2);flex-shrink:0;" class="page-title-flag">
+  <input class="th-inp hdr-field" id="hdr-dest" placeholder="Destination" style="font-size:20px;font-weight:700;color:#444;background:transparent;border:none;outline:none;padding:0;flex:1;min-width:120px;" value="">
+  <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Days</span>
+      <span style="font-size:16px;font-weight:700;color:#0e7a87;" id="s-days">0</span>
+    </div>
+    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
+    <div style="display:flex;flex-direction:column;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Departure</span>
+      <input class="th-inp sm hdr-field" id="hdr-dep" placeholder="dd/mm/yyyy" style="font-size:13px;font-weight:600;color:#444;background:transparent;border:none;outline:none;padding:0;width:90px;" value="">
+    </div>
+    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
+    <div style="display:flex;flex-direction:column;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Return</span>
+      <input class="th-inp sm hdr-field" id="hdr-ret" placeholder="dd/mm/yyyy" style="font-size:13px;font-weight:600;color:#444;background:transparent;border:none;outline:none;padding:0;width:90px;" value="">
     </div>
   </div>
+  <input type="hidden" id="hdr-trav" value="2">
+  <input type="hidden" id="page-title" value="New Trip">
 </div>
 
 <div class="sec-hd">Day by day</div>
@@ -143,7 +142,7 @@ function checkAutoComplete() {
 }
 
 // Pre-fill header
-document.getElementById('page-title').textContent = dest;
+document.getElementById('hdr-dest').value = dest; document.title = dest + ' · Itinerary';
 // Load flag from registry
 (async () => {
   try {
@@ -158,8 +157,7 @@ document.getElementById('page-title').textContent = dest;
   } catch {}
 })();
 const _nt = document.getElementById('nav-title'); if(_nt) _nt.textContent = dest;
-document.getElementById('page-sub').textContent   = [dep, ret].filter(Boolean).join(' – ');
-document.getElementById('hdr-dest').value = dest;
+
 document.getElementById('hdr-dep').value  = dep;
 document.getElementById('hdr-ret').value  = ret;
 document.getElementById('hdr-trav').value = trav;
@@ -376,10 +374,7 @@ function addDay(d) {
 function recalc() {
   const cards = document.querySelectorAll('.day-card');
   document.getElementById('s-days').textContent = cards.length;
-  const depVal = document.getElementById('hdr-dep').value;
-  const retVal = document.getElementById('hdr-ret').value;
-  document.getElementById('s-dep').textContent = depVal || '—';
-  document.getElementById('s-ret').textContent = retVal || '—';
+
   let acc = 0;
   cards.forEach(c => c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value) || 0; }));
 

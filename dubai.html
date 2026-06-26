@@ -29,14 +29,11 @@
     </div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 
-<div class="large-title-area">
-  <div class="large-title"><img class="page-title-flag" src="https://flagcdn.com/w80/ae.png" alt="ae"><span>Dubai & Abu Dhabi</span></div>
-  <div class="large-subtitle">26 Dec 2025 – 9 Jan 2026</div>
+<div class="large-subtitle">26 Dec 2025 – 9 Jan 2026</div>
 </div>
 
 
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
+<div class="stat-lbl">Days</div></div>
   <div class="stat-card"><div class="stat-val sv-orange">26/12/2025</div><div class="stat-lbl">Departure</div></div>
   <div class="stat-card"><div class="stat-val sv-green">09/01/2026</div><div class="stat-lbl">Return</div></div>
 </div>
@@ -45,20 +42,34 @@
   <div class="stat-card"><div class="stat-val sv-green" id="s-total">£0</div><div class="stat-lbl">Total cost</div></div>
 </div>
 
-<div style="padding:0 20px 16px;">
-  <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);">
-    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;">
-      <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value="Dubai & Abu Dhabi"></div>
-      <div class="th-g"><div class="th-lbl">Departure</div><input type="date" class="th-inp sm hdr-field" id="hdr-dep" value="2025-12-26"></div>
-      <div class="th-g"><div class="th-lbl">Return</div><input type="date" class="th-inp sm hdr-field" id="hdr-ret" value="2026-01-09"></div>
-      <input type="hidden" id="hdr-trav" value="2">
-      <div style="margin-left:auto;display:flex;align-items:center;">
-        <div id="save-status" class="saved"><div class="status-dot"></div><span id="save-label">All saved</span></div>
-      </div>
-    </div>
+
   </div>
 </div>
 
+<div style="padding:14px 20px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <img class="page-title-flag" src="https://flagcdn.com/w80/ae.png" alt="ae" style="height:22px;width:auto;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.2);flex-shrink:0;">
+  <span style="font-size:20px;font-weight:700;color:#444;flex:1;" id="page-title">Dubai & Abu Dhabi</span>
+  <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Days</span>
+      <span style="font-size:16px;font-weight:700;color:#0e7a87;" id="s-days">0</span>
+    </div>
+    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
+    <div style="display:flex;flex-direction:column;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Departure</span>
+      <span style="font-size:13px;font-weight:600;color:#444;">26/12/2025</span>
+    </div>
+    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
+    <div style="display:flex;flex-direction:column;">
+      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Return</span>
+      <span style="font-size:13px;font-weight:600;color:#444;">09/01/2026</span>
+    </div>
+  </div>
+  <input type="hidden" id="hdr-dest" value="Dubai & Abu Dhabi">
+  <input type="hidden" id="hdr-dep" value="2025-12-26">
+  <input type="hidden" id="hdr-ret" value="2026-01-09">
+  <input type="hidden" id="hdr-trav" value="2">
+</div>
 <div class="sec-hd">Day by day</div>
 <div class="days" id="days"></div>
 
