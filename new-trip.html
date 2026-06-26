@@ -426,12 +426,16 @@ async function init() {
     document.getElementById('loading').classList.add('hidden');
   }
 }
-// Wait for auth before initialising — check flag in case event already fired
-if (window._mytripsAuthed) {
-  init();
-} else {
-  document.addEventListener('mytrips:authed', init, { once: true });
-}
+// Poll until auth token is available, then init
+(function waitForAuth() {
+  try {
+    const session = JSON.parse(localStorage.getItem('jh_auth') || 'null');
+    const token = session && session.token;
+    const age = session ? (Date.now() - session.ts) : Infinity;
+    if (token && age < 43200000) { init(); return; }
+  } catch {}
+  setTimeout(waitForAuth, 100);
+})();
 async function deleteTrip() {
   if (!confirm("Delete this itinerary? This cannot be undone.")) return;
   try {

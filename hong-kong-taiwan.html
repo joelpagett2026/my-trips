@@ -103,12 +103,16 @@ async function init(){  // Read live status from registry so toggles persist
     if (trip && trip.status) currentStatus = trip.status;
   } catch { /* use baked status */ }
 let state=null;try{state=await dbLoad();}catch{}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{addDay({});setStatus('saving','Not yet saved');}checkAutoComplete();}finally{const l=document.getElementById('loading');if(l)l.classList.add('hidden');}}
-// Wait for auth before initialising — check flag in case event already fired
-if (window._mytripsAuthed) {
-  init();
-} else {
-  document.addEventListener('mytrips:authed', init, { once: true });
-}
+// Poll until auth token is available, then init
+(function waitForAuth() {
+  try {
+    const session = JSON.parse(localStorage.getItem('jh_auth') || 'null');
+    const token = session && session.token;
+    const age = session ? (Date.now() - session.ts) : Infinity;
+    if (token && age < 43200000) { init(); return; }
+  } catch {}
+  setTimeout(waitForAuth, 100);
+})();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 
 function renderStatusToggle() {

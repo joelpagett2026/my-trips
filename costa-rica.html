@@ -332,11 +332,16 @@ function runInit() {
     if (l) l.classList.add('hidden');
   });
 }
-if (window._mytripsAuthed) {
-  runInit();
-} else {
-  document.addEventListener('mytrips:authed', runInit, { once: true });
-}
+// Poll until auth token is available, then init
+(function waitForAuth() {
+  try {
+    const session = JSON.parse(localStorage.getItem('jh_auth') || 'null');
+    const token = session && session.token;
+    const age = session ? (Date.now() - session.ts) : Infinity;
+    if (token && age < 43200000) { runInit(); return; }
+  } catch {}
+  setTimeout(waitForAuth, 100);
+})();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 
 function renderStatusToggle() {
