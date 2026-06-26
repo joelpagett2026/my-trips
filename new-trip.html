@@ -301,9 +301,11 @@ function parseDisplayDate(str) {
   return isNaN(d) ? null : d;
 }
 
-// Format a Date as "29 Aug 2026"
+// Format a Date as dd/mm/yyyy (matches datepicker format)
 function formatDisplayDate(d) {
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return dd + '/' + mm + '/' + d.getFullYear();
 }
 
 // Auto-generate one day card per day from dep to ret (inclusive of dep, up to but not including ret)
