@@ -174,6 +174,15 @@ define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJ
 
         ok(['slug' => $slug, 'url' => '/' . $slug . '.html']);
 
+    // ── WRITE ASSET ──────────────────────────────────────────────────
+    case 'write_asset':
+        $fn = basename($body['filename'] ?? '');
+        $fc = $body['content'] ?? '';
+        if (!$fn || !$fc) fail('Missing params');
+        if (!in_array(pathinfo($fn, PATHINFO_EXTENSION), ['js','css'])) fail('Not allowed');
+        if (file_put_contents(__DIR__ . '/' . $fn, $fc) === false) fail('Write failed');
+        ok(['written' => $fn]);
+
     // ── CLAUDE CHAT PROXY ────────────────────────────────────────────
     // POST /api.php?action=chat  { "messages": [...], "context": {...} }
     case 'chat':
