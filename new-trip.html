@@ -385,10 +385,10 @@ function addDay(d) {
     linkIcon.style.cssText = 'font-size:10px;color:#aaa;flex-shrink:0;';
     linkIcon.textContent = '🔗';
     const li = inp(d['link_' + period] || '', 'link_' + period, '', 'https://…');
-    li.style.color = '#007aff'; li.style.fontSize = '12px';
-    lc.appendChild(ll); lc.appendChild(li);
-    row.appendChild(pc); row.appendChild(ac); row.appendChild(lc);
-    is_.appendChild(row);
+    li.style.cssText = 'font-size:11px;color:#aaa;flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;';
+    linkWrap.appendChild(linkIcon); linkWrap.appendChild(li);
+    block.appendChild(linkWrap);
+    is_.appendChild(block);
   });
   card.appendChild(is_);
   document.getElementById('days').appendChild(card);
