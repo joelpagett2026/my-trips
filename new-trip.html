@@ -48,7 +48,7 @@
 <div class="sec-hd">Day by day</div>
 <div class="days" id="days"></div>
 
-<button class="add-day" onclick="addDay()">
+<button class="add-day" onclick="pushUndo(); addDay();">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   Add Day
 </button>
@@ -77,9 +77,11 @@ document.getElementById('hdr-trav').value = trav;
 document.title = dest + ' · Itinerary';
 
 let saveTimer = null;
+let undoLock = false;
 const undoStack = [];
-const UNDO_LIMIT = 10;
+const UNDO_LIMIT = 20;
 function pushUndo() {
+  if (undoLock) return;
   undoStack.push(JSON.stringify(collectState()));
   if (undoStack.length > UNDO_LIMIT) undoStack.shift();
   document.getElementById('undo-btn').disabled = false;
@@ -87,10 +89,12 @@ function pushUndo() {
 }
 function undoState() {
   if (!undoStack.length) return;
+  undoLock = true;
   const prev = JSON.parse(undoStack.pop());
   document.getElementById('days').innerHTML = '';
   restoreState(prev);
   scheduleSave();
+  undoLock = false;
   if (!undoStack.length) {
     document.getElementById('undo-btn').disabled = true;
     document.getElementById('undo-btn').style.opacity = '0.4';
@@ -124,7 +128,6 @@ async function ensureRegistered() {
 }
 
 function scheduleSave() {
-  pushUndo();
   setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveData(collectState()), 1400);
@@ -146,6 +149,7 @@ function inp(val, key, cls, ph) {
   if (ph) i.placeholder = ph;
   i.className = 'cell-inp' + (cls ? ' ' + cls : '');
   if (key) i.dataset.key = key;
+  i.addEventListener('focus', () => { pushUndo(); });
   i.addEventListener('input', () => { recalc(); scheduleSave(); });
   return i;
 }
@@ -153,6 +157,7 @@ function ta(val, key, ph) {
   const t = document.createElement('textarea'); t.value = val || ''; t.className = 'cell-ta'; t.rows = 2;
   if (ph) t.placeholder = ph;
   if (key) t.dataset.key = key;
+  t.addEventListener('focus', () => { pushUndo(); });
   t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; scheduleSave(); });
   return t;
 }
@@ -165,7 +170,7 @@ function delBtn(onDel) {
   const d = document.createElement('div'); d.className = 'cell row-del';
   const b = document.createElement('button'); b.className = 'row-del-btn'; b.title = 'Remove';
   b.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  b.onclick = () => { onDel(); scheduleSave(); }; d.appendChild(b); return d;
+  b.onclick = () => { pushUndo(); onDel(); scheduleSave(); }; d.appendChild(b); return d;
 }
 function makeTransRow(data, container) {
   data = data || {};
@@ -199,6 +204,7 @@ function addDay(d) {
   const badge = document.createElement('div'); badge.className = 'day-badge';
   const bNum = document.createElement('input'); bNum.type = 'text'; bNum.value = d.dayNum || n; bNum.placeholder = '1';
   bNum.className = 'day-badge-num'; bNum.dataset.key = 'dayNum';
+  bNum.addEventListener('focus', () => { pushUndo(); });
   bNum.addEventListener('input', scheduleSave);
   const bLbl = document.createElement('div'); bLbl.className = 'db-label'; bLbl.textContent = 'Day';
   badge.appendChild(bLbl); badge.appendChild(bNum); top.appendChild(badge);
@@ -206,7 +212,7 @@ function addDay(d) {
   const dateBar = document.createElement('div'); dateBar.className = 'sec-bar';
   dateBar.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="sec-label">Date & Location</span>';
   const delDayBtn = document.createElement('button'); delDayBtn.className = 'del-sec-btn'; delDayBtn.textContent = 'Remove day';
-  delDayBtn.onclick = () => { card.remove(); recalc(); scheduleSave(); };
+  delDayBtn.onclick = () => { pushUndo(); card.remove(); recalc(); scheduleSave(); };
   dateBar.appendChild(delDayBtn);
   dateSec.appendChild(dateBar);
   const dateRow = document.createElement('div'); dateRow.className = 'row-inner'; dateRow.style.gridTemplateColumns = '0.7fr 1fr 1fr';
@@ -218,9 +224,9 @@ function addDay(d) {
     const ts = document.createElement('div'); ts.className = 's-trans';
     const tb = document.createElement('div'); tb.className = 'sec-bar';
     const aBtn = document.createElement('button'); aBtn.className = 'add-row-btn'; aBtn.textContent = '+ Add';
-    aBtn.onclick = () => { makeTransRow({}, tRows); scheduleSave(); };
+    aBtn.onclick = () => { pushUndo(); makeTransRow({}, tRows); scheduleSave(); };
     const dBtn = document.createElement('button'); dBtn.className = 'del-sec-btn'; dBtn.textContent = 'Remove';
-    dBtn.onclick = () => { ts.remove(); scheduleSave(); };
+    dBtn.onclick = () => { pushUndo(); ts.remove(); scheduleSave(); };
     tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label">Transport</span>';
     tb.appendChild(aBtn); tb.appendChild(dBtn); ts.appendChild(tb);
     const tRows = document.createElement('div'); ts.appendChild(tRows);
@@ -241,7 +247,7 @@ function addDay(d) {
   const fs = document.createElement('div'); fs.className = 's-food';
   const fb = document.createElement('div'); fb.className = 'sec-bar';
   const fBtn = document.createElement('button'); fBtn.className = 'add-row-btn'; fBtn.textContent = '+ Add meal';
-  fBtn.onclick = () => { makeFoodRow({}, fRows); scheduleSave(); };
+  fBtn.onclick = () => { pushUndo(); makeFoodRow({}, fRows); scheduleSave(); };
   fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label">Food & Drink</span>';
   fb.appendChild(fBtn); fs.appendChild(fb);
   const fRows = document.createElement('div'); fs.appendChild(fRows);
@@ -297,7 +303,7 @@ function restoreState(state) {
   }
   if (state.days) state.days.forEach(d => addDay(d));
 }
-document.querySelectorAll(".hdr-field").forEach(el => el.addEventListener("input", scheduleSave));
+document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", scheduleSave); });
 
 async function manualSave() {
   const btn = document.getElementById('nav-save-btn');
