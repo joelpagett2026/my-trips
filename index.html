@@ -147,10 +147,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 <body>
 
 <div class="nav">
-  <a href="#" onclick="openModal(event)" style="display:inline-flex;align-items:center;gap:6px;background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    New Trip
-  </a>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <a href="#" onclick="openModal(event)" style="display:inline-flex;align-items:center;gap:6px;background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Trip
+    </a>
+    <a href="#" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#0e7a87;border:1.5px solid #0e7a87;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
+      Holiday Allowance
+    </a>
+  </div>
   <div class="nav-title">My Trips</div>
   <div style="width:60px;text-align:right">
     <a href="/settings.html" style="display:inline-flex;align-items:center;color:#0e7a87;">
