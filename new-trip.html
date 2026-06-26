@@ -322,7 +322,7 @@ function generateDaysFromDates() {
   }
   const cursor = new Date(depDate);
   let dayNum = 1;
-  while (cursor < retDate) {
+  while (cursor <= retDate) {
     addDay({ date: formatDisplayDate(new Date(cursor)), dayNum: dayNum++ });
     cursor.setDate(cursor.getDate() + 1);
   }
