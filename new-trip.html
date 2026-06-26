@@ -291,31 +291,31 @@ function addDay(d) {
 
   // Single inline header bar: date input · location input · remove button
   const dateBar = document.createElement('div');
-  dateBar.style.cssText = 'display:flex;align-items:stretch;gap:0;padding:0;border-bottom:0.5px solid rgba(0,0,0,0.07);background:#fff;flex:1;';
+  dateBar.style.cssText = 'display:flex;align-items:stretch;gap:0;padding:0;border-bottom:0.5px solid rgba(0,0,0,0.07);background:linear-gradient(135deg,#0e7a87,#0d9e8c);flex:1;';
 
   // Date input
   const dateWrap = document.createElement('div');
-  dateWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:center;padding:0 16px;border-right:0.5px solid rgba(0,0,0,0.07);min-width:130px;';
+  dateWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:center;padding:0 16px;border-right:0.5px solid rgba(255,255,255,0.2);min-width:130px;';
   const dateLbl = document.createElement('span');
-  dateLbl.style.cssText = 'font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
+  dateLbl.style.cssText = 'font-size:9px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
   dateLbl.textContent = 'Date';
   const dateInp = inp(d.date, 'date', 'bold', 'dd/mm/yyyy');
-  dateInp.style.cssText = 'font-size:14px;font-weight:700;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  dateInp.style.cssText = 'font-size:14px;font-weight:700;color:#fff;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
   dateWrap.appendChild(dateLbl); dateWrap.appendChild(dateInp);
 
   // Location input
   const locWrap = document.createElement('div');
   locWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:center;padding:0 16px;flex:1;';
   const locLbl = document.createElement('span');
-  locLbl.style.cssText = 'font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
+  locLbl.style.cssText = 'font-size:9px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
   locLbl.textContent = 'Location';
   const locInp = inp(d.to || d.from, 'to', 'bold', 'City / Place');
-  locInp.style.cssText = 'font-size:14px;font-weight:700;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  locInp.style.cssText = 'font-size:14px;font-weight:700;color:#fff;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
   locWrap.appendChild(locLbl); locWrap.appendChild(locInp);
 
   // Remove button
   const delDayBtn = document.createElement('button');
-  delDayBtn.style.cssText = 'background:none;border:none;padding:0 14px;cursor:pointer;color:#ccc;font-size:18px;line-height:1;flex-shrink:0;';
+  delDayBtn.style.cssText = 'background:none;border:none;padding:0 14px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:18px;line-height:1;flex-shrink:0;';
   delDayBtn.innerHTML = '&times;';
   delDayBtn.title = 'Remove day';
   delDayBtn.onclick = () => { pushUndo(); card.remove(); recalc(); scheduleSave(); };
