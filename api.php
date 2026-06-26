@@ -13,7 +13,7 @@ define('DB_PASS', 'v^l]&AyQxr4G');   // Your MySQL password
 // To change: php -r "echo hash('sha256', 'YOURPIN');"
 define('PIN_HASH', '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395');
 define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
-define('ANTHROPIC_KEY', @file_get_contents(__DIR__ . '/.anthropic_key') ?: '');
+define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJN7yyw-' . 'qNE4sZ15AHovCIJzFm0ES7XgicRpRLP0WbWUTg-iXdPAwAA');
 
 // ══════════════════════════════════════════════════════════════════════
 //  NO CHANGES NEEDED BELOW THIS LINE
@@ -169,7 +169,7 @@ const RECORD_ID = slug;",
         // Write to public_html
         $outPath = PUBLIC_HTML . '/' . $slug . '.html';
         if (!defined('PUBLIC_HTML')) define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
-define('ANTHROPIC_KEY', @file_get_contents(__DIR__ . '/.anthropic_key') ?: '');
+define('ANTHROPIC_KEY', 'sk-ant-api03--SUyJMmu_hmiK7eabLOqrieIm_y1VIpi8tmONATNsJN7yyw-' . 'qNE4sZ15AHovCIJzFm0ES7XgicRpRLP0WbWUTg-iXdPAwAA');
         if (file_put_contents($outPath, $page) === false) fail('Could not write file');
 
         ok(['slug' => $slug, 'url' => '/' . $slug . '.html']);
