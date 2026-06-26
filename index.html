@@ -673,85 +673,74 @@ async function geocode(place) {
 }
 
 // Build a dynamic card — with live map + flag from itinerary data
-async function buildDynamicCard(t) {
+function buildDynamicCard(t) {
   const statusClass = t.status==='past' ? 'pill-past' : t.status==='planning' ? 'pill-planning' : 'pill-upcoming';
   const statusLabel = t.status==='past' ? 'Completed' : t.status==='planning' ? 'Planning' : 'Upcoming';
   const url = t.url || `/${t.slug}.html`;
 
-  const a = document.createElement('a'); a.className = 'trip-card'; a.href = url;
+  // City tags from stored cities array
+  const cityTagsHtml = (t.cities || [])
+    .filter((c,i,a) => a.indexOf(c) === i) // dedupe
+    .slice(0, 6)
+    .map(c => `<span class="city-tag">${c}</span>`).join('');
 
-  // Image area — starts as placeholder, map renders into it
+  const a = document.createElement('a'); a.className = 'trip-card'; a.href = url;
   const mapId = 'dyn-map-' + t.slug;
+
+  // Flags HTML from stored flags array
+  const flagsHtml = (t.flags || []).map(cc =>
+    `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}">`
+  ).join('');
+
   a.innerHTML = `<div class="card-image-area" style="background:#e0eef0;position:relative;">
     <div id="${mapId}" class="card-map"></div>
-    <div class="card-map-flags" id="flags-${t.slug}"></div>
+    <div class="card-map-flags">${flagsHtml}</div>
     <div class="card-status-pill ${statusClass}">${statusLabel}</div>
   </div>
   <div class="card-body">
     <div class="card-dest">${t.dest}</div>
     <div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div>
+    ${cityTagsHtml ? `<div class="card-cities">${cityTagsHtml}</div>` : ''}
     <div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   </div>`;
 
-  // Load itinerary data to get cities from day cards
+  // Render map — use stored points if available, else geocode destination
   setTimeout(async () => {
     try {
-      // Get saved itinerary data for map points
-      const data = await window.dbLoad(t.slug);
-      const days = (data && data.days) ? data.days : [];
+      const mapEl = document.getElementById(mapId);
+      if (!mapEl) return;
 
-      // Collect unique city names from From/To fields + destination itself
-      const cityNames = [];
-      days.forEach(d => {
-        if (d.from && d.from.trim()) cityNames.push(d.from.trim());
-        if (d.to && d.to.trim()) cityNames.push(d.to.trim());
-      });
-      // Deduplicate preserving order
-      const seen = new Set();
-      const unique = [t.dest, ...cityNames].filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });
+      let points = t.points || [];
 
-      // Geocode all cities
-      const coords = (await Promise.all(unique.map(c => geocode(c)))).filter(Boolean);
-
-      if (coords.length === 0) {
-        // Fallback: just geocode destination
-        const g = await geocode(t.dest);
-        if (g) coords.push(g);
+      // Fallback: geocode from itinerary day data or destination name
+      if (!points.length) {
+        const data = await window.dbLoad(t.slug).catch(() => null);
+        const days = (data && data.days) ? data.days : [];
+        const cityNames = [];
+        days.forEach(d => {
+          if (d.from && d.from.trim()) cityNames.push(d.from.trim());
+          if (d.to && d.to.trim()) cityNames.push(d.to.trim());
+        });
+        const seen = new Set();
+        const unique = [t.dest, ...cityNames].filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });
+        const coords = (await Promise.all(unique.map(c => geocode(c)))).filter(Boolean);
+        points = coords.map(c => [c.lat, c.lon]);
       }
 
-      // Render map
-      const mapEl = document.getElementById(mapId);
-      if (!mapEl || !coords.length) return;
-      const points = coords.map(c => [c.lat, c.lon]);
+      if (!points.length) return;
+
       const bounds = L.latLngBounds(points);
       const map = L.map(mapId, {center: bounds.getCenter(), zoom: 11, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
       tiles().addTo(map);
       if (points.length > 1) {
         map.fitBounds(bounds, {padding: [28, 28]});
+        L.polyline(points, {color:'#0e7a87', weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
       } else {
         map.setView(points[0], 11);
       }
-      if (points.length > 1) {
-        L.polyline(points, {color:'#0e7a87', weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
-      }
-      points.forEach(p => {
-        L.circleMarker(p, {radius:4, fillColor:'#0e7a87', color:'#fff', weight:1.5, fillOpacity:1}).addTo(map);
+      points.forEach((p, i) => {
+        L.circleMarker(p, {radius: i===0||i===points.length-1 ? 6 : 4, fillColor:'#0e7a87', color:'#fff', weight:2, fillOpacity:1}).addTo(map);
       });
-
-      // Render flags — unique country codes from geocoded results
-      const flagsEl = document.getElementById('flags-' + t.slug);
-      if (flagsEl) {
-        const seenCc = new Set();
-        coords.forEach(c => {
-          if (c.cc && !seenCc.has(c.cc)) {
-            seenCc.add(c.cc);
-            const img = document.createElement('img');
-            img.src = `https://flagcdn.com/w80/${c.cc}.png`;
-            img.alt = c.cc;
-            flagsEl.appendChild(img);
-          }
-        });
-      }
     } catch(e) { console.warn('Card map error:', e); }
   }, 100);
 
@@ -807,16 +796,15 @@ function extractYear(dep) {
   return null;
 }
 
-async function renderDynamicTrips(trips) {
+function renderDynamicTrips(trips) {
   if (!trips.length) return;
-  // Sort by dep date descending so newest appear first within each grid
   trips.sort((a, b) => {
     const ya = extractYear(a.dep) || '0';
     const yb = extractYear(b.dep) || '0';
     return yb.localeCompare(ya);
   });
   for (const t of trips) {
-    const card = await buildDynamicCard(t);
+    const card = buildDynamicCard(t);
     const year = extractYear(t.dep) || '0';
     const grid = getOrCreateYearGrid(year);
     grid.appendChild(card);
