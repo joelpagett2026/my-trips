@@ -363,6 +363,29 @@ Object.entries(PLANNED).forEach(([id, trip]) => {
 
 // Registry trips that have departed — add to stats dynamically
 let liveCompletedRegistry = 0;
+function parseAnyDate(str) {
+  if (!str) return null;
+  // dd/mm/yyyy
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+    const [d,m,y] = str.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // d/m/yyyy or similar short forms
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d,m,y] = str.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // yyyy-mm-dd (ISO)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y,m,d] = str.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // "29 Aug 2026" style
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m = str.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if (m) return new Date(Number(m[3]), months[m[2]], Number(m[1]));
+  return null;
+}
 // Slugs already fully accounted for in PS baseline or PLANNED addToStats
 const ALREADY_COUNTED = new Set([
   'china-2026', 'dubai-2025', 'costa-rica-2025',
@@ -425,29 +448,6 @@ sortedFlags.forEach(cc => {
 
 // ── COUNTDOWN — to the next upcoming trip (planned + registry) ─────────
 // Parse dd/mm/yyyy or yyyy-mm-dd into a Date
-function parseAnyDate(str) {
-  if (!str) return null;
-  // dd/mm/yyyy
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
-    const [d,m,y] = str.split('/').map(Number);
-    return new Date(y, m-1, d);
-  }
-  // d/m/yyyy or similar short forms
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
-    const [d,m,y] = str.split('/').map(Number);
-    return new Date(y, m-1, d);
-  }
-  // yyyy-mm-dd (ISO)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    const [y,m,d] = str.split('-').map(Number);
-    return new Date(y, m-1, d);
-  }
-  // "29 Aug 2026" style
-  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-  const m = str.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
-  if (m) return new Date(Number(m[3]), months[m[2]], Number(m[1]));
-  return null;
-}
 
 // Drive countdown entirely from registry (no hardcoded duplicates)
 async function initCountdown() {
