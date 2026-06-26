@@ -175,7 +175,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .day-badge-num{font-size:20px;font-weight:700;letter-spacing:-0.5px;color:#fff;background:transparent;border:none;width:36px;text-align:center;outline:none;font-family:'Montserrat',sans-serif;}
 .day-top{display:flex;}
 
-.itin-period{background:rgba(255,45,85,0.04);border-right:2px solid rgba(255,45,85,0.15)!important;}
+.itin-period{background:rgba(14,122,135,0.04);border-right:2px solid rgba(14,122,135,0.15)!important;}
 .itin-period .cell-inp{color:#0e7a87;font-weight:600;}
 
 /* Add day button */
