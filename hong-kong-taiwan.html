@@ -16,7 +16,7 @@
     My Trips
   </a>
   <div class="nav-title">Hong Kong & Taiwan</div>
-  <div class="nav-actions"><button class="nav-save-btn" id="nav-save-btn" onclick="manualSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save</button><button class="nav-action" onclick="window.print()">Print</button><button class="nav-action" onclick="deleteTrip()" style="color:#ff3b30;">Delete</button></div>
+  <div class="nav-actions"><div class="nav-status saved" id="nav-status"><div class="status-dot"></div><span id="nav-status-label">All saved</span></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 <div class="large-title-area" style="padding-top:16px;">
   <div class="large-title">Hong Kong & Taiwan</div>
@@ -35,9 +35,7 @@
       <div class="th-g"><div class="th-lbl">Departure</div><input type="date" class="th-inp sm hdr-field" id="hdr-dep" value=""></div>
       <div class="th-g"><div class="th-lbl">Return</div><input type="date" class="th-inp sm hdr-field" id="hdr-ret" value=""></div>
       <div class="th-g"><div class="th-lbl">Travellers</div><input class="th-inp sm hdr-field" id="hdr-trav" style="width:60px" value="2"></div>
-      <div style="margin-left:auto;display:flex;align-items:center;">
-        <div id="save-status" class="saved"><div class="status-dot"></div><span id="save-label">All saved</span></div>
-      </div>
+    </div>
     </div>
   </div>
 </div>
@@ -51,7 +49,7 @@
 let SB_URL=localStorage.getItem('sb_url')||'',SB_KEY=localStorage.getItem('sb_key')||'';
 const RECORD_ID='hk-taiwan-2027';
 let saveTimer=null;
-function setStatus(s,m){document.getElementById('save-status').className=s;document.getElementById('save-label').textContent=m;}
+function setStatus(s,m){const el=document.getElementById('nav-status');if(el)el.className='nav-status '+s;const lbl=document.getElementById('nav-status-label');if(lbl)lbl.textContent=m;}
 async function dbLoad(){if(!SB_URL||!SB_KEY)return null;try{const r=await fetch(SB_URL+'/rest/v1/itinerary?id=eq.'+RECORD_ID+'&select=data',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});if(!r.ok)return null;const rows=await r.json();return rows.length?rows[0].data:null;}catch{return null;}}
 async function dbSave(p){if(!SB_URL||!SB_KEY)return;setStatus('saving','Saving…');try{const r=await fetch(SB_URL+'/rest/v1/itinerary',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:RECORD_ID,data:p,updated_at:new Date().toISOString()})});setStatus(r.ok?'saved':'error',r.ok?'All saved':'Save failed');}catch{setStatus('error','Save failed');}}
 
