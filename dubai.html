@@ -330,10 +330,17 @@ async function init() {
   else { DEFAULTS.forEach(d => addDay(d)); setStatus('saving', 'Not yet saved'); }
   checkAutoComplete();
 }
-init().finally(() => {
-  const l = document.getElementById('loading');
-  if (l) l.classList.add('hidden');
-});
+function runInit() {
+  init().finally(() => {
+    const l = document.getElementById('loading');
+    if (l) l.classList.add('hidden');
+  });
+}
+if (window._mytripsAuthed) {
+  runInit();
+} else {
+  document.addEventListener('mytrips:authed', runInit, { once: true });
+}
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 
 function renderStatusToggle() {

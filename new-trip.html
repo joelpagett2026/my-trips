@@ -426,8 +426,8 @@ async function init() {
     document.getElementById('loading').classList.add('hidden');
   }
 }
-// Wait for auth before initialising
-if (typeof isAuthed === 'function' && isAuthed()) {
+// Wait for auth before initialising — check flag in case event already fired
+if (window._mytripsAuthed) {
   init();
 } else {
   document.addEventListener('mytrips:authed', init, { once: true });
