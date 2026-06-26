@@ -207,25 +207,47 @@ Keep responses concise and friendly. You know Joel's travel history and upcoming
             'messages' => $messages,
         ]);
 
-        $ch = curl_init('https://api.anthropic.com/v1/messages');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'x-api-key: ' . $key,
-                'anthropic-version: 2023-06-01',
-            ],
-            CURLOPT_TIMEOUT => 30,
-        ]);
-        $resp = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        // Try curl first, fall back to file_get_contents
+        $resp = false;
+        $httpCode = 0;
+        if (function_exists('curl_init')) {
+            $ch = curl_init('https://api.anthropic.com/v1/messages');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'x-api-key: ' . $key,
+                    'anthropic-version: 2023-06-01',
+                ],
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_SSL_VERIFYPEER => false,
+            ]);
+            $resp = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr = curl_error($ch);
+            curl_close($ch);
+            if (!$resp) fail('cURL error: ' . $curlErr);
+        } else {
+            $ctx = stream_context_create(['http' => [
+                'method' => 'POST',
+                'header' => implode("\r\n", [
+                    'Content-Type: application/json',
+                    'x-api-key: ' . $key,
+                    'anthropic-version: 2023-06-01',
+                ]),
+                'content' => $payload,
+                'timeout' => 30,
+                'ignore_errors' => true,
+            ]]);
+            $resp = @file_get_contents('https://api.anthropic.com/v1/messages', false, $ctx);
+            if (!$resp) fail('HTTP request failed');
+            $httpCode = 200;
+        }
 
-        if (!$resp) fail('API request failed');
         $data = json_decode($resp, true);
-        if ($httpCode !== 200) fail($data['error']['message'] ?? 'API error');
+        if ($httpCode !== 200 && isset($data['error'])) fail($data['error']['message'] ?? 'API error');
 
         $text = $data['content'][0]['text'] ?? '';
         ok(['reply' => $text]);
