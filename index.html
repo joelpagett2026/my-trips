@@ -380,7 +380,7 @@ function parseAnyDate(str) {
     const [y,m,d] = str.split('-').map(Number);
     return new Date(y, m-1, d);
   }
-  // "29 Aug 2026" style
+  // "Aug 2026" style
   const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
   const m = str.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
   if (m) return new Date(Number(m[3]), months[m[2]], Number(m[1]));
@@ -405,7 +405,7 @@ function applyRegistryStats(trips) {
     // Add to past trips sidebar if not already listed
     const alreadyIn = psTripList.some(p => p.name === t.dest);
     if (!alreadyIn) {
-      const start = dep.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).replace(/\//g,' ');
+      const start = dep.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
       psTripList.unshift({ name: t.dest, start, codes: flags, planned: true });
     }
   });
@@ -413,7 +413,7 @@ function applyRegistryStats(trips) {
   // Re-render past trips sidebar with updated list
   const byYearNew = {};
   psTripList.forEach(t => {
-    const year = t.start.split(' ')[2];
+    const year = t.start.match(/(\d{4})/)?.[1];
     if (!byYearNew[year]) byYearNew[year] = [];
     byYearNew[year].push(t);
   });
@@ -541,127 +541,127 @@ if (typeof isAuthed === 'function' && isAuthed()) {
 
 // ── TRIP HISTORY ──────────────────────────────────────────────────────
 const trips = [
-  {name:"China",start:"30 Mar 2026",codes:["cn"]},
-  {name:"Dubai & Abu Dhabi",start:"26 Dec 2025",codes:["ae","fr"]},
-  {name:"Paris",start:"16 Oct 2025",codes:["fr"]},
-  {name:"Athens & Hydra",start:"03 Oct 2025",codes:["gr"]},
-  {name:"Netherlands",start:"21 Aug 2025",codes:["nl"]},
-  {name:"Cyprus",start:"02 May 2025",codes:["cy"]},
-  {name:"Costa Rica",start:"03 Apr 2025",codes:["cr"]},
-  {name:"Freiberg",start:"30 Nov 2024",codes:["de"]},
-  {name:"Vienna",start:"08 Nov 2024",codes:["at"]},
-  {name:"Canada",start:"18 Sep 2024",codes:["ca"]},
-  {name:"Helsinki",start:"23 Aug 2024",codes:["fi"]},
-  {name:"Lyon",start:"23 May 2024",codes:["fr"]},
-  {name:"Singapore, Bali & KL",start:"28 Mar 2024",codes:["sg","id","my"]},
-  {name:"Japan & South Korea",start:"20 Dec 2023",codes:["jp","kr"]},
-  {name:"Paris",start:"11 Oct 2023",codes:["fr"]},
-  {name:"Barcelona",start:"24 Aug 2023",codes:["es"]},
-  {name:"Switzerland",start:"28 May 2023",codes:["ch"]},
-  {name:"Cologne",start:"04 May 2023",codes:["de"]},
-  {name:"South Africa",start:"26 Mar 2023",codes:["za"]},
-  {name:"Germany & Switzerland",start:"14 Dec 2022",codes:["de","ch"]},
-  {name:"Paris",start:"04 Nov 2022",codes:["fr"]},
-  {name:"Italy",start:"24 Sep 2022",codes:["it"]},
-  {name:"Stockholm",start:"25 Aug 2022",codes:["se"]},
-  {name:"French Riviera & Monaco",start:"01 Jun 2022",codes:["fr","mc"]},
-  {name:"Washington, New York & Chicago",start:"09 Apr 2022",codes:["us"]},
-  {name:"Dublin",start:"05 Nov 2021",codes:["ie"]},
-  {name:"Brussels, Luxembourg & Germany",start:"24 Aug 2021",codes:["be","lu","de"]},
-  {name:"Denmark",start:"29 Aug 2020",codes:["dk"]},
-  {name:"Rome",start:"09 Feb 2020",codes:["it"]},
-  {name:"Gothenburg",start:"17 Oct 2019",codes:["se"]},
-  {name:"Hamburg & Lubeck",start:"20 Sep 2019",codes:["de"]},
-  {name:"Japan",start:"12 Apr 2019",codes:["jp"]},
-  {name:"Bruges & Gent",start:"02 Nov 2018",codes:["be"]},
-  {name:"Croatia",start:"15 Sep 2018",codes:["hr"]},
-  {name:"LA, Nevada & San Francisco",start:"11 May 2018",codes:["us"]},
-  {name:"Prague",start:"09 Feb 2018",codes:["cz"]},
-  {name:"Germany",start:"29 Sep 2017",codes:["de"]},
-  {name:"Netherlands",start:"22 Jul 2017",codes:["nl"]},
-  {name:"Crete",start:"01 May 2017",codes:["gr"]},
-  {name:"Italy",start:"18 Sep 2016",codes:["it"]},
-  {name:"Germany",start:"19 Apr 2016",codes:["de"]},
-  {name:"Budapest",start:"12 Feb 2016",codes:["hu"]},
-  {name:"Barcelona",start:"05 Sep 2015",codes:["es"]},
-  {name:"Sweden",start:"29 Apr 2015",codes:["se"]},
-  {name:"Amsterdam",start:"24 Sep 2014",codes:["nl"]},
-  {name:"Istanbul",start:"20 Jun 2014",codes:["tr"]},
-  {name:"Paris",start:"10 Feb 2014",codes:["fr"]},
-  {name:"Belgium",start:"26 Nov 2013",codes:["be"]},
-  {name:"Edinburgh",start:"24 Aug 2013",codes:["gb"]},
-  {name:"Madrid",start:"07 Aug 2013",codes:["es"]},
-  {name:"Cyprus",start:"10 Aug 2012",codes:["cy"]},
-  {name:"Amsterdam",start:"03 Jun 2012",codes:["nl"]},
-  {name:"Florida",start:"06 Apr 2012",codes:["us"]},
-  {name:"Germany",start:"11 Sep 2011",codes:["de"]},
-  {name:"Cyprus",start:"31 Jul 2011",codes:["cy"]},
-  {name:"Tenerife",start:"23 May 2011",codes:["es"]},
-  {name:"Tenerife",start:"12 Apr 2010",codes:["es"]},
-  {name:"Oludeniz",start:"22 May 2009",codes:["tr"]},
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+  {name:"Dubai & Abu Dhabi",start:"Dec 2025",codes:["ae","fr"]},
+  {name:"Paris",start:"Oct 2025",codes:["fr"]},
+  {name:"Athens & Hydra",start:"Oct 2025",codes:["gr"]},
+  {name:"Netherlands",start:"Aug 2025",codes:["nl"]},
+  {name:"Cyprus",start:"May 2025",codes:["cy"]},
+  {name:"Costa Rica",start:"Apr 2025",codes:["cr"]},
+  {name:"Freiberg",start:"Nov 2024",codes:["de"]},
+  {name:"Vienna",start:"Nov 2024",codes:["at"]},
+  {name:"Canada",start:"Sep 2024",codes:["ca"]},
+  {name:"Helsinki",start:"Aug 2024",codes:["fi"]},
+  {name:"Lyon",start:"May 2024",codes:["fr"]},
+  {name:"Singapore, Bali & KL",start:"Mar 2024",codes:["sg","id","my"]},
+  {name:"Japan & South Korea",start:"Dec 2023",codes:["jp","kr"]},
+  {name:"Paris",start:"Oct 2023",codes:["fr"]},
+  {name:"Barcelona",start:"Aug 2023",codes:["es"]},
+  {name:"Switzerland",start:"May 2023",codes:["ch"]},
+  {name:"Cologne",start:"May 2023",codes:["de"]},
+  {name:"South Africa",start:"Mar 2023",codes:["za"]},
+  {name:"Germany & Switzerland",start:"Dec 2022",codes:["de","ch"]},
+  {name:"Paris",start:"Nov 2022",codes:["fr"]},
+  {name:"Italy",start:"Sep 2022",codes:["it"]},
+  {name:"Stockholm",start:"Aug 2022",codes:["se"]},
+  {name:"French Riviera & Monaco",start:"Jun 2022",codes:["fr","mc"]},
+  {name:"Washington, New York & Chicago",start:"Apr 2022",codes:["us"]},
+  {name:"Dublin",start:"Nov 2021",codes:["ie"]},
+  {name:"Brussels, Luxembourg & Germany",start:"Aug 2021",codes:["be","lu","de"]},
+  {name:"Denmark",start:"Aug 2020",codes:["dk"]},
+  {name:"Rome",start:"Feb 2020",codes:["it"]},
+  {name:"Gothenburg",start:"Oct 2019",codes:["se"]},
+  {name:"Hamburg & Lubeck",start:"Sep 2019",codes:["de"]},
+  {name:"Japan",start:"Apr 2019",codes:["jp"]},
+  {name:"Bruges & Gent",start:"Nov 2018",codes:["be"]},
+  {name:"Croatia",start:"Sep 2018",codes:["hr"]},
+  {name:"LA, Nevada & San Francisco",start:"May 2018",codes:["us"]},
+  {name:"Prague",start:"Feb 2018",codes:["cz"]},
+  {name:"Germany",start:"Sep 2017",codes:["de"]},
+  {name:"Netherlands",start:"Jul 2017",codes:["nl"]},
+  {name:"Crete",start:"May 2017",codes:["gr"]},
+  {name:"Italy",start:"Sep 2016",codes:["it"]},
+  {name:"Germany",start:"Apr 2016",codes:["de"]},
+  {name:"Budapest",start:"Feb 2016",codes:["hu"]},
+  {name:"Barcelona",start:"Sep 2015",codes:["es"]},
+  {name:"Sweden",start:"Apr 2015",codes:["se"]},
+  {name:"Amsterdam",start:"Sep 2014",codes:["nl"]},
+  {name:"Istanbul",start:"Jun 2014",codes:["tr"]},
+  {name:"Paris",start:"Feb 2014",codes:["fr"]},
+  {name:"Belgium",start:"Nov 2013",codes:["be"]},
+  {name:"Edinburgh",start:"Aug 2013",codes:["gb"]},
+  {name:"Madrid",start:"Aug 2013",codes:["es"]},
+  {name:"Cyprus",start:"Aug 2012",codes:["cy"]},
+  {name:"Amsterdam",start:"Jun 2012",codes:["nl"]},
+  {name:"Florida",start:"Apr 2012",codes:["us"]},
+  {name:"Germany",start:"Sep 2011",codes:["de"]},
+  {name:"Cyprus",start:"Jul 2011",codes:["cy"]},
+  {name:"Tenerife",start:"May 2011",codes:["es"]},
+  {name:"Tenerife",start:"Apr 2010",codes:["es"]},
+  {name:"Oludeniz",start:"May 2009",codes:["tr"]},
 ];
 
 // ── TRIP HISTORY ─────────────────────────────────────────────────────
 // Merge Polarsteps trips with any completed planned trips
 const psTripList = [
-  {name:"China",start:"30 Mar 2026",codes:["cn"]},
-  {name:"Dubai & Abu Dhabi",start:"26 Dec 2025",codes:["ae","fr"]},
-  {name:"Paris",start:"16 Oct 2025",codes:["fr"]},
-  {name:"Athens & Hydra",start:"03 Oct 2025",codes:["gr"]},
-  {name:"Netherlands",start:"21 Aug 2025",codes:["nl"]},
-  {name:"Cyprus",start:"02 May 2025",codes:["cy"]},
-  {name:"Costa Rica",start:"03 Apr 2025",codes:["cr"]},
-  {name:"Freiberg",start:"30 Nov 2024",codes:["de"]},
-  {name:"Vienna",start:"08 Nov 2024",codes:["at"]},
-  {name:"Canada",start:"18 Sep 2024",codes:["ca"]},
-  {name:"Helsinki",start:"23 Aug 2024",codes:["fi"]},
-  {name:"Lyon",start:"23 May 2024",codes:["fr"]},
-  {name:"Singapore, Bali & KL",start:"28 Mar 2024",codes:["sg","id","my"]},
-  {name:"Japan & South Korea",start:"20 Dec 2023",codes:["jp","kr"]},
-  {name:"Paris",start:"11 Oct 2023",codes:["fr"]},
-  {name:"Barcelona",start:"24 Aug 2023",codes:["es"]},
-  {name:"Switzerland",start:"28 May 2023",codes:["ch"]},
-  {name:"Cologne",start:"04 May 2023",codes:["de"]},
-  {name:"South Africa",start:"26 Mar 2023",codes:["za"]},
-  {name:"Germany & Switzerland",start:"14 Dec 2022",codes:["de","ch"]},
-  {name:"Paris",start:"04 Nov 2022",codes:["fr"]},
-  {name:"Italy",start:"24 Sep 2022",codes:["it"]},
-  {name:"Stockholm",start:"25 Aug 2022",codes:["se"]},
-  {name:"French Riviera & Monaco",start:"01 Jun 2022",codes:["fr","mc"]},
-  {name:"Washington, New York & Chicago",start:"09 Apr 2022",codes:["us"]},
-  {name:"Dublin",start:"05 Nov 2021",codes:["ie"]},
-  {name:"Brussels, Luxembourg & Germany",start:"24 Aug 2021",codes:["be","lu","de"]},
-  {name:"Denmark",start:"29 Aug 2020",codes:["dk"]},
-  {name:"Rome",start:"09 Feb 2020",codes:["it"]},
-  {name:"Gothenburg",start:"17 Oct 2019",codes:["se"]},
-  {name:"Hamburg & Lubeck",start:"20 Sep 2019",codes:["de"]},
-  {name:"Japan",start:"12 Apr 2019",codes:["jp"]},
-  {name:"Bruges & Gent",start:"02 Nov 2018",codes:["be"]},
-  {name:"Croatia",start:"15 Sep 2018",codes:["hr"]},
-  {name:"LA, Nevada & San Francisco",start:"11 May 2018",codes:["us"]},
-  {name:"Prague",start:"09 Feb 2018",codes:["cz"]},
-  {name:"Germany",start:"29 Sep 2017",codes:["de"]},
-  {name:"Netherlands",start:"22 Jul 2017",codes:["nl"]},
-  {name:"Crete",start:"01 May 2017",codes:["gr"]},
-  {name:"Italy",start:"18 Sep 2016",codes:["it"]},
-  {name:"Germany",start:"19 Apr 2016",codes:["de"]},
-  {name:"Budapest",start:"12 Feb 2016",codes:["hu"]},
-  {name:"Barcelona",start:"05 Sep 2015",codes:["es"]},
-  {name:"Sweden",start:"29 Apr 2015",codes:["se"]},
-  {name:"Amsterdam",start:"24 Sep 2014",codes:["nl"]},
-  {name:"Istanbul",start:"20 Jun 2014",codes:["tr"]},
-  {name:"Paris",start:"10 Feb 2014",codes:["fr"]},
-  {name:"Belgium",start:"26 Nov 2013",codes:["be"]},
-  {name:"Edinburgh",start:"24 Aug 2013",codes:["gb"]},
-  {name:"Madrid",start:"07 Aug 2013",codes:["es"]},
-  {name:"Cyprus",start:"10 Aug 2012",codes:["cy"]},
-  {name:"Amsterdam",start:"03 Jun 2012",codes:["nl"]},
-  {name:"Florida",start:"06 Apr 2012",codes:["us"]},
-  {name:"Germany",start:"11 Sep 2011",codes:["de"]},
-  {name:"Cyprus",start:"31 Jul 2011",codes:["cy"]},
-  {name:"Tenerife",start:"23 May 2011",codes:["es"]},
-  {name:"Tenerife",start:"12 Apr 2010",codes:["es"]},
-  {name:"Oludeniz",start:"22 May 2009",codes:["tr"]},
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+  {name:"Dubai & Abu Dhabi",start:"Dec 2025",codes:["ae","fr"]},
+  {name:"Paris",start:"Oct 2025",codes:["fr"]},
+  {name:"Athens & Hydra",start:"Oct 2025",codes:["gr"]},
+  {name:"Netherlands",start:"Aug 2025",codes:["nl"]},
+  {name:"Cyprus",start:"May 2025",codes:["cy"]},
+  {name:"Costa Rica",start:"Apr 2025",codes:["cr"]},
+  {name:"Freiberg",start:"Nov 2024",codes:["de"]},
+  {name:"Vienna",start:"Nov 2024",codes:["at"]},
+  {name:"Canada",start:"Sep 2024",codes:["ca"]},
+  {name:"Helsinki",start:"Aug 2024",codes:["fi"]},
+  {name:"Lyon",start:"May 2024",codes:["fr"]},
+  {name:"Singapore, Bali & KL",start:"Mar 2024",codes:["sg","id","my"]},
+  {name:"Japan & South Korea",start:"Dec 2023",codes:["jp","kr"]},
+  {name:"Paris",start:"Oct 2023",codes:["fr"]},
+  {name:"Barcelona",start:"Aug 2023",codes:["es"]},
+  {name:"Switzerland",start:"May 2023",codes:["ch"]},
+  {name:"Cologne",start:"May 2023",codes:["de"]},
+  {name:"South Africa",start:"Mar 2023",codes:["za"]},
+  {name:"Germany & Switzerland",start:"Dec 2022",codes:["de","ch"]},
+  {name:"Paris",start:"Nov 2022",codes:["fr"]},
+  {name:"Italy",start:"Sep 2022",codes:["it"]},
+  {name:"Stockholm",start:"Aug 2022",codes:["se"]},
+  {name:"French Riviera & Monaco",start:"Jun 2022",codes:["fr","mc"]},
+  {name:"Washington, New York & Chicago",start:"Apr 2022",codes:["us"]},
+  {name:"Dublin",start:"Nov 2021",codes:["ie"]},
+  {name:"Brussels, Luxembourg & Germany",start:"Aug 2021",codes:["be","lu","de"]},
+  {name:"Denmark",start:"Aug 2020",codes:["dk"]},
+  {name:"Rome",start:"Feb 2020",codes:["it"]},
+  {name:"Gothenburg",start:"Oct 2019",codes:["se"]},
+  {name:"Hamburg & Lubeck",start:"Sep 2019",codes:["de"]},
+  {name:"Japan",start:"Apr 2019",codes:["jp"]},
+  {name:"Bruges & Gent",start:"Nov 2018",codes:["be"]},
+  {name:"Croatia",start:"Sep 2018",codes:["hr"]},
+  {name:"LA, Nevada & San Francisco",start:"May 2018",codes:["us"]},
+  {name:"Prague",start:"Feb 2018",codes:["cz"]},
+  {name:"Germany",start:"Sep 2017",codes:["de"]},
+  {name:"Netherlands",start:"Jul 2017",codes:["nl"]},
+  {name:"Crete",start:"May 2017",codes:["gr"]},
+  {name:"Italy",start:"Sep 2016",codes:["it"]},
+  {name:"Germany",start:"Apr 2016",codes:["de"]},
+  {name:"Budapest",start:"Feb 2016",codes:["hu"]},
+  {name:"Barcelona",start:"Sep 2015",codes:["es"]},
+  {name:"Sweden",start:"Apr 2015",codes:["se"]},
+  {name:"Amsterdam",start:"Sep 2014",codes:["nl"]},
+  {name:"Istanbul",start:"Jun 2014",codes:["tr"]},
+  {name:"Paris",start:"Feb 2014",codes:["fr"]},
+  {name:"Belgium",start:"Nov 2013",codes:["be"]},
+  {name:"Edinburgh",start:"Aug 2013",codes:["gb"]},
+  {name:"Madrid",start:"Aug 2013",codes:["es"]},
+  {name:"Cyprus",start:"Aug 2012",codes:["cy"]},
+  {name:"Amsterdam",start:"Jun 2012",codes:["nl"]},
+  {name:"Florida",start:"Apr 2012",codes:["us"]},
+  {name:"Germany",start:"Sep 2011",codes:["de"]},
+  {name:"Cyprus",start:"Jul 2011",codes:["cy"]},
+  {name:"Tenerife",start:"May 2011",codes:["es"]},
+  {name:"Tenerife",start:"Apr 2010",codes:["es"]},
+  {name:"Oludeniz",start:"May 2009",codes:["tr"]},
 ];
 
 // Inject any completed planned trips that aren't in Polarsteps yet
@@ -670,7 +670,7 @@ Object.entries(PLANNED).forEach(([id, t]) => {
     const alreadyIn = psTripList.some(p => p.name === t.name);
     if (!alreadyIn) {
       const d = new Date(t.startDate);
-      const start = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/\//g,' ');
+      const start = d.toLocaleDateString('en-GB',{month:'short', year:'numeric'});
       psTripList.unshift({ name: t.name, start, codes: t.countries, planned: true });
     }
   }
@@ -679,7 +679,7 @@ Object.entries(PLANNED).forEach(([id, t]) => {
 // Group by year
 const byYear = {};
 psTripList.forEach(t => {
-  const year = t.start.split(' ')[2];
+  const year = t.start.match(/(\d{4})/)?.[1];
   if (!byYear[year]) byYear[year] = [];
   byYear[year].push(t);
 });
