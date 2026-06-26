@@ -716,20 +716,118 @@ async function loadRegistry(){
 async function saveRegistry(trips){
   try{ await window.dbSaveRegistry(trips); }catch{}
 }
-function buildDynamicCard(t){
-  const statusClass=t.status==='past'?'pill-past':t.status==='planning'?'pill-planning':'pill-upcoming';
-  const statusLabel=t.status==='past'?'Completed':t.status==='planning'?'Planning':'Upcoming';
-  const url=`/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&trav=${encodeURIComponent(t.trav)}&status=${encodeURIComponent(t.status)}&slug=${encodeURIComponent(t.slug)}`;
-  const a=document.createElement('a');a.className='trip-card';a.href=url;
-  a.innerHTML=`<div class="card-image-area" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;position:relative;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.5" aria-hidden="true"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg><div class="card-status-pill ${statusClass}">${statusLabel}</div></div><div class="card-body"><div class="card-dest">${t.dest}</div><div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div><div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>`;
+// Geocode a place name → {lat, lon, country_code} using Nominatim
+const geocodeCache = {};
+async function geocode(place) {
+  if (!place) return null;
+  if (geocodeCache[place]) return geocodeCache[place];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&accept-language=en`, {headers:{'Accept-Language':'en'}});
+    const j = await r.json();
+    if (j && j[0]) {
+      const result = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), cc: (j[0].address?.country_code || '').toLowerCase() };
+      geocodeCache[place] = result;
+      return result;
+    }
+  } catch {}
+  return null;
+}
+
+// Build a dynamic card — with live map + flag from itinerary data
+async function buildDynamicCard(t) {
+  const statusClass = t.status==='past' ? 'pill-past' : t.status==='planning' ? 'pill-planning' : 'pill-upcoming';
+  const statusLabel = t.status==='past' ? 'Completed' : t.status==='planning' ? 'Planning' : 'Upcoming';
+  const url = `/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&trav=${encodeURIComponent(t.trav)}&status=${encodeURIComponent(t.status)}&slug=${encodeURIComponent(t.slug)}`;
+
+  const a = document.createElement('a'); a.className = 'trip-card'; a.href = url;
+
+  // Image area — starts as placeholder, map renders into it
+  const mapId = 'dyn-map-' + t.slug;
+  a.innerHTML = `<div class="card-image-area" style="background:#e0eef0;position:relative;">
+    <div id="${mapId}" class="card-map"></div>
+    <div class="card-map-flags" id="flags-${t.slug}"></div>
+    <div class="card-status-pill ${statusClass}">${statusLabel}</div>
+  </div>
+  <div class="card-body">
+    <div class="card-dest">${t.dest}</div>
+    <div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div>
+    <div class="card-footer" style="margin-top:8px;"><span class="card-meta">Tap to open itinerary</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>`;
+
+  // Load itinerary data to get cities from day cards
+  setTimeout(async () => {
+    try {
+      // Get saved itinerary data for map points
+      const data = await window.dbLoad(t.slug);
+      const days = (data && data.days) ? data.days : [];
+
+      // Collect unique city names from From/To fields + destination itself
+      const cityNames = [];
+      days.forEach(d => {
+        if (d.from && d.from.trim()) cityNames.push(d.from.trim());
+        if (d.to && d.to.trim()) cityNames.push(d.to.trim());
+      });
+      // Deduplicate preserving order
+      const seen = new Set();
+      const unique = [t.dest, ...cityNames].filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });
+
+      // Geocode all cities
+      const coords = (await Promise.all(unique.map(c => geocode(c)))).filter(Boolean);
+
+      if (coords.length === 0) {
+        // Fallback: just geocode destination
+        const g = await geocode(t.dest);
+        if (g) coords.push(g);
+      }
+
+      // Render map
+      const mapEl = document.getElementById(mapId);
+      if (!mapEl || !coords.length) return;
+      const points = coords.map(c => [c.lat, c.lon]);
+      const bounds = L.latLngBounds(points);
+      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 5, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
+      tiles().addTo(map);
+      map.fitBounds(bounds, {padding: [24, 24]});
+      if (points.length > 1) {
+        L.polyline(points, {color:'#0e7a87', weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
+      }
+      points.forEach(p => {
+        L.circleMarker(p, {radius:4, fillColor:'#0e7a87', color:'#fff', weight:1.5, fillOpacity:1}).addTo(map);
+      });
+
+      // Render flags — unique country codes from geocoded results
+      const flagsEl = document.getElementById('flags-' + t.slug);
+      if (flagsEl) {
+        const seenCc = new Set();
+        coords.forEach(c => {
+          if (c.cc && !seenCc.has(c.cc)) {
+            seenCc.add(c.cc);
+            const img = document.createElement('img');
+            img.src = `https://flagcdn.com/w80/${c.cc}.png`;
+            img.alt = c.cc;
+            flagsEl.appendChild(img);
+          }
+        });
+      }
+    } catch(e) { console.warn('Card map error:', e); }
+  }, 100);
+
   return a;
 }
-function renderDynamicTrips(trips){
-  if(!trips.length) return;
-  const upGrid=document.getElementById('upcoming-grid');
-  const pastGrid=document.getElementById('past-grid');
-  trips.filter(t=>t.status!=='past').forEach(t=>upGrid.insertBefore(buildDynamicCard(t),upGrid.querySelector('.add-card')));
-  trips.filter(t=>t.status==='past').forEach(t=>pastGrid.appendChild(buildDynamicCard(t)));
+
+async function renderDynamicTrips(trips) {
+  if (!trips.length) return;
+  const upGrid = document.getElementById('upcoming-grid');
+  const pastGrid = document.getElementById('past-grid');
+  const addBtn = upGrid.querySelector('.add-card');
+  for (const t of trips.filter(t => t.status !== 'past')) {
+    const card = await buildDynamicCard(t);
+    upGrid.insertBefore(card, addBtn);
+  }
+  for (const t of trips.filter(t => t.status === 'past')) {
+    const card = await buildDynamicCard(t);
+    pastGrid.appendChild(card);
+  }
 }
 loadRegistry().then(renderDynamicTrips);
 
