@@ -65,7 +65,7 @@ const trav   = params.get('trav') || '2';
 const status = params.get('status') || 'upcoming';
 const slug   = params.get('slug') || 'new-trip';
 
-// Use slug as the Supabase record ID
+// Use slug as the database record ID
 const RECORD_ID = slug;
 
 // Pre-fill header
@@ -81,23 +81,18 @@ document.title = dest + ' · Itinerary';
 let saveTimer = null;
 
 function setStatus(s, m) { document.getElementById('save-status').className = s; document.getElementById('save-label').textContent = m; }
-async function dbLoad() {
+
+async function loadData() {
   try { return await window.dbLoad(RECORD_ID); }
   catch { return null; }
 }
-async function dbSave(p) {
-  if (!SB_URL || !SB_KEY) return;
+
+async function saveData(p) {
   setStatus('saving', 'Saving…');
   try {
-    // Save the itinerary data
-    const r = await fetch(`${SB_URL}/rest/v1/itinerary`, { method: 'POST', headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: RECORD_ID, data: p, updated_at: new Date().toISOString() }) });
-    if (r.ok) {
-      setStatus('saved', 'All saved');
-      // Also ensure this trip is registered in the registry
-      await ensureRegistered();
-    } else {
-      setStatus('error', 'Save failed');
-    }
+    await window.dbSave(RECORD_ID, p);
+    setStatus('saved', 'All saved');
+    await ensureRegistered();
   } catch { setStatus('error', 'Save failed'); }
 }
 
@@ -110,10 +105,11 @@ async function ensureRegistered() {
     }
   } catch { /* silent */ }
 }
+
 function scheduleSave() {
-  if (SB_URL && SB_KEY) setStatus('saving', 'Unsaved changes');
+  setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => dbSave(collectState()), 1400);
+  saveTimer = setTimeout(() => saveData(collectState()), 1400);
 }
 function collectState() {
   const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
@@ -288,7 +284,7 @@ async function manualSave() {
   btn.innerHTML = svgIcon + ' Saving…';
   btn.className = 'nav-save-btn saving';
   clearTimeout(saveTimer);
-  await dbSave(collectState());
+  await saveData(collectState());
   const saved = document.getElementById('save-label').textContent === 'All saved';
   btn.innerHTML = saved ? '✓ Saved' : '✗ Save failed';
   btn.className = 'nav-save-btn ' + (saved ? 'saved' : 'error');
@@ -300,12 +296,11 @@ async function manualSave() {
 
 async function init() {
   let state = null;
-  if (SB_URL && SB_KEY) { state = await dbLoad(); }
+  try { state = await loadData(); } catch { /* silent */ }
   if (state && state.days && state.days.length) {
     restoreState(state);
     setStatus('saved', 'All saved');
   } else {
-    // Start with one blank day ready to fill in
     addDay({});
     setStatus('saving', 'Not yet saved');
   }
