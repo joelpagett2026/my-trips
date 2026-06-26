@@ -12,6 +12,7 @@ define('DB_PASS', 'v^l]&AyQxr4G');   // Your MySQL password
 // PIN hash — SHA-256 of your PIN. Default is 0103.
 // To change: php -r "echo hash('sha256', 'YOURPIN');"
 define('PIN_HASH', '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395');
+define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
 
 // ══════════════════════════════════════════════════════════════════════
 //  NO CHANGES NEEDED BELOW THIS LINE
@@ -119,6 +120,57 @@ switch ($action) {
                        ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()")
             ->execute([$id, $json]);
         ok(['id' => $id]);
+
+    // ── CREATE TRIP PAGE ─────────────────────────────────────────────
+    // POST /api.php?action=create_page  { "slug": "porto-2026", "dest": "Porto", "dep": "...", "ret": "..." }
+    case 'create_page':
+        $slug   = preg_replace('/[^a-z0-9\-]/', '', strtolower($body['slug'] ?? ''));
+        $dest   = $body['dest'] ?? '';
+        $dep    = $body['dep']  ?? '';
+        $ret    = $body['ret']  ?? '';
+        $trav   = $body['trav'] ?? '2';
+        $status = $body['status'] ?? 'upcoming';
+        if (!$slug || !$dest) fail('Missing slug or dest');
+
+        // Read new-trip.html template
+        $template = file_get_contents(__DIR__ . '/new-trip.html');
+        if (!$template) fail('Template not found');
+
+        // Bake in the record ID and suppress URL-param reading
+        $page = str_replace(
+            "// Read URL params
+const params = new URLSearchParams(window.location.search);
+const dest   = params.get('dest') || 'New Trip';
+const dep    = params.get('dep')  || '';
+const ret    = params.get('ret')  || '';
+const trav   = params.get('trav') || '2';
+const status = params.get('status') || 'upcoming';
+const slug   = params.get('slug') || 'new-trip';
+
+// Use slug as the database record ID
+const RECORD_ID = slug;",
+            "// Baked-in trip data
+const dest   = " . json_encode($dest) . ";
+const dep    = " . json_encode($dep) . ";
+const ret    = " . json_encode($ret) . ";
+const trav   = " . json_encode($trav) . ";
+const status = " . json_encode($status) . ";
+const slug   = " . json_encode($slug) . ";
+
+// Use slug as the database record ID
+const RECORD_ID = slug;",
+            $template
+        );
+
+        // Update the <title>
+        $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
+
+        // Write to public_html
+        $outPath = PUBLIC_HTML . '/' . $slug . '.html';
+        if (!defined('PUBLIC_HTML')) define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
+        if (file_put_contents($outPath, $page) === false) fail('Could not write file');
+
+        ok(['slug' => $slug, 'url' => '/' . $slug . '.html']);
 
     // ── DELETE A RECORD ──────────────────────────────────────────────
     // DELETE /api.php?action=delete&id=...

@@ -34,14 +34,21 @@ if ($return !== 0) {
 }
 
 // ── COPY FILES TO PUBLIC_HTML ─────────────────────────────────────────
-$files = [
-    'api.php', 'auth.js', 'db.js', 'datepicker.js', 'itinerary-style.css',
-    'index.html', 'settings.html', 'china.html', 'dubai.html',
-    'costa-rica.html', 'canada.html', 'hong-kong-taiwan.html', 'new-trip.html'
+// Core non-HTML files always deployed from repo
+$coreFiles = [
+    'api.php', 'auth.js', 'db.js', 'datepicker.js',
+    'itinerary-style.css', 'deploy-webhook.php'
 ];
+
+// All HTML files in the repo (includes new trip pages baked in)
+$htmlFiles = glob(REPO_PATH . '/*.html');
+$htmlFiles = array_map('basename', $htmlFiles ?: []);
+
+$files = array_merge($coreFiles, $htmlFiles);
 
 $copied = [];
 $failed = [];
+$skipped = [];
 
 foreach ($files as $file) {
     $src  = REPO_PATH  . '/' . $file;
@@ -52,6 +59,8 @@ foreach ($files as $file) {
         } else {
             $failed[] = $file;
         }
+    } else {
+        $skipped[] = $file;
     }
 }
 

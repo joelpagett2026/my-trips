@@ -735,7 +735,7 @@ async function geocode(place) {
 async function buildDynamicCard(t) {
   const statusClass = t.status==='past' ? 'pill-past' : t.status==='planning' ? 'pill-planning' : 'pill-upcoming';
   const statusLabel = t.status==='past' ? 'Completed' : t.status==='planning' ? 'Planning' : 'Upcoming';
-  const url = `/new-trip.html?dest=${encodeURIComponent(t.dest)}&dep=${encodeURIComponent(t.dep)}&ret=${encodeURIComponent(t.ret)}&trav=${encodeURIComponent(t.trav)}&status=${encodeURIComponent(t.status)}&slug=${encodeURIComponent(t.slug)}`;
+  const url = t.url || `/${t.slug}.html`;
 
   const a = document.createElement('a'); a.className = 'trip-card'; a.href = url;
 
@@ -906,12 +906,28 @@ async function createTrip(){
   const ret=document.getElementById('m-ret').value.trim();
   const trav=document.getElementById('m-trav').value.trim()||'2';
   const status=document.getElementById('m-status').value;
-  const slug=dest.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
-  btn.textContent='Saving…';btn.disabled=true;
-  const existing=await loadRegistry();
-  existing.push({dest,dep,ret,trav,status,slug,created:Date.now()});
-  await saveRegistry(existing);
-  window.location.href=`/new-trip.html?${new URLSearchParams({dest,dep,ret,trav,status,slug}).toString()}`;
+
+  // Build slug: destination-year (e.g. porto-2026)
+  const year = dep ? dep.split('/')[2] : new Date().getFullYear();
+  const slug = dest.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + year;
+
+  btn.textContent='Creating…'; btn.disabled=true;
+
+  try {
+    // Create the dedicated HTML page on the server
+    const res = await apiCall('create_page', {}, {slug, dest, dep, ret, trav, status});
+    const url = res && res.url ? res.url : '/new-trip.html?' + new URLSearchParams({dest,dep,ret,trav,status,slug}).toString();
+
+    // Register in trip registry with clean URL
+    const existing = await loadRegistry();
+    existing.push({dest, dep, ret, trav, status, slug, url, created: Date.now()});
+    await saveRegistry(existing);
+
+    window.location.href = url;
+  } catch(e) {
+    btn.textContent='Create itinerary →'; btn.disabled=false;
+    alert('Could not create itinerary page. Please try again.');
+  }
 }
 </script>
 
