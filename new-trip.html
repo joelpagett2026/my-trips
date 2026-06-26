@@ -107,6 +107,33 @@ async function cycleStatus() {
   } catch { /* silent */ }
 }
 
+function renderStatusToggle() {
+  const toggle = document.getElementById('status-toggle');
+  const optUp  = document.getElementById('opt-upcoming');
+  const optPl  = document.getElementById('opt-planning');
+  if (!toggle) return;
+  if (currentStatus === 'past') {
+    toggle.classList.add('is-past');
+    if (optUp) optUp.className = 'status-toggle-opt';
+    if (optPl) optPl.className = 'status-toggle-opt';
+    return;
+  }
+  toggle.classList.remove('is-past');
+  if (optUp) optUp.className = 'status-toggle-opt' + (currentStatus === 'upcoming' ? ' active-upcoming' : '');
+  if (optPl) optPl.className = 'status-toggle-opt' + (currentStatus === 'planning' ? ' active-planning' : '');
+}
+async function setStatus_toggle(newStatus) {
+  if (currentStatus === 'past' || currentStatus === newStatus) return;
+  currentStatus = newStatus;
+  renderStatusToggle();
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip  = trips.find(t => t.slug === RECORD_ID);
+    if (trip) { trip.status = currentStatus; await window.dbSaveRegistry(trips); }
+  } catch { /* silent */ }
+}
+
+
 function checkAutoComplete() {
   if (!ret) return;
   const parts = ret.split('/');
