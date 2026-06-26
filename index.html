@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -402,9 +402,9 @@ const liveTotalTrips = PS_TRIPS + liveCompletedPlanned;
 const liveCountryCount = liveCountries.size;
 
 // Update stat cards
-document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString();
+document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString('en-GB');
 document.getElementById('s-countries').textContent = liveCountryCount;
-document.getElementById('s-miles').textContent = liveMiles.toLocaleString();
+document.getElementById('s-miles').textContent = liveMiles.toLocaleString('en-GB');
 
 // ── FLAGS GRID ────────────────────────────────────────────────────────
 const flagsGrid = document.getElementById('flags-grid');
@@ -422,16 +422,26 @@ sortedFlags.forEach(cc => {
 // Parse dd/mm/yyyy or yyyy-mm-dd into a Date
 function parseAnyDate(str) {
   if (!str) return null;
+  // dd/mm/yyyy
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
     const [d,m,y] = str.split('/').map(Number);
     return new Date(y, m-1, d);
   }
+  // d/m/yyyy or similar short forms
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d,m,y] = str.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // yyyy-mm-dd (ISO)
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
     const [y,m,d] = str.split('-').map(Number);
     return new Date(y, m-1, d);
   }
-  const d = new Date(str);
-  return isNaN(d) ? null : d;
+  // "29 Aug 2026" style
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m = str.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if (m) return new Date(Number(m[3]), months[m[2]], Number(m[1]));
+  return null;
 }
 
 // Build list from PLANNED hardcoded trips
