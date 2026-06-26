@@ -36,7 +36,7 @@ if ($return !== 0) {
 // ── COPY FILES TO PUBLIC_HTML ─────────────────────────────────────────
 // Core non-HTML files always deployed from repo
 $coreFiles = [
-    'api.php', 'auth.js', 'db.js', 'datepicker.js',
+    'api.php', 'auth.js', 'db.js', 'datepicker.js', 'chat-widget.js',
     'itinerary-style.css', 'deploy-webhook.php'
 ];
 

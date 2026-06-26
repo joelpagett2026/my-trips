@@ -13,6 +13,7 @@ define('DB_PASS', 'v^l]&AyQxr4G');   // Your MySQL password
 // To change: php -r "echo hash('sha256', 'YOURPIN');"
 define('PIN_HASH', '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395');
 define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
+define('ANTHROPIC_KEY', getenv('ANTHROPIC_API_KEY') ?: '');  // Set via server env or replace with key
 
 // ══════════════════════════════════════════════════════════════════════
 //  NO CHANGES NEEDED BELOW THIS LINE
@@ -168,9 +169,66 @@ const RECORD_ID = slug;",
         // Write to public_html
         $outPath = PUBLIC_HTML . '/' . $slug . '.html';
         if (!defined('PUBLIC_HTML')) define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
+define('ANTHROPIC_KEY', getenv('ANTHROPIC_API_KEY') ?: '');  // Set via server env or replace with key
         if (file_put_contents($outPath, $page) === false) fail('Could not write file');
 
         ok(['slug' => $slug, 'url' => '/' . $slug . '.html']);
+
+    // ── CLAUDE CHAT PROXY ────────────────────────────────────────────
+    // POST /api.php?action=chat  { "messages": [...], "context": {...} }
+    case 'chat':
+        $key = ANTHROPIC_KEY;
+        if (!$key) fail('Anthropic API key not configured');
+        $messages = $body['messages'] ?? [];
+        $context  = $body['context']  ?? [];
+        if (empty($messages)) fail('No messages');
+
+        $systemPrompt = "You are Claude, an AI assistant built into Joel Pagett's Trip Planner website at joelpagett.co.uk.
+
+You have two roles:
+1. Answer questions about the trips, stats, itineraries and site
+2. Make live changes by returning structured JSON actions
+
+SITE CONTEXT:
+" . json_encode($context, JSON_PRETTY_PRINT) . "
+
+AVAILABLE ACTIONS (return these in your response as JSON blocks when making changes):
+- Update trip status: {"action":"update_status","slug":"porto-2026","status":"planning"}
+- Update registry trip fields: {"action":"update_trip","slug":"porto-2026","fields":{"dest":"Porto","dep":"29/08/2026"}}
+- Remove a trip: {"action":"remove_trip","slug":"porto-2026"}
+
+When making changes, explain what you're doing in plain English, then include the action JSON.
+Keep responses concise and friendly. You know Joel's travel history and upcoming plans from the context above.";
+
+        $payload = json_encode([
+            'model' => 'claude-sonnet-4-6',
+            'max_tokens' => 1024,
+            'system' => $systemPrompt,
+            'messages' => $messages,
+        ]);
+
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'x-api-key: ' . $key,
+                'anthropic-version: 2023-06-01',
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if (!$resp) fail('API request failed');
+        $data = json_decode($resp, true);
+        if ($httpCode !== 200) fail($data['error']['message'] ?? 'API error');
+
+        $text = $data['content'][0]['text'] ?? '';
+        ok(['reply' => $text]);
 
     // ── DELETE A RECORD ──────────────────────────────────────────────
     // DELETE /api.php?action=delete&id=...
