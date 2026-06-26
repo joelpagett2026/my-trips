@@ -48,6 +48,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .pill-past{background:rgba(100,100,110,0.18);color:#666666;border:1px solid rgba(100,100,110,0.2);}
 .trip-card.card-upcoming{box-shadow:0 0 0 2px #0e7a87,0 2px 8px rgba(0,0,0,0.08);}
 .trip-card.card-planning{box-shadow:0 0 0 2px #ff9500,0 2px 8px rgba(0,0,0,0.08);}
+.trip-card.card-past{box-shadow:0 0 0 2px #b8b8b8,0 2px 8px rgba(0,0,0,0.08);}
 .card-body{padding:12px 14px 14px;}
 .card-dest{font-size:15px;font-weight:700;color:#444444;margin-bottom:2px;}
 .card-dates{font-size:11px;color:#666666;opacity:0.6;font-weight:500;margin-bottom:8px;}
@@ -676,7 +677,7 @@ function buildDynamicCard(t) {
     .slice(0, 6)
     .map(c => `<span class="city-tag">${c}</span>`).join('');
 
-  const cardClass = t.status==='upcoming' ? 'trip-card card-upcoming' : t.status==='planning' ? 'trip-card card-planning' : 'trip-card';
+  const cardClass = t.status==='upcoming' ? 'trip-card card-upcoming' : t.status==='planning' ? 'trip-card card-planning' : 'trip-card card-past';
   const a = document.createElement('a'); a.className = cardClass; a.href = url;
   const mapId = 'dyn-map-' + t.slug;
 
@@ -722,7 +723,7 @@ function buildDynamicCard(t) {
 
       if (!points.length) return;
 
-      const mapColor = t.status === 'planning' ? '#ff9500' : '#0e7a87';
+      const mapColor = t.status === 'planning' ? '#ff9500' : t.status === 'past' ? '#b8b8b8' : '#0e7a87';
       const bounds = L.latLngBounds(points);
       const map = L.map(mapId, {center: bounds.getCenter(), zoom: 11, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
       tiles().addTo(map);
