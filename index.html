@@ -312,15 +312,43 @@ const PS_MILES = 205021;
 const PS_TRIPS = 58;
 
 // ── COMPUTE LIVE STATS ────────────────────────────────────────────────
-// A planned trip "completes" on its endDate — that's when everything updates
-function isCompleted(endDateStr) {
-  return new Date(endDateStr) <= TODAY;
+function isCompleted(endDateStr) { return new Date(endDateStr) <= TODAY; }
+function isUpcoming(startDateStr) { return new Date(startDateStr) > TODAY; }
+
+// Approx miles London → destination return, using known capital coords
+// Haversine straight-line × 1.3 factor for routing, × 2 for return
+const LONDON = [51.5074, -0.1278];
+const COUNTRY_COORDS = {
+  ae:[25.2048,55.2708], at:[48.2082,16.3738], au:[-33.8688,151.2093], be:[50.8503,4.3517],
+  ca:[43.7001,-79.4163], ch:[46.9481,7.4474], cn:[39.9042,116.4074], cr:[9.9281,-84.0907],
+  cy:[35.1856,33.3823], cz:[50.0755,14.4378], de:[52.5200,13.4050], dk:[55.6761,12.5683],
+  es:[40.4168,-3.7038], fi:[60.1699,24.9384], fr:[48.8566,2.3522], gb:[51.5074,-0.1278],
+  gr:[37.9838,23.7275], hk:[22.3193,114.1694], hr:[45.8150,15.9819], hu:[47.4979,19.0402],
+  id:[-6.2088,106.8456], ie:[53.3498,-6.2603], it:[41.9028,12.4964], je:[49.2144,-2.1313],
+  jp:[35.6762,139.6503], kr:[37.5665,126.9780], lu:[49.8153,6.1296], mc:[43.7384,7.4246],
+  my:[3.1390,101.6869], nl:[52.3676,4.9041], nz:[-36.8485,174.7633], pl:[52.2297,21.0122],
+  pt:[38.7169,-9.1395], ro:[44.4268,26.1025], se:[59.3293,18.0686], sg:[1.3521,103.8198],
+  th:[13.7563,100.5018], tr:[41.0082,28.9784], tw:[25.0330,121.5654], us:[40.7128,-74.0060],
+  za:[-33.9249,18.4241],
+};
+function haversineKm([lat1,lon1],[lat2,lon2]) {
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
-function isUpcoming(startDateStr) {
-  return new Date(startDateStr) > TODAY;
+function estimateMilesForCountries(ccs) {
+  // Find the furthest country, fly London→furthest→others→London, convert km→miles
+  let maxKm = 0;
+  ccs.forEach(cc => {
+    if (COUNTRY_COORDS[cc]) {
+      const km = haversineKm(LONDON, COUNTRY_COORDS[cc]);
+      if (km > maxKm) maxKm = km;
+    }
+  });
+  return Math.round(maxKm * 2 * 0.6214 * 1.15); // ×2 return, km→miles, ×1.15 routing
 }
 
-// Build the live country set and miles by merging PS baseline + completed Claude-managed trips only
+// Build live stats from PS baseline + PLANNED trips + completed registry trips
 const liveCountries = new Set(PS_COUNTRIES);
 let liveMiles = PS_MILES;
 let liveCompletedPlanned = 0;
@@ -333,21 +361,55 @@ Object.entries(PLANNED).forEach(([id, trip]) => {
   }
 });
 
+// Registry trips that have departed — add to stats dynamically
+let liveCompletedRegistry = 0;
+function applyRegistryStats(trips) {
+  trips.filter(t => !t.deleted).forEach(t => {
+    const dep = parseAnyDate(t.dep);
+    if (!dep || dep > TODAY) return; // not departed yet
+    // Skip if already counted in PLANNED
+    if (PLANNED[t.slug] && PLANNED[t.slug].addToStats) return;
+    const flags = t.flags || [];
+    flags.forEach(cc => liveCountries.add(cc));
+    liveMiles += estimateMilesForCountries(flags);
+    liveCompletedRegistry++;
+  });
+  renderStats();
+}
+
+function renderStats() {
+  const liveTotalTrips = PS_TRIPS + liveCompletedPlanned + liveCompletedRegistry;
+  const liveCountryCount = liveCountries.size;
+  document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString('en-GB');
+  document.getElementById('s-countries').textContent = liveCountryCount;
+  document.getElementById('s-miles').textContent = liveMiles.toLocaleString('en-GB');
+
+  // ── FLAGS GRID ──────────────────────────────────────────────────────
+  const flagsGrid = document.getElementById('flags-grid');
+  flagsGrid.innerHTML = '';
+  const sortedFlags = Array.from(liveCountries).sort();
+  document.getElementById('flags-title').textContent = `Flags collected · ${liveCountryCount} countries`;
+  sortedFlags.forEach(cc => {
+    const div = document.createElement('div'); div.className = 'flag-item';
+    div.title = cc.toUpperCase();
+    div.innerHTML = `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
+    flagsGrid.appendChild(div);
+  });
+}
+
+// Initial render with PLANNED only (registry loads async)
 const liveTotalTrips = PS_TRIPS + liveCompletedPlanned;
 const liveCountryCount = liveCountries.size;
-
-// Update stat cards
 document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString('en-GB');
 document.getElementById('s-countries').textContent = liveCountryCount;
 document.getElementById('s-miles').textContent = liveMiles.toLocaleString('en-GB');
 
-// ── FLAGS GRID ────────────────────────────────────────────────────────
+// ── FLAGS GRID (initial render) ───────────────────────────────────────
 const flagsGrid = document.getElementById('flags-grid');
 const sortedFlags = Array.from(liveCountries).sort();
 document.getElementById('flags-title').textContent = `Flags collected · ${liveCountryCount} countries`;
 sortedFlags.forEach(cc => {
   const div = document.createElement('div'); div.className = 'flag-item';
-  const d = div.cloneNode();
   div.title = cc.toUpperCase();
   div.innerHTML = `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
   flagsGrid.appendChild(div);
@@ -820,8 +882,8 @@ function renderDynamicTrips(trips) {
 }
 async function seedAndRender() {
   const registry = await loadRegistry();
-  // Filter out deleted markers, render remaining trips
   const trips = registry.filter(r => !r.deleted);
+  applyRegistryStats(trips);
   renderDynamicTrips(trips);
 }
 
