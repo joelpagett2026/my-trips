@@ -46,6 +46,8 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .pill-upcoming{background:rgba(14,122,135,0.18);color:#0e7a87;border:1px solid rgba(14,122,135,0.25);}
 .pill-planning{background:rgba(255,149,0,0.18);color:#c07000;border:1px solid rgba(255,149,0,0.25);}
 .pill-past{background:rgba(100,100,110,0.18);color:#666666;border:1px solid rgba(100,100,110,0.2);}
+.trip-card.card-upcoming{box-shadow:0 0 0 2px #0e7a87,0 2px 8px rgba(0,0,0,0.08);}
+.trip-card.card-planning{box-shadow:0 0 0 2px #ff9500,0 2px 8px rgba(0,0,0,0.08);}
 .card-body{padding:12px 14px 14px;}
 .card-dest{font-size:15px;font-weight:700;color:#444444;margin-bottom:2px;}
 .card-dates{font-size:11px;color:#666666;opacity:0.6;font-weight:500;margin-bottom:8px;}
@@ -674,7 +676,8 @@ function buildDynamicCard(t) {
     .slice(0, 6)
     .map(c => `<span class="city-tag">${c}</span>`).join('');
 
-  const a = document.createElement('a'); a.className = 'trip-card'; a.href = url;
+  const cardClass = t.status==='upcoming' ? 'trip-card card-upcoming' : t.status==='planning' ? 'trip-card card-planning' : 'trip-card';
+  const a = document.createElement('a'); a.className = cardClass; a.href = url;
   const mapId = 'dyn-map-' + t.slug;
 
   // Flags HTML from stored flags array
