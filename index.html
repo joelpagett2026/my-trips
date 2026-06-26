@@ -163,7 +163,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 
   <div class="section" style="padding-top:16px;">
     <div class="section-title">2027</div>
-    <div class="trips-grid" id="upcoming-grid">
+    <div class="trips-grid" id="year-grid-2027">
       <a class="trip-card" href="/canada.html">
         <div class="card-image-area">
           <div id="map-canada" class="card-map"></div>
@@ -190,11 +190,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
           <div class="card-footer"><span class="card-meta">16 nights</span><svg class="card-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </a>
-      <a class="add-card" href="#" onclick="openModal(event)">
-        <div class="add-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-        <div class="add-label">New Trip</div>
-        <div class="add-sub">Add an upcoming itinerary</div>
-      </a>
     </div>
   </div>
 
@@ -202,7 +197,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 
   <div class="section">
     <div class="section-title">2026</div>
-    <div class="trips-grid" id="past-grid">
+    <div class="trips-grid" id="year-grid-2026">
       <a class="trip-card" href="/china.html">
         <div class="card-image-area">
           <div id="map-china" class="card-map"></div>
@@ -221,7 +216,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     <div class="year-divider"></div>
 
     <div class="section-title" style="padding:0 0 10px;">2025</div>
-    <div class="trips-grid">
+    <div class="trips-grid" id="year-grid-2025">
       <a class="trip-card" href="/dubai.html">
         <div class="card-image-area">
           <div id="map-dubai" class="card-map"></div>
@@ -251,6 +246,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     </div>
   </div>
 
+  <div class="section" style="padding-top:8px;">
+    <a class="add-card" href="#" onclick="openModal(event)" id="add-trip-btn">
+      <div class="add-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      <div class="add-label">New Trip</div>
+      <div class="add-sub">Add an upcoming itinerary</div>
+    </a>
+  </div>
 </div><!-- end trips-col -->
 
 <!-- ── RIGHT: DASHBOARD ── -->
@@ -815,18 +817,68 @@ async function buildDynamicCard(t) {
   return a;
 }
 
+function getOrCreateYearGrid(year) {
+  const id = 'year-grid-' + year;
+  let grid = document.getElementById(id);
+  if (grid) return grid;
+
+  // Need to create a new year section — insert in correct position (newest first)
+  const tripsCol = document.querySelector('.trips-col');
+  const addSection = document.getElementById('add-trip-btn').closest('.section');
+
+  // Find where to insert (before the first existing section with a lower year)
+  const sections = tripsCol.querySelectorAll('.section[data-year]');
+  let insertBefore = addSection;
+  for (const sec of sections) {
+    if (parseInt(sec.dataset.year) < parseInt(year)) {
+      // Insert a divider + new section before this one
+      insertBefore = sec;
+      break;
+    }
+  }
+
+  const divider = document.createElement('div'); divider.className = 'year-divider';
+  const section = document.createElement('div'); section.className = 'section'; section.dataset.year = year;
+  section.innerHTML = `<div class="section-title">${year}</div><div class="trips-grid" id="${id}"></div>`;
+
+  tripsCol.insertBefore(divider, insertBefore);
+  tripsCol.insertBefore(section, insertBefore);
+
+  return document.getElementById(id);
+}
+
+// Mark existing hardcoded sections with data-year
+document.querySelectorAll('.trips-col .section').forEach(sec => {
+  const title = sec.querySelector('.section-title');
+  if (title && /^\d{4}$/.test(title.textContent.trim())) {
+    sec.dataset.year = title.textContent.trim();
+  }
+});
+
+function extractYear(dep) {
+  if (!dep) return null;
+  // dd/mm/yyyy
+  const m1 = dep.match(/(\d{4})$/);
+  if (m1) return m1[1];
+  // yyyy-mm-dd
+  const m2 = dep.match(/^(\d{4})-/);
+  if (m2) return m2[1];
+  return null;
+}
+
 async function renderDynamicTrips(trips) {
   if (!trips.length) return;
-  const upGrid = document.getElementById('upcoming-grid');
-  const pastGrid = document.getElementById('past-grid');
-  const addBtn = upGrid.querySelector('.add-card');
-  for (const t of trips.filter(t => t.status !== 'past')) {
+  // Sort by dep date descending so newest appear first within each grid
+  trips.sort((a, b) => {
+    const ya = extractYear(a.dep) || '0';
+    const yb = extractYear(b.dep) || '0';
+    return yb.localeCompare(ya);
+  });
+  for (const t of trips) {
     const card = await buildDynamicCard(t);
-    upGrid.insertBefore(card, addBtn);
-  }
-  for (const t of trips.filter(t => t.status === 'past')) {
-    const card = await buildDynamicCard(t);
-    pastGrid.appendChild(card);
+    const year = extractYear(t.dep) || '0';
+    const grid = getOrCreateYearGrid(year);
+    grid.appendChild(card);
   }
 }
 loadRegistry().then(renderDynamicTrips);
