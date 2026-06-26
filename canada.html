@@ -119,9 +119,15 @@ async function init() {
     if (l) l.classList.add('hidden');
   }
 }
-// Wait for auth then init
+// Wait for auth then run init
 (function waitForAuth() {
-  if (typeof isAuthed === 'function' && isAuthed()) { init(); return; }
+  if (typeof isAuthed === 'function' && isAuthed()) {
+    init().finally(() => {
+      const l = document.getElementById('loading');
+      if (l) l.classList.add('hidden');
+    });
+    return;
+  }
   setTimeout(waitForAuth, 50);
 })();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
