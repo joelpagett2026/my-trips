@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=12">
+<link rel="stylesheet" href="/itinerary-style.css?v=13">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -363,21 +363,27 @@ function addDay(d) {
   ib.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="sec-label"><span class="sec-label-text">Itinerary</span></span>';
   is_.appendChild(ib);
   ['morning', 'afternoon', 'evening'].forEach((period, i) => {
-    const row = document.createElement('div'); row.className = 'row-inner'; row.style.gridTemplateColumns = '0.42fr 2.4fr 1fr';
-    if (i < 2) row.style.borderBottom = '0.5px solid rgba(0,0,0,0.06)';
-    const pc = document.createElement('div'); pc.className = 'cell itin-period';
-    const pl = document.createElement('div'); pl.className = 'cell-lbl'; pl.textContent = 'Period';
-    const pi = document.createElement('input'); pi.type = 'text';
-    pi.value = d['period_' + period] || (period.charAt(0).toUpperCase() + period.slice(1));
-    pi.className = 'cell-inp bold'; pi.dataset.key = 'period_' + period;
-    pi.addEventListener('input', scheduleSave);
-    pc.appendChild(pl); pc.appendChild(pi);
-    const ac = document.createElement('div'); ac.className = 'cell';
-    const al = document.createElement('div'); al.className = 'cell-lbl'; al.textContent = 'Activities & Notes';
+    // Vertical block per period
+    const block = document.createElement('div');
+    block.style.cssText = 'padding:12px 16px;' + (i < 2 ? 'border-bottom:0.5px solid rgba(0,0,0,0.07);' : '');
+
+    // Period heading
+    const heading = document.createElement('div');
+    heading.style.cssText = 'font-size:11px;font-weight:700;color:#0e7a87;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;';
+    heading.textContent = period.charAt(0).toUpperCase() + period.slice(1);
+    block.appendChild(heading);
+
+    // Activities textarea
     const at = ta(d['act_' + period] || '', 'act_' + period, "What's planned " + period + "?");
-    ac.appendChild(al); ac.appendChild(at);
-    const lc = document.createElement('div'); lc.className = 'cell';
-    const ll = document.createElement('div'); ll.className = 'cell-lbl'; ll.textContent = 'Ticket / Booking link';
+    at.style.minHeight = '60px';
+    block.appendChild(at);
+
+    // Ticket link - compact
+    const linkWrap = document.createElement('div');
+    linkWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:8px;';
+    const linkIcon = document.createElement('span');
+    linkIcon.style.cssText = 'font-size:10px;color:#aaa;flex-shrink:0;';
+    linkIcon.textContent = '🔗';
     const li = inp(d['link_' + period] || '', 'link_' + period, '', 'https://…');
     li.style.color = '#007aff'; li.style.fontSize = '12px';
     lc.appendChild(ll); lc.appendChild(li);
