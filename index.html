@@ -692,7 +692,7 @@ function makeYearGroup(year, yearTrips) {
 years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
 
 // ── MAPS ─────────────────────────────────────────────────────────────
-const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:''});
+const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:''});
 function makeMap(id,center,zoom,points,color){
   const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
   tiles().addTo(map);
@@ -785,9 +785,13 @@ async function buildDynamicCard(t) {
       if (!mapEl || !coords.length) return;
       const points = coords.map(c => [c.lat, c.lon]);
       const bounds = L.latLngBounds(points);
-      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 5, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
+      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 11, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
       tiles().addTo(map);
-      map.fitBounds(bounds, {padding: [24, 24]});
+      if (points.length > 1) {
+        map.fitBounds(bounds, {padding: [28, 28]});
+      } else {
+        map.setView(points[0], 11);
+      }
       if (points.length > 1) {
         L.polyline(points, {color:'#0e7a87', weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
       }
