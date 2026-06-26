@@ -406,7 +406,7 @@ function applyRegistryStats(trips) {
     const alreadyIn = psTripList.some(p => p.name === t.dest);
     if (!alreadyIn) {
       const start = dep.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
-      psTripList.unshift({ name: t.dest, start, codes: flags, planned: true });
+      psTripList.unshift({ name: t.dest, start, codes: flags });
     }
   });
 
@@ -671,7 +671,7 @@ Object.entries(PLANNED).forEach(([id, t]) => {
     if (!alreadyIn) {
       const d = new Date(t.startDate);
       const start = d.toLocaleDateString('en-GB',{month:'short', year:'numeric'});
-      psTripList.unshift({ name: t.name, start, codes: t.countries, planned: true });
+      psTripList.unshift({ name: t.name, start, codes: t.countries });
     }
   }
 });
@@ -696,7 +696,7 @@ function makeYearGroup(year, yearTrips) {
   yearTrips.forEach(t => {
     const row = document.createElement('div'); row.className = 'dash-trip-row';
     const info = document.createElement('div'); info.className = 'dash-trip-info';
-    const badge = t.planned ? ' <span style="font-size:9px;background:#e8f0ff;color:#0e7a87;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;">Planned</span>' : '';
+    const badge = '';
     info.innerHTML = `<div class="dash-trip-row-name">${t.name}${badge}</div><div class="dash-trip-row-date">${t.start}</div>`;
     const flags = document.createElement('div'); flags.style.cssText='display:flex;gap:3px;flex-shrink:0;';
     t.codes.slice(0,2).forEach(cc => {
