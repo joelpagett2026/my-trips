@@ -329,15 +329,10 @@ function runInit() {
     if (l) l.classList.add('hidden');
   });
 }
-// Poll until auth token is available, then init
+// Wait for auth then init
 (function waitForAuth() {
-  try {
-    const session = JSON.parse(localStorage.getItem('jh_auth') || 'null');
-    const token = session && session.token;
-    const age = session ? (Date.now() - session.ts) : Infinity;
-    if (token && age < 43200000) { runInit(); return; }
-  } catch {}
-  setTimeout(waitForAuth, 100);
+  if (typeof isAuthed === 'function' && isAuthed()) { runInit(); return; }
+  setTimeout(waitForAuth, 50);
 })();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 

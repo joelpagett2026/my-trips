@@ -426,15 +426,10 @@ async function init() {
     document.getElementById('loading').classList.add('hidden');
   }
 }
-// Poll until auth token is available, then init
+// Wait for auth then init
 (function waitForAuth() {
-  try {
-    const session = JSON.parse(localStorage.getItem('jh_auth') || 'null');
-    const token = session && session.token;
-    const age = session ? (Date.now() - session.ts) : Infinity;
-    if (token && age < 43200000) { init(); return; }
-  } catch {}
-  setTimeout(waitForAuth, 100);
+  if (typeof isAuthed === 'function' && isAuthed()) { init(); return; }
+  setTimeout(waitForAuth, 50);
 })();
 async function deleteTrip() {
   if (!confirm("Delete this itinerary? This cannot be undone.")) return;
