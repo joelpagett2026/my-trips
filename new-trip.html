@@ -18,17 +18,23 @@
     My Trips
   </a>
   <div class="nav-title" id="nav-title">New Trip</div>
-  <div class="nav-actions"><div class="nav-status saved" id="nav-status"><div class="status-dot"></div><span id="nav-status-label">All saved</span></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="opacity:0.4;" disabled>Undo</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
+  <div class="nav-actions"><div class="nav-status saved" id="nav-status"><div class="status-dot"></div><span id="nav-status-label">All saved</span></div><div class="status-toggle" id="status-toggle">
+      <button class="status-toggle-opt" id="opt-upcoming" onclick="setStatus_toggle('upcoming')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Upcoming
+      </button>
+      <button class="status-toggle-opt" id="opt-planning" onclick="setStatus_toggle('planning')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Planning
+      </button>
+    </div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="opacity:0.4;" disabled>Undo</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 
 <div class="large-title-area" style="padding-top:16px;">
   <div class="large-title" id="page-title">New Trip</div>
   <div class="large-subtitle" id="page-sub"></div>
 </div>
-<div class="status-badge-wrap">
-  <button class="status-badge-btn" id="status-badge" onclick="cycleStatus()"></button>
-  <span class="status-toggle-hint" id="status-hint"></span>
-</div>
+
 
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
@@ -93,7 +99,7 @@ function renderStatusBadge() {
 async function cycleStatus() {
   if (currentStatus === 'past') return;
   currentStatus = currentStatus === 'upcoming' ? 'planning' : 'upcoming';
-  renderStatusBadge();
+  renderStatusToggle();
   // Update in registry
   try {
     const trips = await window.dbLoadRegistry();
@@ -107,10 +113,8 @@ function checkAutoComplete() {
   const parts = ret.split('/');
   if (parts.length !== 3) return;
   const retDate = new Date(parts[2], parts[1]-1, parts[0]);
-  if (retDate < new Date()) {
-    currentStatus = 'past';
-  }
-  renderStatusBadge();
+  if (retDate < new Date()) currentStatus = 'past';
+  renderStatusToggle();
 }
 
 // Pre-fill header
@@ -351,7 +355,7 @@ function restoreState(state) {
   if (state.days) state.days.forEach(d => addDay(d));
 }
 document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", scheduleSave); });
-renderStatusBadge(); // Show correct badge immediately on load
+renderStatusToggle(); // Show correct badge immediately on load
 
 async function manualSave() {
   const btn = document.getElementById('nav-save-btn');
