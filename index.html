@@ -398,13 +398,31 @@ function applyRegistryStats(trips) {
     const dep = parseAnyDate(t.dep);
     if (!dep || dep > TODAY) return; // not departed yet
     const flags = t.flags || [];
-    // Only add countries not already in the live set
-    const newCountries = flags.filter(cc => !liveCountries.has(cc));
     flags.forEach(cc => liveCountries.add(cc));
-    // Only count miles if this actually adds new ground (has flags)
     if (flags.length) liveMiles += estimateMilesForCountries(flags);
     liveCompletedRegistry++;
+
+    // Add to past trips sidebar if not already listed
+    const alreadyIn = psTripList.some(p => p.name === t.dest);
+    if (!alreadyIn) {
+      const start = dep.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).replace(/\//g,' ');
+      psTripList.unshift({ name: t.dest, start, codes: flags, planned: true });
+    }
   });
+
+  // Re-render past trips sidebar with updated list
+  const byYearNew = {};
+  psTripList.forEach(t => {
+    const year = t.start.split(' ')[2];
+    if (!byYearNew[year]) byYearNew[year] = [];
+    byYearNew[year].push(t);
+  });
+  const histEl = document.getElementById('trip-history');
+  if (histEl) {
+    histEl.innerHTML = '';
+    Object.keys(byYearNew).sort((a,b) => b-a).forEach(year => histEl.appendChild(makeYearGroup(year, byYearNew[year])));
+  }
+
   renderStats();
 }
 
