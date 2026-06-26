@@ -712,7 +712,7 @@ function makeYearGroup(year, yearTrips) {
 years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
 
 // ── MAPS ─────────────────────────────────────────────────────────────
-const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',detectRetina:true});
+const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',detectRetina:true,updateWhenZooming:false,keepBuffer:2});
 function makeMap(id,center,zoom,points,color){
   const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
   tiles().addTo(map);
