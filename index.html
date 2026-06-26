@@ -712,7 +712,7 @@ function makeYearGroup(year, yearTrips) {
 years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
 
 // ── MAPS ─────────────────────────────────────────────────────────────
-const tiles = () => ({ addTo: () => {} }) // No base tiles - clean grey background;
+const tiles = () => L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:''});
 function makeMap(id,center,zoom,points,color){
   const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
   tiles().addTo(map);
