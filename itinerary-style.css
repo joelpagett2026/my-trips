@@ -220,4 +220,4 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .status-toggle-opt.active-upcoming svg,.status-toggle-opt.active-planning svg{transform:scale(1.15);}
 .status-toggle.is-past{opacity:0.45;pointer-events:none;}
 
-.page-title-flag{height:1em;width:auto;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.2);flex-shrink:0;vertical-align:middle;}
+.page-title-flag{height:0.7em;width:auto;border-radius:2px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.2);flex-shrink:0;vertical-align:middle;}
