@@ -324,11 +324,12 @@ async function init() {
   try { state = await dbLoad(); } catch(e) { console.error('Load failed', e); }
   if (state && state.days && state.days.length) { restoreState(state); setStatus('saved', 'All saved'); }
   else { DEFAULTS.forEach(d => addDay(d)); setStatus('saving', 'Not yet saved'); }
-  document.getElementById('loading').classList.add('hidden');
   checkAutoComplete();
 }
-
-init();
+init().finally(() => {
+  const l = document.getElementById('loading');
+  if (l) l.classList.add('hidden');
+});
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 
 function renderStatusToggle() {

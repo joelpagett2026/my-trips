@@ -102,7 +102,7 @@ async function init(){  // Read live status from registry so toggles persist
     const trip = trips.find(t => t.slug === RECORD_ID);
     if (trip && trip.status) currentStatus = trip.status;
   } catch { /* use baked status */ }
-let state=null;try{state=await dbLoad();}catch{}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{addDay({});setStatus('saving','Not yet saved');}document.getElementById('loading').classList.add('hidden');checkAutoComplete();}
+let state=null;try{state=await dbLoad();}catch{}if(state&&state.days&&state.days.length){restoreState(state);setStatus('saved','All saved');}else{addDay({});setStatus('saving','Not yet saved');}checkAutoComplete();}finally{const l=document.getElementById('loading');if(l)l.classList.add('hidden');}}
 init();
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 
