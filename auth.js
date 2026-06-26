@@ -156,7 +156,7 @@ function showPinOverlay() {
             if (json.ok && json.data && json.data.token) {
                 storeSession(json.data.token);
                 document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => { d.style.background='#34c759'; });
-                setTimeout(() => { overlay.remove(); document.documentElement.style.visibility = 'visible'; }, 350);
+                setTimeout(() => { overlay.remove(); document.documentElement.style.visibility = 'visible'; document.dispatchEvent(new Event('mytrips:authed')); }, 350);
             } else {
                 throw new Error('bad pin');
             }
@@ -188,6 +188,7 @@ function showPinOverlay() {
 
 if (isAuthed()) {
     document.documentElement.style.visibility = 'visible';
+    document.addEventListener('DOMContentLoaded', () => document.dispatchEvent(new Event('mytrips:authed')));
 } else {
     document.addEventListener('DOMContentLoaded', showPinOverlay);
 }

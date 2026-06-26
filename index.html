@@ -447,7 +447,16 @@ async function initCountdown() {
     });
   }
 }
-initCountdown();
+// Don't run until authed
+function runAfterAuth() {
+  initCountdown();
+  seedAndRender();
+}
+if (typeof isAuthed === 'function' && isAuthed()) {
+  runAfterAuth();
+} else {
+  document.addEventListener('mytrips:authed', runAfterAuth, { once: true });
+}
 
 // ── TRIP HISTORY ──────────────────────────────────────────────────────
 const trips = [
@@ -840,7 +849,6 @@ async function seedAndRender() {
   if (changed) await saveRegistry([...trips, ...Array.from(deletedSlugs).map(s => ({ deleted: s }))]);
   renderDynamicTrips(trips);
 }
-seedAndRender();
 
 function openModal(e){
   e.preventDefault();
