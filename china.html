@@ -41,6 +41,9 @@
 
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val sv-blue" id="s-days">0</div><div class="stat-lbl">Days</div></div>
+  <div class="stat-card"><div class="stat-val sv-orange">31/03/2026</div><div class="stat-lbl">Departure</div></div>
+  <div class="stat-card"><div class="stat-val sv-green">17/04/2026</div><div class="stat-lbl">Return</div></div>
+</div>
   <div class="stat-card"><div class="stat-val sv-orange">4</div><div class="stat-lbl">Cities</div></div>
   <div class="stat-card"><div class="stat-val sv-purple" id="s-acc">£0</div><div class="stat-lbl">Accommodation</div></div>
   <div class="stat-card"><div class="stat-val sv-green" id="s-total">£0</div><div class="stat-lbl">Total cost</div></div>
@@ -52,7 +55,7 @@
       <div class="th-g"><div class="th-lbl">Destination</div><input class="th-inp hdr-field" id="hdr-dest" value="China"></div>
       <div class="th-g"><div class="th-lbl">Departure</div><input type="date" class="th-inp sm hdr-field" id="hdr-dep" value="2026-03-31"></div>
       <div class="th-g"><div class="th-lbl">Return</div><input type="date" class="th-inp sm hdr-field" id="hdr-ret" value="2026-04-17"></div>
-      <div class="th-g"><div class="th-lbl">Travellers</div><input class="th-inp sm hdr-field" id="hdr-trav" style="width:60px" value="2"></div>
+      <input type="hidden" id="hdr-trav" value="2">
     </div>
     </div>
   </div>
@@ -272,8 +275,6 @@ function recalc() {
   document.getElementById('s-days').textContent = cards.length;
   let acc = 0;
   cards.forEach(c => c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value)||0; }));
-  document.getElementById('s-acc').textContent = '£'+acc.toFixed(0);
-  document.getElementById('s-total').textContent = '£'+acc.toFixed(0);
 }
 
 function restoreState(state) {
