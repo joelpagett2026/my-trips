@@ -37,7 +37,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .trip-card:hover{transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
 .trip-card:active{transform:scale(0.985);}
 .card-image-area{height:140px;position:relative;overflow:hidden;isolation:isolate;}
-.card-map{width:100%;height:100%;pointer-events:none;}.leaflet-container{background:#e2e8ea!important;}.leaflet-tile{border:none!important;outline:none!important;}
+.card-map{width:100%;height:100%;pointer-events:none;}.leaflet-container{background:#e2e8ea!important;}.leaflet-tile{border:none!important;outline:none!important;}.leaflet-tile-loaded{transition:none!important;}.leaflet-pane canvas,.leaflet-pane svg{position:absolute;}.card-map .leaflet-layer{opacity:1!important;}.card-map .leaflet-tile-container{pointer-events:none;}
 .card-map .leaflet-control-container{display:none!important;}
 .card-map .leaflet-bottom,.card-map .leaflet-top{display:none!important;}
 .card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:450;}
@@ -717,7 +717,7 @@ function makeMap(id,center,zoom,points,color){
   const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
   tiles().addTo(map);
   L.polyline(points,{color,weight:2.5,opacity:0.85,dashArray:'6,4'}).addTo(map);
-  points.forEach((p,i)=>L.circleMarker(p,{radius:i===0||i===points.length-1?6:4,fillColor:color,color:'#fff',weight:2,fillOpacity:1}).addTo(map));
+  points.forEach((p,i)=>L.circleMarker(p,{radius:i===0||i===points.length-1?6:4,fillColor:color,color:color,weight:1,fillOpacity:1}).addTo(map));
 }
 makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#0e7a87');
 makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#0e7a87');
@@ -824,7 +824,7 @@ function buildDynamicCard(t) {
         map.setView(points[0], 11);
       }
       points.forEach((p, i) => {
-        L.circleMarker(p, {radius: i===0||i===points.length-1 ? 6 : 4, fillColor:mapColor, color:'#fff', weight:2, fillOpacity:1}).addTo(map);
+        L.circleMarker(p, {radius: i===0||i===points.length-1 ? 6 : 4, fillColor:mapColor, color:mapColor, weight:1, fillOpacity:1}).addTo(map);
       });
     } catch(e) { console.warn('Card map error:', e); }
   }, 100);
