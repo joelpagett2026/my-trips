@@ -241,8 +241,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .status-toggle-opt { padding: 5px 7px; font-size: 0; gap: 0; }
   .status-toggle-opt svg { width: 13px; height: 13px; }
 
-  /* Action buttons: compact */
-  .nav-btn { font-size: 11px; padding: 5px 8px; border-radius: 7px; }
+  /* Nav buttons: icon-only squares on mobile */
+  .nav-btn { 
+    width: 34px !important; 
+    height: 34px !important;
+    padding: 0 !important; 
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+    gap: 0 !important;
+  }
+  .nav-btn .nav-btn-text { display: none; }
+  .nav-btn svg { flex-shrink: 0; }
+
+  /* Back link: icon only */
+  .nav-back .nav-back-text { display: none; }
 
   .large-title-area { padding: 12px 16px 0; }
   .large-title { font-size: 24px; gap: 8px; }
