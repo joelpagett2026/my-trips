@@ -224,10 +224,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* ── MOBILE RESPONSIVE (itinerary pages) ── */
 @media (max-width: 700px) {
-  /* Hide top nav on mobile — everything moves to bottom bar */
-  .nav { height: 52px; padding: 0 16px; }
-  .nav-back { display: none !important; }
-  .nav-actions { display: none !important; }
+  /* Hide entire nav on mobile — bottom bar replaces it */
+  .nav { display: none !important; }
 
   /* Bottom tab bar for itinerary pages */
   .itin-tab-bar {
