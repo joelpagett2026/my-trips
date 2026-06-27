@@ -319,9 +319,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     max-height: calc(100vh - 160px) !important;
   }
 
-  /* Push content above tab bar */
-  .days { padding-bottom: 88px; }
-
   .large-title-area { padding: 12px 16px 0; }
   .large-title { font-size: 24px; gap: 8px; }
   .large-subtitle { font-size: 12px; }
@@ -337,7 +334,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   .sec-hd { font-size: 18px; padding: 12px 16px 6px; }
 
-  .days { padding: 0 12px 88px; gap: 10px; }
+  /* Push content well above tab bar */
+  .days { padding: 0 12px 100px; gap: 10px; }
+  .add-day { margin-bottom: 100px; }
   .day-card { border-radius: 14px; }
 
   /* ── DAY CARD VERTICAL STACKING ── */
