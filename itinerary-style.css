@@ -292,9 +292,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   /* Day top: date + location bar wraps nicely already, just ensure min-width */
   .s-date [style*="min-width:130px"] { min-width: 100px !important; }
 
-  /* Day date/location bar: shrink date, give location more room */
-  .day-date-wrap { min-width: 90px !important; padding: 0 10px !important; }
-  .day-loc-wrap { padding: 0 10px !important; }
+  /* Day date/location bar: date fixed width, location gets the rest */
+  .day-date-wrap { min-width: 0 !important; width: 110px !important; flex-shrink: 0 !important; padding: 0 10px !important; }
+  .day-loc-wrap { padding: 0 10px !important; flex: 1 !important; min-width: 0 !important; }
+  .day-loc-wrap input { overflow: hidden; text-overflow: ellipsis; }
 
   /* Cells: more breathing room */
   .cell { padding: 10px 14px; }
