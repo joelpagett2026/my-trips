@@ -241,7 +241,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .status-toggle-opt { padding: 5px 7px; font-size: 0; gap: 0; }
   .status-toggle-opt svg { width: 13px; height: 13px; }
 
-  /* Nav buttons: icon-only squares on mobile */
+  /* Nav buttons: icon-only squares on mobile, all same style */
   .nav-btn { 
     width: 34px !important; 
     height: 34px !important;
@@ -251,6 +251,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     justify-content: center !important;
     border-radius: 9px !important;
     gap: 0 !important;
+    background: rgba(14,122,135,0.1) !important;
+    color: #0e7a87 !important;
+  }
+  .nav-btn.danger {
+    background: rgba(192,57,43,0.1) !important;
+    color: #c0392b !important;
   }
   .nav-btn .nav-btn-text { display: none; }
   .nav-btn svg { flex-shrink: 0; }
