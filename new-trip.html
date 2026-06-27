@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=66">
+<link rel="stylesheet" href="/itinerary-style.css?v=67">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -274,7 +274,7 @@ function makeTransRow(data, container) {
   const modeLbl = document.createElement('div'); modeLbl.className = 'cell-lbl'; modeLbl.textContent = 'Mode';
   const modeSel = document.createElement('select');
   modeSel.className = 'cell-inp'; modeSel.dataset.key = 'mode';
-  modeSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:11px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  modeSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
   ['', 'Flight', 'Train', 'Ferry', 'Taxi', 'Bus', 'Car', 'Other'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
@@ -315,7 +315,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
   const mealLbl = document.createElement('div'); mealLbl.className = 'cell-lbl'; mealLbl.textContent = 'Meal';
   const mealSel = document.createElement('select');
   mealSel.className = 'cell-inp'; mealSel.dataset.key = 'meal';
-  mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:11px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
   ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack', 'Inflight', 'Airport Lounge'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
@@ -376,7 +376,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
     const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked?';
     const bookedSel = document.createElement('select');
     bookedSel.className = 'cell-inp'; bookedSel.dataset.key = 'notes';
-    bookedSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:11px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+    bookedSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
     ['', 'Booked', 'Walk In Only', 'No Information'].forEach(opt => {
       const o = document.createElement('option');
       o.value = opt; o.textContent = opt || 'Select…';
