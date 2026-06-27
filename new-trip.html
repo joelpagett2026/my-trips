@@ -399,8 +399,23 @@ function addDay(d) {
   as.appendChild(ab);
   const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 0.7fr';
 
-  const checkinInp = inp(d.checkin, 'checkin', '', '');
-  const checkoutInp = inp(d.checkout, 'checkout', '', '');
+  // Auto-format date inputs (dd/mm/yyyy)
+  function dateInp2(val, key) {
+    const i = document.createElement('input');
+    i.type = 'text'; i.inputMode = 'numeric'; i.maxLength = 10;
+    i.value = val || ''; i.dataset.key = key; i.className = 'cell-inp';
+    i.placeholder = 'dd/mm/yyyy';
+    i.addEventListener('input', () => {
+      let v = i.value.replace(/[^0-9]/g, '');
+      if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+      if (v.length >= 6) v = v.slice(0,5) + '/' + v.slice(5,9);
+      i.value = v;
+      scheduleSave();
+    });
+    return i;
+  }
+  const checkinInp = dateInp2(d.checkin, 'checkin');
+  const checkoutInp = dateInp2(d.checkout, 'checkout');
   const hotelCell = document.createElement('div'); hotelCell.className = 'cell';
   const hotelLbl = document.createElement('div'); hotelLbl.className = 'cell-lbl'; hotelLbl.textContent = 'Hotel';
   const hotelInp = inp(d.hotel, 'hotel', 'bold', '');
