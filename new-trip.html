@@ -217,7 +217,14 @@ function collectState() {
   const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
   const days = Array.from(document.querySelectorAll('.day-card')).map(card => {
     const obj = {};
-    card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.value; });
+    card.querySelectorAll('[data-key]').forEach(el => {
+      let val = el.value;
+      // Expand 2-digit year dates (dd/mm/yy → dd/mm/yyyy)
+      if (el.dataset.key === 'date' && val && val.length === 8 && val[2]==='/' && val[5]==='/') {
+        const y = val.slice(6); val = val.slice(0,6) + (parseInt(y)<50?'20':'19') + y;
+      }
+      obj[el.dataset.key] = val;
+    });
     obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); o._hotelBf = !row.querySelector('[data-key="notes"]'); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
@@ -421,6 +428,23 @@ function addDay(d) {
   dateLbl.textContent = 'Date';
   const dateInp = inp(d.date, 'date', 'bold', '');
   dateInp.style.cssText = 'font-size:14px;font-weight:700;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  // Show short year (dd/mm/yy) but store full date
+  const toShortDate = v => v && v.length === 10 ? v.slice(0,6) + v.slice(8) : v;
+  const toLongDate = v => {
+    if (!v) return v;
+    const p = v.replace(/[^0-9/]/g,'').split('/');
+    if (p.length === 3 && p[2].length === 2) p[2] = (parseInt(p[2]) < 50 ? '20' : '19') + p[2];
+    return p.join('/');
+  };
+  if (d.date) dateInp.value = toShortDate(d.date);
+  dateInp.addEventListener('blur', () => { dateInp.dataset.fullDate = toLongDate(dateInp.value); });
+  dateInp.addEventListener('input', () => {
+    let v = dateInp.value.replace(/[^0-9]/g,'');
+    if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+    if (v.length >= 6) v = v.slice(0,5) + '/' + v.slice(5,7);
+    dateInp.value = v;
+    scheduleSave();
+  });
   dateWrap.appendChild(dateLbl); dateWrap.appendChild(dateInp);
 
   const locWrap = document.createElement('div');
