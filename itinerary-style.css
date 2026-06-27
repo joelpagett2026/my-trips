@@ -106,7 +106,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .cell:last-child{border-right:none;}
 .cell-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;font-weight:700;color:#555555;}
 .cell-inp{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:400;color:#333333;width:100%;outline:none;padding:0;letter-spacing:-0.1px;}
-.cell-inp.bold{font-weight:500;font-size:12px;letter-spacing:-0.1px;}
+.cell-inp.bold{font-weight:400;font-size:13px;letter-spacing:-0.1px;}
 /* ── DATE PICKER STYLING ── */
 input[type="date"] {
   color-scheme: light;
