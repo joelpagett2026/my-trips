@@ -252,7 +252,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
     flex: 1;
     height: 100%;
     background: none;
@@ -261,12 +261,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     color: #888;
     text-decoration: none;
     font-family: Montserrat, sans-serif;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
     letter-spacing: 0.02em;
     padding: 0;
   }
-  .itin-tab-btn svg { width: 18px; height: 18px; }
+  .itin-tab-btn svg { width: 15px; height: 15px; }
   .itin-tab-btn.back-btn  { color: #0e7a87; }
   .itin-tab-btn.save-btn  { color: #0e7a87; }
   .itin-tab-btn.undo-tab  { color: #0e7a87; }
