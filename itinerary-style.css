@@ -380,7 +380,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* Day date/location bar: date fixed width, location gets the rest */
   .day-date-wrap { flex-shrink: 0 !important; width: auto !important; padding: 0 8px !important; }
-  .day-date-wrap input { width: 7.5em !important; }
+  .day-date-wrap input { width: 6em !important; }
   .day-loc-wrap { padding: 0 8px !important; flex: 1 !important; min-width: 0 !important; overflow: hidden; }
   .day-loc-wrap input { overflow: hidden; text-overflow: ellipsis; width: 100% !important; }
   .day-card [style*="margin:0 12px"] { margin: 0 6px !important; }
