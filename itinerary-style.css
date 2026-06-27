@@ -335,7 +335,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* Push ALL content above fixed tab bar (72px + safe area ~34px + buffer) */
   body { padding-bottom: 70px; overflow-x: hidden; }
-  .days { padding: 0 12px 0; gap: 10px; }
+  .days { padding: 16px 12px 0; gap: 10px; }
   .add-day { margin-bottom: 0; }
   .day-card { border-radius: 14px; }
 
@@ -394,7 +394,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .nav-btn { font-size: 10px; padding: 5px 6px; }
   .large-title { font-size: 20px; }
   .stats-row { padding: 10px 12px; gap: 6px; }
-  .days { padding: 0 10px 14px; }
+  .days { padding: 16px 10px 0; }
   .trip-hdr { margin: 0 10px 12px; }
   .sec-hd { padding: 10px 12px 6px; }
   .trans-row { grid-template-columns: 1fr !important; }
