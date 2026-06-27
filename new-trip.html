@@ -378,7 +378,29 @@ function addDay(d) {
   ab.appendChild(accDelBtn);
   as.appendChild(ab);
   const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr';
-  ar.appendChild(cell('Hotel', inp(d.hotel, 'hotel', 'bold', '')));
+  // Hotel field with Google Maps auto-link
+  const hotelCell = document.createElement('div'); hotelCell.className = 'cell';
+  const hotelLbl = document.createElement('div'); hotelLbl.className = 'cell-lbl'; hotelLbl.textContent = 'Hotel';
+  const hotelInp = inp(d.hotel, 'hotel', 'bold', '');
+  const hotelLink = document.createElement('a');
+  hotelLink.style.cssText = 'font-size:10px;color:#0e7a87;text-decoration:none;display:none;margin-top:3px;display:flex;align-items:center;gap:3px;';
+  hotelLink.target = '_blank';
+  hotelLink.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> View on Maps';
+  const updateHotelLink = () => {
+    const v = hotelInp.value.trim();
+    if (v) {
+      hotelLink.href = 'https://www.google.com/maps/search/' + encodeURIComponent(v);
+      hotelLink.style.display = 'flex';
+    } else {
+      hotelLink.style.display = 'none';
+    }
+  };
+  hotelInp.addEventListener('input', () => { scheduleSave(); updateHotelLink(); });
+  updateHotelLink();
+  hotelCell.appendChild(hotelLbl);
+  hotelCell.appendChild(hotelInp);
+  hotelCell.appendChild(hotelLink);
+  ar.appendChild(hotelCell);
   ar.appendChild(cell('Booking Reference', inp(d.ref, 'ref', '', '')));
   ar.appendChild(cell('Check-in', inp(d.checkin, 'checkin', '', '')));
   ar.appendChild(cell('Check-out', inp(d.checkout, 'checkout', '', '')));
