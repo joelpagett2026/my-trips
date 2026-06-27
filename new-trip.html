@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=62">
+<link rel="stylesheet" href="/itinerary-style.css?v=63">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -274,7 +274,7 @@ function makeTransRow(data, container) {
   const modeLbl = document.createElement('div'); modeLbl.className = 'cell-lbl'; modeLbl.textContent = 'Mode';
   const modeSel = document.createElement('select');
   modeSel.className = 'cell-inp'; modeSel.dataset.key = 'mode';
-  modeSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:10px;font-weight:300;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  modeSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:11px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
   ['', 'Flight', 'Train', 'Ferry', 'Taxi', 'Bus', 'Car', 'Other'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
@@ -315,7 +315,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
   const mealLbl = document.createElement('div'); mealLbl.className = 'cell-lbl'; mealLbl.textContent = 'Meal';
   const mealSel = document.createElement('select');
   mealSel.className = 'cell-inp'; mealSel.dataset.key = 'meal';
-  mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:10px;font-weight:300;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:11px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
   ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack', 'Inflight', 'Airport Lounge'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
@@ -376,7 +376,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
     const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked?';
     const bookedSel = document.createElement('select');
     bookedSel.className = 'cell-inp'; bookedSel.dataset.key = 'notes';
-    bookedSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:10px;font-weight:300;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+    bookedSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:11px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
     ['', 'Booked', 'Walk In Only', 'No Information'].forEach(opt => {
       const o = document.createElement('option');
       o.value = opt; o.textContent = opt || 'Select…';
@@ -427,7 +427,7 @@ function addDay(d) {
   dateLbl.style.cssText = 'font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
   dateLbl.textContent = 'Date';
   const dateInp = inp(d.date, 'date', 'bold', '');
-  dateInp.style.cssText = 'font-size:10px;font-weight:300;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  dateInp.style.cssText = 'font-size:11px;font-weight:400;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
   // Show short year (dd/mm/yy) but store full date
   const toShortDate = v => v && v.length === 10 ? v.slice(0,6) + v.slice(8) : v;
   const toLongDate = v => {
@@ -454,7 +454,7 @@ function addDay(d) {
   locLbl.style.cssText = 'font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
   locLbl.textContent = 'Location';
   const locInp = inp(d.to || d.from, 'to', 'bold', '');
-  locInp.style.cssText = 'font-size:10px;font-weight:300;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  locInp.style.cssText = 'font-size:11px;font-weight:400;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
   locWrap.appendChild(locLbl); locWrap.appendChild(locInp);
 
   // Remove button
