@@ -276,9 +276,23 @@ function makeTransRow(data, container) {
 
   row.appendChild(cell('Booking Reference', inp(data.ref, 'ref', '', '')));
   row.appendChild(cell('From', inp(data.from || data.route, 'from', '', '')));
-  row.appendChild(cell('Depart', inp(data.depart, 'depart', '', '')));
+
+  // Time input helper — auto inserts colon after 2 digits
+  function timeInp(val, key) {
+    const i = document.createElement('input');
+    i.type = 'text'; i.inputMode = 'numeric'; i.maxLength = 5;
+    i.value = val || ''; i.dataset.key = key; i.className = 'cell-inp';
+    i.addEventListener('input', () => {
+      let v = i.value.replace(/[^0-9]/g, '');
+      if (v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2,4);
+      i.value = v;
+      scheduleSave();
+    });
+    return i;
+  }
+  row.appendChild(cell('Depart', timeInp(data.depart, 'depart')));
   row.appendChild(cell('To', inp(data.to_loc || '', 'to_loc', '', '')));
-  row.appendChild(cell('Arrive', inp(data.arrive, 'arrive', '', '')));
+  row.appendChild(cell('Arrive', timeInp(data.arrive, 'arrive')));
   container.appendChild(row);
 }
 function makeFoodRow(data, container) {
