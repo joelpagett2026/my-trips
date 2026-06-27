@@ -674,9 +674,10 @@ async function initCountdown() {
   }
 }
 // Don't run until authed
-function runAfterAuth() {
+async function runAfterAuth() {
   initCountdown();
-  seedAndRender();
+  await seedAndRender();
+  if (typeof initMobilePanel === 'function') initMobilePanel();
 }
 if (typeof isAuthed === 'function' && isAuthed()) {
   runAfterAuth();
@@ -1141,7 +1142,7 @@ async function createTrip(){
 
   function isMobile() { return window.innerWidth <= 700; }
 
-  function initMobilePanel() {
+  window.initMobilePanel = function initMobilePanel() {
     if (isMobile()) {
       statsBtn.style.display = 'inline-flex';
       // Move the real dash-col node into the mobile panel (keeps all live JS/DOM)
@@ -1174,8 +1175,7 @@ async function createTrip(){
     if (e.changedTouches[0].clientX - touchStartX > 60) closeStatsPanel();
   }, { passive: true });
 
-  // Init after page content loads
-  window.addEventListener('load', initMobilePanel);
+  // initMobilePanel is called by runAfterAuth once data is populated
   window.addEventListener('resize', () => {
     closeStatsPanel();
     initMobilePanel();
