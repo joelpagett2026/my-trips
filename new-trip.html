@@ -748,6 +748,8 @@ function addDay(d) {
   const savedPeriods = (d._periods && d._periods.length) ? d._periods : ['morning', 'afternoon', 'evening'];
   savedPeriods.forEach(period => addPeriodBlock(period, d, periodsRow));
   refreshBorders();
+  is_.appendChild(periodsRow);
+  card.appendChild(is_);
   } // end !_itinRemoved
   document.getElementById('days').appendChild(card);
   recalc();
