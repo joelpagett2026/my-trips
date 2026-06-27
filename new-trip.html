@@ -576,25 +576,31 @@ function addDay(d) {
     bfUpdate();
     scheduleSave();
     propagateHotel();
+    const allCards = Array.from(document.querySelectorAll('.day-card'));
+    const thisCard = as.closest('.day-card');
+    const nextCard = allCards[allCards.indexOf(thisCard) + 1];
+    if (!nextCard) return;
+    // Find or create food section on next day
+    let nextFoodSec = nextCard.querySelector('.s-food');
+    if (!nextFoodSec) return;
+    const fRowsEl = nextFoodSec.querySelector('.food-rows');
+    if (!fRowsEl) return;
     if (bfSel.value === 'Yes') {
-      // Find the next day card after this one
-      const allCards = Array.from(document.querySelectorAll('.day-card'));
-      const thisCard = as.closest('.day-card');
-      const nextCard = allCards[allCards.indexOf(thisCard) + 1];
-      if (nextCard) {
-        const nextFoodRows = nextCard.querySelector('.s-food > div:last-child');
-        const nextFoodSection = nextCard.querySelector('.s-food');
-        if (nextFoodSection && nextFoodRows) {
-          // Check if a hotel breakfast row already exists
-          const existing = Array.from(nextFoodRows.querySelectorAll('[data-key="meal"]'))
-            .find(el => el.value === 'Breakfast');
-          if (!existing) {
-            pushUndo();
-            makeFoodRow({ meal: 'Breakfast', place: hotelInp.value.trim() }, nextFoodRows, true);
-            scheduleSave();
-          }
-        }
+      // Add breakfast row if not already there
+      const existing = Array.from(fRowsEl.querySelectorAll('[data-key="meal"]'))
+        .find(el => el.value === 'Breakfast');
+      if (!existing) {
+        pushUndo();
+        makeFoodRow({ meal: 'Breakfast', place: hotelInp.value.trim() }, fRowsEl, true);
+        scheduleSave();
       }
+    } else {
+      // Remove auto-added breakfast row
+      const bfRow = Array.from(fRowsEl.querySelectorAll('.food-row')).find(row => {
+        const meal = row.querySelector('[data-key="meal"]');
+        return meal && meal.value === 'Breakfast';
+      });
+      if (bfRow) { pushUndo(); bfRow.remove(); scheduleSave(); }
     }
   };
   // bfToggle is placed inside hotelCell below
@@ -612,7 +618,7 @@ function addDay(d) {
   };
   fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label"><span class="sec-label-text">Food & Drink</span></span>';
   fb.appendChild(fBtn); fb.appendChild(fDelBtn); fs.appendChild(fb);
-  const fRows = document.createElement('div'); fs.appendChild(fRows);
+  const fRows = document.createElement('div'); fRows.className = 'food-rows'; fs.appendChild(fRows);
   if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows));
   card.appendChild(fs);
   const is_ = document.createElement('div'); is_.className = 's-itin';
