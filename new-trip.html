@@ -745,7 +745,7 @@ function addDay(d) {
     return block;
   }
 
-  const savedPeriods = d._periods || ['morning', 'afternoon', 'evening'];
+  const savedPeriods = (d._periods && d._periods.length) ? d._periods : ['morning', 'afternoon', 'evening'];
   savedPeriods.forEach(period => addPeriodBlock(period, d, periodsRow));
   refreshBorders();
   } // end !_itinRemoved
