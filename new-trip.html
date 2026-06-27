@@ -219,7 +219,7 @@ function collectState() {
     const obj = {};
     card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.value; });
     obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
-    obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
+    obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); o._hotelBf = !row.querySelector('[data-key="notes"]'); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
     obj._accRemoved   = !card.querySelector('.s-acc');
     obj._foodRemoved  = !card.querySelector('.s-food');
@@ -691,7 +691,7 @@ function addDay(d) {
   fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label"><span class="sec-label-text">Food & Drink</span></span>';
   fb.appendChild(fBtn); fb.appendChild(fDelBtn); fs.appendChild(fb);
   const fRows = document.createElement('div'); fRows.className = 'food-rows'; fs.appendChild(fRows);
-  if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows));
+  if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows, f._hotelBf === true));
   card.appendChild(fs);
   } // end !_foodRemoved
   if (d._itinRemoved !== true) {
