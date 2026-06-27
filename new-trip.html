@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=29">
+<link rel="stylesheet" href="/itinerary-style.css?v=30">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -560,14 +560,6 @@ async function deleteTrip() {
 <script>
 // Show tab bar on mobile, sync undo state and status toggle
 (function() {
-  function isMobile() { return window.innerWidth <= 700; }
-
-  function initTabBar() {
-    const bar = document.getElementById('itin-tab-bar');
-    if (!bar) return;
-    bar.style.display = isMobile() ? 'flex' : 'none';
-  }
-
   // Keep tab toggle in sync with the main status toggle
   const origSetStatus = window.setStatus_toggle;
   window.setStatus_toggle = async function(s) {
@@ -595,7 +587,6 @@ async function deleteTrip() {
 
   // Init on load and resize
   window.addEventListener('load', () => {
-    initTabBar();
     // Sync initial status
     const tog = document.getElementById('status-toggle');
     if (tog) {
@@ -606,7 +597,7 @@ async function deleteTrip() {
       }
     }
   });
-  window.addEventListener('resize', initTabBar, { passive: true });
+  window.addEventListener('resize', () => { syncTabToggle(currentStatus); }, { passive: true });
 })();
 </script>
 

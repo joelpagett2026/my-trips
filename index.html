@@ -1237,10 +1237,8 @@ async function createTrip(){
   function isMobile() { return window.innerWidth <= 700; }
 
   window.initMobilePanel = function initMobilePanel() {
-    const tabBar = document.getElementById('mobile-tab-bar');
     if (isMobile()) {
       statsBtn.style.display = 'inline-flex';
-      if (tabBar) tabBar.style.display = 'flex';
       // Move the real dash-inner node (not dash-col which is display:none on mobile)
       const dashInner = dashCol ? dashCol.querySelector('.dash-inner') : null;
       if (dashInner && dashInner.parentNode !== mobileInner) {
@@ -1248,7 +1246,6 @@ async function createTrip(){
       }
     } else {
       statsBtn.style.display = 'none';
-      if (tabBar) tabBar.style.display = 'none';
       // Move dash-inner back into dash-col for desktop
       const dashInner = mobileInner.querySelector('.dash-inner');
       if (dashInner && dashCol && dashInner.parentNode !== dashCol) {
