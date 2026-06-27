@@ -415,16 +415,10 @@ function addDay(d) {
       hotelLink.style.display = 'none';
     }
   };
-  hotelInp.addEventListener('input', () => { scheduleSave(); updateHotelLink(); });
-  updateHotelLink();
-  hotelCell.appendChild(hotelLbl);
-  hotelCell.appendChild(hotelInp);
-  hotelCell.appendChild(hotelLink);
-  ar.appendChild(hotelCell);
-  ar.appendChild(cell('Booking Reference', inp(d.ref, 'ref', '', '')));
-  ar.appendChild(cell('Check-in', inp(d.checkin, 'checkin', '', '')));
-  ar.appendChild(cell('Check-out', inp(d.checkout, 'checkout', '', '')));
-  ar.appendChild(cell('Nightly cost (£)', inp(d.cost, 'cost', 'cost-inp', '')));
+  const refInp = inp(d.ref, 'ref', '', '');
+  const checkinInp = inp(d.checkin, 'checkin', '', '');
+  const checkoutInp = inp(d.checkout, 'checkout', '', '');
+  const costInp = inp(d.cost, 'cost', 'cost-inp', '');
 
   // Breakfast included dropdown
   const bfCell = document.createElement('div'); bfCell.className = 'cell';
@@ -438,8 +432,113 @@ function addDay(d) {
     if ((d.breakfast || '') === opt) o.selected = true;
     bfSel.appendChild(o);
   });
+
+  // Auto-fill subsequent nights when checkout is entered
+  const propagateHotel = () => {
+    const hotel = hotelInp.value.trim();
+    const ref = refInp.value.trim();
+    const checkin = checkinInp.value.trim();
+    const checkout = checkoutInp.value.trim();
+    const cost = costInp.value.trim();
+    const bfVal = bfSel.value;
+    if (!hotel || !checkin || !checkout) return;
+
+    // Parse dd/mm/yyyy dates
+    const parseDate = s => { const [d,m,y] = s.split('/'); return new Date(y,m-1,d); };
+    const d1 = parseDate(checkin), d2 = parseDate(checkout);
+    if (isNaN(d1) || isNaN(d2)) return;
+    const nights = Math.round((d2 - d1) / 86400000);
+    if (nights < 1 || nights > 30) return;
+
+    // Find this card's position
+    const allCards = Array.from(document.querySelectorAll('.day-card'));
+    const thisCard = as.closest('.day-card');
+    const idx = allCards.indexOf(thisCard);
+
+    for (let i = 1; i < nights; i++) {
+      const nextCard = allCards[idx + i];
+      if (!nextCard) break;
+      let nextAcc = nextCard.querySelector('.s-acc');
+      // Create acc section if missing
+      if (!nextAcc) {
+        nextAcc = document.createElement('div'); nextAcc.className = 's-acc';
+        const nextAb = document.createElement('div'); nextAb.className = 'sec-bar';
+        const nextDel = document.createElement('button'); nextDel.className = 'del-sec-btn'; nextDel.innerHTML = '&times;';
+        nextDel.onclick = () => { pushUndo(); nextAcc.remove(); scheduleSave(); };
+        nextAb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
+        nextAb.appendChild(nextDel); nextAcc.appendChild(nextAb);
+        // Insert after transport if present, else after day-top
+        const trans = nextCard.querySelector('.s-trans');
+        const dayTop = nextCard.querySelector('.day-top');
+        if (trans) trans.after(nextAcc); else if (dayTop) dayTop.after(nextAcc);
+      }
+      // Fill fields
+      const setField = (key, val) => {
+        let el = nextAcc.querySelector('[data-key="' + key + '"]');
+        if (!el) return;
+        el.value = val;
+      };
+      // If no row, add one via addDay data — simpler: just set input values
+      let nextRow = nextAcc.querySelector('.row-inner');
+      if (!nextRow) {
+        nextRow = document.createElement('div'); nextRow.className = 'row-inner';
+        nextRow.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr 0.8fr';
+        ['Hotel','Booking Reference','Check-in','Check-out','Nightly cost (£)','Breakfast Included'].forEach(lbl => {
+          const key = {
+            'Hotel':'hotel','Booking Reference':'ref','Check-in':'checkin',
+            'Check-out':'checkout','Nightly cost (£)':'cost','Breakfast Included':'breakfast'
+          }[lbl];
+          const c = document.createElement('div'); c.className = 'cell';
+          const l = document.createElement('div'); l.className = 'cell-lbl'; l.textContent = lbl;
+          const inp2 = document.createElement('input'); inp2.className = 'cell-inp'; inp2.dataset.key = key; inp2.type = 'text';
+          inp2.addEventListener('input', scheduleSave);
+          c.appendChild(l); c.appendChild(inp2); nextRow.appendChild(c);
+        });
+        nextAcc.appendChild(nextRow);
+      }
+      setField('hotel', hotel);
+      setField('ref', ref);
+      setField('checkin', '');  // already checked in
+      setField('checkout', i === nights - 1 ? checkout : '');  // checkout only on last night
+      setField('cost', cost);
+      setField('breakfast', bfVal);
+
+      // Auto-add breakfast to the day after this one
+      if (bfVal === 'Yes') {
+        const morningCard = allCards[idx + i + 1];
+        if (morningCard) {
+          const mFood = morningCard.querySelector('.s-food > div:last-child');
+          if (mFood) {
+            const hasBf = Array.from(mFood.querySelectorAll('[data-key="meal"]')).find(e => e.value === 'Breakfast');
+            if (!hasBf) makeFoodRow({ meal: 'Breakfast', place: hotel }, mFood, true);
+          }
+        }
+      }
+    }
+    scheduleSave();
+  };
+
+  hotelCell.appendChild(hotelLbl);
+  hotelCell.appendChild(hotelInp);
+  hotelCell.appendChild(hotelLink);
+
+  updateHotelLink();
+  hotelInp.addEventListener('input', () => { scheduleSave(); updateHotelLink(); propagateHotel(); });
+  refInp.addEventListener('input', () => { scheduleSave(); propagateHotel(); });
+  checkinInp.addEventListener('input', () => { scheduleSave(); propagateHotel(); });
+  checkoutInp.addEventListener('input', () => { scheduleSave(); propagateHotel(); });
+  costInp.addEventListener('input', () => { scheduleSave(); propagateHotel(); });
+
+  ar.appendChild(hotelCell);
+  ar.appendChild(cell('Booking Reference', refInp));
+  ar.appendChild(cell('Check-in', checkinInp));
+  ar.appendChild(cell('Check-out', checkoutInp));
+  ar.appendChild(cell('Nightly cost (£)', costInp));
+
+
   bfSel.addEventListener('change', () => {
     scheduleSave();
+    propagateHotel();
     if (bfSel.value === 'Yes') {
       // Find the next day card after this one
       const allCards = Array.from(document.querySelectorAll('.day-card'));
