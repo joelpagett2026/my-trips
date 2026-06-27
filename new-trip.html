@@ -542,12 +542,14 @@ function addDay(d) {
     const allCards = Array.from(document.querySelectorAll('.day-card'));
     const thisCard = as.closest('.day-card');
     const idx = allCards.indexOf(thisCard);
+    const fmtDate = dt => String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
 
     for (let i = 1; i < nights; i++) {
       const nextCard = allCards[idx + i];
       if (!nextCard) break;
+
+      // Get or create accommodation section
       let nextAcc = nextCard.querySelector('.s-acc');
-      // Create acc section if missing
       if (!nextAcc) {
         nextAcc = document.createElement('div'); nextAcc.className = 's-acc';
         const nextAb = document.createElement('div'); nextAb.className = 'sec-bar';
@@ -555,70 +557,67 @@ function addDay(d) {
         nextDel.onclick = () => { pushUndo(); nextAcc.remove(); scheduleSave(); };
         nextAb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
         nextAb.appendChild(nextDel); nextAcc.appendChild(nextAb);
-        // Insert after transport if present, else after day-top
         const trans = nextCard.querySelector('.s-trans');
         const dayTop = nextCard.querySelector('.day-top');
         if (trans) trans.after(nextAcc); else if (dayTop) dayTop.after(nextAcc);
       }
-      // Fill fields
-      const setField = (key, val) => {
-        let el = nextAcc.querySelector('[data-key="' + key + '"]');
-        if (!el) return;
-        el.value = val;
-      };
-      // If no row, add one
+
+      const setField = (key, val) => { const el = nextAcc.querySelector('[data-key="' + key + '"]'); if (el) el.value = val; };
+
+      // Build row if missing
       let nextRow = nextAcc.querySelector('.row-inner');
       if (!nextRow) {
         nextRow = document.createElement('div'); nextRow.className = 'row-inner';
-        nextRow.style.gridTemplateColumns = '2fr 0.7fr 1.2fr 0.7fr 0.8fr';
-        ['Hotel','Booking Reference','checkin','checkout','Nightly cost (£)','Breakfast Included'].forEach(lbl => {
-          const key = {
-            'Hotel':'hotel','Booking Reference':'ref','checkin':'checkin',
-            'checkout':'checkout','Nightly cost (£)':'cost','Breakfast Included':'breakfast'
-          }[lbl];
-          // checkin and checkout are separate cells, fall through to generic handler
+        nextRow.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 0.7fr';
+        [['Hotel','hotel'],['Check-in','checkin'],['Check-out','checkout'],['Nightly cost','cost'],['Booking Ref','ref']].forEach(([lbl,key]) => {
           const c = document.createElement('div'); c.className = 'cell';
           const l = document.createElement('div'); l.className = 'cell-lbl'; l.textContent = lbl;
-          const inp2 = document.createElement('input'); inp2.className = 'cell-inp'; inp2.dataset.key = key; inp2.type = 'text';
-          inp2.addEventListener('input', scheduleSave);
-          c.appendChild(l); c.appendChild(inp2); nextRow.appendChild(c);
+          const i2 = document.createElement('input'); i2.className = 'cell-inp'; i2.dataset.key = key; i2.type = 'text';
+          i2.addEventListener('input', scheduleSave);
+          c.appendChild(l); c.appendChild(i2); nextRow.appendChild(c);
         });
+        // Hidden breakfast field + visible toggle
+        const bfH = document.createElement('input'); bfH.type = 'hidden'; bfH.dataset.key = 'breakfast'; nextRow.appendChild(bfH);
+        const bfC = document.createElement('div'); bfC.className = 'cell';
+        const bfL = document.createElement('div'); bfL.className = 'cell-lbl'; bfL.textContent = 'Breakfast';
+        const bfB = document.createElement('button'); bfB.type = 'button';
+        bfB.style.cssText = 'display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:12px;border:none;cursor:pointer;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;background:#e0e0e0;color:#aaa;';
+        bfB.textContent = 'No BF';
+        bfC.appendChild(bfL); bfC.appendChild(bfB); nextRow.appendChild(bfC);
         nextAcc.appendChild(nextRow);
       }
+
+      // Set all field values
       setField('hotel', hotel);
       setField('ref', ref);
-      // Calculate date for this night (checkin date + i days)
-      const nightDate = new Date(d1.getTime() + i * 86400000);
-      const dd = String(nightDate.getDate()).padStart(2,'0');
-      const mm = String(nightDate.getMonth()+1).padStart(2,'0');
-      const yyyy = nightDate.getFullYear();
-      const nightDateStr = dd + '/' + mm + '/' + yyyy;
-      setField('checkin', nightDateStr);
-      setField('checkout', i === nights - 1 ? checkout : '');  // checkout only on last night
       setField('cost', cost);
+      setField('checkin', fmtDate(new Date(d1.getTime() + i * 86400000)));
+      setField('checkout', i === nights - 1 ? checkout : '');
       setField('breakfast', bfVal);
 
-      // Auto-add breakfast to the day after this one
+      // Update breakfast toggle visual
+      const bfBtn = nextAcc.querySelector('button[style*="border-radius:12px"]');
+      if (bfBtn) {
+        const on = bfVal === 'Yes';
+        bfBtn.style.background = on ? 'linear-gradient(135deg,#0e7a87,#0d9e8c)' : '#e0e0e0';
+        bfBtn.style.color = on ? '#fff' : '#aaa';
+        bfBtn.textContent = on ? '\u2713 BF' : 'No BF';
+      }
+
+      // Add breakfast row to the morning of the next day
       if (bfVal === 'Yes') {
         const morningCard = allCards[idx + i + 1];
         if (morningCard) {
-          const mFood = morningCard.querySelector('.s-food > div:last-child');
-          if (mFood) {
-            const hasBf = Array.from(mFood.querySelectorAll('[data-key="meal"]')).find(e => e.value === 'Breakfast');
-            if (!hasBf) makeFoodRow({ meal: 'Breakfast', place: hotel }, mFood, true);
+          const foodRows = morningCard.querySelector('.food-rows');
+          if (foodRows) {
+            const hasBf = Array.from(foodRows.querySelectorAll('[data-key="meal"]')).find(e => e.value === 'Breakfast');
+            if (!hasBf) makeFoodRow({ meal: 'Breakfast', place: hotel }, foodRows, true);
           }
         }
       }
     }
     scheduleSave();
   };
-
-  hotelCell.appendChild(hotelLbl);
-  // Hotel name + breakfast toggle on same row
-  const hotelRow = document.createElement('div');
-  hotelRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  hotelInp.style.flex = '1';
-  hotelCell.appendChild(hotelLbl);
   hotelCell.appendChild(hotelRow);
   hotelRow.appendChild(hotelInp);
   hotelRow.appendChild(bfToggle);
