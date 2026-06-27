@@ -1135,19 +1135,25 @@ async function createTrip(){
 (function() {
   const panel = document.getElementById('mobile-stats-panel');
   const statsBtn = document.querySelector('.mobile-stats-btn');
+  const dashCol = document.querySelector('.dash-col');
+  const mobileInner = document.getElementById('mobile-dash-inner');
+  const pageLayout = document.querySelector('.page-layout');
 
   function isMobile() { return window.innerWidth <= 700; }
 
-  // On mobile: show the stats button and populate the panel with dash content
   function initMobilePanel() {
-    if (!isMobile()) return;
-    statsBtn.style.display = 'inline-flex';
-
-    // Move dash-col content into mobile panel (clone so desktop keeps it)
-    const dashInner = document.querySelector('.dash-col .dash-inner');
-    const mobileInner = document.getElementById('mobile-dash-inner');
-    if (dashInner && mobileInner && !mobileInner.hasChildNodes()) {
-      mobileInner.innerHTML = dashInner.innerHTML;
+    if (isMobile()) {
+      statsBtn.style.display = 'inline-flex';
+      // Move the real dash-col node into the mobile panel (keeps all live JS/DOM)
+      if (dashCol && !mobileInner.contains(dashCol)) {
+        mobileInner.appendChild(dashCol);
+      }
+    } else {
+      statsBtn.style.display = 'none';
+      // Move dash-col back into page layout for desktop
+      if (dashCol && !pageLayout.contains(dashCol)) {
+        pageLayout.appendChild(dashCol);
+      }
     }
   }
 
@@ -1171,12 +1177,8 @@ async function createTrip(){
   // Init after page content loads
   window.addEventListener('load', initMobilePanel);
   window.addEventListener('resize', () => {
-    if (!isMobile()) {
-      statsBtn.style.display = 'none';
-      closeStatsPanel();
-    } else {
-      statsBtn.style.display = 'inline-flex';
-    }
+    closeStatsPanel();
+    initMobilePanel();
   });
 })();
 </script>
