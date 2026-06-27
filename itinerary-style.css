@@ -374,3 +374,5 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .food-row { grid-template-columns: 1fr !important; }
   .s-acc .row-inner { grid-template-columns: 1fr !important; }
 }
+
+/* v25 */
