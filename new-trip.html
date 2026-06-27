@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=52">
+<link rel="stylesheet" href="/itinerary-style.css?v=53">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -397,7 +397,7 @@ function addDay(d) {
   ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
   ab.appendChild(accDelBtn);
   as.appendChild(ab);
-  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 1fr 0.7fr 0.8fr';
+  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 1fr 0.7fr';
 
   // Combined check-in / check-out cell
   const datesCell = document.createElement('div'); datesCell.className = 'cell';
@@ -430,18 +430,18 @@ function addDay(d) {
   const checkoutInp = inp(d.checkout, 'checkout', '', '');
   const costInp = inp(d.cost, 'cost', 'cost-inp', '');
 
-  // Breakfast included dropdown
-  const bfCell = document.createElement('div'); bfCell.className = 'cell';
-  const bfLbl = document.createElement('div'); bfLbl.className = 'cell-lbl'; bfLbl.textContent = 'Breakfast Included';
-  const bfSel = document.createElement('select');
-  bfSel.className = 'cell-inp'; bfSel.dataset.key = 'breakfast';
-  bfSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
-  ['', 'Yes', 'No'].forEach(opt => {
-    const o = document.createElement('option');
-    o.value = opt; o.textContent = opt || 'Select…';
-    if ((d.breakfast || '') === opt) o.selected = true;
-    bfSel.appendChild(o);
-  });
+  // Breakfast toggle switch (hidden input + button)
+  const bfSel = document.createElement('input');
+  bfSel.type = 'hidden'; bfSel.dataset.key = 'breakfast';
+  bfSel.value = d.breakfast || 'No';
+  const bfToggle = document.createElement('button');
+  bfToggle.type = 'button';
+  const bfUpdate = () => {
+    const on = bfSel.value === 'Yes';
+    bfToggle.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;border:none;cursor:pointer;font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;transition:all 0.2s;background:' + (on ? 'linear-gradient(135deg,#0e7a87,#0d9e8c)' : '#e0e0e0') + ';color:' + (on ? '#fff' : '#aaa') + ';margin-top:4px;';
+    bfToggle.textContent = (on ? '✓ Breakfast' : 'No Breakfast');
+  };
+  bfUpdate();
 
   // Auto-fill subsequent nights when checkout is entered
   const propagateHotel = () => {
@@ -551,6 +551,8 @@ function addDay(d) {
   hotelCell.appendChild(hotelLbl);
   hotelCell.appendChild(hotelInp);
   hotelCell.appendChild(hotelLink);
+  hotelCell.appendChild(bfSel);
+  hotelCell.appendChild(bfToggle);
 
   updateHotelLink();
   hotelInp.addEventListener('input', () => { scheduleSave(); updateHotelLink(); propagateHotel(); });
@@ -565,7 +567,9 @@ function addDay(d) {
   ar.appendChild(cell('Nightly cost (£)', costInp));
 
 
-  bfSel.addEventListener('change', () => {
+  bfToggle.onclick = () => {
+    bfSel.value = bfSel.value === 'Yes' ? 'No' : 'Yes';
+    bfUpdate();
     scheduleSave();
     propagateHotel();
     if (bfSel.value === 'Yes') {
@@ -589,8 +593,7 @@ function addDay(d) {
       }
     }
   });
-  bfCell.appendChild(bfLbl); bfCell.appendChild(bfSel);
-  ar.appendChild(bfCell);
+  // bfToggle is placed inside hotelCell below
   as.appendChild(ar); card.appendChild(as);
   const fs = document.createElement('div'); fs.className = 's-food';
   const fb = document.createElement('div'); fb.className = 'sec-bar';
