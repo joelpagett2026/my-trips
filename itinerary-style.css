@@ -334,9 +334,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   .sec-hd { font-size: 18px; padding: 12px 16px 6px; }
 
-  /* Push content well above tab bar */
-  .days { padding: 0 12px 100px; gap: 10px; }
-  .add-day { margin-bottom: 100px; }
+  /* Push ALL content above tab bar */
+  body { padding-bottom: 90px; }
+  .days { padding: 0 12px 0; gap: 10px; }
+  .add-day { margin-bottom: 0; }
   .day-card { border-radius: 14px; }
 
   /* ── DAY CARD VERTICAL STACKING ── */
