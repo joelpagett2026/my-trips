@@ -65,7 +65,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .sec-hd{font-size:20px;font-weight:700;letter-spacing:-0.4px;color:#444444;padding:16px 20px 8px;}
 
 /* DAY CARDS */
-.days{padding:0 20px 16px;display:flex;flex-direction:column;gap:14px;}
+.days{padding:16px 20px 16px;display:flex;flex-direction:column;gap:14px;}
 
 .day-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);}
 
