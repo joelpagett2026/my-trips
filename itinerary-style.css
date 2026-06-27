@@ -236,7 +236,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .nav-status { gap: 3px; }
   #nav-status-label { display: none; }
 
-  /* Status toggle: pill switch style matching the buttons */
+  /* Status toggle: pill switch style */
   .status-toggle { 
     padding: 3px !important; 
     gap: 2px !important; 
@@ -251,7 +251,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     border: none !important;
     background: transparent !important;
     color: #999 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
+  .status-toggle-opt svg { width: 13px !important; height: 13px !important; }
   .status-toggle-opt.active-upcoming {
     background: linear-gradient(135deg,#0e7a87,#0d9e8c) !important;
     color: #fff !important;
@@ -263,9 +267,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     border-color: transparent !important;
     box-shadow: 0 1px 4px rgba(255,149,0,0.4) !important;
   }
-  .status-toggle-opt svg { width: 13px; height: 13px; }
 
-  /* Nav buttons: match homepage outlined style — all teal including Undo */
+  /* Nav buttons: match homepage outlined style */
   .nav-btn { 
     width: 36px !important; 
     height: 36px !important;
@@ -280,13 +283,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     border: 1.5px solid #0e7a87 !important;
     font-size: 0 !important;
   }
+  /* Delete: red outlined to match style but signal danger */
   .nav-btn.danger {
     background: transparent !important;
     color: #c0392b !important;
     border: 1.5px solid #c0392b !important;
   }
-  /* Undo disabled state — keep same shape, just dimmed */
-  .nav-btn:disabled {
+  /* Undo disabled — same teal shape, just dimmed */
+  #undo-btn {
     border-color: #0e7a87 !important;
     color: #0e7a87 !important;
   }
