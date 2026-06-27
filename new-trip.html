@@ -49,6 +49,14 @@
 
 <div class="days" id="days"></div>
 
+<div id="acc-total-box" style="display:none;margin:0 20px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Accommodation Total</div>
+    <div id="acc-total-val" style="font-size:20px;font-weight:600;color:#0e7a87;letter-spacing:-0.3px;">£0.00</div>
+  </div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.5" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+</div>
+
 <button class="add-day" onclick="pushUndo(); addDay();">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   Add Day
@@ -797,6 +805,16 @@ function recalc() {
   let acc = 0;
   cards.forEach(c => c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value) || 0; }));
 
+  const box = document.getElementById('acc-total-box');
+  const val = document.getElementById('acc-total-val');
+  if (box && val) {
+    if (acc > 0) {
+      box.style.display = 'flex';
+      val.textContent = '£' + acc.toFixed(2);
+    } else {
+      box.style.display = 'none';
+    }
+  }
 }
 function restoreState(state) {
   if (state.header) {
