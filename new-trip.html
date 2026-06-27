@@ -274,7 +274,7 @@ function makeTransRow(data, container) {
   modeCell.appendChild(modeLbl); modeCell.appendChild(modeSel);
   row.appendChild(modeCell);
 
-  row.appendChild(cell('Booking Ref', inp(data.ref, 'ref', '', '#XXX')));
+  row.appendChild(cell('Booking Reference', inp(data.ref, 'ref', '', '#XXX')));
   row.appendChild(cell('From', inp(data.from || data.route, 'from', '', 'City / Airport')));
   row.appendChild(cell('Depart', inp(data.depart, 'depart', '', '12:10')));
   row.appendChild(cell('To', inp(data.to_loc || '', 'to_loc', '', 'City / Airport')));
