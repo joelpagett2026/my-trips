@@ -379,10 +379,10 @@ function addDay(d) {
   as.appendChild(ab);
   const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr';
   ar.appendChild(cell('Hotel', inp(d.hotel, 'hotel', 'bold', '')));
+  ar.appendChild(cell('Booking ref', inp(d.ref, 'ref', '', '')));
   ar.appendChild(cell('Check-in', inp(d.checkin, 'checkin', '', '')));
   ar.appendChild(cell('Check-out', inp(d.checkout, 'checkout', '', '')));
   ar.appendChild(cell('Nightly cost (£)', inp(d.cost, 'cost', 'cost-inp', '')));
-  ar.appendChild(cell('Booking ref', inp(d.ref, 'ref', '', '')));
   as.appendChild(ar); card.appendChild(as);
   const fs = document.createElement('div'); fs.className = 's-food';
   const fb = document.createElement('div'); fb.className = 'sec-bar';
