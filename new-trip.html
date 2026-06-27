@@ -355,9 +355,9 @@ function makeFoodRow(data, container, hotelBreakfast) {
   };
   placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
   updatePlaceLink();
-  // Apply Inflight state on load
+  // Apply Inflight state after full row is in DOM
   if (data.meal === 'Inflight') {
-    mealSel.dispatchEvent(new Event('change'));
+    setTimeout(() => mealSel.dispatchEvent(new Event('change')), 0);
   }
   placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
   placeCell.appendChild(placeLbl); placeCell.appendChild(placeRow);
