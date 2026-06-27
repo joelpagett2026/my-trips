@@ -340,7 +340,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* ── DAY CARD VERTICAL STACKING ── */
 
-  /* Transport rows: stack all 7 cols into 2 per row then single */
+  /* Transport rows: stack into 2 cols */
   .trans-row { grid-template-columns: 1fr 1fr !important; }
   /* Delete button full width at bottom */
   .trans-row .row-del { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding: 4px 0; }
