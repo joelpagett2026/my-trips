@@ -262,8 +262,42 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .days { padding: 0 12px 16px; gap: 10px; }
   .day-card { border-radius: 14px; }
 
-  .status-badge-wrap { padding: 8px 16px 0; }
+  /* ── DAY CARD VERTICAL STACKING ── */
 
+  /* Transport rows: stack all 7 cols into 2 per row then single */
+  .trans-row { grid-template-columns: 1fr 1fr !important; }
+  /* Delete button full width at bottom */
+  .trans-row .row-del { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding: 4px 0; }
+
+  /* Accommodation: stack all cells vertically */
+  .s-acc .row-inner { grid-template-columns: 1fr 1fr !important; }
+
+  /* Food rows: stack into 2 cols */
+  .food-row { grid-template-columns: 1fr 1fr !important; }
+  .food-row .row-del { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding: 4px 0; }
+
+  /* Morning/Afternoon/Evening: stack vertically instead of side by side */
+  .s-itin [style*="display:flex"] {
+    flex-direction: column !important;
+  }
+  /* Each period block: full width, border-bottom instead of border-right */
+  .s-itin [style*="flex:1"] {
+    border-right: none !important;
+    border-bottom: 0.5px solid rgba(0,0,0,0.07) !important;
+  }
+  .s-itin [style*="flex:1"]:last-child {
+    border-bottom: none !important;
+  }
+
+  /* Day top: date + location bar wraps nicely already, just ensure min-width */
+  .s-date [style*="min-width:130px"] { min-width: 100px !important; }
+
+  /* Cells: more breathing room */
+  .cell { padding: 10px 14px; }
+  .cell-inp { font-size: 14px; }
+  .cell-ta { font-size: 14px; }
+
+  .status-badge-wrap { padding: 8px 16px 0; }
   #setup-banner { margin: 12px 12px; }
 }
 
@@ -275,4 +309,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .days { padding: 0 10px 14px; }
   .trip-hdr { margin: 0 10px 12px; }
   .sec-hd { padding: 10px 12px 6px; }
+  .trans-row { grid-template-columns: 1fr !important; }
+  .food-row { grid-template-columns: 1fr !important; }
+  .s-acc .row-inner { grid-template-columns: 1fr !important; }
 }
