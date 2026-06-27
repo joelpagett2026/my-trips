@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=51">
+<link rel="stylesheet" href="/itinerary-style.css?v=52">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -397,8 +397,18 @@ function addDay(d) {
   ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
   ab.appendChild(accDelBtn);
   as.appendChild(ab);
-  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr 0.8fr';
-  // Hotel field with Google Maps auto-link
+  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 1fr 0.7fr 0.8fr';
+
+  // Combined check-in / check-out cell
+  const datesCell = document.createElement('div'); datesCell.className = 'cell';
+  const datesLbl = document.createElement('div'); datesLbl.className = 'cell-lbl'; datesLbl.textContent = 'Check-in → Check-out';
+  const datesRow = document.createElement('div'); datesRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+  const checkinInp = inp(d.checkin, 'checkin', '', '');
+  const arrowSpan = document.createElement('span'); arrowSpan.textContent = '→'; arrowSpan.style.cssText = 'color:#aaa;font-size:11px;flex-shrink:0;';
+  const checkoutInp = inp(d.checkout, 'checkout', '', '');
+  checkinInp.style.flex = '1'; checkoutInp.style.flex = '1';
+  datesRow.appendChild(checkinInp); datesRow.appendChild(arrowSpan); datesRow.appendChild(checkoutInp);
+  datesCell.appendChild(datesLbl); datesCell.appendChild(datesRow);
   const hotelCell = document.createElement('div'); hotelCell.className = 'cell';
   const hotelLbl = document.createElement('div'); hotelLbl.className = 'cell-lbl'; hotelLbl.textContent = 'Hotel';
   const hotelInp = inp(d.hotel, 'hotel', 'bold', '');
@@ -478,16 +488,30 @@ function addDay(d) {
         if (!el) return;
         el.value = val;
       };
-      // If no row, add one via addDay data — simpler: just set input values
+      // If no row, add one
       let nextRow = nextAcc.querySelector('.row-inner');
       if (!nextRow) {
         nextRow = document.createElement('div'); nextRow.className = 'row-inner';
-        nextRow.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr 0.8fr';
-        ['Hotel','Booking Reference','Check-in','Check-out','Nightly cost (£)','Breakfast Included'].forEach(lbl => {
+        nextRow.style.gridTemplateColumns = '2fr 0.7fr 1fr 0.7fr 0.8fr';
+        ['Hotel','Booking Reference','checkin','checkout','Nightly cost (£)','Breakfast Included'].forEach(lbl => {
           const key = {
-            'Hotel':'hotel','Booking Reference':'ref','Check-in':'checkin',
-            'Check-out':'checkout','Nightly cost (£)':'cost','Breakfast Included':'breakfast'
+            'Hotel':'hotel','Booking Reference':'ref','checkin':'checkin',
+            'checkout':'checkout','Nightly cost (£)':'cost','Breakfast Included':'breakfast'
           }[lbl];
+          if (lbl === 'checkin') return; // skip - handled by combined cell below
+          if (lbl === 'checkout') {
+            // Build combined check-in/out cell
+            const dc = document.createElement('div'); dc.className = 'cell';
+            const dl = document.createElement('div'); dl.className = 'cell-lbl'; dl.textContent = 'Check-in → Check-out';
+            const dr = document.createElement('div'); dr.style.cssText = 'display:flex;gap:6px;align-items:center;';
+            const ci = document.createElement('input'); ci.className = 'cell-inp'; ci.dataset.key = 'checkin'; ci.type = 'text'; ci.addEventListener('input', scheduleSave);
+            const arrow = document.createElement('span'); arrow.textContent = '→'; arrow.style.cssText = 'color:#aaa;font-size:11px;flex-shrink:0;';
+            const co = document.createElement('input'); co.className = 'cell-inp'; co.dataset.key = 'checkout'; co.type = 'text'; co.addEventListener('input', scheduleSave);
+            ci.style.flex = '1'; co.style.flex = '1';
+            dr.appendChild(ci); dr.appendChild(arrow); dr.appendChild(co);
+            dc.appendChild(dl); dc.appendChild(dr); nextRow.appendChild(dc);
+            return;
+          }
           const c = document.createElement('div'); c.className = 'cell';
           const l = document.createElement('div'); l.className = 'cell-lbl'; l.textContent = lbl;
           const inp2 = document.createElement('input'); inp2.className = 'cell-inp'; inp2.dataset.key = key; inp2.type = 'text';
@@ -537,8 +561,7 @@ function addDay(d) {
 
   ar.appendChild(hotelCell);
   ar.appendChild(cell('Booking Reference', refInp));
-  ar.appendChild(cell('Check-in', checkinInp));
-  ar.appendChild(cell('Check-out', checkoutInp));
+  ar.appendChild(datesCell);
   ar.appendChild(cell('Nightly cost (£)', costInp));
 
 
