@@ -237,15 +237,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 56px;
+    height: 52px;
     background: rgba(232,232,232,0.96);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-top: 0.5px solid rgba(0,0,0,0.12);
     z-index: 300;
-    padding: 0 12px;
+    padding: 0 20px;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-between;
+    gap: 4px;
   }
   .itin-tab-btn {
     display: flex;
@@ -263,13 +264,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     font-family: Montserrat, sans-serif;
     font-size: 9px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     padding: 0;
+    min-width: 0;
   }
-  .itin-tab-btn svg { width: 15px; height: 15px; }
-  .itin-tab-btn.back-btn  { color: #0e7a87; }
-  .itin-tab-btn.save-btn  { color: #0e7a87; }
-  .itin-tab-btn.undo-tab  { color: #0e7a87; }
+  .itin-tab-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
   .itin-tab-btn.delete-tab { color: #c0392b; }
 
   /* Status switch in bottom bar */
