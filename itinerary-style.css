@@ -335,7 +335,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   /* Push ALL content above fixed tab bar (72px + safe area ~34px + buffer) */
   body { padding-bottom: 70px; overflow-x: hidden; }
   /* date/location header stay large on focus */
-  .day-date-wrap input:focus, .day-loc-wrap input:focus { font-size: 14px !important; }
+  /* iOS zoom prevention: cell inputs need 16px on focus */
+  .cell-inp:focus, .cell-ta:focus, select:focus { font-size: 16px !important; }
+  .day-date-wrap input:focus, .day-loc-wrap input:focus { font-size: 16px !important; }
   .days { padding: 16px 12px 0; gap: 10px; }
   .add-day { margin-bottom: 0; }
   .day-card { border-radius: 14px; }
