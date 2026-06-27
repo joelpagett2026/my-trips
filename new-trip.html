@@ -607,10 +607,10 @@ function addDay(d) {
   costInp.addEventListener('input', () => { scheduleSave(); propagateHotel(); });
 
   ar.appendChild(hotelCell);
-  ar.appendChild(cell('Booking Reference', refInp));
   ar.appendChild(cell('Check-in', checkinInp));
   ar.appendChild(cell('Check-out', checkoutInp));
   ar.appendChild(cell('Nightly cost (£)', costInp));
+  ar.appendChild(cell('Booking Reference', refInp));
 
 
   bfToggle.onclick = () => {
