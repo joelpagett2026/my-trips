@@ -222,7 +222,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     cursor: pointer;
   }
 
-  /* Stats: 2×2 grid */
+  /* Nav: shrink buttons to icon+short label on mobile */
+  .nav { padding: 0 10px; }
+  .nav-left-btns { gap: 6px !important; }
+  .nav-btn-text { display: none; }
+  .nav-icon-btn {
+    padding: 7px !important;
+    min-width: 34px;
+    justify-content: center;
+  }
   .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; }
   .stat-val { font-size: 22px; }
 
@@ -272,17 +280,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 <body>
 
 <div class="nav">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <a href="#" onclick="openModal(event)" style="display:inline-flex;align-items:center;gap:6px;background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
+  <div style="display:flex;align-items:center;gap:8px;" class="nav-left-btns">
+    <a href="#" onclick="openModal(event)" class="nav-icon-btn" style="display:inline-flex;align-items:center;gap:6px;background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      New Trip
+      <span class="nav-btn-text">New Trip</span>
     </a>
-    <a href="#" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#0e7a87;border:1.5px solid #0e7a87;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
-      Holiday Allowance
+    <a href="#" class="nav-icon-btn" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#0e7a87;border:1.5px solid #0e7a87;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-btn-text">Holiday Allowance</span>
     </a>
-    <button class="mobile-stats-btn" onclick="openStatsPanel()" style="display:none;">
+    <button class="mobile-stats-btn nav-icon-btn" onclick="openStatsPanel()" style="display:none;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Stats
+      <span class="nav-btn-text">Stats</span>
     </button>
   </div>
   <div class="nav-title">Joel Pagett's Trip Planner</div>
