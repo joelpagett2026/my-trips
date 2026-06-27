@@ -292,6 +292,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   /* Day top: date + location bar wraps nicely already, just ensure min-width */
   .s-date [style*="min-width:130px"] { min-width: 100px !important; }
 
+  /* Day date/location bar: shrink date, give location more room */
+  .day-date-wrap { min-width: 90px !important; padding: 0 10px !important; }
+  .day-loc-wrap { padding: 0 10px !important; }
+
   /* Cells: more breathing room */
   .cell { padding: 10px 14px; }
   .cell-inp { font-size: 14px; }
