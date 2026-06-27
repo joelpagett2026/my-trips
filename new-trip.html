@@ -256,7 +256,7 @@ function delBtn(onDel) {
 function makeTransRow(data, container) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner trans-row';
-  row.style.gridTemplateColumns = '1.1fr 0.7fr 1fr 0.6fr 1fr 0.6fr 32px';
+  row.style.gridTemplateColumns = '1.1fr 0.7fr 1fr 0.6fr 1fr 0.6fr';
 
   // Mode dropdown
   const modeCell = document.createElement('div'); modeCell.className = 'cell';
@@ -279,7 +279,6 @@ function makeTransRow(data, container) {
   row.appendChild(cell('Depart', inp(data.depart, 'depart', '', '')));
   row.appendChild(cell('To', inp(data.to_loc || '', 'to_loc', '', '')));
   row.appendChild(cell('Arrive', inp(data.arrive, 'arrive', '', '')));
-  row.appendChild(delBtn(() => row.remove()));
   container.appendChild(row);
 }
 function makeFoodRow(data, container) {
