@@ -105,8 +105,8 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .cell{padding:8px 14px;border-right:0.5px solid rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:3px;}
 .cell:last-child{border-right:none;}
 .cell-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;font-weight:700;color:#555555;}
-.cell-inp{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#333333;width:100%;outline:none;padding:0;letter-spacing:-0.1px;}
-.cell-inp.bold{font-weight:600;font-size:14px;letter-spacing:-0.2px;}
+.cell-inp{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:500;color:#333333;width:100%;outline:none;padding:0;letter-spacing:-0.1px;}
+.cell-inp.bold{font-weight:500;font-size:12px;letter-spacing:-0.1px;}
 /* ── DATE PICKER STYLING ── */
 input[type="date"] {
   color-scheme: light;
@@ -161,7 +161,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .cell-inp:focus{background:rgba(14,122,135,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
-.cell-ta{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:13px;color:#333333;width:100%;outline:none;padding:0;resize:none;line-height:1.5;min-height:36px;letter-spacing:-0.1px;overflow:hidden;}
+.cell-ta{border:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:500;color:#333333;width:100%;outline:none;padding:0;resize:none;line-height:1.5;min-height:36px;letter-spacing:-0.1px;overflow:hidden;}
 .cell-ta::placeholder{color:#b8b8b8;}
 .cell-ta:focus{background:rgba(14,122,135,0.04);border-radius:6px;padding:2px 6px;margin:-2px -6px;}
 
