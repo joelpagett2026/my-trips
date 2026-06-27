@@ -387,8 +387,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* Cells: more breathing room */
   .cell { padding: 10px 14px; }
-  .cell-inp { font-size: 14px; }
-  .cell-ta { font-size: 14px; }
 
   .status-badge-wrap { padding: 8px 16px 0; }
   #setup-banner { margin: 12px 12px; }
