@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=68">
+<link rel="stylesheet" href="/itinerary-style.css?v=69">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -662,7 +662,15 @@ function addDay(d) {
   ar.appendChild(hotelCell);
   ar.appendChild(cell('Check-in', checkinInp));
   ar.appendChild(cell('Check-out', checkoutInp));
-  ar.appendChild(cell('Nightly cost (£)', costInp));
+  // Nightly cost with £ prefix
+  const costCell = document.createElement('div'); costCell.className = 'cell';
+  const costLbl = document.createElement('div'); costLbl.className = 'cell-lbl'; costLbl.textContent = 'Nightly cost';
+  const costRow = document.createElement('div'); costRow.style.cssText = 'display:flex;align-items:center;gap:2px;';
+  const costPrefix = document.createElement('span'); costPrefix.textContent = '£'; costPrefix.style.cssText = 'font-size:13px;font-weight:400;color:#333;flex-shrink:0;';
+  costInp.style.flex = '1';
+  costRow.appendChild(costPrefix); costRow.appendChild(costInp);
+  costCell.appendChild(costLbl); costCell.appendChild(costRow);
+  ar.appendChild(costCell);
   ar.appendChild(cell('Booking Reference', refInp));
 
 
