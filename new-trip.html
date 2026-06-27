@@ -397,7 +397,7 @@ function addDay(d) {
   ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
   ab.appendChild(accDelBtn);
   as.appendChild(ab);
-  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 0.7fr';
+  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 1.2fr 0.7fr';
 
   // Auto-format date inputs (dd/mm/yyyy)
   function dateInp2(val, key) {
@@ -497,7 +497,7 @@ function addDay(d) {
       let nextRow = nextAcc.querySelector('.row-inner');
       if (!nextRow) {
         nextRow = document.createElement('div'); nextRow.className = 'row-inner';
-        nextRow.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 0.7fr 0.8fr';
+        nextRow.style.gridTemplateColumns = '2fr 0.7fr 1.2fr 0.7fr 0.8fr';
         ['Hotel','Booking Reference','checkin','checkout','Nightly cost (£)','Breakfast Included'].forEach(lbl => {
           const key = {
             'Hotel':'hotel','Booking Reference':'ref','checkin':'checkin',
@@ -561,8 +561,15 @@ function addDay(d) {
 
   ar.appendChild(hotelCell);
   ar.appendChild(cell('Booking Reference', refInp));
-  ar.appendChild(cell('Check-in', checkinInp));
-  ar.appendChild(cell('Check-out', checkoutInp));
+  // Check-in and check-out on same line
+  const datesCell = document.createElement('div'); datesCell.className = 'cell';
+  const datesLbl = document.createElement('div'); datesLbl.className = 'cell-lbl'; datesLbl.textContent = 'Check-in / Check-out';
+  const datesRow = document.createElement('div'); datesRow.style.cssText = 'display:flex;gap:4px;align-items:center;';
+  const arrow = document.createElement('span'); arrow.textContent = '→'; arrow.style.cssText = 'color:#aaa;font-size:10px;flex-shrink:0;';
+  checkinInp.style.flex = '1'; checkoutInp.style.flex = '1';
+  datesRow.appendChild(checkinInp); datesRow.appendChild(arrow); datesRow.appendChild(checkoutInp);
+  datesCell.appendChild(datesLbl); datesCell.appendChild(datesRow);
+  ar.appendChild(datesCell);
   ar.appendChild(cell('Nightly cost (£)', costInp));
 
 
