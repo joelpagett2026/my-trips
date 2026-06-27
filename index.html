@@ -285,14 +285,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 72px;
+    height: 56px;
     background: rgba(232,232,232,0.96);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-top: 0.5px solid rgba(0,0,0,0.12);
     z-index: 300;
     padding: 0 8px;
-    padding-bottom: env(safe-area-inset-bottom);
     align-items: center;
     justify-content: space-around;
   }
@@ -317,7 +316,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     transition: color 0.15s;
   }
   .tab-btn.active, .tab-btn:active { color: #0e7a87; }
-  .tab-btn svg { width: 22px; height: 22px; }
+  .tab-btn svg { width: 18px; height: 18px; }
   .tab-btn.tab-primary {
     color: #0e7a87;
   }
@@ -341,7 +340,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
   }
 
   /* Push content above tab bar */
-  .page-layout { padding-bottom: calc(72px + env(safe-area-inset-bottom) + 24px); }
+  .page-layout { padding-bottom: 70px; }
 
   /* Year dividers */
   .year-divider { margin: 16px 12px; }
