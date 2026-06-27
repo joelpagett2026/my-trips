@@ -37,12 +37,14 @@ if ($return !== 0) {
 // These will be regenerated from new-trip.html on every deploy,
 // so style/template changes automatically propagate to all pages.
 $itineraries = [
-    ['slug' => 'china-2026',      'filename' => 'china.html',         'dest' => 'China',              'dep' => '31/03/2026', 'ret' => '17/04/2026', 'trav' => '2', 'status' => 'past'],
-    ['slug' => 'dubai-2025',      'filename' => 'dubai.html',         'dest' => 'Dubai & Abu Dhabi',  'dep' => '26/12/2025', 'ret' => '09/01/2026', 'trav' => '2', 'status' => 'past'],
-    ['slug' => 'costa-rica-2025', 'filename' => 'costa-rica.html',    'dest' => 'Costa Rica',         'dep' => '04/04/2025', 'ret' => '21/04/2025', 'trav' => '2', 'status' => 'past'],
-    ['slug' => 'canada-2027',     'filename' => 'canada.html',        'dest' => 'Canada Road Trip',   'dep' => '25/09/2027', 'ret' => '10/10/2027', 'trav' => '2', 'status' => 'upcoming'],
-    ['slug' => 'hk-taiwan-2027',  'filename' => 'hong-kong-taiwan.html', 'dest' => 'Hong Kong & Taiwan', 'dep' => '27/03/2027', 'ret' => '12/04/2027', 'trav' => '2', 'status' => 'planning'],
-    ['slug' => 'porto-2026',      'filename' => 'porto-2026.html',    'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'],
+    ['slug' => 'china-2026',      'filename' => 'china.html',             'dest' => 'China',              'dep' => '31/03/2026', 'ret' => '17/04/2026', 'trav' => '2', 'status' => 'past'],
+    ['slug' => 'dubai-2025',      'filename' => 'dubai.html',             'dest' => 'Dubai & Abu Dhabi',  'dep' => '26/12/2025', 'ret' => '09/01/2026', 'trav' => '2', 'status' => 'past'],
+    ['slug' => 'costa-rica-2025', 'filename' => 'costa-rica.html',        'dest' => 'Costa Rica',         'dep' => '04/04/2025', 'ret' => '21/04/2025', 'trav' => '2', 'status' => 'past'],
+    ['slug' => 'canada-2027',     'filename' => 'canada.html',            'dest' => 'Canada Road Trip',   'dep' => '25/09/2027', 'ret' => '10/10/2027', 'trav' => '2', 'status' => 'upcoming'],
+    ['slug' => 'hk-taiwan-2027',  'filename' => 'hong-kong-taiwan.html',  'dest' => 'Hong Kong & Taiwan', 'dep' => '27/03/2027', 'ret' => '12/04/2027', 'trav' => '2', 'status' => 'planning'],
+    ['slug' => 'porto-2026',      'filename' => 'porto-2026.html',        'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'],
+    ['slug' => 'gothenburg-2026', 'filename' => 'gothenburg-2026.html',   'dest' => 'Gothenburg',         'dep' => '09/10/2026', 'ret' => '12/10/2026', 'trav' => '2', 'status' => 'planning'],
+    ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
 ];
 
 // ── REGENERATE ALL ITINERARY PAGES FROM TEMPLATE ─────────────────────
