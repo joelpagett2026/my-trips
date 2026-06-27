@@ -308,13 +308,13 @@ function makeFoodRow(data, container, hotelBreakfast) {
   const mealSel = document.createElement('select');
   mealSel.className = 'cell-inp'; mealSel.dataset.key = 'meal';
   mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
-  ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack'].forEach(opt => {
+  ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack', 'Inflight'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
     if (data.meal === opt) o.selected = true;
     mealSel.appendChild(o);
   });
-  mealSel.addEventListener('change', scheduleSave);
+  mealSel.addEventListener('change', () => { scheduleSave(); const pi = row.querySelector('[data-key="place"]'); if (pi) pi.dispatchEvent(new Event('input')); });
   mealCell.appendChild(mealLbl); mealCell.appendChild(mealSel);
   row.appendChild(mealCell);
   // Restaurant/place with Maps auto-link
@@ -329,7 +329,9 @@ function makeFoodRow(data, container, hotelBreakfast) {
   placeLink.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
   const updatePlaceLink = () => {
     const v = placeInp.value.trim();
-    if (v) { placeLink.href = 'https://www.google.com/maps/search/' + encodeURIComponent(v); placeLink.style.display = 'inline-flex'; }
+    const meal = row.querySelector('[data-key="meal"]');
+    const isInflight = meal && meal.value === 'Inflight';
+    if (v && !isInflight) { placeLink.href = 'https://www.google.com/maps/search/' + encodeURIComponent(v); placeLink.style.display = 'inline-flex'; }
     else { placeLink.style.display = 'none'; }
   };
   placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
