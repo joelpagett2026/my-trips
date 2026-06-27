@@ -302,7 +302,7 @@ function makeFoodRow(data, container) {
   row.appendChild(mealCell);
   row.appendChild(cell('Restaurant / Place', inp(data.place, 'place', '', '')));
   row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
-  row.appendChild(cell('Booking ref', inp(data.ref, 'ref', '', '')));
+  row.appendChild(cell('Time Booked', inp(data.time, 'time', '', '')));
   row.appendChild(delBtn(() => row.remove()));
   container.appendChild(row);
 }
