@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=25">
+<link rel="stylesheet" href="/itinerary-style.css?v=26">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -521,5 +521,90 @@ async function deleteTrip() {
 </script>
 <script src="/datepicker.js"></script>
 <script src="/chat-widget.js"></script>
+
+<!-- ── MOBILE BOTTOM TAB BAR ── -->
+<div class="itin-tab-bar" id="itin-tab-bar" style="display:none;">
+  <a href="/" class="itin-tab-btn back-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+    Home
+  </a>
+  <button class="itin-tab-btn save-btn" onclick="manualSave()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Save
+  </button>
+  <button class="itin-tab-btn undo-tab" id="undo-tab-btn" onclick="undoState()" style="opacity:0.4;pointer-events:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+    Undo
+  </button>
+  <div class="itin-tab-switch">
+    <div class="itin-tab-switch-label">Status</div>
+    <div class="status-toggle is-tab-toggle" id="status-toggle-tab">
+      <button class="status-toggle-opt" id="opt-upcoming-tab" onclick="setStatus_toggle('upcoming')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+      </button>
+      <button class="status-toggle-opt" id="opt-planning-tab" onclick="setStatus_toggle('planning')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="itin-tab-btn delete-tab" onclick="deleteTrip()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    Delete
+  </button>
+</div>
+
+<script>
+// Show tab bar on mobile, sync undo state and status toggle
+(function() {
+  function isMobile() { return window.innerWidth <= 700; }
+
+  function initTabBar() {
+    const bar = document.getElementById('itin-tab-bar');
+    if (!bar) return;
+    bar.style.display = isMobile() ? 'flex' : 'none';
+  }
+
+  // Keep tab toggle in sync with the main status toggle
+  const origSetStatus = window.setStatus_toggle;
+  window.setStatus_toggle = async function(s) {
+    await origSetStatus(s);
+    syncTabToggle(s);
+  };
+
+  function syncTabToggle(s) {
+    const upTab = document.getElementById('opt-upcoming-tab');
+    const plTab = document.getElementById('opt-planning-tab');
+    const tog   = document.getElementById('status-toggle-tab');
+    if (!upTab || !plTab) return;
+    upTab.className = 'status-toggle-opt' + (s === 'upcoming' ? ' active-upcoming' : '');
+    plTab.className = 'status-toggle-opt' + (s === 'planning' ? ' active-planning' : '');
+    if (tog) tog.className = 'status-toggle is-tab-toggle' + (s === 'past' ? ' is-past' : '');
+  }
+
+  // Sync undo button in tab bar
+  const origPushUndo = window.pushUndo;
+  window.pushUndo = function() {
+    origPushUndo && origPushUndo();
+    const u = document.getElementById('undo-tab-btn');
+    if (u) { u.style.opacity = '1'; u.style.pointerEvents = 'auto'; }
+  };
+
+  // Init on load and resize
+  window.addEventListener('load', () => {
+    initTabBar();
+    // Sync initial status
+    const tog = document.getElementById('status-toggle');
+    if (tog) {
+      const active = tog.querySelector('.active-upcoming, .active-planning');
+      if (active) {
+        const s = active.classList.contains('active-upcoming') ? 'upcoming' : 'planning';
+        syncTabToggle(s);
+      }
+    }
+  });
+  window.addEventListener('resize', initTabBar, { passive: true });
+})();
+</script>
+
 </body>
 </html>
