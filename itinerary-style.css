@@ -379,12 +379,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .s-date [style*="min-width:130px"] { min-width: 100px !important; }
 
   /* Day date/location bar: date fixed width, location gets the rest */
-  .day-date-wrap { min-width: 0 !important; width: auto !important; flex-shrink: 1 !important; padding: 0 8px !important; }
+  .day-date-wrap { flex-shrink: 0 !important; width: auto !important; padding: 0 8px !important; }
+  .day-date-wrap input { width: 7.5em !important; }
   .day-loc-wrap { padding: 0 8px !important; flex: 1 !important; min-width: 0 !important; overflow: hidden; }
   .day-loc-wrap input { overflow: hidden; text-overflow: ellipsis; width: 100% !important; }
-  /* Shrink date text on mobile so full date fits */
-  .day-date-wrap input { font-size: 13px !important; }
-  /* Day delete button: tighter margin on mobile */
   .day-card [style*="margin:0 12px"] { margin: 0 6px !important; }
 
   /* Cells: more breathing room */
