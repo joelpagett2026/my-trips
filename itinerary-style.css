@@ -334,8 +334,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* Push ALL content above fixed tab bar (72px + safe area ~34px + buffer) */
   body { padding-bottom: 70px; overflow-x: hidden; }
-  /* Prevent iOS auto-zoom on input focus (requires font-size ≥ 16px) */
-  input, select, textarea { font-size: 16px !important; }
+  /* Prevent iOS auto-zoom: 16px only on focus, not at rest */
+  input:focus, select:focus, textarea:focus { font-size: 16px !important; }
   .days { padding: 16px 12px 0; gap: 10px; }
   .add-day { margin-bottom: 0; }
   .day-card { border-radius: 14px; }
