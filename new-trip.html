@@ -317,7 +317,23 @@ function makeFoodRow(data, container, hotelBreakfast) {
   mealSel.addEventListener('change', scheduleSave);
   mealCell.appendChild(mealLbl); mealCell.appendChild(mealSel);
   row.appendChild(mealCell);
-  row.appendChild(cell('Restaurant / Place', inp(data.place, 'place', '', '')));
+  // Restaurant/place with Maps auto-link
+  const placeCell = document.createElement('div'); placeCell.className = 'cell';
+  const placeLbl = document.createElement('div'); placeLbl.className = 'cell-lbl'; placeLbl.textContent = 'Restaurant / Place';
+  const placeInp = inp(data.place, 'place', '', '');
+  const placeLink = document.createElement('a');
+  placeLink.target = '_blank';
+  placeLink.style.cssText = 'display:none;align-items:center;gap:2px;font-size:9px;color:#0e7a87;text-decoration:none;margin-top:2px;';
+  placeLink.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Maps';
+  const updatePlaceLink = () => {
+    const v = placeInp.value.trim();
+    if (v) { placeLink.href = 'https://www.google.com/maps/search/' + encodeURIComponent(v); placeLink.style.display = 'inline-flex'; }
+    else { placeLink.style.display = 'none'; }
+  };
+  placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
+  updatePlaceLink();
+  placeCell.appendChild(placeLbl); placeCell.appendChild(placeInp); placeCell.appendChild(placeLink);
+  row.appendChild(placeCell);
   if (!hotelBreakfast) {
     row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
     row.appendChild(cell('Time Booked', inp(data.time, 'time', '', '')));
