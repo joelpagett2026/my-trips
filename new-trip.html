@@ -284,7 +284,7 @@ function makeTransRow(data, container) {
 function makeFoodRow(data, container) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner food-row';
-  row.style.gridTemplateColumns = '0.55fr 1.1fr 1.1fr 0.75fr 32px';
+  row.style.gridTemplateColumns = '0.55fr 1.1fr 1.1fr 0.75fr';
   // Meal dropdown
   const mealCell = document.createElement('div'); mealCell.className = 'cell';
   const mealLbl = document.createElement('div'); mealLbl.className = 'cell-lbl'; mealLbl.textContent = 'Meal';
@@ -303,7 +303,6 @@ function makeFoodRow(data, container) {
   row.appendChild(cell('Restaurant / Place', inp(data.place, 'place', '', '')));
   row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
   row.appendChild(cell('Time Booked', inp(data.time, 'time', '', '')));
-  row.appendChild(delBtn(() => row.remove()));
   container.appendChild(row);
 }
 function addDay(d) {
