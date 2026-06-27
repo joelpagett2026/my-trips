@@ -144,6 +144,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 .year-group .dash-trip-row{padding:6px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);}
 .year-group .dash-trip-row:last-child{border-bottom:none;}
 
+.mobile-tab-bar { display: none; }
+
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 700px) {
   /* Nav: compact */
@@ -278,9 +280,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
   .nav-left-btns { display: none !important; }
   .nav-settings-btn { display: none !important; }
 
-  /* Bottom tab bar */
+  /* Bottom tab bar — always visible on mobile */
   .mobile-tab-bar {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 72px;
@@ -1190,7 +1192,7 @@ async function createTrip(){
 </script>
 
 <!-- ── MOBILE BOTTOM TAB BAR ── -->
-<div class="mobile-tab-bar" id="mobile-tab-bar" style="display:none;">
+<div class="mobile-tab-bar" id="mobile-tab-bar">
   <a href="#" onclick="openModal(event)" class="tab-btn tab-primary">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     New Trip

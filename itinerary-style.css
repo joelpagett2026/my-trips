@@ -222,14 +222,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .page-title-flag{height:0.7em;width:auto;border-radius:2px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.2);flex-shrink:0;vertical-align:middle;}
 
+.itin-tab-bar { display: none; }
+
 /* ── MOBILE RESPONSIVE (itinerary pages) ── */
 @media (max-width: 700px) {
   /* Hide entire nav on mobile — bottom bar replaces it */
   .nav { display: none !important; }
 
-  /* Bottom tab bar for itinerary pages */
+  /* Bottom tab bar for itinerary pages — always visible on mobile */
   .itin-tab-bar {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 72px;
