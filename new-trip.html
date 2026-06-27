@@ -498,7 +498,13 @@ function addDay(d) {
       }
       setField('hotel', hotel);
       setField('ref', ref);
-      setField('checkin', '');  // already checked in
+      // Calculate date for this night (checkin date + i days)
+      const nightDate = new Date(d1.getTime() + i * 86400000);
+      const dd = String(nightDate.getDate()).padStart(2,'0');
+      const mm = String(nightDate.getMonth()+1).padStart(2,'0');
+      const yyyy = nightDate.getFullYear();
+      const nightDateStr = dd + '/' + mm + '/' + yyyy;
+      setField('checkin', nightDateStr);
       setField('checkout', i === nights - 1 ? checkout : '');  // checkout only on last night
       setField('cost', cost);
       setField('breakfast', bfVal);
