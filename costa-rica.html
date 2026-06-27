@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Costa Rica · April 2025</title>
+<title>Costa Rica 2025 · Itinerary</title>
 <link rel="stylesheet" href="/itinerary-style.css?v=15">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
 <body>
 
-<div id="loading"><div class="spinner"></div><div class="loading-text">Loading itinerary…</div></div>
+<div id="loading"><div class="spinner"></div><div class="loading-text">Setting up your itinerary…</div></div>
 
 <div class="nav">
   <a class="nav-back" href="/">
@@ -26,129 +26,195 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Planning
       </button>
-    </div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
-</div>
-
-<div class="large-subtitle">4 Apr – 21 Apr 2025</div>
-</div>
-
-
-<div class="stat-lbl">Days</div></div>
-  <div class="stat-card"><div class="stat-val sv-orange">04/04/2025</div><div class="stat-lbl">Departure</div></div>
-  <div class="stat-card"><div class="stat-val sv-green">21/04/2025</div><div class="stat-lbl">Return</div></div>
-</div>
-  <div class="stat-card"><div class="stat-val sv-orange">7</div><div class="stat-lbl">Locations</div></div>
-  <div class="stat-card"><div class="stat-val sv-purple" id="s-acc">£0</div><div class="stat-lbl">Accommodation</div></div>
-  <div class="stat-card"><div class="stat-val sv-green" id="s-total">£0</div><div class="stat-lbl">Total cost</div></div>
-</div>
-
-
-  </div>
+    </div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()">Save</button><button class="nav-btn" onclick="window.print()">Print</button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="opacity:0.4;" disabled>Undo</button><button class="nav-btn danger" onclick="deleteTrip()">Delete</button></div>
 </div>
 
 <div style="background:linear-gradient(135deg,#0e7a87,#0d9e8c);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-  <img class="page-title-flag" src="https://flagcdn.com/w80/cr.png" alt="cr" style="height:22px;width:auto;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.3);flex-shrink:0;">
-  <span style="font-size:20px;font-weight:700;color:#fff;flex:1;" id="page-title">Costa Rica</span>
+  <img id="page-flag" style="display:none;height:22px;width:auto;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.3);flex-shrink:0;" class="page-title-flag">
+  <input class="th-inp hdr-field" id="hdr-dest" placeholder="Destination" style="font-size:20px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;flex:1;min-width:120px;" value="">
   <div style="display:flex;align-items:center;gap:20px;flex-shrink:0;">
     <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Days</span><span style="font-size:18px;font-weight:700;color:#fff;line-height:1;text-align:center;" id="s-days">0</span></div>
     <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Departure</span><span style="font-size:18px;font-weight:700;color:#fff;line-height:1;text-align:center;">04/04/2025</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Departure</span><input class="th-inp sm hdr-field" id="hdr-dep" placeholder="dd/mm/yyyy" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:110px;line-height:1;text-align:center;" value=""></div>
     <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
-    <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Return</span><span style="font-size:18px;font-weight:700;color:#fff;line-height:1;text-align:center;">21/04/2025</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Return</span><input class="th-inp sm hdr-field" id="hdr-ret" placeholder="dd/mm/yyyy" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:110px;line-height:1;text-align:center;" value=""></div>
   </div>
 </div>
-    <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
-    <div style="display:flex;flex-direction:column;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Departure</span><span style="font-size:18px;font-weight:700;color:#fff;line-height:1;">04/04/2025</span></div>
-    <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
-    <div style="display:flex;flex-direction:column;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Return</span><span style="font-size:18px;font-weight:700;color:#fff;line-height:1;">21/04/2025</span></div>
-  </div>
-</div>
-    <div style="width:1px;height:28px;background:rgba(255,255,255,0.2);"></div>
-    <div style="display:flex;flex-direction:column;">
-      <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;">Departure</span>
-      <span style="font-size:13px;font-weight:700;color:#fff;">04/04/2025</span>
-    </div>
-    <div style="width:1px;height:28px;background:rgba(255,255,255,0.2);"></div>
-    <div style="display:flex;flex-direction:column;">
-      <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;">Return</span>
-      <span style="font-size:13px;font-weight:700;color:#fff;">21/04/2025</span>
-    </div>
-  </div>
-</div>
-    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
-    <div style="display:flex;flex-direction:column;">
-      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Departure</span>
-      <span style="font-size:13px;font-weight:600;color:#444;">04/04/2025</span>
-    </div>
-    <div style="width:1px;height:28px;background:#e0e0e0;"></div>
-    <div style="display:flex;flex-direction:column;">
-      <span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;">Return</span>
-      <span style="font-size:13px;font-weight:600;color:#444;">21/04/2025</span>
-    </div>
-  </div>
-  <input type="hidden" id="hdr-dest" value="Costa Rica">
-  <input type="hidden" id="hdr-dep" value="2025-04-04">
-  <input type="hidden" id="hdr-ret" value="2025-04-21">
   <input type="hidden" id="hdr-trav" value="2">
+  <input type="hidden" id="page-title" value="New Trip">
 </div>
+
 <div class="sec-hd">Day by day</div>
 <div class="days" id="days"></div>
 
-<button class="add-day" onclick="addDay()">
+<button class="add-day" onclick="pushUndo(); addDay();">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   Add Day
 </button>
 
 <script>
-const RECORD_ID = 'costa-rica-2025';
-let currentStatus = 'past';
+// Baked-in trip data
+const dest   = "Costa Rica";
+const dep    = "04\/04\/2025";
+const ret    = "21\/04\/2025";
+const trav   = "2";
+const status = "past";
+const slug   = "costa-rica-2025";
+
+// Use slug as the database record ID
+const RECORD_ID = slug;
+
+// ── STATUS BADGE ──────────────────────────────────────────────────────
+let currentStatus = status;
+
+function renderStatusBadge() {
+  const badge = document.getElementById('status-badge');
+  const hint  = document.getElementById('status-hint');
+  if (!badge) return;
+  badge.className = 'status-badge-btn ' + currentStatus;
+  if (currentStatus === 'upcoming') {
+    badge.textContent = '✈ Upcoming';
+    hint.textContent  = 'Click to mark as Planning';
+  } else if (currentStatus === 'planning') {
+    badge.textContent = '✦ Planning';
+    hint.textContent  = 'Click to mark as Upcoming';
+  } else {
+    badge.textContent = '✓ Completed';
+    hint.textContent  = '';
+  }
+}
+
+async function cycleStatus() {
+  if (currentStatus === 'past') return;
+  currentStatus = currentStatus === 'upcoming' ? 'planning' : 'upcoming';
+  renderStatusToggle();
+  // Update in registry
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip  = trips.find(t => t.slug === RECORD_ID);
+    if (trip) { trip.status = currentStatus; await window.dbSaveRegistry(trips); }
+  } catch { /* silent */ }
+}
+
+function renderStatusToggle() {
+  const toggle = document.getElementById('status-toggle');
+  const optUp  = document.getElementById('opt-upcoming');
+  const optPl  = document.getElementById('opt-planning');
+  if (!toggle) return;
+  if (currentStatus === 'past') {
+    toggle.classList.add('is-past');
+    if (optUp) optUp.className = 'status-toggle-opt';
+    if (optPl) optPl.className = 'status-toggle-opt';
+    return;
+  }
+  toggle.classList.remove('is-past');
+  if (optUp) optUp.className = 'status-toggle-opt' + (currentStatus === 'upcoming' ? ' active-upcoming' : '');
+  if (optPl) optPl.className = 'status-toggle-opt' + (currentStatus === 'planning' ? ' active-planning' : '');
+}
+async function setStatus_toggle(newStatus) {
+  if (currentStatus === 'past' || currentStatus === newStatus) return;
+  currentStatus = newStatus;
+  renderStatusToggle();
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip  = trips.find(t => t.slug === RECORD_ID);
+    if (trip) { trip.status = currentStatus; await window.dbSaveRegistry(trips); }
+  } catch { /* silent */ }
+}
+
+
+function checkAutoComplete() {
+  if (!dep) return;
+  const parts = dep.split('/');
+  if (parts.length !== 3) return;
+  const depDate = new Date(parts[2], parts[1]-1, parts[0]);
+  if (depDate <= new Date()) currentStatus = 'past';
+  renderStatusToggle();
+}
+
+// Pre-fill header
+document.getElementById('hdr-dest').value = dest; document.title = dest + ' · Itinerary';
+// Load flag from registry
+(async () => {
+  try {
+    const trips = await window.dbLoadRegistry();
+    const trip = trips.find(t => t.slug === RECORD_ID);
+    const flags = trip && trip.flags;
+    if (flags && flags.length) {
+      const flagEl = document.getElementById('page-flag');
+      flagEl.src = 'https://flagcdn.com/w80/' + flags[0] + '.png';
+      flagEl.style.display = 'inline-block';
+    }
+  } catch {}
+})();
+const _nt = document.getElementById('nav-title'); if(_nt) _nt.textContent = dest;
+
+document.getElementById('hdr-dep').value  = dep;
+document.getElementById('hdr-ret').value  = ret;
+document.getElementById('hdr-trav').value = trav;
+document.title = dest + ' · Itinerary';
+
 let saveTimer = null;
+let undoLock = false;
+const undoStack = [];
+const UNDO_LIMIT = 20;
+function pushUndo() {
+  if (undoLock) return;
+  undoStack.push(JSON.stringify(collectState()));
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  document.getElementById('undo-btn').disabled = false;
+  document.getElementById('undo-btn').style.opacity = '1';
+}
+function undoState() {
+  if (!undoStack.length) return;
+  undoLock = true;
+  const prev = JSON.parse(undoStack.pop());
+  document.getElementById('days').innerHTML = '';
+  restoreState(prev);
+  scheduleSave();
+  undoLock = false;
+  if (!undoStack.length) {
+    document.getElementById('undo-btn').disabled = true;
+    document.getElementById('undo-btn').style.opacity = '0.4';
+  }
+}
 
 function setStatus(s, m) { const el = document.getElementById('nav-status'); if(el){ el.className = 'nav-status ' + s; } const lbl = document.getElementById('nav-status-label'); if(lbl) lbl.textContent = m; }
-async function dbLoad() {
+
+async function loadData() {
   try { return await window.dbLoad(RECORD_ID); }
   catch { return null; }
 }
-async function dbSave(p) {
+
+async function saveData(p) {
   setStatus('saving', 'Saving…');
   try {
     await window.dbSave(RECORD_ID, p);
     setStatus('saved', 'All saved');
+    await ensureRegistered();
   } catch { setStatus('error', 'Save failed'); }
 }
 
-function toISO(dmy) {
-  if (!dmy) return '';
-  const p = dmy.split('/');
-  if (p.length !== 3) return dmy;
-  return p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
-}
-function fromISO(iso) {
-  if (!iso) return '';
-  const p = iso.split('-');
-  if (p.length !== 3) return iso;
-  return p[2] + '/' + p[1] + '/' + p[0];
-}
-function inpDate(val) {
-  const i = document.createElement('input');
-  i.type = 'date';
-  i.className = 'cell-inp bold';
-  i.value = toISO(val || '');
-  i.dataset.key = 'date';
-  i.addEventListener('input', scheduleSave);
-  return i;
+async function ensureRegistered() {
+  try {
+    const trips = await window.dbLoadRegistry();
+    if (!trips.find(t => t.slug === RECORD_ID)) {
+      trips.push({ dest, dep, ret, trav, status, slug: RECORD_ID, created: Date.now() });
+      await window.dbSaveRegistry(trips);
+    }
+  } catch { /* silent */ }
 }
 
 function scheduleSave() {
   setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => dbSave(collectState()), 1400);
+  saveTimer = setTimeout(() => saveData(collectState()), 1400);
 }
 function collectState() {
-  const header = { dest: document.getElementById('hdr-dest').value, dep: fromISO(document.getElementById('hdr-dep').value), ret: fromISO(document.getElementById('hdr-ret').value), trav: document.getElementById('hdr-trav').value };
+  const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
   const days = Array.from(document.querySelectorAll('.day-card')).map(card => {
     const obj = {};
-    card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.type === 'date' ? fromISO(el.value) : el.value; });
+    card.querySelectorAll('[data-key]').forEach(el => { obj[el.dataset.key] = el.value; });
     obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
@@ -161,6 +227,7 @@ function inp(val, key, cls, ph) {
   if (ph) i.placeholder = ph;
   i.className = 'cell-inp' + (cls ? ' ' + cls : '');
   if (key) i.dataset.key = key;
+  i.addEventListener('focus', () => { pushUndo(); });
   i.addEventListener('input', () => { recalc(); scheduleSave(); });
   return i;
 }
@@ -168,6 +235,7 @@ function ta(val, key, ph) {
   const t = document.createElement('textarea'); t.value = val || ''; t.className = 'cell-ta'; t.rows = 2;
   if (ph) t.placeholder = ph;
   if (key) t.dataset.key = key;
+  t.addEventListener('focus', () => { pushUndo(); });
   t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; scheduleSave(); });
   return t;
 }
@@ -180,16 +248,16 @@ function delBtn(onDel) {
   const d = document.createElement('div'); d.className = 'cell row-del';
   const b = document.createElement('button'); b.className = 'row-del-btn'; b.title = 'Remove';
   b.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  b.onclick = () => { onDel(); scheduleSave(); }; d.appendChild(b); return d;
+  b.onclick = () => { pushUndo(); onDel(); scheduleSave(); }; d.appendChild(b); return d;
 }
 function makeTransRow(data, container) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner trans-row';
   row.style.gridTemplateColumns = '1.1fr 1.1fr 0.6fr 0.6fr 0.7fr 0.8fr 32px';
-  row.appendChild(cell('Mode', inp(data.mode, 'mode', '', 'Flight / Car…')));
+  row.appendChild(cell('Mode', inp(data.mode, 'mode', '', 'Flight / Train…')));
   row.appendChild(cell('Route', inp(data.route, 'route', '', 'A → B')));
-  row.appendChild(cell('Depart', inp(data.depart, 'depart', '', '09:00')));
-  row.appendChild(cell('Arrive', inp(data.arrive, 'arrive', '', '12:00')));
+  row.appendChild(cell('Depart', inp(data.depart, 'depart', '', '12:10')));
+  row.appendChild(cell('Arrive', inp(data.arrive, 'arrive', '', '15:40')));
   row.appendChild(cell('Ref', inp(data.ref, 'ref', '', '#XXX')));
   row.appendChild(cell('Notes', inp(data.notes, 'notes', '', '')));
   row.appendChild(delBtn(() => row.remove()));
@@ -208,205 +276,222 @@ function makeFoodRow(data, container) {
 }
 function addDay(d) {
   d = d || {};
+  const n = document.querySelectorAll('.day-card').length + 1;
   const card = document.createElement('div'); card.className = 'day-card';
   const top = document.createElement('div'); top.className = 'day-top';
   const badge = document.createElement('div'); badge.className = 'day-badge';
-  const bNum = document.createElement('input'); bNum.type = 'text'; bNum.value = d.dayNum || ''; bNum.placeholder = '1';
+  const bNum = document.createElement('input'); bNum.type = 'text'; bNum.value = d.dayNum || n; bNum.placeholder = '1';
   bNum.className = 'day-badge-num'; bNum.dataset.key = 'dayNum';
+  bNum.addEventListener('focus', () => { pushUndo(); });
   bNum.addEventListener('input', scheduleSave);
   const bLbl = document.createElement('div'); bLbl.className = 'db-label'; bLbl.textContent = 'Day';
   badge.appendChild(bLbl); badge.appendChild(bNum); top.appendChild(badge);
-  const dateSec = document.createElement('div'); dateSec.className = 's-date'; dateSec.style.flex = '1';
-  const dateBar = document.createElement('div'); dateBar.className = 'sec-bar';
-  dateBar.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="sec-label">Date & Location</span>';
-  dateSec.appendChild(dateBar);
-  const dateRow = document.createElement('div'); dateRow.className = 'row-inner'; dateRow.style.gridTemplateColumns = '0.7fr 1fr 1fr';
-  dateRow.appendChild(cell('Date', inpDate(d.date)));
-  dateRow.appendChild(cell('From', inp(d.from, 'from', 'bold', '')));
-  dateRow.appendChild(cell('To', inp(d.to, 'to', 'bold', '')));
-  dateSec.appendChild(dateRow); top.appendChild(dateSec); card.appendChild(top);
+  const dateSec = document.createElement('div'); dateSec.className = 's-date'; dateSec.style.cssText = 'flex:1;display:flex;flex-direction:column;';
 
+  // Single inline header bar: date input · location input · remove button
+  const dateBar = document.createElement('div');
+  dateBar.style.cssText = 'display:flex;align-items:stretch;gap:0;padding:0;border-bottom:0.5px solid rgba(0,0,0,0.07);background:#fbfcfd;flex:1;';
+
+  // Date input
+  const dateWrap = document.createElement('div');
+  dateWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:center;padding:0 16px;border-right:0.5px solid rgba(0,0,0,0.07);min-width:130px;';
+  const dateLbl = document.createElement('span');
+  dateLbl.style.cssText = 'font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
+  dateLbl.textContent = 'Date';
+  const dateInp = inp(d.date, 'date', 'bold', 'dd/mm/yyyy');
+  dateInp.style.cssText = 'font-size:14px;font-weight:700;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  dateWrap.appendChild(dateLbl); dateWrap.appendChild(dateInp);
+
+  // Location input
+  const locWrap = document.createElement('div');
+  locWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:center;padding:0 16px;flex:1;';
+  const locLbl = document.createElement('span');
+  locLbl.style.cssText = 'font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;';
+  locLbl.textContent = 'Location';
+  const locInp = inp(d.to || d.from, 'to', 'bold', 'City / Place');
+  locInp.style.cssText = 'font-size:14px;font-weight:700;color:#333;border:none;background:transparent;outline:none;padding:0;width:100%;font-family:Montserrat,sans-serif;';
+  locWrap.appendChild(locLbl); locWrap.appendChild(locInp);
+
+  // Remove button
+  const delDayBtn = document.createElement('button');
+  delDayBtn.style.cssText = 'background:none;border:1.5px solid rgba(0,0,0,0.15);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#999;font-size:13px;line-height:1;padding:0;margin:0 12px;flex-shrink:0;transition:all 0.15s;';
+  delDayBtn.innerHTML = '&times;';
+  delDayBtn.title = 'Remove day';
+  delDayBtn.onclick = () => { pushUndo(); card.remove(); recalc(); scheduleSave(); };
+
+  dateBar.appendChild(dateWrap);
+  dateBar.appendChild(locWrap);
+  dateBar.appendChild(delDayBtn);
+  dateSec.appendChild(dateBar);
+  top.appendChild(dateSec); card.appendChild(top);
   if (!d._transRemoved) {
     const ts = document.createElement('div'); ts.className = 's-trans';
     const tb = document.createElement('div'); tb.className = 'sec-bar';
-    const aBtn = document.createElement('button'); aBtn.className = 'add-row-btn'; aBtn.textContent = '+ Add';
-    aBtn.onclick = () => { makeTransRow({}, tRows); scheduleSave(); };
-    const dBtn = document.createElement('button'); dBtn.className = 'del-sec-btn'; dBtn.textContent = 'Remove';
-    dBtn.onclick = () => { ts.remove(); scheduleSave(); };
-    tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label">Transport</span>';
+    const aBtn = document.createElement('button'); aBtn.className = 'add-row-btn'; aBtn.textContent = '+';
+    aBtn.onclick = () => { pushUndo(); makeTransRow({}, tRows); scheduleSave(); };
+    const dBtn = document.createElement('button'); dBtn.className = 'del-sec-btn'; dBtn.innerHTML = '&times;';
+    dBtn.onclick = () => { pushUndo(); ts.remove(); scheduleSave(); };
+    tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
     tb.appendChild(aBtn); tb.appendChild(dBtn); ts.appendChild(tb);
     const tRows = document.createElement('div'); ts.appendChild(tRows);
     if (d._transport && d._transport.length) d._transport.forEach(t => makeTransRow(t, tRows));
     card.appendChild(ts);
   }
-
   const as = document.createElement('div'); as.className = 's-acc';
   const ab = document.createElement('div'); ab.className = 'sec-bar';
-  ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label">Accommodation</span>';
+  ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
   as.appendChild(ab);
   const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr';
-  ar.appendChild(cell('Hotel / Lodge', inp(d.hotel, 'hotel', 'bold', '')));
+  ar.appendChild(cell('Hotel / Airbnb', inp(d.hotel, 'hotel', 'bold', '')));
   ar.appendChild(cell('Check-in', inp(d.checkin, 'checkin', '', '')));
   ar.appendChild(cell('Check-out', inp(d.checkout, 'checkout', '', '')));
   ar.appendChild(cell('Nightly cost (£)', inp(d.cost, 'cost', 'cost-inp', '')));
   ar.appendChild(cell('Booking ref', inp(d.ref, 'ref', '', '')));
   as.appendChild(ar); card.appendChild(as);
-
   const fs = document.createElement('div'); fs.className = 's-food';
   const fb = document.createElement('div'); fb.className = 'sec-bar';
-  const fBtn = document.createElement('button'); fBtn.className = 'add-row-btn'; fBtn.textContent = '+ Add meal';
-  fBtn.onclick = () => { makeFoodRow({}, fRows); scheduleSave(); };
-  fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label">Food & Drink</span>';
+  const fBtn = document.createElement('button'); fBtn.className = 'add-row-btn'; fBtn.textContent = '+';
+  fBtn.onclick = () => { pushUndo(); makeFoodRow({}, fRows); scheduleSave(); };
+  fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label"><span class="sec-label-text">Food & Drink</span></span>';
   fb.appendChild(fBtn); fs.appendChild(fb);
   const fRows = document.createElement('div'); fs.appendChild(fRows);
   if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows));
   card.appendChild(fs);
-
   const is_ = document.createElement('div'); is_.className = 's-itin';
   const ib = document.createElement('div'); ib.className = 'sec-bar';
-  ib.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="sec-label">Itinerary</span>';
+  ib.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="sec-label"><span class="sec-label-text">Itinerary</span></span>';
   is_.appendChild(ib);
+  const periodsRow = document.createElement('div');
+  periodsRow.style.cssText = 'display:flex;';
   ['morning', 'afternoon', 'evening'].forEach((period, i) => {
-    const row = document.createElement('div'); row.className = 'row-inner'; row.style.gridTemplateColumns = '0.42fr 2.4fr 1fr';
-    if (i < 2) row.style.borderBottom = '0.5px solid rgba(0,0,0,0.06)';
-    const pc = document.createElement('div'); pc.className = 'cell itin-period';
-    const pl = document.createElement('div'); pl.className = 'cell-lbl'; pl.textContent = 'Period';
-    const pi = document.createElement('input'); pi.type = 'text';
-    pi.value = d['period_' + period] || (period.charAt(0).toUpperCase() + period.slice(1));
-    pi.className = 'cell-inp bold'; pi.dataset.key = 'period_' + period;
-    pi.addEventListener('input', scheduleSave);
-    pc.appendChild(pl); pc.appendChild(pi);
-    const ac = document.createElement('div'); ac.className = 'cell';
-    const al = document.createElement('div'); al.className = 'cell-lbl'; al.textContent = 'Activities & Notes';
+    // Vertical block per period
+    const block = document.createElement('div');
+    block.style.cssText = 'padding:12px 16px;flex:1;' + (i < 2 ? 'border-right:0.5px solid rgba(0,0,0,0.07);' : '');
+
+    // Period heading
+    const heading = document.createElement('div');
+    heading.style.cssText = 'font-size:11px;font-weight:700;color:#0e7a87;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;';
+    heading.textContent = period.charAt(0).toUpperCase() + period.slice(1);
+    block.appendChild(heading);
+
+    // Activities textarea
     const at = ta(d['act_' + period] || '', 'act_' + period, "What's planned " + period + "?");
-    ac.appendChild(al); ac.appendChild(at);
-    const lc = document.createElement('div'); lc.className = 'cell';
-    const ll = document.createElement('div'); ll.className = 'cell-lbl'; ll.textContent = 'Ticket / Booking link';
+    at.style.minHeight = '60px';
+    block.appendChild(at);
+
+    // Ticket link - compact
+    const linkWrap = document.createElement('div');
+    linkWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:8px;';
+    const linkIcon = document.createElement('span');
+    linkIcon.style.cssText = 'font-size:10px;color:#aaa;flex-shrink:0;';
+    linkIcon.textContent = '🔗';
     const li = inp(d['link_' + period] || '', 'link_' + period, '', 'https://…');
-    li.style.color = '#007aff'; li.style.fontSize = '12px';
-    lc.appendChild(ll); lc.appendChild(li);
-    row.appendChild(pc); row.appendChild(ac); row.appendChild(lc);
-    is_.appendChild(row);
+    li.style.cssText = 'font-size:11px;color:#aaa;flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;';
+    linkWrap.appendChild(linkIcon); linkWrap.appendChild(li);
+    block.appendChild(linkWrap);
+    periodsRow.appendChild(block);
   });
+  is_.appendChild(periodsRow);
   card.appendChild(is_);
   document.getElementById('days').appendChild(card);
   recalc();
+  if (!d.date) card.querySelector('input').focus();
 }
 function recalc() {
   const cards = document.querySelectorAll('.day-card');
   document.getElementById('s-days').textContent = cards.length;
+
   let acc = 0;
   cards.forEach(c => c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value) || 0; }));
+
 }
 function restoreState(state) {
   if (state.header) {
-    document.getElementById('hdr-dest').value = state.header.dest || '';
-    document.getElementById('hdr-dep').value = state.header.dep || '';
-    document.getElementById('hdr-ret').value = state.header.ret || '';
-    document.getElementById('hdr-trav').value = state.header.trav || '';
+    document.getElementById('hdr-dest').value = state.header.dest || dest;
+    document.getElementById('hdr-dep').value  = state.header.dep  || dep;
+    document.getElementById('hdr-ret').value  = state.header.ret  || ret;
+    document.getElementById('hdr-trav').value = state.header.trav || trav;
+    document.getElementById('page-title').textContent = state.header.dest || dest;
+    const _nt2 = document.getElementById('nav-title'); if(_nt2) _nt2.textContent = state.header.dest || dest;
   }
   if (state.days) state.days.forEach(d => addDay(d));
 }
-document.querySelectorAll(".hdr-field").forEach(el => el.addEventListener("input", scheduleSave));
+document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", scheduleSave); });
+renderStatusToggle(); // Show correct badge immediately on load
 
 async function manualSave() {
   const btn = document.getElementById('nav-save-btn');
-  const svgIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
-  btn.innerHTML = svgIcon + ' Saving…';
-  btn.className = 'nav-save-btn saving';
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
   clearTimeout(saveTimer);
-  await dbSave(collectState());
-  const saved = document.getElementById('nav-status-label').textContent === 'All saved';
-  btn.innerHTML = saved ? '✓ Saved' : '✗ Save failed';
-  btn.className = 'nav-save-btn ' + (saved ? 'saved' : 'error');
-  setTimeout(() => {
-    btn.innerHTML = svgIcon + ' Save';
-    btn.className = 'nav-save-btn';
-  }, 2000);
+  await saveData(collectState());
+  const savedOk = document.getElementById('nav-status-label').textContent === 'All saved';
+  btn.textContent = savedOk ? '✓ Saved' : '✗ Failed';
+  setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 2000);
 }
 
-const DEFAULTS = [
-  {dayNum:'1',date:'04/04/2025',from:'London, UK',to:'Madrid',_transRemoved:false,_transport:[{mode:'Flight',route:'London → Madrid',depart:'18:45',arrive:'22:10',ref:'',notes:''}],hotel:'Air Rooms Madrid Airport By Premium Traveller',checkin:'',checkout:'',cost:'150',ref:'72963763872891',_food:[],act_morning:'',act_afternoon:'',act_evening:'Arrive Madrid — overnight stay near airport',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'2',date:'05/04/2025',from:'Madrid',to:'San José',_transRemoved:false,_transport:[{mode:'Flight',route:'Madrid → San José, Costa Rica',depart:'10:00',arrive:'18:30',ref:'',notes:'Iberia Sala VIP Velázquez lounge'}],hotel:'Hilton Garden Inn San José Airport City Mall',checkin:'',checkout:'',cost:'0',ref:'3244247467',_food:[{meal:'Breakfast',place:'Iberia Sala VIP Velázquez',notes:'Airport lounge',ref:''},{meal:'Dinner',place:'Tikka Masala',notes:'',ref:'Not Possible'}],act_morning:'Iberia Sala VIP Velázquez lounge · Board flight',act_afternoon:'In-flight to San José',act_evening:'Arrive early evening in San José',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'3',date:'06/04/2025',from:'San José',to:'Tortuguero',_transRemoved:false,_transport:[{mode:'Car Hire',route:'San José → Tortuguero',depart:'09:00',arrive:'12:00',ref:'',notes:'~3 hour drive'}],hotel:'Tortuguero Sport Fishing',checkin:'',checkout:'',cost:'82',ref:'4834700948 · Pin: 6300',_food:[{meal:'Breakfast',place:'Hilton Garden Inn San José',notes:'Included',ref:''},{meal:'Dinner',place:'Bar Restaurante Rock Well',notes:'',ref:'Not Possible'}],act_morning:'Drive from San José to Tortuguero',act_afternoon:'Arrive in Tortuguero · Sendero Cerro Tortuguero hike',act_evening:'Settle in · Dinner at Rock Well',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'4',date:'07/04/2025',from:'Tortuguero',to:'Tortuguero',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Tortuguero — local',depart:'',arrive:'',ref:'',notes:''}],hotel:'Tortuguero Sport Fishing',checkin:'',checkout:'',cost:'82',ref:'4834700948 · Pin: 6300',_food:[{meal:'Breakfast',place:'Tortuguero Sport Fishing',notes:'Included',ref:''},{meal:'Dinner',place:'Sabores Miriel',notes:'',ref:'Not Possible'}],act_morning:'Tours with Hotel',act_afternoon:'Tours with Hotel',act_evening:'Dinner at Sabores Miriel',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'5',date:'08/04/2025',from:'Tortuguero',to:'Puerto Viejo',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Tortuguero → Puerto Viejo',depart:'09:00',arrive:'17:00',ref:'',notes:'~3h 40 min drive'}],hotel:'Satta Lodge',checkin:'',checkout:'',cost:'100',ref:'1400876',_food:[{meal:'Breakfast',place:'Satta Lodge',notes:'Included',ref:''},{meal:'Dinner',place:'Zaika Indian Cuisine Bar & Grill',notes:'',ref:'Not Possible'}],act_morning:'Drive to Puerto Viejo',act_afternoon:'Arrive Puerto Viejo · Visit Playa Negra · Explore Puerto Viejo · Talamanca Viewpoint',act_evening:'Dinner at Zaika Indian Cuisine',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'6',date:'09/04/2025',from:'Puerto Viejo',to:'Puerto Viejo',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Puerto Viejo — local',depart:'',arrive:'',ref:'',notes:''}],hotel:'Satta Lodge',checkin:'',checkout:'',cost:'100',ref:'1400876',_food:[{meal:'Breakfast',place:'Satta Lodge',notes:'Included',ref:''},{meal:'Dinner',place:'Spicy Coconut',notes:'',ref:'Not Possible'}],act_morning:'Playa Cocles · Jaguar Rescue Center at 11:30am (£23pp — Booked)',act_afternoon:'Visit Manzanillo · Playa Manzanillo · Yicel Shipwreck · Mirador Manzanillo · Manzanillo Tip',act_evening:'Dinner at Spicy Coconut',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'7',date:'10/04/2025',from:'Puerto Viejo',to:'Puerto Viejo',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Puerto Viejo — local',depart:'',arrive:'',ref:'',notes:''}],hotel:'Satta Lodge',checkin:'',checkout:'',cost:'100',ref:'1400876',_food:[{meal:'Breakfast',place:'Satta Lodge',notes:'Included',ref:''},{meal:'Dinner',place:'El Rincón Porteño',notes:'',ref:'Not Possible'}],act_morning:'Chocolate Tour at 10am (2 hours · £20pp — Booking requested)',act_afternoon:'Explore Cahuita National Park',act_evening:'Dinner at El Rincón Porteño',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'8',date:'11/04/2025',from:'Puerto Viejo',to:'Fortuna',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Puerto Viejo → Fortuna',depart:'09:00',arrive:'17:00',ref:'',notes:'~4h 15 min drive via Pierella'}],hotel:'La Finca Lodge',checkin:'',checkout:'',cost:'88',ref:'4999233177 · Pin: 1767',_food:[{meal:'Breakfast',place:'Aroma, Coffee Bar & Breakfast',notes:'',ref:''},{meal:'Dinner',place:'La Cabaña Bar y Restaurante',notes:'',ref:'Not Possible'}],act_morning:'Drive to Pierella Ecological Garden (3 hours · £36pp — Booking requested)',act_afternoon:'Pierella Ecological Garden tour 1pm–4pm · Continue drive to Fortuna',act_evening:'Arrive Fortuna · Dinner at La Cabaña',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'9',date:'12/04/2025',from:'Fortuna',to:'Fortuna',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Fortuna — local',depart:'10:00',arrive:'21:00',ref:'',notes:'~1h 15 min to waterfall'}],hotel:'La Finca Lodge',checkin:'',checkout:'',cost:'88',ref:'4999233177 · Pin: 1767',_food:[{meal:'Breakfast',place:'La Finca Lodge',notes:'Included',ref:''},{meal:'Dinner',place:'Casa Fortuna, Restaurante Familiar',notes:'',ref:'Not Possible'}],act_morning:'Explore trails in Arenal Volcano National Park (£11pp — buy on the day)',act_afternoon:'La Fortuna Waterfall · Hot Springs Spa at 5pm (£38pp — Booked)',act_evening:'Hot Springs Spa · Dinner at Casa Fortuna',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'10',date:'13/04/2025',from:'Fortuna',to:'Monteverde',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Fortuna → Monteverde',depart:'10:00',arrive:'18:00',ref:'',notes:'~4h 30 min drive'}],hotel:'Finca Aquarius',checkin:'',checkout:'',cost:'89.50',ref:'73064260823833',_food:[{meal:'Breakfast',place:'La Finca Lodge',notes:'Included — final morning',ref:''},{meal:'Dinner',place:'Finca Aquarius',notes:'',ref:''}],act_morning:'Místico Arenal Hanging Bridges (£26pp — Booked)',act_afternoon:'Parque Nacional Volcán Tenorio (£10pp — Booked) · Continue drive to Monteverde',act_evening:'Arrive Monteverde · Dinner at Finca Aquarius',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'11',date:'14/04/2025',from:'Monteverde',to:'Monteverde',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Monteverde — local',depart:'',arrive:'',ref:'',notes:''}],hotel:'Finca Aquarius',checkin:'',checkout:'',cost:'89.50',ref:'73064260823833',_food:[{meal:'Breakfast',place:'Finca Aquarius',notes:'Included',ref:''},{meal:'Dinner',place:'Finca Aquarius',notes:'',ref:''}],act_morning:'The Original Canopy Tour at 10am (£61.25pp — Booked)',act_afternoon:'Visit Cafe Colibri · Explore Finca Ecologica San Luis',act_evening:'Dinner at Finca Aquarius',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'12',date:'15/04/2025',from:'Monteverde',to:'Manuel Antonio',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Monteverde → Manuel Antonio',depart:'10:00',arrive:'17:00',ref:'',notes:'~3h 30 min drive'}],hotel:'Bonding Coffee Roaster Café & Hotel',checkin:'',checkout:'',cost:'95.40',ref:'73017514858648',_food:[{meal:'Breakfast',place:'Finca Aquarius',notes:'Included — final morning',ref:''},{meal:'Dinner',place:'De La Finca',notes:'',ref:'Not Possible'}],act_morning:'El Cafetal Coffee Tour at 10am (£31.20pp — Booked)',act_afternoon:'Drive to Manuel Antonio · Stop at Mirador de Jacó · Walk to Parque Nahomi',act_evening:'Arrive Manuel Antonio · Dinner at De La Finca',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'13',date:'16/04/2025',from:'Manuel Antonio',to:'Manuel Antonio',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Manuel Antonio — local',depart:'',arrive:'',ref:'',notes:''}],hotel:'Bonding Coffee Roaster Café & Hotel',checkin:'',checkout:'',cost:'95.40',ref:'73017514858648',_food:[{meal:'Breakfast',place:'Bonding Coffee Roaster Café & Hotel',notes:'Included',ref:''},{meal:'Dinner',place:'The Butcher Block',notes:'',ref:'7:30 PM — Confirmed'}],act_morning:'Explore Playitas Beach & Espadilla Beach',act_afternoon:'Lunch at Restaurante Manuel Antonio · Manuel Antonio National Park (£14pp — Booked) · Cocktail at Cocos',act_evening:'Dinner at The Butcher Block (7:30pm — Confirmed)',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'14',date:'17/04/2025',from:'Manuel Antonio',to:'Uvita',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Manuel Antonio → Uvita',depart:'10:00',arrive:'17:00',ref:'',notes:'~1h 30 min drive'}],hotel:'Hotel Uvita Forest',checkin:'',checkout:'',cost:'106',ref:'73048985537655',_food:[{meal:'Breakfast',place:'Bonding Coffee Roaster Café & Hotel',notes:'Included — final morning',ref:''},{meal:'Lunch',place:'Gate One Charter',notes:'',ref:''},{meal:'Dinner',place:'Tribu',notes:'',ref:'Not Possible'}],act_morning:'Nauyaca Waterfalls + Hike (£9.50pp — Reserved)',act_afternoon:'Lunch at Gate One Charter · Parque Reptilandia (£12pp — no reservation) · Visit Dominical',act_evening:'Arrive Uvita · Dinner at Tribu',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'15',date:'18/04/2025',from:'Uvita',to:'Uvita',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Uvita → Sierpe → Uvita (return)',depart:'10:00',arrive:'17:00',ref:'',notes:'~1h each way'}],hotel:'Hotel Uvita Forest',checkin:'',checkout:'',cost:'106',ref:'73048985537655',_food:[{meal:'Breakfast',place:'Indómitos Café & Bar',notes:'',ref:''},{meal:'Dinner',place:'Mosaic Wine and Sushi Bar',notes:'',ref:'Book via link'}],act_morning:"Whale's Tail Overlook Walk · Drive to Sierpe · Cascada El Pavón en route",act_afternoon:'Sierpe Mangrove Tour at 1pm (£61.50pp — Reserved) · Evening in Uvita',act_evening:'Dinner at Mosaic Wine and Sushi Bar',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'16',date:'19/04/2025',from:'Uvita',to:'San José',_transRemoved:false,_transport:[{mode:'Car Hire',route:'Uvita → San José',depart:'10:00',arrive:'17:00',ref:'',notes:'~4h 15 min drive'}],hotel:'Villa San Ignacio',checkin:'',checkout:'',cost:'57.50',ref:'73048295610698',_food:[{meal:'Breakfast',place:'Café Vivo Uvita',notes:'',ref:''},{meal:'Lunch',place:'Kafecitos Coffee Shop',notes:'Stop en route',ref:''},{meal:'Dinner',place:'Villa San Ignacio / Restaurante Pandora',notes:'',ref:'7:30 PM — Confirmed'}],act_morning:'Drive from Uvita to San José · Stop at Crocodile Bridge · Lunch at Kafecitos Coffee Shop',act_afternoon:'Complete drive to San José · Reserva Natural Cerro Tinajita · Jardín Else Kientzler',act_evening:'Dinner at Restaurante Pandora (7:30pm — Confirmed)',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'17',date:'20/04/2025',from:'San José',to:'Madrid',_transRemoved:false,_transport:[{mode:'Flight',route:'San José → Madrid',depart:'16:15',arrive:'10:45 +1',ref:'',notes:'Overnight flight'}],hotel:'',checkin:'',checkout:'',cost:'',ref:'',_food:[{meal:'Breakfast',place:'Villa San Ignacio',notes:'',ref:''}],act_morning:'Visit Volcán Poás at 10am (£14pp — Reserved)',act_afternoon:'Return to airport by 1pm · Depart 16:15',act_evening:'Overnight flight to Madrid',link_morning:'',link_afternoon:'',link_evening:''},
-  {dayNum:'18',date:'21/04/2025',from:'Madrid',to:'London',_transRemoved:false,_transport:[{mode:'Flight',route:'Madrid → London',depart:'15:50',arrive:'17:15',ref:'',notes:''}],hotel:'',checkin:'',checkout:'',cost:'',ref:'',_food:[],act_morning:'Arrive Madrid from overnight flight',act_afternoon:'Depart Madrid 15:50 · Arrive London 17:15',act_evening:'Home!',link_morning:'',link_afternoon:'',link_evening:''},
-];
+// Parse a date string in dd/mm/yyyy format into a Date object
+function parseDisplayDate(str) {
+  if (!str) return null;
+  const parts = str.split('/');
+  if (parts.length === 3) {
+    const [d, m, y] = parts.map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return null;
+}
+
+// Format a Date as dd/mm/yyyy (matches datepicker format)
+function formatDisplayDate(d) {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return dd + '/' + mm + '/' + d.getFullYear();
+}
+
+// Auto-generate one day card per day from dep to ret (inclusive of dep, up to but not including ret)
+function generateDaysFromDates() {
+  const depDate = parseDisplayDate(dep);
+  const retDate = parseDisplayDate(ret);
+  if (!depDate || !retDate || depDate >= retDate) {
+    addDay({});
+    return;
+  }
+  const cursor = new Date(depDate);
+  let dayNum = 1;
+  while (cursor <= retDate) {
+    addDay({ date: formatDisplayDate(new Date(cursor)), dayNum: dayNum++ });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+}
 
 async function init() {
-  // Read live status from registry so toggles persist
   try {
     const trips = await window.dbLoadRegistry();
     const trip = trips.find(t => t.slug === RECORD_ID);
     if (trip && trip.status) currentStatus = trip.status;
   } catch { /* use baked status */ }
   let state = null;
-  try { state = await dbLoad(); } catch(e) { console.error('Load failed', e); }
-  if (state && state.days && state.days.length) { restoreState(state); setStatus('saved', 'All saved'); }
-  else { DEFAULTS.forEach(d => addDay(d)); setStatus('saving', 'Not yet saved'); }
+  try { state = await loadData(); } catch { /* silent */ }
+  if (state && state.days && state.days.length) {
+    restoreState(state);
+    setStatus('saved', 'All saved');
+  } else {
+    generateDaysFromDates();
+    setStatus('saving', 'Not yet saved');
+  }
   checkAutoComplete();
 }
-function runInit() {
-  init().finally(() => {
-    const l = document.getElementById('loading');
-    if (l) l.classList.add('hidden');
-  });
-}
-// Wait for auth then init
+// Wait for auth then run init
 (function waitForAuth() {
-  if (typeof isAuthed === 'function' && isAuthed()) { runInit(); return; }
-  setTimeout(waitForAuth, 50);
-})();
-// ── STATUS BADGE ──────────────────────────────────────────────────────
-
-function renderStatusToggle() {
-  const toggle = document.getElementById('status-toggle');
-  const optUp  = document.getElementById('opt-upcoming');
-  const optPl  = document.getElementById('opt-planning');
-  if (!toggle) return;
-  if (currentStatus === 'past') {
-    toggle.classList.add('is-past');
-    optUp.className = 'status-toggle-opt';
-    optPl.className = 'status-toggle-opt';
+  if (typeof isAuthed === 'function' && isAuthed()) {
+    init().finally(() => {
+      const l = document.getElementById('loading');
+      if (l) l.classList.add('hidden');
+    });
     return;
   }
-  toggle.classList.remove('is-past');
-  optUp.className = 'status-toggle-opt' + (currentStatus === 'upcoming' ? ' active-upcoming' : '');
-  optPl.className = 'status-toggle-opt' + (currentStatus === 'planning' ? ' active-planning' : '');
-}
-async function setStatus_toggle(newStatus) {
-  if (currentStatus === 'past') return;
-  if (currentStatus === newStatus) return;
-  currentStatus = newStatus;
-  renderStatusToggle();
-  try {
-    const trips = await window.dbLoadRegistry();
-    const trip  = trips.find(t => t.slug === RECORD_ID);
-    if (trip) { trip.status = currentStatus; await window.dbSaveRegistry(trips); }
-  } catch { /* silent */ }
-}
-function checkAutoComplete() {
-  // using dep date
-  const parts = '04/04/2025'.split('/');
-  if (parts.length === 3) {
-    const depDate = new Date(parts[2], parts[1]-1, parts[0]);
-    if (depDate < new Date()) currentStatus = 'past';
-  }
-  renderStatusToggle();
-}
+  setTimeout(waitForAuth, 50);
+})();
 async function deleteTrip() {
   if (!confirm("Delete this itinerary? This cannot be undone.")) return;
   try {
