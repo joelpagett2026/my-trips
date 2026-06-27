@@ -295,39 +295,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     align-items: center;
     justify-content: space-around;
   }
-  .tab-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    flex: 1;
-    height: 100%;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #888;
-    text-decoration: none;
-    font-family: Montserrat, sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 0;
-    transition: color 0.15s;
-  }
-  .tab-btn.active, .tab-btn:active { color: #0e7a87; }
-  .tab-btn svg { width: 18px; height: 18px; }
-  .tab-btn.tab-primary {
-    color: #0e7a87;
-  }
-  .tab-btn.tab-primary svg {
-    background: #0e7a87;
-    color: #fff;
-    border-radius: 14px;
-    padding: 5px;
-    width: 36px;
-    height: 36px;
-  }
+  .tab-btn {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    gap: 2px;\n    flex: 1;\n    height: 100%;\n    background: none;\n    border: none;\n    cursor: pointer;\n    color: #888;\n    text-decoration: none;\n    font-family: Montserrat, sans-serif;\n    font-size: 9px;\n    font-weight: 600;\n    letter-spacing: 0.02em;\n    padding: 0;\n    transition: color 0.15s;\n  }\n  .tab-btn.active, .tab-btn:active { color: #0e7a87; }\n  .tab-btn svg { width: 15px; height: 15px; }\n  .tab-btn.tab-primary { color: #0e7a87; }\n  .tab-btn.tab-primary svg {\n    background: none;\n    color: #0e7a87;\n    border-radius: 0;\n    padding: 0;\n    width: 15px;\n    height: 15px;\n  }
 
   /* Hide chat bubble on mobile — moved to bottom bar */
   #jt-chat-btn { display: none !important; }
