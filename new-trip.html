@@ -395,7 +395,7 @@ function addDay(d) {
   ab.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="sec-label"><span class="sec-label-text">Accommodation</span></span>';
   ab.appendChild(accDelBtn);
   as.appendChild(ab);
-  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr';
+  const ar = document.createElement('div'); ar.className = 'row-inner'; ar.style.gridTemplateColumns = '2fr 0.7fr 0.7fr 0.7fr 1fr 0.8fr';
   // Hotel field with Google Maps auto-link
   const hotelCell = document.createElement('div'); hotelCell.className = 'cell';
   const hotelLbl = document.createElement('div'); hotelLbl.className = 'cell-lbl'; hotelLbl.textContent = 'Hotel';
@@ -423,6 +423,44 @@ function addDay(d) {
   ar.appendChild(cell('Check-in', inp(d.checkin, 'checkin', '', '')));
   ar.appendChild(cell('Check-out', inp(d.checkout, 'checkout', '', '')));
   ar.appendChild(cell('Nightly cost (£)', inp(d.cost, 'cost', 'cost-inp', '')));
+
+  // Breakfast included dropdown
+  const bfCell = document.createElement('div'); bfCell.className = 'cell';
+  const bfLbl = document.createElement('div'); bfLbl.className = 'cell-lbl'; bfLbl.textContent = 'Breakfast Included';
+  const bfSel = document.createElement('select');
+  bfSel.className = 'cell-inp'; bfSel.dataset.key = 'breakfast';
+  bfSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  ['', 'Yes', 'No'].forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt || 'Select…';
+    if ((d.breakfast || '') === opt) o.selected = true;
+    bfSel.appendChild(o);
+  });
+  bfSel.addEventListener('change', () => {
+    scheduleSave();
+    if (bfSel.value === 'Yes') {
+      // Find the next day card after this one
+      const allCards = Array.from(document.querySelectorAll('.day-card'));
+      const thisCard = as.closest('.day-card');
+      const nextCard = allCards[allCards.indexOf(thisCard) + 1];
+      if (nextCard) {
+        const nextFoodRows = nextCard.querySelector('.s-food > div:last-child');
+        const nextFoodSection = nextCard.querySelector('.s-food');
+        if (nextFoodSection && nextFoodRows) {
+          // Check if a hotel breakfast row already exists
+          const existing = Array.from(nextFoodRows.querySelectorAll('[data-key="meal"]'))
+            .find(el => el.value === 'Breakfast');
+          if (!existing) {
+            pushUndo();
+            makeFoodRow({ meal: 'Breakfast', place: hotelInp.value.trim() }, nextFoodRows);
+            scheduleSave();
+          }
+        }
+      }
+    }
+  });
+  bfCell.appendChild(bfLbl); bfCell.appendChild(bfSel);
+  ar.appendChild(bfCell);
   as.appendChild(ar); card.appendChild(as);
   const fs = document.createElement('div'); fs.className = 's-food';
   const fb = document.createElement('div'); fb.className = 'sec-bar';
