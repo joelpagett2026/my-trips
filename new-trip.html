@@ -362,7 +362,12 @@ function addDay(d) {
     const aBtn = document.createElement('button'); aBtn.className = 'add-row-btn'; aBtn.textContent = '+';
     aBtn.onclick = () => { pushUndo(); makeTransRow({}, tRows); scheduleSave(); };
     const dBtn = document.createElement('button'); dBtn.className = 'del-sec-btn'; dBtn.innerHTML = '&times;';
-    dBtn.onclick = () => { pushUndo(); ts.remove(); scheduleSave(); };
+    dBtn.onclick = () => {
+      pushUndo();
+      const rows = tRows.querySelectorAll('.trans-row');
+      if (rows.length > 0) { rows[rows.length - 1].remove(); scheduleSave(); }
+      else { ts.remove(); scheduleSave(); }
+    };
     tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
     tb.appendChild(aBtn); tb.appendChild(dBtn); ts.appendChild(tb);
     const tRows = document.createElement('div'); ts.appendChild(tRows);
@@ -410,7 +415,12 @@ function addDay(d) {
   const fBtn = document.createElement('button'); fBtn.className = 'add-row-btn'; fBtn.textContent = '+';
   fBtn.onclick = () => { pushUndo(); makeFoodRow({}, fRows); scheduleSave(); };
   const fDelBtn = document.createElement('button'); fDelBtn.className = 'del-sec-btn'; fDelBtn.innerHTML = '&times;';
-  fDelBtn.onclick = () => { pushUndo(); fs.remove(); scheduleSave(); };
+  fDelBtn.onclick = () => {
+    pushUndo();
+    const rows = fRows.querySelectorAll('.food-row');
+    if (rows.length > 0) { rows[rows.length - 1].remove(); scheduleSave(); }
+    else { fs.remove(); scheduleSave(); }
+  };
   fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span class="sec-label"><span class="sec-label-text">Food & Drink</span></span>';
   fb.appendChild(fBtn); fb.appendChild(fDelBtn); fs.appendChild(fb);
   const fRows = document.createElement('div'); fs.appendChild(fRows);
