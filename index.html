@@ -144,7 +144,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 .year-group .dash-trip-row{padding:6px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);}
 .year-group .dash-trip-row:last-child{border-bottom:none;}
 
-.mobile-tab-bar { display: none; }
+@media (min-width: 701px) { .mobile-tab-bar { display: none !important; } }
 
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 700px) {
@@ -282,7 +282,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 
   /* Bottom tab bar — always visible on mobile */
   .mobile-tab-bar {
-    display: flex !important;
+    display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 72px;
