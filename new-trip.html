@@ -314,7 +314,26 @@ function makeFoodRow(data, container, hotelBreakfast) {
     if (data.meal === opt) o.selected = true;
     mealSel.appendChild(o);
   });
-  mealSel.addEventListener('change', () => { scheduleSave(); const pi = row.querySelector('[data-key="place"]'); if (pi) pi.dispatchEvent(new Event('input')); });
+  mealSel.addEventListener('change', () => {
+    scheduleSave();
+    const isInflight = mealSel.value === 'Inflight';
+    // Auto-fill place field with Inflight
+    const pi = row.querySelector('[data-key="place"]');
+    if (pi) {
+      if (isInflight) pi.value = 'Inflight';
+      pi.dispatchEvent(new Event('input'));
+    }
+    // Show/hide notes and time cells
+    const cells = Array.from(row.querySelectorAll('.cell'));
+    cells.forEach(c => {
+      const lbl = c.querySelector('.cell-lbl');
+      if (lbl && (lbl.textContent === 'Notes / Ideas' || lbl.textContent === 'Time Booked')) {
+        c.style.display = isInflight ? 'none' : '';
+      }
+    });
+    // Adjust grid columns
+    row.style.gridTemplateColumns = isInflight ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
+  });
   mealCell.appendChild(mealLbl); mealCell.appendChild(mealSel);
   row.appendChild(mealCell);
   // Restaurant/place with Maps auto-link
@@ -336,6 +355,10 @@ function makeFoodRow(data, container, hotelBreakfast) {
   };
   placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
   updatePlaceLink();
+  // Apply Inflight state on load
+  if (data.meal === 'Inflight') {
+    mealSel.dispatchEvent(new Event('change'));
+  }
   placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
   placeCell.appendChild(placeLbl); placeCell.appendChild(placeRow);
   row.appendChild(placeCell);
