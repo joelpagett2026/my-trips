@@ -154,18 +154,73 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
   .page-layout { display: flex; flex-direction: column; }
   .trips-col { width: 100%; }
 
-  /* Dash col: flows below trips, not a sticky sidebar */
+  /* Dash col: hidden on mobile — replaced by slide panel */
   .dash-col {
-    position: static;
-    height: auto;
-    width: 100%;
-    border-left: none;
-    border-top: 0.5px solid rgba(0,0,0,0.1);
-    overflow: visible;
+    display: none;
   }
-  .dash-inner { padding: 0 0 24px; }
-  .dash-countdown { margin: 12px 16px 0; }
-  .dash-section { padding: 14px 16px 0; }
+
+  /* Stats panel slide-over */
+  .mobile-stats-panel {
+    display: block;
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 100%;
+    background: #ffffff;
+    z-index: 400;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-stats-panel.open { transform: translateX(0); }
+
+  .mobile-stats-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 52px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .mobile-stats-panel-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #444444;
+  }
+  .mobile-stats-close {
+    background: #e8e8e8;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+  }
+
+  /* Stats button in nav — mobile only */
+  .mobile-stats-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    color: #0e7a87;
+    border: 1.5px solid #0e7a87;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: Montserrat, sans-serif;
+    cursor: pointer;
+  }
 
   /* Stats: 2×2 grid */
   .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; }
@@ -225,6 +280,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
     <a href="#" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#0e7a87;border:1.5px solid #0e7a87;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
       Holiday Allowance
     </a>
+    <button class="mobile-stats-btn" onclick="openStatsPanel()" style="display:none;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Stats
+    </button>
   </div>
   <div class="nav-title">Joel Pagett's Trip Planner</div>
   <div style="width:60px;text-align:right">
@@ -1040,6 +1099,67 @@ async function createTrip(){
     alert('Could not create itinerary page. Please try again.');
   }
 }
+</script>
+
+<!-- ── MOBILE STATS PANEL ── -->
+<div class="mobile-stats-panel" id="mobile-stats-panel">
+  <div class="mobile-stats-panel-header">
+    <div class="mobile-stats-panel-title">Stats & Dashboard</div>
+    <button class="mobile-stats-close" onclick="closeStatsPanel()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="dash-inner" id="mobile-dash-inner"></div>
+</div>
+
+<script>
+(function() {
+  const panel = document.getElementById('mobile-stats-panel');
+  const statsBtn = document.querySelector('.mobile-stats-btn');
+
+  function isMobile() { return window.innerWidth <= 700; }
+
+  // On mobile: show the stats button and populate the panel with dash content
+  function initMobilePanel() {
+    if (!isMobile()) return;
+    statsBtn.style.display = 'inline-flex';
+
+    // Move dash-col content into mobile panel (clone so desktop keeps it)
+    const dashInner = document.querySelector('.dash-col .dash-inner');
+    const mobileInner = document.getElementById('mobile-dash-inner');
+    if (dashInner && mobileInner && !mobileInner.hasChildNodes()) {
+      mobileInner.innerHTML = dashInner.innerHTML;
+    }
+  }
+
+  window.openStatsPanel = function() {
+    panel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeStatsPanel = function() {
+    panel.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  // Close on swipe right
+  let touchStartX = 0;
+  panel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  panel.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientX - touchStartX > 60) closeStatsPanel();
+  }, { passive: true });
+
+  // Init after page content loads
+  window.addEventListener('load', initMobilePanel);
+  window.addEventListener('resize', () => {
+    if (!isMobile()) {
+      statsBtn.style.display = 'none';
+      closeStatsPanel();
+    } else {
+      statsBtn.style.display = 'inline-flex';
+    }
+  });
+})();
 </script>
 
 <script src="/datepicker.js"></script>
