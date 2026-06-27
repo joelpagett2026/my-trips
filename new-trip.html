@@ -338,7 +338,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
   row.appendChild(mealCell);
   // Restaurant/place with Maps auto-link
   const placeCell = document.createElement('div'); placeCell.className = 'cell';
-  const placeLbl = document.createElement('div'); placeLbl.className = 'cell-lbl'; placeLbl.textContent = 'Restaurant / Place';
+  const placeLbl = document.createElement('div'); placeLbl.className = 'cell-lbl'; placeLbl.textContent = 'Location';
   const placeRow = document.createElement('div'); placeRow.style.cssText = 'display:flex;align-items:center;gap:5px;';
   const placeInp = inp(data.place, 'place', '', '');
   placeInp.style.flex = '1';
