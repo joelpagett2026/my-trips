@@ -286,7 +286,21 @@ function makeFoodRow(data, container) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner food-row';
   row.style.gridTemplateColumns = '0.55fr 1.1fr 1.1fr 0.75fr 32px';
-  row.appendChild(cell('Meal', inp(data.meal, 'meal', '', '')));
+  // Meal dropdown
+  const mealCell = document.createElement('div'); mealCell.className = 'cell';
+  const mealLbl = document.createElement('div'); mealLbl.className = 'cell-lbl'; mealLbl.textContent = 'Meal';
+  const mealSel = document.createElement('select');
+  mealSel.className = 'cell-inp'; mealSel.dataset.key = 'meal';
+  mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack'].forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt || 'Select…';
+    if (data.meal === opt) o.selected = true;
+    mealSel.appendChild(o);
+  });
+  mealSel.addEventListener('change', scheduleSave);
+  mealCell.appendChild(mealLbl); mealCell.appendChild(mealSel);
+  row.appendChild(mealCell);
   row.appendChild(cell('Restaurant / Place', inp(data.place, 'place', '', '')));
   row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
   row.appendChild(cell('Booking ref', inp(data.ref, 'ref', '', '')));
