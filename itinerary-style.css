@@ -349,6 +349,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* Accommodation: stack all cells vertically */
   .s-acc .row-inner { grid-template-columns: 1fr 1fr !important; }
+  /* Hotel name spans full width so it's fully readable */
+  .s-acc .row-inner .cell:first-child { grid-column: 1 / -1; }
 
   /* Food rows: stack into 2 cols */
   .food-row { grid-template-columns: 1fr 1fr !important; }
