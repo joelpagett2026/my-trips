@@ -618,6 +618,10 @@ function addDay(d) {
     }
     scheduleSave();
   };
+  const hotelRow = document.createElement('div');
+  hotelRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  hotelInp.style.flex = '1';
+  hotelCell.appendChild(hotelLbl);
   hotelCell.appendChild(hotelRow);
   hotelRow.appendChild(hotelInp);
   hotelRow.appendChild(bfToggle);
