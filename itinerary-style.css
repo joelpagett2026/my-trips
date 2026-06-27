@@ -236,27 +236,46 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .nav-status { gap: 3px; }
   #nav-status-label { display: none; }
 
-  /* Status toggle: icon-only, no text */
-  .status-toggle { padding: 2px; gap: 0; }
-  .status-toggle-opt { padding: 5px 7px; font-size: 0; gap: 0; }
+  /* Status toggle: outlined style matching other buttons */
+  .status-toggle { padding: 0; gap: 5px; background: transparent; box-shadow: none; }
+  .status-toggle-opt { 
+    width: 36px !important; height: 36px !important;
+    padding: 0 !important; font-size: 0 !important; gap: 0 !important;
+    border-radius: 10px !important;
+    border: 1.5px solid #0e7a87 !important;
+    background: transparent !important;
+    color: #0e7a87 !important;
+  }
+  .status-toggle-opt.active-upcoming,
+  .status-toggle-opt.active-planning {
+    background: #0e7a87 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+  }
+  .status-toggle-opt.active-planning {
+    background: #ff9500 !important;
+    border-color: #ff9500 !important;
+  }
   .status-toggle-opt svg { width: 13px; height: 13px; }
 
-  /* Nav buttons: icon-only squares on mobile, all same style */
+  /* Nav buttons: match homepage icon button style */
   .nav-btn { 
-    width: 34px !important; 
-    height: 34px !important;
+    width: 36px !important; 
+    height: 36px !important;
     padding: 0 !important; 
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 9px !important;
+    border-radius: 10px !important;
     gap: 0 !important;
-    background: rgba(14,122,135,0.1) !important;
+    background: transparent !important;
     color: #0e7a87 !important;
+    border: 1.5px solid #0e7a87 !important;
   }
   .nav-btn.danger {
-    background: rgba(192,57,43,0.1) !important;
+    background: transparent !important;
     color: #c0392b !important;
+    border: 1.5px solid #c0392b !important;
   }
   .nav-btn .nav-btn-text { display: none; }
   .nav-btn svg { flex-shrink: 0; }
