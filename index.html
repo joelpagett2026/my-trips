@@ -341,7 +341,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
   }
 
   /* Push content above tab bar */
-  .page-layout { padding-bottom: 80px; }
+  .page-layout { padding-bottom: calc(72px + env(safe-area-inset-bottom) + 24px); }
 
   /* Year dividers */
   .year-divider { margin: 16px 12px; }

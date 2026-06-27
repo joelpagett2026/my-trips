@@ -237,7 +237,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 72px;
+    height: calc(72px + env(safe-area-inset-bottom));
     background: rgba(232,232,232,0.96);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -334,8 +334,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   .sec-hd { font-size: 18px; padding: 12px 16px 6px; }
 
-  /* Push ALL content above tab bar */
-  body { padding-bottom: 120px; }
+  /* Push ALL content above fixed tab bar (72px + safe area ~34px + buffer) */
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom) + 24px); }
   .days { padding: 0 12px 0; gap: 10px; }
   .add-day { margin-bottom: 0; }
   .day-card { border-radius: 14px; }
