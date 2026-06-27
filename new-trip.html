@@ -221,6 +221,9 @@ function collectState() {
     obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
+    obj._accRemoved   = !card.querySelector('.s-acc');
+    obj._foodRemoved  = !card.querySelector('.s-food');
+    obj._itinRemoved  = !card.querySelector('.s-itin');
     return obj;
   });
   return { header, days };
@@ -606,7 +609,8 @@ function addDay(d) {
     }
   };
   // bfToggle is placed inside hotelCell below
-  as.appendChild(ar); card.appendChild(as);
+  as.appendChild(ar); if (!d._accRemoved) card.appendChild(as);
+  if (!d._foodRemoved) {
   const fs = document.createElement('div'); fs.className = 's-food';
   const fb = document.createElement('div'); fb.className = 'sec-bar';
   const fBtn = document.createElement('button'); fBtn.className = 'add-row-btn'; fBtn.textContent = '+';
@@ -623,6 +627,8 @@ function addDay(d) {
   const fRows = document.createElement('div'); fRows.className = 'food-rows'; fs.appendChild(fRows);
   if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows));
   card.appendChild(fs);
+  } // end !_foodRemoved
+  if (!d._itinRemoved) {
   const is_ = document.createElement('div'); is_.className = 's-itin';
   const ib = document.createElement('div'); ib.className = 'sec-bar';
   const iDelBtn = document.createElement('button'); iDelBtn.className = 'del-sec-btn'; iDelBtn.innerHTML = '&times;';
@@ -674,6 +680,7 @@ function addDay(d) {
   });
   is_.appendChild(periodsRow);
   card.appendChild(is_);
+  } // end !_itinRemoved
   document.getElementById('days').appendChild(card);
   recalc();
   if (!d.date) card.querySelector('input').focus();
