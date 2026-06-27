@@ -308,7 +308,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
   const mealSel = document.createElement('select');
   mealSel.className = 'cell-inp'; mealSel.dataset.key = 'meal';
   mealSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
-  ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack', 'Inflight'].forEach(opt => {
+  ['', 'Breakfast', 'Lunch', 'Dinner', 'Drinks', 'Snack', 'Inflight', 'Airport Lounge'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
     if (data.meal === opt) o.selected = true;
@@ -316,11 +316,11 @@ function makeFoodRow(data, container, hotelBreakfast) {
   });
   mealSel.addEventListener('change', () => {
     scheduleSave();
-    const isInflight = mealSel.value === 'Inflight';
+    const isInflight = mealSel.value === 'Inflight' || mealSel.value === 'Airport Lounge';
     // Auto-fill place field with Inflight
     const pi = row.querySelector('[data-key="place"]');
     if (pi) {
-      if (isInflight) pi.value = 'Inflight';
+      if (mealSel.value === 'Inflight') pi.value = 'Inflight';
       pi.dispatchEvent(new Event('input'));
     }
     // Show/hide notes and time cells
@@ -356,7 +356,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
   placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
   updatePlaceLink();
   // Apply Inflight state after full row is in DOM
-  if (data.meal === 'Inflight') {
+  if (data.meal === 'Inflight' || data.meal === 'Airport Lounge') {
     setTimeout(() => mealSel.dispatchEvent(new Event('change')), 0);
   }
   placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
