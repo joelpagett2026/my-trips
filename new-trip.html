@@ -328,7 +328,7 @@ function makeFoodRow(data, container, hotelBreakfast) {
     cells.forEach(c => {
       const lbl = c.querySelector('.cell-lbl');
       if (lbl && (lbl.textContent === 'Booked?' || lbl.textContent === 'Time Booked')) {
-        c.style.display = isInflight ? 'none' : '';
+        c.style.display = isInflight ? 'none' : (lbl.textContent === 'Time Booked' ? (row.querySelector('[data-key="notes"]')?.value === 'Booked' ? '' : 'none') : '');
       }
     });
     // Adjust grid columns
@@ -375,10 +375,21 @@ function makeFoodRow(data, container, hotelBreakfast) {
       if ((data.notes || '') === opt) o.selected = true;
       bookedSel.appendChild(o);
     });
-    bookedSel.addEventListener('change', scheduleSave);
+    bookedSel.addEventListener('change', () => {
+      scheduleSave();
+      const timeCell = row.querySelector('[data-time-cell]');
+      if (timeCell) timeCell.style.display = bookedSel.value === 'Booked' ? '' : 'none';
+    });
     bookedCell.appendChild(bookedLbl); bookedCell.appendChild(bookedSel);
     row.appendChild(bookedCell);
-    row.appendChild(cell('Time Booked', inp(data.time, 'time', '', '')));
+    // Time Booked — only visible when Booked is selected
+    const timeCell = document.createElement('div'); timeCell.className = 'cell'; timeCell.setAttribute('data-time-cell', '1');
+    const timeLbl = document.createElement('div'); timeLbl.className = 'cell-lbl'; timeLbl.textContent = 'Time Booked';
+    const timeInp2 = inp(data.time, 'time', '', '');
+    timeInp2.addEventListener('input', scheduleSave);
+    timeCell.appendChild(timeLbl); timeCell.appendChild(timeInp2);
+    timeCell.style.display = (data.notes === 'Booked') ? '' : 'none';
+    row.appendChild(timeCell);
   }
   container.appendChild(row);
 }
