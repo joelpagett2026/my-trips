@@ -304,6 +304,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     color: #fff !important; box-shadow: 0 1px 4px rgba(255,149,0,0.4) !important;
   }
 
+  /* Hide chat bubble on mobile — chat moved into bottom bar */
+  #jt-chat-btn { display: none !important; }
+  #jt-chat-panel {
+    bottom: 80px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-height: calc(100vh - 160px) !important;
+  }
+
   /* Push content above tab bar */
   .days { padding-bottom: 88px; }
 
