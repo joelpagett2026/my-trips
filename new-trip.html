@@ -295,10 +295,10 @@ function makeTransRow(data, container) {
   row.appendChild(cell('Arrive', timeInp(data.arrive, 'arrive')));
   container.appendChild(row);
 }
-function makeFoodRow(data, container) {
+function makeFoodRow(data, container, hotelBreakfast) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner food-row';
-  row.style.gridTemplateColumns = '0.55fr 1.1fr 1.1fr 0.75fr';
+  row.style.gridTemplateColumns = hotelBreakfast ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
   // Meal dropdown
   const mealCell = document.createElement('div'); mealCell.className = 'cell';
   const mealLbl = document.createElement('div'); mealLbl.className = 'cell-lbl'; mealLbl.textContent = 'Meal';
@@ -315,8 +315,10 @@ function makeFoodRow(data, container) {
   mealCell.appendChild(mealLbl); mealCell.appendChild(mealSel);
   row.appendChild(mealCell);
   row.appendChild(cell('Restaurant / Place', inp(data.place, 'place', '', '')));
-  row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
-  row.appendChild(cell('Time Booked', inp(data.time, 'time', '', '')));
+  if (!hotelBreakfast) {
+    row.appendChild(cell('Notes / Ideas', inp(data.notes, 'notes', '', '')));
+    row.appendChild(cell('Time Booked', inp(data.time, 'time', '', '')));
+  }
   container.appendChild(row);
 }
 function addDay(d) {
@@ -452,7 +454,7 @@ function addDay(d) {
             .find(el => el.value === 'Breakfast');
           if (!existing) {
             pushUndo();
-            makeFoodRow({ meal: 'Breakfast', place: hotelInp.value.trim() }, nextFoodRows);
+            makeFoodRow({ meal: 'Breakfast', place: hotelInp.value.trim() }, nextFoodRows, true);
             scheduleSave();
           }
         }
