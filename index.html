@@ -143,6 +143,68 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 .year-group-trips{padding:4px 0;}
 .year-group .dash-trip-row{padding:6px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);}
 .year-group .dash-trip-row:last-child{border-bottom:none;}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 700px) {
+  /* Nav: compact */
+  .nav { height: 52px; padding: 0 12px; }
+  .nav-title { font-size: 15px; position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+
+  /* Single column — stack trips then dash */
+  .page-layout { display: flex; flex-direction: column; }
+  .trips-col { width: 100%; }
+
+  /* Dash col: flows below trips, not a sticky sidebar */
+  .dash-col {
+    position: static;
+    height: auto;
+    width: 100%;
+    border-left: none;
+    border-top: 0.5px solid rgba(0,0,0,0.1);
+    overflow: visible;
+  }
+  .dash-inner { padding: 0 0 24px; }
+  .dash-countdown { margin: 12px 16px 0; }
+  .dash-section { padding: 14px 16px 0; }
+
+  /* Stats: 2×2 grid */
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; }
+  .stat-val { font-size: 22px; }
+
+  /* Sections */
+  .section { padding: 0 12px 20px; }
+  .section-title { font-size: 18px; }
+
+  /* Trip cards: single column */
+  .trips-grid { grid-template-columns: 1fr; gap: 10px; }
+  .trip-card:hover { transform: none; }
+  .trip-card:active { transform: scale(0.985); }
+  .card-image-area { height: 160px; }
+
+  /* Add card */
+  .add-card { padding: 20px 16px; }
+
+  /* Modal: bottom sheet */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-width: 100%;
+    padding: 24px 20px 40px;
+    transform: translateY(100%);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-row { grid-template-columns: 1fr; }
+
+  /* Year dividers */
+  .year-divider { margin: 16px 12px; }
+}
+
+@media (max-width: 400px) {
+  .nav { padding: 0 10px; }
+  .stats-row { gap: 6px; padding: 10px 12px; }
+  .section { padding: 0 10px 16px; }
+  .trips-grid { gap: 8px; }
+}
 </style>
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
