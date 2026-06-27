@@ -436,8 +436,8 @@ function addDay(d) {
   bfToggle.type = 'button';
   const bfUpdate = () => {
     const on = bfSel.value === 'Yes';
-    bfToggle.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;border:none;cursor:pointer;font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;transition:all 0.2s;background:' + (on ? 'linear-gradient(135deg,#0e7a87,#0d9e8c)' : '#e0e0e0') + ';color:' + (on ? '#fff' : '#aaa') + ';margin-top:4px;';
-    bfToggle.textContent = (on ? '✓ Breakfast' : 'No Breakfast');
+    bfToggle.style.cssText = 'display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:12px;border:none;cursor:pointer;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;transition:all 0.2s;white-space:nowrap;flex-shrink:0;background:' + (on ? 'linear-gradient(135deg,#0e7a87,#0d9e8c)' : '#e0e0e0') + ';color:' + (on ? '#fff' : '#aaa') + ';';
+    bfToggle.textContent = (on ? '\u2713 BF' : 'No BF');
   };
   bfUpdate();
 
@@ -547,10 +547,16 @@ function addDay(d) {
   };
 
   hotelCell.appendChild(hotelLbl);
-  hotelCell.appendChild(hotelInp);
+  // Hotel name + breakfast toggle on same row
+  const hotelRow = document.createElement('div');
+  hotelRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  hotelInp.style.flex = '1';
+  hotelCell.appendChild(hotelLbl);
+  hotelCell.appendChild(hotelRow);
+  hotelRow.appendChild(hotelInp);
+  hotelRow.appendChild(bfToggle);
   hotelCell.appendChild(hotelLink);
   hotelCell.appendChild(bfSel);
-  hotelCell.appendChild(bfToggle);
 
   updateHotelLink();
   hotelInp.addEventListener('input', () => { scheduleSave(); updateHotelLink(); propagateHotel(); });
