@@ -1145,15 +1145,17 @@ async function createTrip(){
   window.initMobilePanel = function initMobilePanel() {
     if (isMobile()) {
       statsBtn.style.display = 'inline-flex';
-      // Move the real dash-col node into the mobile panel (keeps all live JS/DOM)
-      if (dashCol && !mobileInner.contains(dashCol)) {
-        mobileInner.appendChild(dashCol);
+      // Move the real dash-inner node (not dash-col which is display:none on mobile)
+      const dashInner = dashCol ? dashCol.querySelector('.dash-inner') : null;
+      if (dashInner && dashInner.parentNode !== mobileInner) {
+        mobileInner.appendChild(dashInner);
       }
     } else {
       statsBtn.style.display = 'none';
-      // Move dash-col back into page layout for desktop
-      if (dashCol && !pageLayout.contains(dashCol)) {
-        pageLayout.appendChild(dashCol);
+      // Move dash-inner back into dash-col for desktop
+      const dashInner = mobileInner.querySelector('.dash-inner');
+      if (dashInner && dashCol && dashInner.parentNode !== dashCol) {
+        dashCol.appendChild(dashInner);
       }
     }
   }
