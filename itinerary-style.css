@@ -9,6 +9,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .nav-back svg{margin-right:2px;}
 .nav-title{font-size:17px;font-weight:600;letter-spacing:-0.4px;color:#444444;}
 .nav-actions{display:flex;align-items:center;gap:8px;}
+#status-toggle{display:none;}
 .nav-btn{font-size:13px;font-weight:700;color:#fff;background:#0e7a87;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Montserrat,sans-serif;transition:all 0.15s;}
 .nav-btn:hover{background:#0a6570;}
 .nav-btn:active{transform:scale(0.97);}
