@@ -327,7 +327,8 @@ function makeTransRow(data, container) {
   const transCostPfx = document.createElement('span'); transCostPfx.textContent = '£'; transCostPfx.style.cssText = 'font-size:13px;font-weight:400;color:#333;flex-shrink:0;';
   const transCostInp = inp(data.trans_cost, 'trans_cost', '', '');
   transCostInp.style.flex = '1';
-  transCostInp.addEventListener('input', () => { scheduleSave(); recalc(); if (modeSel.value === 'Car Hire') propagateCarHire(); });
+  transCostInp.addEventListener('input', () => { scheduleSave(); recalc(); });
+  transCostInp.addEventListener('blur', () => { if (modeSel.value === 'Car Hire') propagateCarHire(); });
   transCostRow2.appendChild(transCostPfx); transCostRow2.appendChild(transCostInp);
   transCostCell.appendChild(transCostLbl); transCostCell.appendChild(transCostRow2);
   row.appendChild(transCostCell);
@@ -359,7 +360,8 @@ function makeTransRow(data, container) {
   const chDaysLbl = document.createElement('div'); chDaysLbl.className = 'cell-lbl'; chDaysLbl.textContent = 'Days';
   const chDaysInp = inp(data.ch_days, 'ch_days', '', '0');
   chDaysInp.inputMode = 'numeric';
-  chDaysInp.addEventListener('input', () => { scheduleSave(); propagateCarHire(); });
+  chDaysInp.addEventListener('change', () => { scheduleSave(); propagateCarHire(); });
+  chDaysInp.addEventListener('blur', () => { scheduleSave(); propagateCarHire(); });
   chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysInp);
 
   // Pickup fields (first day only)
@@ -406,7 +408,7 @@ function makeTransRow(data, container) {
     const dailyCost = days > 0 && totalCost > 0 ? (totalCost / days).toFixed(2) : '';
 
     // Update first day to daily cost and hide dropoff (only on last day)
-    if (dailyCost) transCostInp.value = dailyCost;
+    if (dailyCost && document.activeElement !== transCostInp) transCostInp.value = dailyCost;
     chDropLoc.style.display = days > 1 ? 'none' : '';
 
     for (let i = 1; i < days; i++) {
