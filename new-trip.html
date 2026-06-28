@@ -306,7 +306,17 @@ function makeTransRow(data, container) {
   const transCostPfx = document.createElement('span'); transCostPfx.textContent = '\u00a3'; transCostPfx.style.cssText = 'font-size:13px;font-weight:400;color:#333;flex-shrink:0;';
   const transCostInp = inp(data.trans_cost, 'trans_cost', '', '');
   transCostInp.style.flex = '1';
-  transCostInp.addEventListener('input', () => { scheduleSave(); recalc(); });
+  // Hidden field to store the original total cost
+  const chTotalCostInp = document.createElement('input');
+  chTotalCostInp.type = 'hidden'; chTotalCostInp.dataset.key = 'ch_total_cost';
+  chTotalCostInp.value = data.ch_total_cost || data.trans_cost || '';
+  row.appendChild(chTotalCostInp);
+
+  // When cost field changes, update the stored total
+  transCostInp.addEventListener('input', () => {
+    chTotalCostInp.value = transCostInp.value;
+    scheduleSave(); recalc();
+  });
   transCostInp.addEventListener('blur', () => { if (modeSel.value === 'Car Hire') propagateCarHire(); });
   transCostWrap.appendChild(transCostPfx); transCostWrap.appendChild(transCostInp);
   transCostCell.appendChild(transCostLbl); transCostCell.appendChild(transCostWrap);
@@ -387,11 +397,12 @@ function makeTransRow(data, container) {
     const supplier = row.querySelector('[data-key="ch_supplier"]')?.value.trim() || '';
     const ref      = row.querySelector('[data-key="ch_ref"]')?.value.trim() || '';
     const pickup   = row.querySelector('[data-key="ch_pickup_loc"]')?.value.trim() || '';
-    const totalCost = parseFloat(transCostInp.value) || 0;
+    // Always divide from the stored total, never from already-divided value
+    const totalCost = parseFloat(chTotalCostInp.value) || parseFloat(transCostInp.value) || 0;
     const dailyCost = totalCost > 0 ? (totalCost / days).toFixed(2) : '';
 
-    // Update first day cost to per-day rate
-    if (dailyCost && document.activeElement !== transCostInp) transCostInp.value = dailyCost;
+    // Show daily cost in the field (but keep total stored separately)
+    if (dailyCost) transCostInp.value = dailyCost;
 
     // First day: show pickup, hide dropoff (unless 1 day hire)
     chPickupCell.style.display = '';
@@ -403,17 +414,21 @@ function makeTransRow(data, container) {
       const role = i === days - 1 ? 'last' : 'middle';
 
       let nextTrans = nextCard.querySelector('.s-trans');
-      if (!nextTrans) {
-        nextTrans = document.createElement('div'); nextTrans.className = 's-trans';
-        const nextTb = document.createElement('div'); nextTb.className = 'sec-bar';
-        const nextDBtn = document.createElement('button'); nextDBtn.className = 'del-sec-btn'; nextDBtn.innerHTML = '&times;';
-        nextDBtn.onclick = () => { pushUndo(); nextTrans.remove(); scheduleSave(); };
-        nextTb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
-        nextTb.appendChild(nextDBtn);
-        const nextDayTop = nextCard.querySelector('.day-top');
-        if (nextDayTop) nextDayTop.after(nextTrans); else nextCard.prepend(nextTrans);
+      // If existing transport section has car hire row, update it; otherwise create
+      const existCarHire = nextTrans?.querySelector('[data-key="ch_supplier"]');
+      if (!nextTrans || !existCarHire) {
+        if (!nextTrans) {
+          nextTrans = document.createElement('div'); nextTrans.className = 's-trans';
+          const nextTb = document.createElement('div'); nextTb.className = 'sec-bar';
+          const nextDBtn = document.createElement('button'); nextDBtn.className = 'del-sec-btn'; nextDBtn.innerHTML = '&times;';
+          nextDBtn.onclick = () => { pushUndo(); nextTrans.remove(); scheduleSave(); };
+          nextTb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
+          nextTb.appendChild(nextDBtn);
+          const nextDayTop = nextCard.querySelector('.day-top');
+          if (nextDayTop) nextDayTop.after(nextTrans); else nextCard.prepend(nextTrans);
+        }
         const nextTRows = document.createElement('div'); nextTrans.appendChild(nextTRows);
-        makeTransRow({ mode: 'Car Hire', trans_cost: dailyCost, ch_supplier: supplier, ch_ref: ref, ch_days: '', _carHireRole: role }, nextTRows);
+        makeTransRow({ mode: 'Car Hire', trans_cost: dailyCost, ch_supplier: supplier, ch_ref: ref, ch_days: '', ch_total_cost: chTotalCostInp.value, _carHireRole: role }, nextTRows);
       } else {
         const existRow = nextTrans.querySelector('.trans-row');
         if (existRow) {
