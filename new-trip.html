@@ -390,7 +390,9 @@ function makeTransRow(data, container) {
     const days = parseInt(chDaysInp.value) || 0;
     if (days < 1) return;
     const allCards = Array.from(document.querySelectorAll('.day-card'));
-    const thisCard = container.closest('.day-card');
+    // Find this card — container may not be in DOM yet, so search by row
+    const thisCard = row.closest('.day-card') || container.closest('.day-card');
+    if (!thisCard) return;
     const idx = allCards.indexOf(thisCard);
 
     // Read values directly from inputs in this row
@@ -414,9 +416,11 @@ function makeTransRow(data, container) {
       const role = i === days - 1 ? 'last' : 'middle';
 
       let nextTrans = nextCard.querySelector('.s-trans');
-      // If existing transport section has car hire row, update it; otherwise create
       const existCarHire = nextTrans?.querySelector('[data-key="ch_supplier"]');
-      if (!nextTrans || !existCarHire) {
+      const existMode = nextTrans?.querySelector('[data-key="mode"]')?.value;
+      const needsCarHireRow = !nextTrans || !existCarHire || existMode !== 'Car Hire';
+
+      if (needsCarHireRow) {
         if (!nextTrans) {
           nextTrans = document.createElement('div'); nextTrans.className = 's-trans';
           const nextTb = document.createElement('div'); nextTb.className = 'sec-bar';
@@ -426,6 +430,9 @@ function makeTransRow(data, container) {
           nextTb.appendChild(nextDBtn);
           const nextDayTop = nextCard.querySelector('.day-top');
           if (nextDayTop) nextDayTop.after(nextTrans); else nextCard.prepend(nextTrans);
+        } else {
+          // Remove existing non-car-hire rows
+          nextTrans.querySelectorAll('.trans-row').forEach(r => r.remove());
         }
         const nextTRows = document.createElement('div'); nextTrans.appendChild(nextTRows);
         makeTransRow({ mode: 'Car Hire', trans_cost: dailyCost, ch_supplier: supplier, ch_ref: ref, ch_days: '', ch_total_cost: chTotalCostInp.value, _carHireRole: role }, nextTRows);
