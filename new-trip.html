@@ -800,12 +800,13 @@ function addDay(d) {
         nextAcc.appendChild(nextRow);
       }
 
-      // Set all field values
+      // Set all field values — check-in is always the original check-in date,
+      // check-out is always the original check-out date (same throughout stay)
       setField('hotel', hotel);
       setField('ref', ref);
       setField('cost', cost);
-      setField('checkin', fmtDate(new Date(d1.getTime() + i * 86400000)));
-      setField('checkout', i === nights - 1 ? checkout : '');
+      setField('checkin', checkin);
+      setField('checkout', checkout);
       setField('breakfast', bfVal);
 
       // Update breakfast toggle visual
@@ -817,14 +818,27 @@ function addDay(d) {
         bfBtn.textContent = on ? '\u2713 BF' : 'No BF';
       }
 
-      // Add breakfast row to the morning of the next day
+      // Add breakfast row to this night's food section (same card as the acc)
       if (bfVal === 'Yes') {
-        const morningCard = allCards[idx + i + 1];
-        if (morningCard) {
-          const foodRows = morningCard.querySelector('.food-rows');
+        const thisFoodSec = nextCard.querySelector('.s-food');
+        if (thisFoodSec) {
+          const foodRows = thisFoodSec.querySelector('.food-rows');
           if (foodRows) {
             const hasBf = Array.from(foodRows.querySelectorAll('[data-key="meal"]')).find(e => e.value === 'Breakfast');
             if (!hasBf) makeFoodRow({ meal: 'Breakfast', place: hotel }, foodRows, true);
+          }
+        }
+      } else {
+        // Remove any auto-added breakfast row from this card if BF toggled off
+        const thisFoodSec = nextCard.querySelector('.s-food');
+        if (thisFoodSec) {
+          const foodRows = thisFoodSec.querySelector('.food-rows');
+          if (foodRows) {
+            const bfRow = Array.from(foodRows.querySelectorAll('.food-row')).find(row => {
+              const meal = row.querySelector('[data-key="meal"]');
+              return meal && meal.value === 'Breakfast';
+            });
+            if (bfRow) bfRow.remove();
           }
         }
       }
@@ -864,36 +878,12 @@ function addDay(d) {
 
 
   bfToggle.onclick = () => {
+    pushUndo();
     bfSel.value = bfSel.value === 'Yes' ? 'No' : 'Yes';
     bfUpdate();
-    scheduleSave();
+    // propagateHotel handles all subsequent nights' acc fields AND breakfast rows
     propagateHotel();
-    const allCards = Array.from(document.querySelectorAll('.day-card'));
-    const thisCard = as.closest('.day-card');
-    const nextCard = allCards[allCards.indexOf(thisCard) + 1];
-    if (!nextCard) return;
-    // Find or create food section on next day
-    let nextFoodSec = nextCard.querySelector('.s-food');
-    if (!nextFoodSec) return;
-    const fRowsEl = nextFoodSec.querySelector('.food-rows');
-    if (!fRowsEl) return;
-    if (bfSel.value === 'Yes') {
-      // Add breakfast row if not already there
-      const existing = Array.from(fRowsEl.querySelectorAll('[data-key="meal"]'))
-        .find(el => el.value === 'Breakfast');
-      if (!existing) {
-        pushUndo();
-        makeFoodRow({ meal: 'Breakfast', place: hotelInp.value.trim() }, fRowsEl, true);
-        scheduleSave();
-      }
-    } else {
-      // Remove auto-added breakfast row
-      const bfRow = Array.from(fRowsEl.querySelectorAll('.food-row')).find(row => {
-        const meal = row.querySelector('[data-key="meal"]');
-        return meal && meal.value === 'Breakfast';
-      });
-      if (bfRow) { pushUndo(); bfRow.remove(); scheduleSave(); }
-    }
+    scheduleSave();
   };
   // bfToggle is placed inside hotelCell below
   as.appendChild(ar); if (d._accRemoved !== true) card.appendChild(as);
