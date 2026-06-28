@@ -380,7 +380,7 @@ function makeTransRow(data, container) {
   const showMode = () => {
     const isCarHire = modeSel.value === 'Car Hire';
     row.classList.toggle('car-hire-row', isCarHire);
-    row.style.gridTemplateColumns = isCarHire ? '1.2fr 0.5fr 1fr 0.7fr 1fr 1fr' : '1.1fr 0.5fr 0.7fr 1fr 0.6fr 1fr 0.6fr';
+    row.style.gridTemplateColumns = '1fr 0.6fr 1fr 1fr 0.6fr 1fr 0.6fr 1fr';
     row.querySelectorAll('[data-std]').forEach(c => c.style.display = isCarHire ? 'none' : '');
     row.querySelectorAll('[data-ch]').forEach(c => c.style.display = isCarHire ? '' : 'none');
     if (isCarHire) applyCarHireRole();
