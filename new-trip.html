@@ -360,7 +360,8 @@ function makeTransRow(data, container) {
   chApplyBtn.textContent = 'Apply';
   chApplyBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); scheduleSave(); setTimeout(() => propagateCarHire(), 50); };
   chDaysInp.addEventListener('blur', () => { scheduleSave(); propagateCarHire(); });
-  chDaysRow.appendChild(chDaysInp); chDaysRow.appendChild(chApplyBtn);
+  chDaysRow.appendChild(chDaysInp);
+  if (!data._carHireRole || data._carHireRole === 'first') chDaysRow.appendChild(chApplyBtn);
   chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysRow);
 
   const chPickupCell = cell('Pickup Point', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', '')); chPickupCell.dataset.ch = '1'; chPickupCell.dataset.chRole = 'first';
