@@ -396,36 +396,52 @@ function makeTransRow(data, container) {
   function propagateCarHire() {
     if (modeSel.value !== 'Car Hire') return;
     const days = parseInt(chDaysInp.value) || 0;
-    if (days < 2) return;
+    if (days < 1) return;
     const allCards = Array.from(document.querySelectorAll('.day-card'));
     const thisCard = container.closest('.day-card');
     const idx = allCards.indexOf(thisCard);
-    const supplier = (data.ch_supplier || chSupplier.querySelector('input')?.value || '').trim();
-    const ref = (data.ch_ref || chRef.querySelector('input')?.value || '').trim();
-    const cost = transCostInp.value.trim();
+    const supplier = chSupplier.querySelector('input')?.value.trim() || '';
+    const ref = chRef.querySelector('input')?.value.trim() || '';
+    const totalCost = parseFloat(transCostInp.value) || 0;
+    const dailyCost = days > 0 && totalCost > 0 ? (totalCost / days).toFixed(2) : '';
+
+    // Update first day to daily cost and hide dropoff (only on last day)
+    if (dailyCost) transCostInp.value = dailyCost;
+    chDropLoc.style.display = days > 1 ? 'none' : '';
 
     for (let i = 1; i < days; i++) {
       const nextCard = allCards[idx + i];
       if (!nextCard) break;
+      const role = i === days - 1 ? 'last' : 'middle';
       let nextTrans = nextCard.querySelector('.s-trans');
       if (!nextTrans) {
-        // Create transport section
         nextTrans = document.createElement('div'); nextTrans.className = 's-trans';
         const nextTb = document.createElement('div'); nextTb.className = 'sec-bar';
+        const nextDBtn = document.createElement('button'); nextDBtn.className = 'del-sec-btn'; nextDBtn.innerHTML = '&times;';
+        nextDBtn.onclick = () => { pushUndo(); nextTrans.remove(); scheduleSave(); };
         nextTb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
+        nextTb.appendChild(nextDBtn);
         const nextDayTop = nextCard.querySelector('.day-top');
         if (nextDayTop) nextDayTop.after(nextTrans); else nextCard.prepend(nextTrans);
         const nextTRows = document.createElement('div'); nextTrans.appendChild(nextTRows);
-        const role = i === days - 1 ? 'last' : 'middle';
-        makeTransRow({
-          mode: 'Car Hire', trans_cost: '', ch_supplier: supplier, ch_ref: ref,
-          ch_days: '', _carHireRole: role
-        }, nextTRows);
+        makeTransRow({ mode: 'Car Hire', trans_cost: dailyCost, ch_supplier: supplier, ch_ref: ref, ch_days: '', _carHireRole: role }, nextTRows);
+      } else {
+        const existRow = nextTrans.querySelector('.trans-row');
+        if (existRow) {
+          const setF = (key, val) => { const el = existRow.querySelector('[data-key="' + key + '"]'); if (el) el.value = val; };
+          setF('ch_supplier', supplier);
+          setF('ch_ref', ref);
+          if (dailyCost) setF('trans_cost', dailyCost);
+          const pLoc = existRow.querySelector('[data-key="ch_pickup_loc"]')?.closest('.cell');
+          const dLoc = existRow.querySelector('[data-key="ch_drop_loc"]')?.closest('.cell');
+          if (pLoc) pLoc.style.display = (role === 'middle') ? 'none' : '';
+          if (dLoc) dLoc.style.display = (role === 'last') ? '' : 'none';
+        }
       }
     }
+    scheduleSave();
   }
 
-  showMode();
   container.appendChild(row);
 }
 function makeFoodRow(data, container, hotelBreakfast) {
