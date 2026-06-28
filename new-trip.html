@@ -789,14 +789,8 @@ function addDay(d) {
           i2.addEventListener('input', scheduleSave);
           c.appendChild(l); c.appendChild(i2); nextRow.appendChild(c);
         });
-        // Hidden breakfast field + visible toggle
+        // Hidden breakfast field only — no visible toggle on propagated nights
         const bfH = document.createElement('input'); bfH.type = 'hidden'; bfH.dataset.key = 'breakfast'; nextRow.appendChild(bfH);
-        const bfC = document.createElement('div'); bfC.className = 'cell';
-        const bfL = document.createElement('div'); bfL.className = 'cell-lbl'; bfL.textContent = 'Breakfast';
-        const bfB = document.createElement('button'); bfB.type = 'button';
-        bfB.style.cssText = 'display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:12px;border:none;cursor:pointer;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;background:#e0e0e0;color:#aaa;';
-        bfB.textContent = 'No BF';
-        bfC.appendChild(bfL); bfC.appendChild(bfB); nextRow.appendChild(bfC);
         nextAcc.appendChild(nextRow);
       }
 
@@ -808,15 +802,6 @@ function addDay(d) {
       setField('checkin', checkin);
       setField('checkout', checkout);
       setField('breakfast', bfVal);
-
-      // Update breakfast toggle visual
-      const bfBtn = nextAcc.querySelector('button[style*="border-radius:12px"]');
-      if (bfBtn) {
-        const on = bfVal === 'Yes';
-        bfBtn.style.background = on ? 'linear-gradient(135deg,#0e7a87,#0d9e8c)' : '#e0e0e0';
-        bfBtn.style.color = on ? '#fff' : '#aaa';
-        bfBtn.textContent = on ? '\u2713 BF' : 'No BF';
-      }
 
       // Add breakfast row to this night's food section (same card as the acc)
       if (bfVal === 'Yes') {
