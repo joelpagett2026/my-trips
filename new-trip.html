@@ -291,32 +291,53 @@ function makeTransRow(data, container) {
   const modeSel = document.createElement('select');
   modeSel.className = 'cell-inp'; modeSel.dataset.key = 'mode';
   modeSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
-  ['', 'Flight', 'Train', 'Ferry', 'Taxi', 'Bus', 'Car', 'Other'].forEach(opt => {
+  ['', 'Flight', 'Train', 'Ferry', 'Taxi', 'Bus', 'Car', 'Car Hire', 'Other'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
     if (data.mode === opt) o.selected = true;
     modeSel.appendChild(o);
   });
-  modeSel.addEventListener('change', scheduleSave);
+
+  // Standard fields (hidden when Car Hire selected)
+  const stdFields = document.createElement('div');
+  stdFields.style.cssText = 'display:contents;';
+
+  // Car Hire fields (hidden when not Car Hire)
+  const carHireFields = document.createElement('div');
+  carHireFields.style.cssText = 'display:contents;';
+
+  const showMode = () => {
+    const isCarHire = modeSel.value === 'Car Hire';
+    // Update grid
+    row.style.gridTemplateColumns = isCarHire
+      ? '1.1fr 0.5fr 1fr 0.5fr 0.5fr 1fr'
+      : '1.1fr 0.5fr 0.7fr 1fr 0.6fr 1fr 0.6fr';
+    Array.from(stdFields.children).forEach(c => c.style.display = isCarHire ? 'none' : '');
+    Array.from(carHireFields.children).forEach(c => c.style.display = isCarHire ? '' : 'none');
+    if (isCarHire) propagateCarHire();
+  };
+
+  modeSel.addEventListener('change', () => { scheduleSave(); showMode(); });
   modeCell.appendChild(modeLbl); modeCell.appendChild(modeSel);
   row.appendChild(modeCell);
 
-  // Cost field with £ prefix
+  // Cost (shared)
   const transCostCell = document.createElement('div'); transCostCell.className = 'cell';
   const transCostLbl = document.createElement('div'); transCostLbl.className = 'cell-lbl'; transCostLbl.textContent = 'Cost';
-  const transCostRow = document.createElement('div'); transCostRow.style.cssText = 'display:flex;align-items:center;gap:2px;';
+  const transCostRow2 = document.createElement('div'); transCostRow2.style.cssText = 'display:flex;align-items:center;gap:2px;';
   const transCostPfx = document.createElement('span'); transCostPfx.textContent = '£'; transCostPfx.style.cssText = 'font-size:13px;font-weight:400;color:#333;flex-shrink:0;';
   const transCostInp = inp(data.trans_cost, 'trans_cost', '', '');
   transCostInp.style.flex = '1';
-  transCostInp.addEventListener('input', () => { scheduleSave(); recalc(); });
-  transCostRow.appendChild(transCostPfx); transCostRow.appendChild(transCostInp);
-  transCostCell.appendChild(transCostLbl); transCostCell.appendChild(transCostRow);
+  transCostInp.addEventListener('input', () => { scheduleSave(); recalc(); if (modeSel.value === 'Car Hire') propagateCarHire(); });
+  transCostRow2.appendChild(transCostPfx); transCostRow2.appendChild(transCostInp);
+  transCostCell.appendChild(transCostLbl); transCostCell.appendChild(transCostRow2);
   row.appendChild(transCostCell);
 
-  row.appendChild(cell('Booking Reference', inp(data.ref, 'ref', '', '')));
-  row.appendChild(cell('From', inp(data.from || data.route, 'from', '', '')));
+  // --- Standard fields ---
+  const stdRef = cell('Booking Reference', inp(data.ref, 'ref', '', ''));
+  stdFields.appendChild(stdRef);
+  stdFields.appendChild(cell('From', inp(data.from || data.route, 'from', '', '')));
 
-  // Time input helper — auto inserts colon after 2 digits
   function timeInp(val, key) {
     const i = document.createElement('input');
     i.type = 'text'; i.inputMode = 'numeric'; i.maxLength = 5;
@@ -324,14 +345,89 @@ function makeTransRow(data, container) {
     i.addEventListener('input', () => {
       let v = i.value.replace(/[^0-9]/g, '');
       if (v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2,4);
-      i.value = v;
-      scheduleSave();
+      i.value = v; scheduleSave();
     });
     return i;
   }
-  row.appendChild(cell('Depart', timeInp(data.depart, 'depart')));
-  row.appendChild(cell('To', inp(data.to_loc || '', 'to_loc', '', '')));
-  row.appendChild(cell('Arrive', timeInp(data.arrive, 'arrive')));
+  stdFields.appendChild(cell('Depart', timeInp(data.depart, 'depart')));
+  stdFields.appendChild(cell('To', inp(data.to_loc || '', 'to_loc', '', '')));
+  stdFields.appendChild(cell('Arrive', timeInp(data.arrive, 'arrive')));
+
+  // --- Car Hire fields ---
+  const chSupplier = cell('Supplier', inp(data.ch_supplier, 'ch_supplier', '', ''));
+  const chRef = cell('Booking Ref', inp(data.ch_ref, 'ch_ref', '', ''));
+  const chDaysCell = document.createElement('div'); chDaysCell.className = 'cell';
+  const chDaysLbl = document.createElement('div'); chDaysLbl.className = 'cell-lbl'; chDaysLbl.textContent = 'Days';
+  const chDaysInp = inp(data.ch_days, 'ch_days', '', '0');
+  chDaysInp.inputMode = 'numeric';
+  chDaysInp.addEventListener('input', () => { scheduleSave(); propagateCarHire(); });
+  chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysInp);
+
+  // Pickup fields (first day only)
+  const chPickupTime = cell('Pickup Time', timeInp(data.ch_pickup_time, 'ch_pickup_time'));
+  const chPickupLoc = cell('Pickup Location', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', ''));
+  // Dropoff fields (last day only) — hidden by default on non-last days
+  const chDropTime = cell('Drop-off Time', timeInp(data.ch_drop_time, 'ch_drop_time'));
+  const chDropLoc = cell('Drop-off Location', inp(data.ch_drop_loc, 'ch_drop_loc', '', ''));
+
+  [chPickupTime, chPickupLoc, chDropTime, chDropLoc].forEach(c => {
+    c.querySelectorAll('input').forEach(i => i.addEventListener('input', scheduleSave));
+  });
+
+  if (data._carHireRole === 'first' || (!data._carHireRole && !data.ch_days)) {
+    chDropTime.style.display = 'none'; chDropLoc.style.display = 'none';
+  } else if (data._carHireRole === 'last') {
+    chPickupTime.style.display = 'none'; chPickupLoc.style.display = 'none';
+  } else if (data._carHireRole === 'middle') {
+    chPickupTime.style.display = 'none'; chPickupLoc.style.display = 'none';
+    chDropTime.style.display = 'none'; chDropLoc.style.display = 'none';
+  }
+
+  carHireFields.appendChild(chSupplier);
+  carHireFields.appendChild(chRef);
+  carHireFields.appendChild(chDaysCell);
+  carHireFields.appendChild(chPickupTime);
+  carHireFields.appendChild(chPickupLoc);
+  carHireFields.appendChild(chDropTime);
+  carHireFields.appendChild(chDropLoc);
+
+  row.appendChild(stdFields);
+  row.appendChild(carHireFields);
+
+  // Car hire propagation
+  function propagateCarHire() {
+    if (modeSel.value !== 'Car Hire') return;
+    const days = parseInt(chDaysInp.value) || 0;
+    if (days < 2) return;
+    const allCards = Array.from(document.querySelectorAll('.day-card'));
+    const thisCard = container.closest('.day-card');
+    const idx = allCards.indexOf(thisCard);
+    const supplier = (data.ch_supplier || chSupplier.querySelector('input')?.value || '').trim();
+    const ref = (data.ch_ref || chRef.querySelector('input')?.value || '').trim();
+    const cost = transCostInp.value.trim();
+
+    for (let i = 1; i < days; i++) {
+      const nextCard = allCards[idx + i];
+      if (!nextCard) break;
+      let nextTrans = nextCard.querySelector('.s-trans');
+      if (!nextTrans) {
+        // Create transport section
+        nextTrans = document.createElement('div'); nextTrans.className = 's-trans';
+        const nextTb = document.createElement('div'); nextTb.className = 'sec-bar';
+        nextTb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
+        const nextDayTop = nextCard.querySelector('.day-top');
+        if (nextDayTop) nextDayTop.after(nextTrans); else nextCard.prepend(nextTrans);
+        const nextTRows = document.createElement('div'); nextTrans.appendChild(nextTRows);
+        const role = i === days - 1 ? 'last' : 'middle';
+        makeTransRow({
+          mode: 'Car Hire', trans_cost: '', ch_supplier: supplier, ch_ref: ref,
+          ch_days: '', _carHireRole: role
+        }, nextTRows);
+      }
+    }
+  }
+
+  showMode();
   container.appendChild(row);
 }
 function makeFoodRow(data, container, hotelBreakfast) {
