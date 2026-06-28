@@ -291,7 +291,7 @@ function makeTransRow(data, container) {
   const modeSel = document.createElement('select');
   modeSel.className = 'cell-inp'; modeSel.dataset.key = 'mode';
   modeSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
-  ['', 'Flight', 'Train', 'Ferry', 'Taxi', 'Bus', 'Car', 'Car Hire', 'Other'].forEach(opt => {
+  ['', 'Flight', 'Train', 'Ferry', 'Taxi', 'Bus', 'Car Hire'].forEach(opt => {
     const o = document.createElement('option');
     o.value = opt; o.textContent = opt || 'Select…';
     if (data.mode === opt) o.selected = true;
