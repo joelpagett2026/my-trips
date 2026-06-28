@@ -24,7 +24,27 @@ $return = 0;
 exec('cd ' . escapeshellarg(REPO_PATH) . ' && git fetch origin main 2>&1 && git reset --hard origin/main 2>&1', $output, $return);
 
 if ($return !== 0) {
-    echo json_encode([
+    
+// ── COPY SUBDIRECTORY INDEX FILES ────────────────────────────────────
+$subdirFiles = [
+    'trips/index.html'    => 'trips/index.html',
+    'holidays/index.html' => 'holidays/index.html',
+    'concerts/index.html' => 'concerts/index.html',
+];
+
+foreach ($subdirFiles as $src => $dest) {
+    $srcPath  = REPO_PATH  . '/' . $src;
+    $destPath = PUBLIC_HTML . '/' . $dest;
+    if (file_exists($srcPath)) {
+        if (copy($srcPath, $destPath)) {
+            $copied[] = $src;
+        } else {
+            $failed[] = $src;
+        }
+    }
+}
+
+echo json_encode([
         'ok'     => false,
         'error'  => 'Git pull failed',
         'output' => implode("\n", $output)
@@ -46,6 +66,14 @@ $itineraries = [
     ['slug' => 'gothenburg-2026', 'filename' => 'gothenburg-2026.html',   'dest' => 'Gothenburg',         'dep' => '09/10/2026', 'ret' => '12/10/2026', 'trav' => '2', 'status' => 'planning'],
     ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
 ];
+
+// ── ENSURE SUBDIRECTORIES EXIST ──────────────────────────────────────
+foreach (['trips', 'holidays', 'concerts'] as $dir) {
+    $dirPath = PUBLIC_HTML . '/' . $dir;
+    if (!is_dir($dirPath)) {
+        mkdir($dirPath, 0755, true);
+    }
+}
 
 // ── REGENERATE ALL ITINERARY PAGES FROM TEMPLATE ─────────────────────
 $template = file_get_contents(REPO_PATH . '/new-trip.html');
@@ -79,7 +107,7 @@ const RECORD_ID = slug;";
         $page = str_replace($placeholder, $baked, $template);
         $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($trip['dest']) . ' · Itinerary</title>', $page);
 
-        $outPath = PUBLIC_HTML . '/' . $trip['filename'];
+        $outPath = PUBLIC_HTML . '/trips/' . $trip['filename'];
         if (file_put_contents($outPath, $page) !== false) {
             $regenerated[] = $trip['filename'];
         } else {
@@ -110,6 +138,26 @@ foreach ($coreFiles as $file) {
         }
     } else {
         $skipped[] = $file;
+    }
+}
+
+
+// ── COPY SUBDIRECTORY INDEX FILES ────────────────────────────────────
+$subdirFiles = [
+    'trips/index.html'    => 'trips/index.html',
+    'holidays/index.html' => 'holidays/index.html',
+    'concerts/index.html' => 'concerts/index.html',
+];
+
+foreach ($subdirFiles as $src => $dest) {
+    $srcPath  = REPO_PATH  . '/' . $src;
+    $destPath = PUBLIC_HTML . '/' . $dest;
+    if (file_exists($srcPath)) {
+        if (copy($srcPath, $destPath)) {
+            $copied[] = $src;
+        } else {
+            $failed[] = $src;
+        }
     }
 }
 

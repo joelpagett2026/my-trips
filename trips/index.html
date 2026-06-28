@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joel Pagett's Trip Planner</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-height:100vh;}
+
+.nav{background:rgba(232,232,232,0.92);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.18);padding:0 20px;height:44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-title{font-size:17px;font-weight:600;color:#444444;}
+
+/* TWO COLUMN LAYOUT */
+.page-layout{display:grid;grid-template-columns:1fr 320px;gap:0;align-items:start;}
+.trips-col{min-width:0;}
+.dash-col{border-left:0.5px solid rgba(0,0,0,0.1);background:#ffffff;position:sticky;top:44px;height:calc(100vh - 44px);overflow-y:auto;align-self:start;scrollbar-width:none;}
+.dash-col::-webkit-scrollbar{display:none;}
+
+.large-title-area{padding:8px 20px 4px;}
+.large-title{font-size:34px;font-weight:700;letter-spacing:-0.5px;color:#444444;line-height:1.1;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px;}
+.stat-card{background:#ffffff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+.stat-val{font-size:24px;font-weight:700;line-height:1;}
+.stat-lbl{font-size:11px;color:#555555;margin-top:3px;font-weight:500;}
+.sv-blue{color:#0e7a87;}.sv-green{color:#34c759;}.sv-orange{color:#ff9500;}.sv-purple{color:#af52de;}
+
+.section{padding:0 20px 24px;}
+.section-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;margin-bottom:10px;}
+
+.trips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.trip-card{background:#ffffff;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.05);transition:transform 0.18s ease,box-shadow 0.18s ease;}
+.trip-card:hover{transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
+.trip-card:active{transform:scale(0.985);}
+.card-image-area{height:140px;position:relative;overflow:hidden;isolation:isolate;}
+.card-map{width:100%;height:100%;pointer-events:none;}.card-map .leaflet-tile-pane{will-change:transform;}.card-map .leaflet-tile{will-change:transform;transform:translate3d(0,0,0);image-rendering:auto;}
+.card-map .leaflet-control-container{display:none!important;}
+.card-map .leaflet-bottom,.card-map .leaflet-top{display:none!important;}
+.card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:450;}
+.card-map-flags img{width:32px;height:21px;object-fit:cover;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.95);}
+.card-status-pill{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;backdrop-filter:blur(12px);z-index:450;font-family:'Montserrat',sans-serif;}
+.pill-upcoming{background:rgba(14,122,135,0.18);color:#0e7a87;border:1px solid rgba(14,122,135,0.25);}
+.pill-planning{background:rgba(255,149,0,0.18);color:#c07000;border:1px solid rgba(255,149,0,0.25);}
+.pill-past{background:rgba(100,100,110,0.18);color:#666666;border:1px solid rgba(100,100,110,0.2);}
+.trip-card.card-upcoming{box-shadow:0 0 0 2px #0e7a87,0 2px 8px rgba(0,0,0,0.08);}
+.trip-card.card-planning{box-shadow:0 0 0 2px #ff9500,0 2px 8px rgba(0,0,0,0.08);}
+.trip-card.card-past{box-shadow:0 0 0 2px #b8b8b8,0 2px 8px rgba(0,0,0,0.08);}
+.card-body{padding:12px 14px 14px;}
+.card-dest{font-size:15px;font-weight:700;color:#444444;margin-bottom:2px;}
+.card-dates{font-size:11px;color:#555555;font-weight:500;margin-bottom:8px;}
+.card-cities{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.city-tag{font-size:10px;background:#e8e8e8;color:#666666;border-radius:5px;padding:2px 7px;font-weight:600;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:0.5px solid rgba(60,60,67,0.12);}
+.card-meta{font-size:10px;color:#666666;opacity:0.5;font-weight:500;}
+.card-chevron{color:#b8b8b8;}
+.add-card{background:#ffffff;border-radius:18px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.04);transition:transform 0.18s ease;border:2px dashed #b8b8b8;}
+.add-card:hover{transform:scale(1.015);border-color:#0e7a87;}
+.add-icon{width:40px;height:40px;background:#0e7a87;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.add-label{font-size:14px;font-weight:700;color:#0e7a87;}
+.add-sub{font-size:11px;color:#666666;opacity:0.5;font-weight:500;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:#ffffff;border-radius:20px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);transform:translateY(20px);transition:transform 0.25s ease;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:#666666;opacity:0.55;margin-bottom:20px;font-weight:500;}
+.modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.modal-label{font-size:11px;font-weight:700;color:#666666;text-transform:uppercase;letter-spacing:0.04em;}
+.modal-inp{background:#e8e8e8;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;}
+.modal-inp:focus{box-shadow:0 0 0 3px rgba(14,122,135,0.2);}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-select{background:#e8e8e8;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;appearance:none;cursor:pointer;}
+.modal-inp[type="date"]{background:#f2f2f7;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:500;padding:11px 14px;width:100%;outline:none;color:#444444;}
+.modal-inp[type="date"]:focus{box-shadow:0 0 0 3px rgba(14,122,135,0.2);}
+input[type="date"]{color-scheme:light;font-family:'Montserrat',sans-serif;}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:0.4;cursor:pointer;filter:invert(30%) sepia(60%) saturate(500%) hue-rotate(155deg);}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
+.modal-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.modal-btn-cancel{background:#e8e8e8;color:#666666;}
+.modal-btn-cancel:hover{opacity:0.7;}
+.modal-btn-create{background:#0e7a87;color:#fff;}
+.modal-btn-create:hover{background:#0a6570;}
+
+/* ── DASHBOARD ── */
+.dash-inner{padding:0 0 32px;}
+.dash-section{padding:16px 16px 0;}
+.dash-section-title{font-size:11px;font-weight:700;color:#888888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+
+/* Stats grid in dash */
+.dash-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
+.dash-stat{background:#e8e8e8;border-radius:12px;padding:12px 14px;}
+.dash-stat-val{font-size:22px;font-weight:700;color:#0e7a87;line-height:1;}
+.dash-stat-lbl{font-size:10px;color:#888888;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+.dash-stat-icon{font-size:16px;margin-bottom:4px;}
+
+/* Countdown */
+.dash-countdown{background:linear-gradient(135deg,#1a2a2a 0%,#0e3a3f 100%);border-radius:14px;padding:16px;margin:8px 16px 0;position:relative;overflow:hidden;}
+.dash-countdown-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.dash-countdown-dest{font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.dash-countdown-dest img{width:22px;height:15px;border-radius:2px;object-fit:cover;}
+.dash-countdown-timer{display:flex;gap:6px;}
+.dash-cd-block{background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;text-align:center;flex:1;}
+.dash-cd-num{font-size:20px;font-weight:700;color:#fff;line-height:1;}
+.dash-cd-unit{font-size:9px;color:rgba(255,255,255,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
+.dash-countdown-stars{position:absolute;top:0;right:0;bottom:0;width:80px;background:radial-gradient(ellipse at right,rgba(255,255,255,0.04) 0%,transparent 70%);pointer-events:none;}
+
+/* Upcoming trips in dash */
+.dash-upcoming-trip{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);}
+.dash-upcoming-trip:last-child{border-bottom:none;}
+.dash-trip-flag{width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;}
+.dash-trip-name{font-size:13px;font-weight:600;color:#444444;line-height:1.2;}
+.dash-trip-date{font-size:11px;color:#555555;margin-top:1px;}
+.dash-trip-chevron{color:#b8b8b8;margin-left:auto;flex-shrink:0;}
+
+/* Flags grid */
+.flags-grid{display:flex;flex-wrap:wrap;gap:5px;}
+.flag-item{width:32px;height:22px;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.flag-item img{width:100%;height:100%;object-fit:cover;}
+
+/* Trip history list */
+.dash-trip-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.05);}
+.dash-trip-row:last-child{border-bottom:none;}
+.dash-trip-year{font-size:10px;font-weight:700;color:#0e7a87;min-width:30px;opacity:0.7;}
+.dash-trip-info{flex:1;min-width:0;}
+.dash-trip-row-name{font-size:12px;font-weight:600;color:#444444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-trip-row-date{font-size:10px;color:#555555;margin-top:1px;}
+.dash-trip-flag-sm{width:20px;height:13px;border-radius:2px;object-fit:cover;flex-shrink:0;}
+
+/* Year label & divider */
+.year-label{font-size:13px;font-weight:700;color:#666666;opacity:0.35;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 10px 2px;}
+.year-divider{height:1px;background:rgba(0,0,0,0.08);margin:20px 20px;}
+
+.year-group{background:#e8e8e8;border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.year-group-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.year-group-label{font-size:12px;font-weight:700;color:#0e7a87;letter-spacing:-0.1px;}
+.year-group-count{font-size:10px;color:#666666;opacity:0.4;font-weight:600;}
+.year-group-trips{padding:4px 0;}
+.year-group .dash-trip-row{padding:6px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);}
+.year-group .dash-trip-row:last-child{border-bottom:none;}
+
+@media (min-width: 701px) { .mobile-tab-bar { display: none !important; } .mobile-stats-panel { display: none !important; } }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 700px) {
+  /* Nav: compact */
+  .nav { height: 52px; padding: 0 12px; }
+  .nav-title { display: none; }
+
+  /* Single column — stack trips then dash */
+  .page-layout { display: flex; flex-direction: column; }
+  .trips-col { width: 100%; }
+
+  /* Dash col: hidden on mobile — replaced by slide panel */
+  .dash-col {
+    display: none;
+  }
+
+  /* Stats panel slide-over */
+  .mobile-stats-panel {
+    display: block;
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 100%;
+    background: #ffffff;
+    z-index: 400;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-stats-panel.open { transform: translateX(0); }
+
+  .mobile-stats-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 52px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .mobile-stats-panel-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #444444;
+  }
+  .mobile-stats-close {
+    background: #e8e8e8;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+  }
+
+  /* Stats button in nav — shown via JS on mobile */
+  .mobile-stats-btn { cursor: pointer; }
+
+  /* Nav: shrink buttons to icon+short label on mobile */
+  .nav { padding: 0 10px; }
+  .nav-left-btns { gap: 8px !important; }
+  .nav-btn-text { display: none; }
+
+  /* All four nav buttons: same square size and style */
+  .nav-icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    font-size: 0 !important;
+  }
+  .nav-icon-btn svg { width: 17px !important; height: 17px !important; }
+
+  /* Settings gear — same box */
+  .nav-settings-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1.5px solid #0e7a87;
+    color: #0e7a87;
+  }
+  .nav-settings-btn svg { width: 17px; height: 17px; }
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; }
+  .stat-val { font-size: 22px; }
+
+  /* Sections */
+  .section { padding: 0 12px 20px; }
+  .section-title { font-size: 18px; }
+
+  /* Trip cards: single column */
+  .trips-grid { grid-template-columns: 1fr; gap: 18px; }
+  .trip-card:hover { transform: none; }
+  .trip-card:active { transform: scale(0.985); }
+  .card-image-area { height: 110px; }
+  .card-body { padding: 9px 12px 10px; }
+  .card-dest { font-size: 14px; }
+  .card-dates { font-size: 10px; margin-bottom: 6px; }
+  .card-cities { margin-bottom: 7px; }
+  .card-footer { padding-top: 6px; }
+
+  /* Add card */
+  .add-card { padding: 20px 16px; }
+  .section:last-of-type { padding-bottom: 80px; }
+
+  /* Modal: bottom sheet */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-width: 100%;
+    padding: 24px 20px 40px;
+    transform: translateY(100%);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-row { grid-template-columns: 1fr; }
+
+  /* Hide top nav on mobile — bottom bar replaces it */
+  .nav { display: none !important; }
+  .nav-left-btns { display: none !important; }
+  .nav-settings-btn { display: none !important; }
+
+  /* Bottom tab bar — always visible on mobile */
+  .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(232,232,232,0.96);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-top: 0.5px solid rgba(0,0,0,0.12);
+    z-index: 300;
+    padding: 0 20px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+    height: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+    text-decoration: none;
+    font-family: Montserrat, sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 0;
+    transition: color 0.15s;
+    min-width: 0;
+  }
+  .tab-btn.active, .tab-btn:active { color: #0e7a87; }
+  .tab-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .tab-btn.tab-primary { color: #0e7a87; }
+  .tab-btn.tab-primary svg { width: 14px; height: 14px; }
+
+  /* Hide chat bubble on mobile — moved to bottom bar */
+  #jt-chat-btn { display: none !important; }
+  #jt-chat-panel {
+    bottom: 80px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-height: calc(100vh - 160px) !important;
+  }
+
+  /* Push content above tab bar */
+  .page-layout { padding-bottom: 0; }
+  body { overflow-x: hidden; padding-bottom: 70px; }
+
+
+  /* Year dividers */
+  .year-divider { margin: 16px 12px; }
+}
+
+@media (max-width: 400px) {
+  .nav { padding: 0 10px; }
+  .stats-row { gap: 6px; padding: 10px 12px; }
+  .section { padding: 0 10px 16px; }
+  .trips-grid { gap: 8px; }
+}
+</style>
+<script src="/auth.js"></script>
+<script src="/db.js"></script>
+</head>
+<body>
+
+<div class="nav">
+  <div style="display:flex;align-items:center;gap:8px;" class="nav-left-btns">
+    <a href="#" onclick="openModal(event)" class="nav-icon-btn" style="display:inline-flex;align-items:center;gap:6px;background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="nav-btn-text">New Trip</span>
+    </a>
+    <a href="#" class="nav-icon-btn" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#0e7a87;border:1.5px solid #0e7a87;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:Montserrat,sans-serif;text-decoration:none;cursor:pointer;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="nav-btn-text">Holiday Allowance</span>
+    </a>
+    <button class="mobile-stats-btn nav-icon-btn" onclick="openStatsPanel()" style="display:none;background:transparent;color:#0e7a87;border:1.5px solid #0e7a87;border-radius:8px;font-family:Montserrat,sans-serif;align-items:center;justify-content:center;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-btn-text">Stats</span>
+    </button>
+  </div>
+  <div class="nav-title">Joel Pagett's Trip Planner</div>
+  <div style="display:flex;align-items:center;">
+    <a href="/settings.html" class="nav-settings-btn nav-icon-btn" style="display:inline-flex;align-items:center;color:#0e7a87;text-decoration:none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="page-layout">
+
+<!-- ── LEFT: TRIPS ── -->
+<div class="trips-col">
+
+  <div class="section" style="padding-top:16px;">
+    <div class="section-title" style="padding:0 0 10px;">2027 <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div>
+    <div class="trips-grid" id="year-grid-2027"></div>
+  </div>
+
+  <div class="year-divider"></div>
+
+  <div class="section">
+    <div class="section-title" style="padding:0 0 10px;">2026 <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div>
+    <div class="trips-grid" id="year-grid-2026"></div>
+
+    <div class="year-divider"></div>
+
+    <div class="section-title" style="padding:0 0 10px;">2025 <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div>
+    <div class="trips-grid" id="year-grid-2025"></div>
+  </div>
+
+  <div id="add-trip-btn" style="display:none;"></div>
+</div><!-- end trips-col -->
+
+<!-- ── RIGHT: DASHBOARD ── -->
+<div class="dash-col">
+  <div class="dash-inner">
+
+    <!-- Countdown to next trip -->
+    <div class="dash-countdown" id="dash-countdown">
+      <div class="dash-countdown-label">Next adventure</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div class="dash-countdown-dest" id="cd-dest" style="margin-bottom:0;">
+          <img src="https://flagcdn.com/w80/hk.png" alt="" id="cd-flag">
+          <span id="cd-name">Hong Kong & Taiwan</span>
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+          <div class="dash-cd-num" id="cd-days" style="font-size:24px;font-weight:700;color:#fff;line-height:1;">—</div>
+          <div class="dash-cd-unit" style="font-size:9px;color:rgba(255,255,255,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;">days to go</div>
+        </div>
+      </div>
+      <div class="dash-countdown-stars"></div>
+    </div>
+
+    <!-- Upcoming from planner -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title">Planned upcoming trips</div>
+      <div id="dash-upcoming-list"></div>
+    </div>
+
+    <div class="dash-divider"></div>
+
+    <!-- Stats -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title">Stats</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+
+        <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
+          <!-- Map/fold icon matching Polarsteps -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          <div class="dash-stat-lbl" style="flex:1;margin:0;">Trips taken</div>
+          <div class="dash-stat-val" style="color:#0e7a87;font-size:18px;" id="s-polarsteps-trips">58</div>
+        </div>
+
+        <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
+          <!-- Globe with meridian lines -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2C8 6 8 18 12 22"/><path d="M12 2c4 4 4 16 0 20"/><path d="M2 12h20"/><path d="M3.5 7h17M3.5 17h17"/></svg>
+          <div class="dash-stat-lbl" style="flex:1;margin:0;">Countries visited</div>
+          <div class="dash-stat-val" style="color:#0e7a87;font-size:18px;" id="s-countries">33</div>
+        </div>
+
+        <div class="dash-stat" style="display:flex;align-items:center;gap:12px;padding:10px 14px;">
+          <!-- Speedometer/odometer matching Polarsteps -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="#0e7a87" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg>
+          <div class="dash-stat-lbl" style="flex:1;margin:0;">Miles travelled</div>
+          <div class="dash-stat-val" style="color:#0e7a87;font-size:18px;" id="s-miles">205,021</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="dash-divider"></div>
+
+    <!-- Flags collected -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title" id="flags-title">Flags collected · 33 countries</div>
+      <div class="flags-grid" id="flags-grid"></div>
+    </div>
+
+    <div class="dash-divider"></div>
+
+    <!-- Trip history -->
+    <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section-title">Past trips</div>
+      <div id="trip-history"></div>
+    </div>
+
+  </div>
+</div><!-- end dash-col -->
+
+</div><!-- end page-layout -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title">New Trip</div>
+    <div class="modal-sub">Fill in the details and we'll set it up for you</div>
+    <div class="modal-field"><div class="modal-label">Destination</div><input class="modal-inp" id="m-dest" placeholder="e.g. Japan" autocomplete="off"></div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="modal-label">Departure date</div><input class="modal-inp dp-trigger" type="text" id="m-dep" placeholder="Select date" autocomplete="off" readonly></div>
+      <div class="modal-field"><div class="modal-label">Return date</div><input class="modal-inp dp-trigger" type="text" id="m-ret" placeholder="Select date" autocomplete="off" readonly></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field"><div class="modal-label">Travellers</div><input class="modal-inp" id="m-trav" placeholder="2" type="number" min="1" max="20" autocomplete="off"></div>
+      <div class="modal-field"><div class="modal-label">Status</div><select class="modal-select" id="m-status"><option value="upcoming">Upcoming</option><option value="planning">Planning</option><option value="past">Completed</option></select></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn modal-btn-create" id="create-btn" onclick="createTrip()">Create itinerary →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+// ── PLANNED ITINERARY METADATA ────────────────────────────────────────
+// Polarsteps export already includes everything up to and including China (end: 17 Apr 2026).
+// Only trips starting AFTER that date should ever add to the stats.
+// addToStats: true = Claude will count this once it completes
+const PLANNED = {
+  'china-2026':     { name:'China',             endDate:'2026-04-17', startDate:'2026-03-30', countries:['cn'],      estimatedMiles:12790, flagPrimary:'cn', url:'/trips/china.html',           addToStats: false },
+  'dubai-2025':     { name:'Dubai & Abu Dhabi', endDate:'2026-01-09', startDate:'2025-12-26', countries:['ae','fr'], estimatedMiles:7012,  flagPrimary:'ae', url:'/trips/dubai.html',            addToStats: false },
+  'costa-rica-2025':{ name:'Costa Rica',        endDate:'2025-04-21', startDate:'2025-04-03', countries:['es','cr'], estimatedMiles:11911, flagPrimary:'cr', url:'/trips/costa-rica.html',       addToStats: false },
+  'canada-2027':    { name:'Canada Road Trip',  endDate:'2027-10-10', startDate:'2027-09-25', countries:['ca'],      estimatedMiles:7820,  flagPrimary:'ca', url:'/trips/canada.html',           addToStats: true  },
+  'hk-taiwan-2027': { name:'Hong Kong & Taiwan',endDate:'2027-04-12', startDate:'2027-03-27', countries:['hk','tw'], estimatedMiles:12802, flagPrimary:'hk', url:'/trips/hong-kong-taiwan.html', addToStats: true  },
+};
+
+// Polarsteps historical baseline (countries already visited, miles already done)
+const PS_COUNTRIES = ['ae','at','be','ca','ch','cn','cr','cy','cz','de','dk','es','fi','fr','gb','gr','hr','hu','id','ie','it','je','jp','kr','lu','mc','my','nl','se','sg','tr','us','za'];
+const PS_MILES = 205021;
+const PS_TRIPS = 58;
+
+// ── COMPUTE LIVE STATS ────────────────────────────────────────────────
+function isCompleted(endDateStr) { return new Date(endDateStr) <= TODAY; }
+function isUpcoming(startDateStr) { return new Date(startDateStr) > TODAY; }
+
+// Approx miles London → destination return, using known capital coords
+// Haversine straight-line × 1.3 factor for routing, × 2 for return
+const LONDON = [51.5074, -0.1278];
+const COUNTRY_COORDS = {
+  ae:[25.2048,55.2708], at:[48.2082,16.3738], au:[-33.8688,151.2093], be:[50.8503,4.3517],
+  ca:[43.7001,-79.4163], ch:[46.9481,7.4474], cn:[39.9042,116.4074], cr:[9.9281,-84.0907],
+  cy:[35.1856,33.3823], cz:[50.0755,14.4378], de:[52.5200,13.4050], dk:[55.6761,12.5683],
+  es:[40.4168,-3.7038], fi:[60.1699,24.9384], fr:[48.8566,2.3522], gb:[51.5074,-0.1278],
+  gr:[37.9838,23.7275], hk:[22.3193,114.1694], hr:[45.8150,15.9819], hu:[47.4979,19.0402],
+  id:[-6.2088,106.8456], ie:[53.3498,-6.2603], it:[41.9028,12.4964], je:[49.2144,-2.1313],
+  jp:[35.6762,139.6503], kr:[37.5665,126.9780], lu:[49.8153,6.1296], mc:[43.7384,7.4246],
+  my:[3.1390,101.6869], nl:[52.3676,4.9041], nz:[-36.8485,174.7633], pl:[52.2297,21.0122],
+  pt:[38.7169,-9.1395], ro:[44.4268,26.1025], se:[59.3293,18.0686], sg:[1.3521,103.8198],
+  th:[13.7563,100.5018], tr:[41.0082,28.9784], tw:[25.0330,121.5654], us:[40.7128,-74.0060],
+  za:[-33.9249,18.4241],
+};
+function haversineKm([lat1,lon1],[lat2,lon2]) {
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function estimateMilesForCountries(ccs) {
+  // Find the furthest country, fly London→furthest→others→London, convert km→miles
+  let maxKm = 0;
+  ccs.forEach(cc => {
+    if (COUNTRY_COORDS[cc]) {
+      const km = haversineKm(LONDON, COUNTRY_COORDS[cc]);
+      if (km > maxKm) maxKm = km;
+    }
+  });
+  return Math.round(maxKm * 2 * 0.6214 * 1.15); // ×2 return, km→miles, ×1.15 routing
+}
+
+// Build live stats from PS baseline + PLANNED trips + completed registry trips
+const liveCountries = new Set(PS_COUNTRIES);
+let liveMiles = PS_MILES;
+let liveCompletedPlanned = 0;
+
+Object.entries(PLANNED).forEach(([id, trip]) => {
+  if (trip.addToStats && isCompleted(trip.endDate)) {
+    trip.countries.forEach(cc => liveCountries.add(cc));
+    liveMiles += trip.estimatedMiles;
+    liveCompletedPlanned++;
+  }
+});
+
+// Registry trips that have departed — add to stats dynamically
+let liveCompletedRegistry = 0;
+function parseAnyDate(str) {
+  if (!str) return null;
+  // dd/mm/yyyy
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+    const [d,m,y] = str.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // d/m/yyyy or similar short forms
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [d,m,y] = str.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // yyyy-mm-dd (ISO)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y,m,d] = str.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  // "Aug 2026" style
+  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const m = str.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  if (m) return new Date(Number(m[3]), months[m[2]], Number(m[1]));
+  return null;
+}
+// Slugs already fully accounted for in PS baseline or PLANNED addToStats
+const ALREADY_COUNTED = new Set([
+  'china-2026', 'dubai-2025', 'costa-rica-2025',
+  ...Object.entries(PLANNED).filter(([,t]) => t.addToStats).map(([id]) => id)
+]);
+
+function applyRegistryStats(trips) {
+  trips.filter(t => !t.deleted).forEach(t => {
+    if (ALREADY_COUNTED.has(t.slug)) return; // already in baseline
+    const dep = parseAnyDate(t.dep);
+    if (!dep || dep > TODAY) return; // not departed yet
+    const flags = t.flags || [];
+    flags.forEach(cc => liveCountries.add(cc));
+    if (flags.length) liveMiles += estimateMilesForCountries(flags);
+    liveCompletedRegistry++;
+
+    // Add to past trips sidebar if not already listed
+    const alreadyIn = psTripList.some(p => p.name === t.dest);
+    if (!alreadyIn) {
+      const start = dep.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
+      psTripList.unshift({ name: t.dest, start, codes: flags });
+    }
+  });
+
+  // Re-render past trips sidebar with updated list
+  const byYearNew = {};
+  psTripList.forEach(t => {
+    const year = t.start.match(/(\d{4})/)?.[1];
+    if (!byYearNew[year]) byYearNew[year] = [];
+    byYearNew[year].push(t);
+  });
+  const histEl = document.getElementById('trip-history');
+  if (histEl) {
+    histEl.innerHTML = '';
+    Object.keys(byYearNew).sort((a,b) => b-a).forEach(year => histEl.appendChild(makeYearGroup(year, byYearNew[year])));
+  }
+
+  renderStats();
+}
+
+function renderStats() {
+  const liveTotalTrips = PS_TRIPS + liveCompletedPlanned + liveCompletedRegistry;
+  const liveCountryCount = liveCountries.size;
+  document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString('en-GB');
+  document.getElementById('s-countries').textContent = liveCountryCount;
+  document.getElementById('s-miles').textContent = liveMiles.toLocaleString('en-GB');
+
+  // ── FLAGS GRID ──────────────────────────────────────────────────────
+  const flagsGrid = document.getElementById('flags-grid');
+  flagsGrid.innerHTML = '';
+  const sortedFlags = Array.from(liveCountries).sort();
+  document.getElementById('flags-title').textContent = `Flags collected · ${liveCountryCount} countries`;
+  sortedFlags.forEach(cc => {
+    const div = document.createElement('div'); div.className = 'flag-item';
+    div.title = cc.toUpperCase();
+    div.innerHTML = `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
+    flagsGrid.appendChild(div);
+  });
+}
+
+// Initial render with PLANNED only (registry loads async)
+const liveTotalTrips = PS_TRIPS + liveCompletedPlanned;
+const liveCountryCount = liveCountries.size;
+document.getElementById('s-polarsteps-trips').textContent = liveTotalTrips.toLocaleString('en-GB');
+document.getElementById('s-countries').textContent = liveCountryCount;
+document.getElementById('s-miles').textContent = liveMiles.toLocaleString('en-GB');
+
+// ── FLAGS GRID (initial render) ───────────────────────────────────────
+const flagsGrid = document.getElementById('flags-grid');
+const sortedFlags = Array.from(liveCountries).sort();
+document.getElementById('flags-title').textContent = `Flags collected · ${liveCountryCount} countries`;
+sortedFlags.forEach(cc => {
+  const div = document.createElement('div'); div.className = 'flag-item';
+  div.title = cc.toUpperCase();
+  div.innerHTML = `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
+  flagsGrid.appendChild(div);
+});
+
+// ── COUNTDOWN — to the next upcoming trip (planned + registry) ─────────
+// Parse dd/mm/yyyy or yyyy-mm-dd into a Date
+
+// Drive countdown entirely from registry (no hardcoded duplicates)
+async function initCountdown() {
+  let allTrips = [];
+  try {
+    const reg = await window.dbLoadRegistry();
+    allTrips = (reg || [])
+      .filter(t => !t.deleted)
+      .map(t => ({
+        name: t.dest,
+        depDate: parseAnyDate(t.dep),
+        retDate: parseAnyDate(t.ret),
+        flags: t.flags || [],
+        url: t.url || `/trips/${t.slug}.html`,
+        dep: t.dep,
+        ret: t.ret,
+      }))
+      .filter(t => t.depDate && t.depDate > TODAY)
+      .sort((a, b) => a.depDate - b.depDate);
+  } catch { /* no registry yet */ }
+
+  // COUNTDOWN — show the soonest upcoming trip
+  if (allTrips.length > 0) {
+    const next = allTrips[0];
+    document.getElementById('cd-name').textContent = next.name;
+    const flagEl = document.getElementById('cd-flag');
+    if (next.flags && next.flags.length) {
+      flagEl.src = `https://flagcdn.com/w80/${next.flags[0]}.png`;
+      flagEl.style.display = '';
+    } else {
+      flagEl.style.display = 'none';
+    }
+    const targetDate = new Date(next.depDate);
+    function updateCountdown() {
+      const now = new Date();
+      const diff = targetDate - now;
+      if (diff <= 0) { document.getElementById('dash-countdown').style.display='none'; return; }
+      document.getElementById('cd-days').textContent = Math.ceil(diff / 86400000);
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  } else {
+    document.getElementById('dash-countdown').style.display = 'none';
+  }
+
+  // PLANNED UPCOMING LIST in dashboard sidebar
+  const upcomingEl = document.getElementById('dash-upcoming-list');
+  if (allTrips.length === 0) {
+    upcomingEl.innerHTML = '<div style="font-size:12px;color:#666666;opacity:0.4;padding:8px 0;">No upcoming trips planned</div>';
+  } else {
+    allTrips.forEach((t, i) => {
+      const a = document.createElement('a');
+      a.href = t.url;
+      a.style.cssText = `text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;padding:10px 0;${i < allTrips.length-1 ? 'border-bottom:0.5px solid rgba(0,0,0,0.06);' : ''}`;
+      const flagHtml = t.flags && t.flags.length
+        ? t.flags.map(cc => `<img class="dash-trip-flag" src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" style="width:28px;height:19px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.15);flex-shrink:0;">`).join('')
+        : `<div style="width:28px;height:19px;border-radius:3px;background:#e8e8e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#b8b8b8" stroke-width="2"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg></div>`;
+      a.innerHTML = `${flagHtml}<div><div class="dash-trip-name">${t.name}</div><div class="dash-trip-date">${t.dep} → ${t.ret}</div></div><svg style="margin-left:auto;flex-shrink:0;" width="7" height="11" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="#c7c7cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      upcomingEl.appendChild(a);
+    });
+  }
+}
+// Don't run until authed
+async function runAfterAuth() {
+  initCountdown();
+  await seedAndRender();
+  if (typeof initMobilePanel === 'function') initMobilePanel();
+}
+if (typeof isAuthed === 'function' && isAuthed()) {
+  runAfterAuth();
+} else {
+  document.addEventListener('mytrips:authed', runAfterAuth, { once: true });
+}
+
+// ── TRIP HISTORY ──────────────────────────────────────────────────────
+const trips = [
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+  {name:"Dubai & Abu Dhabi",start:"Dec 2025",codes:["ae","fr"]},
+  {name:"Paris",start:"Oct 2025",codes:["fr"]},
+  {name:"Athens & Hydra",start:"Oct 2025",codes:["gr"]},
+  {name:"Netherlands",start:"Aug 2025",codes:["nl"]},
+  {name:"Cyprus",start:"May 2025",codes:["cy"]},
+  {name:"Costa Rica",start:"Apr 2025",codes:["cr"]},
+  {name:"Freiberg",start:"Nov 2024",codes:["de"]},
+  {name:"Vienna",start:"Nov 2024",codes:["at"]},
+  {name:"Canada",start:"Sep 2024",codes:["ca"]},
+  {name:"Helsinki",start:"Aug 2024",codes:["fi"]},
+  {name:"Lyon",start:"May 2024",codes:["fr"]},
+  {name:"Singapore, Bali & KL",start:"Mar 2024",codes:["sg","id","my"]},
+  {name:"Japan & South Korea",start:"Dec 2023",codes:["jp","kr"]},
+  {name:"Paris",start:"Oct 2023",codes:["fr"]},
+  {name:"Barcelona",start:"Aug 2023",codes:["es"]},
+  {name:"Switzerland",start:"May 2023",codes:["ch"]},
+  {name:"Cologne",start:"May 2023",codes:["de"]},
+  {name:"South Africa",start:"Mar 2023",codes:["za"]},
+  {name:"Germany & Switzerland",start:"Dec 2022",codes:["de","ch"]},
+  {name:"Paris",start:"Nov 2022",codes:["fr"]},
+  {name:"Italy",start:"Sep 2022",codes:["it"]},
+  {name:"Stockholm",start:"Aug 2022",codes:["se"]},
+  {name:"French Riviera & Monaco",start:"Jun 2022",codes:["fr","mc"]},
+  {name:"Washington, New York & Chicago",start:"Apr 2022",codes:["us"]},
+  {name:"Dublin",start:"Nov 2021",codes:["ie"]},
+  {name:"Brussels, Luxembourg & Germany",start:"Aug 2021",codes:["be","lu","de"]},
+  {name:"Denmark",start:"Aug 2020",codes:["dk"]},
+  {name:"Rome",start:"Feb 2020",codes:["it"]},
+  {name:"Gothenburg",start:"Oct 2019",codes:["se"]},
+  {name:"Hamburg & Lubeck",start:"Sep 2019",codes:["de"]},
+  {name:"Japan",start:"Apr 2019",codes:["jp"]},
+  {name:"Bruges & Gent",start:"Nov 2018",codes:["be"]},
+  {name:"Croatia",start:"Sep 2018",codes:["hr"]},
+  {name:"LA, Nevada & San Francisco",start:"May 2018",codes:["us"]},
+  {name:"Prague",start:"Feb 2018",codes:["cz"]},
+  {name:"Germany",start:"Sep 2017",codes:["de"]},
+  {name:"Netherlands",start:"Jul 2017",codes:["nl"]},
+  {name:"Crete",start:"May 2017",codes:["gr"]},
+  {name:"Italy",start:"Sep 2016",codes:["it"]},
+  {name:"Germany",start:"Apr 2016",codes:["de"]},
+  {name:"Budapest",start:"Feb 2016",codes:["hu"]},
+  {name:"Barcelona",start:"Sep 2015",codes:["es"]},
+  {name:"Sweden",start:"Apr 2015",codes:["se"]},
+  {name:"Amsterdam",start:"Sep 2014",codes:["nl"]},
+  {name:"Istanbul",start:"Jun 2014",codes:["tr"]},
+  {name:"Paris",start:"Feb 2014",codes:["fr"]},
+  {name:"Belgium",start:"Nov 2013",codes:["be"]},
+  {name:"Edinburgh",start:"Aug 2013",codes:["gb"]},
+  {name:"Madrid",start:"Aug 2013",codes:["es"]},
+  {name:"Cyprus",start:"Aug 2012",codes:["cy"]},
+  {name:"Amsterdam",start:"Jun 2012",codes:["nl"]},
+  {name:"Florida",start:"Apr 2012",codes:["us"]},
+  {name:"Germany",start:"Sep 2011",codes:["de"]},
+  {name:"Cyprus",start:"Jul 2011",codes:["cy"]},
+  {name:"Tenerife",start:"May 2011",codes:["es"]},
+  {name:"Tenerife",start:"Apr 2010",codes:["es"]},
+  {name:"Oludeniz",start:"May 2009",codes:["tr"]},
+];
+
+// ── TRIP HISTORY ─────────────────────────────────────────────────────
+// Merge Polarsteps trips with any completed planned trips
+const psTripList = [
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+  {name:"Dubai & Abu Dhabi",start:"Dec 2025",codes:["ae","fr"]},
+  {name:"Paris",start:"Oct 2025",codes:["fr"]},
+  {name:"Athens & Hydra",start:"Oct 2025",codes:["gr"]},
+  {name:"Netherlands",start:"Aug 2025",codes:["nl"]},
+  {name:"Cyprus",start:"May 2025",codes:["cy"]},
+  {name:"Costa Rica",start:"Apr 2025",codes:["cr"]},
+  {name:"Freiberg",start:"Nov 2024",codes:["de"]},
+  {name:"Vienna",start:"Nov 2024",codes:["at"]},
+  {name:"Canada",start:"Sep 2024",codes:["ca"]},
+  {name:"Helsinki",start:"Aug 2024",codes:["fi"]},
+  {name:"Lyon",start:"May 2024",codes:["fr"]},
+  {name:"Singapore, Bali & KL",start:"Mar 2024",codes:["sg","id","my"]},
+  {name:"Japan & South Korea",start:"Dec 2023",codes:["jp","kr"]},
+  {name:"Paris",start:"Oct 2023",codes:["fr"]},
+  {name:"Barcelona",start:"Aug 2023",codes:["es"]},
+  {name:"Switzerland",start:"May 2023",codes:["ch"]},
+  {name:"Cologne",start:"May 2023",codes:["de"]},
+  {name:"South Africa",start:"Mar 2023",codes:["za"]},
+  {name:"Germany & Switzerland",start:"Dec 2022",codes:["de","ch"]},
+  {name:"Paris",start:"Nov 2022",codes:["fr"]},
+  {name:"Italy",start:"Sep 2022",codes:["it"]},
+  {name:"Stockholm",start:"Aug 2022",codes:["se"]},
+  {name:"French Riviera & Monaco",start:"Jun 2022",codes:["fr","mc"]},
+  {name:"Washington, New York & Chicago",start:"Apr 2022",codes:["us"]},
+  {name:"Dublin",start:"Nov 2021",codes:["ie"]},
+  {name:"Brussels, Luxembourg & Germany",start:"Aug 2021",codes:["be","lu","de"]},
+  {name:"Denmark",start:"Aug 2020",codes:["dk"]},
+  {name:"Rome",start:"Feb 2020",codes:["it"]},
+  {name:"Gothenburg",start:"Oct 2019",codes:["se"]},
+  {name:"Hamburg & Lubeck",start:"Sep 2019",codes:["de"]},
+  {name:"Japan",start:"Apr 2019",codes:["jp"]},
+  {name:"Bruges & Gent",start:"Nov 2018",codes:["be"]},
+  {name:"Croatia",start:"Sep 2018",codes:["hr"]},
+  {name:"LA, Nevada & San Francisco",start:"May 2018",codes:["us"]},
+  {name:"Prague",start:"Feb 2018",codes:["cz"]},
+  {name:"Germany",start:"Sep 2017",codes:["de"]},
+  {name:"Netherlands",start:"Jul 2017",codes:["nl"]},
+  {name:"Crete",start:"May 2017",codes:["gr"]},
+  {name:"Italy",start:"Sep 2016",codes:["it"]},
+  {name:"Germany",start:"Apr 2016",codes:["de"]},
+  {name:"Budapest",start:"Feb 2016",codes:["hu"]},
+  {name:"Barcelona",start:"Sep 2015",codes:["es"]},
+  {name:"Sweden",start:"Apr 2015",codes:["se"]},
+  {name:"Amsterdam",start:"Sep 2014",codes:["nl"]},
+  {name:"Istanbul",start:"Jun 2014",codes:["tr"]},
+  {name:"Paris",start:"Feb 2014",codes:["fr"]},
+  {name:"Belgium",start:"Nov 2013",codes:["be"]},
+  {name:"Edinburgh",start:"Aug 2013",codes:["gb"]},
+  {name:"Madrid",start:"Aug 2013",codes:["es"]},
+  {name:"Cyprus",start:"Aug 2012",codes:["cy"]},
+  {name:"Amsterdam",start:"Jun 2012",codes:["nl"]},
+  {name:"Florida",start:"Apr 2012",codes:["us"]},
+  {name:"Germany",start:"Sep 2011",codes:["de"]},
+  {name:"Cyprus",start:"Jul 2011",codes:["cy"]},
+  {name:"Tenerife",start:"May 2011",codes:["es"]},
+  {name:"Tenerife",start:"Apr 2010",codes:["es"]},
+  {name:"Oludeniz",start:"May 2009",codes:["tr"]},
+];
+
+// Inject any completed planned trips that aren't in Polarsteps yet
+Object.entries(PLANNED).forEach(([id, t]) => {
+  if (isCompleted(t.endDate)) {
+    const alreadyIn = psTripList.some(p => p.name === t.name);
+    if (!alreadyIn) {
+      const d = new Date(t.startDate);
+      const start = d.toLocaleDateString('en-GB',{month:'short', year:'numeric'});
+      psTripList.unshift({ name: t.name, start, codes: t.countries });
+    }
+  }
+});
+
+// Group by year
+const byYear = {};
+psTripList.forEach(t => {
+  const year = t.start.match(/(\d{4})/)?.[1];
+  if (!byYear[year]) byYear[year] = [];
+  byYear[year].push(t);
+});
+
+const historyEl = document.getElementById('trip-history');
+const years = Object.keys(byYear).sort((a,b) => b-a);
+
+function makeYearGroup(year, yearTrips) {
+  const card = document.createElement('div'); card.className = 'year-group';
+  const hdr = document.createElement('div'); hdr.className = 'year-group-header';
+  hdr.innerHTML = `<span class="year-group-label">${year}</span><span class="year-group-count">${yearTrips.length} trip${yearTrips.length>1?'s':''}</span>`;
+  card.appendChild(hdr);
+  const body = document.createElement('div'); body.className = 'year-group-trips';
+  yearTrips.forEach(t => {
+    const row = document.createElement('div'); row.className = 'dash-trip-row';
+    const info = document.createElement('div'); info.className = 'dash-trip-info';
+    const badge = '';
+    info.innerHTML = `<div class="dash-trip-row-name">${t.name}${badge}</div><div class="dash-trip-row-date">${t.start}</div>`;
+    const flags = document.createElement('div'); flags.style.cssText='display:flex;gap:3px;flex-shrink:0;';
+    t.codes.slice(0,2).forEach(cc => {
+      flags.innerHTML += `<img class="dash-trip-flag-sm" src="https://flagcdn.com/w80/${cc}.png" alt="${cc}" loading="lazy">`;
+    });
+    row.appendChild(info); row.appendChild(flags);
+    body.appendChild(row);
+  });
+  card.appendChild(body);
+  return card;
+}
+
+years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
+
+// ── MAPS ─────────────────────────────────────────────────────────────
+const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',detectRetina:true,updateWhenZooming:false,keepBuffer:2});
+function makeMap(id,center,zoom,points,color){
+  const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
+  tiles().addTo(map);
+  L.polyline(points,{color,weight:2.5,opacity:0.85,dashArray:'6,4'}).addTo(map);
+  points.forEach((p,i)=>L.circleMarker(p,{radius:i===0||i===points.length-1?6:4,fillColor:color,color:'#fff',weight:2,fillOpacity:1}).addTo(map));
+}
+makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#0e7a87');
+makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#0e7a87');
+makeMap('map-dubai',[24.4,54.8],7,[[48.8566,2.3522],[25.2532,51.6100],[25.2048,55.2708],[24.4539,54.3773],[25.2048,55.2708]],'#0e7a87');
+makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#0e7a87');
+makeMap('map-china',[33.5,109.0],4,[[31.2304,121.4737],[31.2989,120.5853],[30.5728,104.0668],[30.9964,103.6673],[34.3416,108.9398],[39.9042,116.4074]],'#0e7a87');
+
+// ── MODAL & REGISTRY ─────────────────────────────────────────────────
+const SB_URL = localStorage.getItem('sb_url')||'';
+const SB_KEY = localStorage.getItem('sb_key')||'';
+const REGISTRY_ID = 'trip-registry';
+
+async function loadRegistry(){
+  try{ return await window.dbLoadRegistry(); }catch{ return []; }
+}
+async function saveRegistry(trips){
+  try{ await window.dbSaveRegistry(trips); }catch{}
+}
+// Geocode a place name → {lat, lon, country_code} using Nominatim
+const geocodeCache = {};
+async function geocode(place) {
+  if (!place) return null;
+  if (geocodeCache[place]) return geocodeCache[place];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&accept-language=en`, {headers:{'Accept-Language':'en'}});
+    const j = await r.json();
+    if (j && j[0]) {
+      const result = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), cc: (j[0].address?.country_code || '').toLowerCase() };
+      geocodeCache[place] = result;
+      return result;
+    }
+  } catch {}
+  return null;
+}
+
+// Build a dynamic card — with live map + flag from itinerary data
+function buildDynamicCard(t) {
+  // Auto-complete if departure date has passed
+  const depDate = parseAnyDate(t.dep);
+  if (depDate && depDate <= TODAY && t.status !== 'past') t.status = 'past';
+  const statusClass = t.status==='past' ? 'pill-past' : t.status==='planning' ? 'pill-planning' : 'pill-upcoming';
+  const statusLabel = t.status==='past' ? 'Completed' : t.status==='planning' ? 'Planning' : 'Upcoming';
+  const url = t.url || `/trips/${t.slug}.html`;
+
+  // City tags from stored cities array
+  const cityTagsHtml = (t.cities || [])
+    .filter((c,i,a) => a.indexOf(c) === i) // dedupe
+    .slice(0, 6)
+    .map(c => `<span class="city-tag">${c}</span>`).join('');
+
+  const cardClass = t.status==='upcoming' ? 'trip-card card-upcoming' : t.status==='planning' ? 'trip-card card-planning' : 'trip-card card-past';
+  const a = document.createElement('a'); a.className = cardClass; a.href = url;
+  const mapId = 'dyn-map-' + t.slug;
+
+  // Flags HTML from stored flags array
+  const flagsHtml = (t.flags || []).map(cc =>
+    `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}">`
+  ).join('');
+
+  a.innerHTML = `<div class="card-image-area" style="background:#e0eef0;position:relative;">
+    <div id="${mapId}" class="card-map"></div>
+    <div class="card-map-flags">${flagsHtml}</div>
+    <div class="card-status-pill ${statusClass}">${statusLabel}</div>
+  </div>
+  <div class="card-body">
+    <div class="card-dest">${t.dest}</div>
+    <div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div>
+    ${cityTagsHtml ? `<div class="card-cities">${cityTagsHtml}</div>` : ''}
+  </div>`;
+
+  // Render map — use stored points if available, else geocode destination
+  setTimeout(async () => {
+    try {
+      const mapEl = document.getElementById(mapId);
+      if (!mapEl) return;
+
+      let points = t.points || [];
+
+      // Fallback: geocode from itinerary day data or destination name
+      if (!points.length) {
+        const data = await window.dbLoad(t.slug).catch(() => null);
+        const days = (data && data.days) ? data.days : [];
+        const cityNames = [];
+        days.forEach(d => {
+          if (d.from && d.from.trim()) cityNames.push(d.from.trim());
+          if (d.to && d.to.trim()) cityNames.push(d.to.trim());
+        });
+        const seen = new Set();
+        const unique = [t.dest, ...cityNames].filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });
+        const coords = (await Promise.all(unique.map(c => geocode(c)))).filter(Boolean);
+        points = coords.map(c => [c.lat, c.lon]);
+      }
+
+      if (!points.length) return;
+
+      const mapColor = t.status === 'planning' ? '#ff9500' : t.status === 'past' ? '#b8b8b8' : '#0e7a87';
+      const bounds = L.latLngBounds(points);
+      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 5, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
+      tiles().addTo(map);
+      if (points.length > 1) {
+        map.fitBounds(bounds, {padding: [32, 32], maxZoom: 7});
+        L.polyline(points, {color:mapColor, weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
+      } else {
+        map.setView(points[0], 6);
+      }
+      points.forEach((p, i) => {
+        L.circleMarker(p, {radius: i===0||i===points.length-1 ? 6 : 4, fillColor:mapColor, color:'#fff', weight:2, fillOpacity:1}).addTo(map);
+      });
+    } catch(e) { console.warn('Card map error:', e); }
+  }, 100);
+
+  return a;
+}
+
+function getOrCreateYearGrid(year) {
+  const id = 'year-grid-' + year;
+  let grid = document.getElementById(id);
+  if (grid) return grid;
+
+  // Need to create a new year section — insert in correct position (newest first)
+  const tripsCol = document.querySelector('.trips-col');
+  const addSection = document.getElementById('add-trip-btn').closest('.section');
+
+  // Find where to insert (before the first existing section with a lower year)
+  const sections = tripsCol.querySelectorAll('.section[data-year]');
+  let insertBefore = addSection;
+  for (const sec of sections) {
+    if (parseInt(sec.dataset.year) < parseInt(year)) {
+      // Insert a divider + new section before this one
+      insertBefore = sec;
+      break;
+    }
+  }
+
+  const divider = document.createElement('div'); divider.className = 'year-divider';
+  const section = document.createElement('div'); section.className = 'section'; section.dataset.year = year;
+  section.innerHTML = `<div class="section-title" style="padding:0 0 10px;">${year} <span style="font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#444444;">Trips</span></div><div class="trips-grid" id="${id}"></div>`;
+
+  tripsCol.insertBefore(divider, insertBefore);
+  tripsCol.insertBefore(section, insertBefore);
+
+  return document.getElementById(id);
+}
+
+// Mark existing hardcoded sections with data-year
+document.querySelectorAll('.trips-col .section').forEach(sec => {
+  const title = sec.querySelector('.section-title');
+  if (title && /^\d{4}$/.test(title.textContent.trim())) {
+    sec.dataset.year = title.textContent.trim();
+  }
+});
+
+function extractYear(dep) {
+  if (!dep) return null;
+  // dd/mm/yyyy
+  const m1 = dep.match(/(\d{4})$/);
+  if (m1) return m1[1];
+  // yyyy-mm-dd
+  const m2 = dep.match(/^(\d{4})-/);
+  if (m2) return m2[1];
+  return null;
+}
+
+function parseDepDate(dep) {
+  if (!dep) return new Date(0);
+  // dd/mm/yyyy
+  const m = dep.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(m[3], m[2]-1, m[1]);
+  return new Date(dep);
+}
+
+function renderDynamicTrips(trips) {
+  if (!trips.length) return;
+
+  // Group by year
+  const byYear = {};
+  for (const t of trips) {
+    const year = extractYear(t.dep) || '0';
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(t);
+  }
+
+  // For each year, sort: latest departure date first (left), soonest last (right, next to completed)
+  for (const year of Object.keys(byYear).sort((a,b) => b-a)) {
+    byYear[year].sort((a, b) => parseDepDate(b.dep) - parseDepDate(a.dep));
+    const grid = getOrCreateYearGrid(year);
+    for (const t of byYear[year]) {
+      grid.appendChild(buildDynamicCard(t));
+    }
+  }
+}
+async function seedAndRender() {
+  const registry = await loadRegistry();
+  const trips = registry.filter(r => !r.deleted);
+  applyRegistryStats(trips);
+  renderDynamicTrips(trips);
+}
+
+function openModal(e){
+  e.preventDefault();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>{
+    document.getElementById('m-dest').focus();
+    if (window.dpAttachText) {
+      window.dpAttachText(document.getElementById('m-dep'));
+      window.dpAttachText(document.getElementById('m-ret'));
+    }
+  }, 250);
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+async function createTrip(){
+  const btn=document.getElementById('create-btn');
+  const dest=document.getElementById('m-dest').value.trim();
+  if(!dest){document.getElementById('m-dest').focus();return;}
+  const dep=document.getElementById('m-dep').value.trim();
+  const ret=document.getElementById('m-ret').value.trim();
+  const trav=document.getElementById('m-trav').value.trim()||'2';
+  const status=document.getElementById('m-status').value;
+
+  // Build slug: destination-year (e.g. porto-2026)
+  const year = dep ? dep.split('/')[2] : new Date().getFullYear();
+  const slug = dest.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + year;
+
+  btn.textContent='Creating…'; btn.disabled=true;
+
+  try {
+    // Geocode destination (non-blocking — failure won't stop creation)
+    let points = [], flags = [], cities = [dest];
+    try {
+      const geo = await geocode(dest);
+      if (geo) {
+        points = [[geo.lat, geo.lon]];
+        if (geo.cc) flags = [geo.cc];
+      }
+    } catch(geoErr) { /* geocode failed silently, card will show without map */ }
+
+    // Create the dedicated HTML page on the server
+    const res = await apiCall('create_page', {}, {slug, dest, dep, ret, trav, status});
+    const url = res && res.url ? res.url : '/trips/' + slug + '.html';
+
+    // Register in trip registry with map data
+    const existing = await loadRegistry();
+    existing.push({dest, dep, ret, trav, status, slug, url, points, flags, cities, created: Date.now()});
+    await saveRegistry(existing);
+
+    window.location.href = url;
+  } catch(e) {
+    console.error('createTrip error:', e);
+    btn.textContent='Create itinerary →'; btn.disabled=false;
+    alert('Could not create itinerary page. Please try again.');
+  }
+}
+</script>
+
+<!-- ── MOBILE BOTTOM TAB BAR ── -->
+<div class="mobile-tab-bar" id="mobile-tab-bar">
+  <a href="#" onclick="openModal(event)" class="tab-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Trip
+  </a>
+  <a href="#" class="tab-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Holiday
+  </a>
+  <button class="tab-btn" onclick="openStatsPanel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Stats
+  </button>
+  <a href="/settings.html" class="tab-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Settings
+  </a>
+  <button class="tab-btn" onclick="document.getElementById('jt-chat-panel').classList.toggle('open')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Chat
+  </button>
+</div>
+
+
+<div class="mobile-stats-panel" id="mobile-stats-panel">
+  <div class="mobile-stats-panel-header">
+    <div class="mobile-stats-panel-title">Stats & Dashboard</div>
+    <button class="mobile-stats-close" onclick="closeStatsPanel()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="dash-inner" id="mobile-dash-inner"></div>
+</div>
+
+<script>
+(function() {
+  const panel = document.getElementById('mobile-stats-panel');
+  const statsBtn = document.querySelector('.mobile-stats-btn');
+  const dashCol = document.querySelector('.dash-col');
+  const mobileInner = document.getElementById('mobile-dash-inner');
+  const pageLayout = document.querySelector('.page-layout');
+
+  function isMobile() { return window.innerWidth <= 700; }
+
+  window.initMobilePanel = function initMobilePanel() {
+    if (isMobile()) {
+      statsBtn.style.display = 'inline-flex';
+      // Move the real dash-inner node (not dash-col which is display:none on mobile)
+      const dashInner = dashCol ? dashCol.querySelector('.dash-inner') : null;
+      if (dashInner && dashInner.parentNode !== mobileInner) {
+        mobileInner.appendChild(dashInner);
+      }
+    } else {
+      statsBtn.style.display = 'none';
+      // Move dash-inner back into dash-col for desktop
+      const dashInner = mobileInner.querySelector('.dash-inner');
+      if (dashInner && dashCol && dashInner.parentNode !== dashCol) {
+        dashCol.appendChild(dashInner);
+      }
+    }
+  }
+
+  window.openStatsPanel = function() {
+    panel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeStatsPanel = function() {
+    panel.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  // Close on swipe right
+  let touchStartX = 0;
+  panel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  panel.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientX - touchStartX > 60) closeStatsPanel();
+  }, { passive: true });
+
+  // initMobilePanel is called by runAfterAuth once data is populated
+  window.addEventListener('resize', () => {
+    closeStatsPanel();
+    initMobilePanel();
+  });
+})();
+</script>
+
+<script src="/datepicker.js"></script>
+<script src="/chat-widget.js"></script>
+</body>
+</html>
