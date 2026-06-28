@@ -84,6 +84,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 /* Transport — indigo */
 
 .s-trans .row-inner{background:rgba(14,122,135,0.02);}
+.s-trans .row-inner.car-hire-row{background:rgba(0,0,0,0.035);}
 .s-trans .cell-lbl{color:#555555;}
 
 /* Accommodation — purple */
