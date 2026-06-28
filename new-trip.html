@@ -893,7 +893,7 @@ function addDay(d) {
     if (rows.length > 0) { rows[rows.length - 1].remove(); scheduleSave(); }
     else { fs.remove(); scheduleSave(); }
   };
-  fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="13" r="8"/><path d="M12 3v3m-3-2v4a3 3 0 0 0 6 0V4"/><line x1="19" y1="3" x2="19" y2="21"/></svg><span class="sec-label"><span class="sec-label-text">Food & Drink</span></span>';
+  fb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="3" x2="8" y2="21"/><path d="M5 3v6a3 3 0 0 0 6 0V3"/><line x1="19" y1="3" x2="19" y2="21"/><path d="M16 3v8h6"/></svg><span class="sec-label"><span class="sec-label-text">Food & Drink</span></span>';
   fb.appendChild(fBtn); fb.appendChild(fDelBtn); fs.appendChild(fb);
   const fRows = document.createElement('div'); fRows.className = 'food-rows'; fs.appendChild(fRows);
   if (d._food && d._food.length) d._food.forEach(f => makeFoodRow(f, fRows, f._hotelBf === true));
