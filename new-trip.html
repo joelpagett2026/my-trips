@@ -391,7 +391,14 @@ function makeTransRow(data, container) {
     chDropCell.style.display   = (role === 'first' || role === 'middle') ? 'none' : '';
   };
 
-  modeSel.addEventListener('change', () => { scheduleSave(); showMode(); });
+  modeSel.addEventListener('change', () => {
+    scheduleSave(); showMode();
+    // If changed to Flight, move this row to top of tRows
+    if (modeSel.value === 'Flight') {
+      const parent = row.parentElement;
+      if (parent) parent.prepend(row);
+    }
+  });
   showMode();
 
   function propagateCarHire() {
@@ -641,7 +648,15 @@ function addDay(d) {
     tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
     tb.appendChild(aBtn); tb.appendChild(dBtn); ts.appendChild(tb);
     const tRows = document.createElement('div'); ts.appendChild(tRows);
-    if (d._transport && d._transport.length) d._transport.forEach(t => makeTransRow(t, tRows));
+    if (d._transport && d._transport.length) {
+      // Flights always first
+      const sorted = [...d._transport].sort((a, b) => {
+        if (a.mode === 'Flight' && b.mode !== 'Flight') return -1;
+        if (b.mode === 'Flight' && a.mode !== 'Flight') return 1;
+        return 0;
+      });
+      sorted.forEach(t => makeTransRow(t, tRows));
+    }
     card.appendChild(ts);
   }
   const as = document.createElement('div'); as.className = 's-acc';
