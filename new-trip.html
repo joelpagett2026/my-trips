@@ -341,10 +341,17 @@ function makeTransRow(data, container) {
 
   const chDaysCell = document.createElement('div'); chDaysCell.className = 'cell'; chDaysCell.dataset.ch = '1';
   const chDaysLbl = document.createElement('div'); chDaysLbl.className = 'cell-lbl'; chDaysLbl.textContent = 'Days Hired';
+  const chDaysRow = document.createElement('div'); chDaysRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
   const chDaysInp = inp(data.ch_days, 'ch_days', '', '');
-  chDaysInp.inputMode = 'numeric';
+  chDaysInp.inputMode = 'numeric'; chDaysInp.style.flex = '1';
+  const chApplyBtn = document.createElement('button');
+  chApplyBtn.type = 'button';
+  chApplyBtn.style.cssText = 'flex-shrink:0;padding:2px 8px;border-radius:10px;border:none;background:linear-gradient(135deg,#0e7a87,#0d9e8c);color:#fff;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;';
+  chApplyBtn.textContent = 'Apply';
+  chApplyBtn.onclick = () => { propagateCarHire(); };
   chDaysInp.addEventListener('blur', () => { scheduleSave(); propagateCarHire(); });
-  chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysInp);
+  chDaysRow.appendChild(chDaysInp); chDaysRow.appendChild(chApplyBtn);
+  chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysRow);
 
   const chPickupCell = cell('Pickup Point', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', '')); chPickupCell.dataset.ch = '1'; chPickupCell.dataset.chRole = 'first';
   const chDropCell   = cell('Drop-off Point', inp(data.ch_drop_loc, 'ch_drop_loc', '', '')); chDropCell.dataset.ch = '1'; chDropCell.dataset.chRole = 'last';
