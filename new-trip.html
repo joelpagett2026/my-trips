@@ -308,9 +308,8 @@ function makeTransRow(data, container) {
 
   const showMode = () => {
     const isCarHire = modeSel.value === 'Car Hire';
-    // Update grid
     row.style.gridTemplateColumns = isCarHire
-      ? '1.1fr 0.5fr 1fr 0.5fr 0.5fr 1fr'
+      ? '1.1fr 0.5fr 1fr 0.7fr 1fr'
       : '1.1fr 0.5fr 0.7fr 1fr 0.6fr 1fr 0.6fr';
     Array.from(stdFields.children).forEach(c => c.style.display = isCarHire ? 'none' : '');
     Array.from(carHireFields.children).forEach(c => c.style.display = isCarHire ? '' : 'none');
@@ -365,30 +364,29 @@ function makeTransRow(data, container) {
 
   // Pickup fields (first day only)
   const chPickupTime = cell('Pickup Time', timeInp(data.ch_pickup_time, 'ch_pickup_time'));
-  const chPickupLoc = cell('Pickup Location', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', ''));
+  const chPickupLoc = cell('Pickup Point', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', ''));
   // Dropoff fields (last day only) — hidden by default on non-last days
   const chDropTime = cell('Drop-off Time', timeInp(data.ch_drop_time, 'ch_drop_time'));
-  const chDropLoc = cell('Drop-off Location', inp(data.ch_drop_loc, 'ch_drop_loc', '', ''));
+  const chDropLoc = cell('Drop-off Point', inp(data.ch_drop_loc, 'ch_drop_loc', '', ''));
 
   [chPickupTime, chPickupLoc, chDropTime, chDropLoc].forEach(c => {
     c.querySelectorAll('input').forEach(i => i.addEventListener('input', scheduleSave));
   });
 
-  if (data._carHireRole === 'first' || (!data._carHireRole && !data.ch_days)) {
-    chDropTime.style.display = 'none'; chDropLoc.style.display = 'none';
-  } else if (data._carHireRole === 'last') {
-    chPickupTime.style.display = 'none'; chPickupLoc.style.display = 'none';
+  if (data._carHireRole === 'last') {
+    chPickupLoc.style.display = 'none';
   } else if (data._carHireRole === 'middle') {
-    chPickupTime.style.display = 'none'; chPickupLoc.style.display = 'none';
-    chDropTime.style.display = 'none'; chDropLoc.style.display = 'none';
+    chPickupLoc.style.display = 'none';
+    chDropLoc.style.display = 'none';
+  } else {
+    // First day: show pickup, hide dropoff
+    chDropLoc.style.display = 'none';
   }
 
   carHireFields.appendChild(chSupplier);
   carHireFields.appendChild(chRef);
   carHireFields.appendChild(chDaysCell);
-  carHireFields.appendChild(chPickupTime);
   carHireFields.appendChild(chPickupLoc);
-  carHireFields.appendChild(chDropTime);
   carHireFields.appendChild(chDropLoc);
 
   row.appendChild(stdFields);
