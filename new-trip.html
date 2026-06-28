@@ -365,16 +365,28 @@ function makeTransRow(data, container) {
   if (isFirstDay) chDaysRow.appendChild(chApplyBtn);
   chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysRow);
 
+  function timeInpCh(val, key) {
+    const i = document.createElement('input');
+    i.type = 'text'; i.inputMode = 'numeric'; i.maxLength = 5;
+    i.value = val || ''; i.dataset.key = key; i.className = 'cell-inp';
+    i.addEventListener('input', () => {
+      let v = i.value.replace(/[^0-9]/g, '');
+      if (v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2,4);
+      i.value = v; scheduleSave();
+    });
+    return i;
+  }
+  const chPickupTimeCell = cell('Pickup Time', timeInpCh(data.ch_pickup_time, 'ch_pickup_time')); chPickupTimeCell.dataset.ch = '1'; chPickupTimeCell.dataset.chRole = 'first';
   const chPickupCell = cell('Pickup Point', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', '')); chPickupCell.dataset.ch = '1'; chPickupCell.dataset.chRole = 'first';
   const chDropCell   = cell('Drop-off Point', inp(data.ch_drop_loc, 'ch_drop_loc', '', '')); chDropCell.dataset.ch = '1'; chDropCell.dataset.chRole = 'last';
 
   // On middle/last days: hide booking ref, reorder to Supplier | Days
   if (!isFirstDay) {
     chRefCell.style.display = 'none';
-    // Reorder: Supplier, Days, Pickup, Drop
+    chPickupTimeCell.style.display = 'none';
     [chSupplierCell, chDaysCell, chPickupCell, chDropCell].forEach(c => row.appendChild(c));
   } else {
-    [chSupplierCell, chRefCell, chDaysCell, chPickupCell, chDropCell].forEach(c => row.appendChild(c));
+    [chSupplierCell, chRefCell, chDaysCell, chPickupTimeCell, chPickupCell, chDropCell].forEach(c => row.appendChild(c));
   }
 
   const showMode = () => {
@@ -388,6 +400,7 @@ function makeTransRow(data, container) {
 
   const applyCarHireRole = () => {
     const role = data._carHireRole || 'first';
+    chPickupTimeCell.style.display = (role === 'last' || role === 'middle') ? 'none' : '';
     chPickupCell.style.display = (role === 'last' || role === 'middle') ? 'none' : '';
     chDropCell.style.display   = (role === 'first' || role === 'middle') ? 'none' : '';
   };
@@ -424,6 +437,7 @@ function makeTransRow(data, container) {
     if (dailyCost) transCostInp.value = dailyCost;
 
     // First day: show pickup, hide dropoff (unless 1 day hire)
+    chPickupTimeCell.style.display = '';
     chPickupCell.style.display = '';
     chDropCell.style.display = days === 1 ? '' : 'none';
 
