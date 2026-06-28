@@ -346,9 +346,9 @@ function makeTransRow(data, container) {
   chDaysInp.inputMode = 'numeric'; chDaysInp.style.flex = '1';
   const chApplyBtn = document.createElement('button');
   chApplyBtn.type = 'button';
-  chApplyBtn.style.cssText = 'flex-shrink:0;padding:2px 8px;border-radius:10px;border:none;background:linear-gradient(135deg,#0e7a87,#0d9e8c);color:#fff;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;';
+  chApplyBtn.style.cssText = 'flex-shrink:0;padding:2px 8px;border-radius:10px;border:1.5px solid #ddd;background:#f5f5f5;color:#666;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;';
   chApplyBtn.textContent = 'Apply';
-  chApplyBtn.onclick = () => { propagateCarHire(); };
+  chApplyBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); scheduleSave(); setTimeout(() => propagateCarHire(), 50); };
   chDaysInp.addEventListener('blur', () => { scheduleSave(); propagateCarHire(); });
   chDaysRow.appendChild(chDaysInp); chDaysRow.appendChild(chApplyBtn);
   chDaysCell.appendChild(chDaysLbl); chDaysCell.appendChild(chDaysRow);
