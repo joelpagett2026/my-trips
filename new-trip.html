@@ -334,8 +334,10 @@ function makeTransRow(data, container) {
 
   // Car Hire fields
   const chSupplierCell = cell('Supplier', inp(data.ch_supplier, 'ch_supplier', '', '')); chSupplierCell.dataset.ch = '1';
+  chSupplierCell.querySelector('input').addEventListener('blur', () => { if (modeSel.value === 'Car Hire') propagateCarHire(); });
 
   const chRefCell = cell('Booking Ref', inp(data.ch_ref, 'ch_ref', '', '')); chRefCell.dataset.ch = '1';
+  chRefCell.querySelector('input').addEventListener('blur', () => { if (modeSel.value === 'Car Hire') propagateCarHire(); });
 
   const chDaysCell = document.createElement('div'); chDaysCell.className = 'cell'; chDaysCell.dataset.ch = '1';
   const chDaysLbl = document.createElement('div'); chDaysLbl.className = 'cell-lbl'; chDaysLbl.textContent = 'Days Hired';
@@ -373,13 +375,17 @@ function makeTransRow(data, container) {
     const allCards = Array.from(document.querySelectorAll('.day-card'));
     const thisCard = container.closest('.day-card');
     const idx = allCards.indexOf(thisCard);
-    const supplier = chSupplierCell.querySelector('input')?.value.trim() || '';
-    const ref = chRefCell.querySelector('input')?.value.trim() || '';
+
+    // Read values directly from inputs in this row
+    const supplier = row.querySelector('[data-key="ch_supplier"]')?.value.trim() || '';
+    const ref      = row.querySelector('[data-key="ch_ref"]')?.value.trim() || '';
+    const pickup   = row.querySelector('[data-key="ch_pickup_loc"]')?.value.trim() || '';
     const totalCost = parseFloat(transCostInp.value) || 0;
     const dailyCost = totalCost > 0 ? (totalCost / days).toFixed(2) : '';
 
     // Update first day cost to per-day rate
     if (dailyCost && document.activeElement !== transCostInp) transCostInp.value = dailyCost;
+
     // First day: show pickup, hide dropoff (unless 1 day hire)
     chPickupCell.style.display = '';
     chDropCell.style.display = days === 1 ? '' : 'none';
