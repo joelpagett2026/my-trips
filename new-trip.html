@@ -49,6 +49,14 @@
 
 <div class="days" id="days"></div>
 
+<div id="trans-total-box" style="display:none;margin:0 20px 10px;background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Transport Total</div>
+    <div id="trans-total-val" style="font-size:20px;font-weight:600;color:#0e7a87;letter-spacing:-0.3px;">£0.00</div>
+  </div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.5" opacity="0.3"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+</div>
+
 <div id="acc-total-box" style="display:none;margin:0 20px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
   <div>
     <div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Accommodation Total</div>
@@ -275,7 +283,7 @@ function delBtn(onDel) {
 function makeTransRow(data, container) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner trans-row';
-  row.style.gridTemplateColumns = '1.1fr 0.7fr 1fr 0.6fr 1fr 0.6fr';
+  row.style.gridTemplateColumns = '1.1fr 0.5fr 0.7fr 1fr 0.6fr 1fr 0.6fr';
 
   // Mode dropdown
   const modeCell = document.createElement('div'); modeCell.className = 'cell';
@@ -292,6 +300,18 @@ function makeTransRow(data, container) {
   modeSel.addEventListener('change', scheduleSave);
   modeCell.appendChild(modeLbl); modeCell.appendChild(modeSel);
   row.appendChild(modeCell);
+
+  // Cost field with £ prefix
+  const transCostCell = document.createElement('div'); transCostCell.className = 'cell';
+  const transCostLbl = document.createElement('div'); transCostLbl.className = 'cell-lbl'; transCostLbl.textContent = 'Cost';
+  const transCostRow = document.createElement('div'); transCostRow.style.cssText = 'display:flex;align-items:center;gap:2px;';
+  const transCostPfx = document.createElement('span'); transCostPfx.textContent = '£'; transCostPfx.style.cssText = 'font-size:13px;font-weight:400;color:#333;flex-shrink:0;';
+  const transCostInp = inp(data.trans_cost, 'trans_cost', '', '');
+  transCostInp.style.flex = '1';
+  transCostInp.addEventListener('input', () => { scheduleSave(); recalc(); });
+  transCostRow.appendChild(transCostPfx); transCostRow.appendChild(transCostInp);
+  transCostCell.appendChild(transCostLbl); transCostCell.appendChild(transCostRow);
+  row.appendChild(transCostCell);
 
   row.appendChild(cell('Booking Reference', inp(data.ref, 'ref', '', '')));
   row.appendChild(cell('From', inp(data.from || data.route, 'from', '', '')));
@@ -802,18 +822,24 @@ function recalc() {
   const cards = document.querySelectorAll('.day-card');
   document.getElementById('s-days').textContent = cards.length;
 
-  let acc = 0;
-  cards.forEach(c => c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value) || 0; }));
+  let acc = 0, trans = 0;
+  cards.forEach(c => {
+    c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value) || 0; });
+    c.querySelectorAll('[data-key="trans_cost"]').forEach(i => { trans += parseFloat(i.value) || 0; });
+  });
 
-  const box = document.getElementById('acc-total-box');
-  const val = document.getElementById('acc-total-val');
-  if (box && val) {
-    if (acc > 0) {
-      box.style.display = 'flex';
-      val.textContent = '£' + acc.toFixed(2);
-    } else {
-      box.style.display = 'none';
-    }
+  const accBox = document.getElementById('acc-total-box');
+  const accVal = document.getElementById('acc-total-val');
+  if (accBox && accVal) {
+    accBox.style.display = acc > 0 ? 'flex' : 'none';
+    accVal.textContent = '£' + acc.toFixed(2);
+  }
+
+  const transBox = document.getElementById('trans-total-box');
+  const transVal = document.getElementById('trans-total-val');
+  if (transBox && transVal) {
+    transBox.style.display = trans > 0 ? 'flex' : 'none';
+    transVal.textContent = '£' + trans.toFixed(2);
   }
 }
 function restoreState(state) {
