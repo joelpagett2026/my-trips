@@ -368,7 +368,14 @@ function makeTransRow(data, container) {
   const chPickupCell = cell('Pickup Point', inp(data.ch_pickup_loc, 'ch_pickup_loc', '', '')); chPickupCell.dataset.ch = '1'; chPickupCell.dataset.chRole = 'first';
   const chDropCell   = cell('Drop-off Point', inp(data.ch_drop_loc, 'ch_drop_loc', '', '')); chDropCell.dataset.ch = '1'; chDropCell.dataset.chRole = 'last';
 
-  [chSupplierCell, chRefCell, chDaysCell, chPickupCell, chDropCell].forEach(c => row.appendChild(c));
+  // On middle/last days: hide booking ref, reorder to Supplier | Days
+  if (!isFirstDay) {
+    chRefCell.style.display = 'none';
+    // Reorder: Supplier, Days, Pickup, Drop
+    [chSupplierCell, chDaysCell, chPickupCell, chDropCell].forEach(c => row.appendChild(c));
+  } else {
+    [chSupplierCell, chRefCell, chDaysCell, chPickupCell, chDropCell].forEach(c => row.appendChild(c));
+  }
 
   const showMode = () => {
     const isCarHire = modeSel.value === 'Car Hire';
