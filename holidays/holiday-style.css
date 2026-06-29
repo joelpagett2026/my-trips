@@ -262,33 +262,7 @@ body {
     background: #f8f8f8 !important;
   }
 
-  .print-footer {
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid #ddd;
-    font-size: 9px;
-    color: #aaa;
-  }
-
-  .print-sig {
-    display: flex !important;
-    gap: 40px;
-    margin-top: 16px;
-  }
-  .print-sig-block {
-    flex: 1;
-    border-top: 1px solid #bbb;
-    padding-top: 4px;
-    font-size: 9px;
-    color: #888;
-  }
 }
-
-/* Hidden on screen, shown on print */
-.print-footer, .print-sig, .print-sig-block { display: none; }
 
 /* Print button style */
 .nav-btn.print-btn {
