@@ -918,6 +918,7 @@ function addDay(d) {
   is_.appendChild(ib);
   const periodsRow = document.createElement('div');
   const isMobile = () => window.innerWidth <= 700;
+  periodsRow.className = 'row-inner';
   periodsRow.style.cssText = isMobile() ? 'display:flex;flex-direction:column;' : 'display:flex;';
 
   function refreshBorders() {
