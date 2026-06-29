@@ -1337,8 +1337,10 @@ function recalc() {
   });
 
   const ticketsTot = ticketsPP * travellers;
-  const grand = acc + trans + ticketsTot;
-  const grandPP = grand / travellers;
+  const accPP      = acc / travellers;          // room cost ÷ travellers
+  const transPP    = trans / travellers;
+  const grandPP    = accPP + transPP + ticketsPP;
+  const grand      = acc + trans + ticketsTot;
 
   const fmt = v => '£' + v.toFixed(2);
   const summary = document.getElementById('cost-summary');
@@ -1355,9 +1357,9 @@ function recalc() {
     }
   };
 
-  setRow('cs-trans-row', 'cs-trans-pp', 'cs-trans-tot', trans / travellers, trans);
-  setRow('cs-acc-row',   'cs-acc-pp',   'cs-acc-tot',   acc / travellers, acc);  // acc is room total, pp = total ÷ travellers
-  setRow('cs-tk-row',    'cs-tk-pp',    'cs-tk-tot',    ticketsPP, ticketsTot);
+  setRow('cs-trans-row', 'cs-trans-pp', 'cs-trans-tot', transPP,    trans);
+  setRow('cs-acc-row',   'cs-acc-pp',   'cs-acc-tot',   accPP,      acc);
+  setRow('cs-tk-row',    'cs-tk-pp',    'cs-tk-tot',    ticketsPP,  ticketsTot);
 
   if (grand > 0) {
     summary.style.display = 'block';
