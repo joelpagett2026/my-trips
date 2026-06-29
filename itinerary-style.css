@@ -99,6 +99,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 /* Food — orange */
 
 .s-food .row-inner{background:rgba(14,122,135,0.02);}
+.s-food .row-inner + .row-inner{border-top:1px solid rgba(0,0,0,0.06);}
 .s-food .cell-lbl{color:#555555;}
 
 /* Itinerary — pink */
