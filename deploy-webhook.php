@@ -29,6 +29,10 @@ if ($return !== 0) {
 $subdirFiles = [
     'trips/index.html'    => 'trips/index.html',
     'holidays/index.html' => 'holidays/index.html',
+    'holidays/holiday-style.css' => 'holidays/holiday-style.css',
+    'holidays/2025-26.html' => 'holidays/2025-26.html',
+    'holidays/2026-27.html' => 'holidays/2026-27.html',
+    'holidays/2027-28.html' => 'holidays/2027-28.html',
     'concerts/index.html' => 'concerts/index.html',
 ];
 
@@ -146,6 +150,10 @@ foreach ($coreFiles as $file) {
 $subdirFiles = [
     'trips/index.html'    => 'trips/index.html',
     'holidays/index.html' => 'holidays/index.html',
+    'holidays/holiday-style.css' => 'holidays/holiday-style.css',
+    'holidays/2025-26.html' => 'holidays/2025-26.html',
+    'holidays/2026-27.html' => 'holidays/2026-27.html',
+    'holidays/2027-28.html' => 'holidays/2027-28.html',
     'concerts/index.html' => 'concerts/index.html',
 ];
 

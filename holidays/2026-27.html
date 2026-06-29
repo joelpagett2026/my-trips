@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holiday Allowance · 1st April 2026 – 31st March 2027</title>
+<script src="/auth.js"></script>
+<link rel="stylesheet" href="/holidays/holiday-style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/holidays/">
+    <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
+    Holiday Allowance
+  </a>
+  <div class="nav-title">2026 / 27</div>
+  <div class="nav-actions">
+    <button class="nav-btn" onclick="addTrip()">+ Add trip</button>
+  </div>
+</nav>
+
+<div class="large-title-area">
+  <div class="large-title">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    2026 / 27
+  </div>
+  <div class="large-subtitle">1st April 2026 – 31st March 2027</div>
+</div>
+
+<div class="year-tabs">
+  <a href="/holidays/2025-26.html" class="year-tab">2025 / 26</a>
+  <a href="/holidays/2026-27.html" class="year-tab active">2026 / 27</a>
+  <a href="/holidays/2027-28.html" class="year-tab">2027 / 28</a>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-lbl">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Days Off
+    </div>
+    <div class="stat-val" id="tot-days">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-lbl">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Lieu Time
+    </div>
+    <div class="stat-val" id="tot-lieu">0</div>
+  </div>
+  <div class="stat-card hol-stat">
+    <div class="stat-lbl">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      Holiday Used
+    </div>
+    <div class="stat-val orange" id="tot-hol">0</div>
+    <div class="stat-sub">of 28 days allowance</div>
+  </div>
+  <div class="stat-card remain-stat" id="remain-stat">
+    <div class="stat-lbl">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Remaining
+    </div>
+    <div class="stat-val green" id="tot-remain">28</div>
+    <div class="stat-sub" id="remain-sub">28 day allowance</div>
+  </div>
+</div>
+
+<div class="sec-hd">Your trips</div>
+
+<div class="cards-container" id="cards">
+  <button class="add-card" onclick="addTrip()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    ADD TRIP
+  </button>
+</div>
+
+<script>
+const ALLOWANCE = 28;
+const trips = [
+  {
+    "dest": "China",
+    "start": "31/03/2026",
+    "end": "15/04/2026",
+    "ret": "17/04/2026",
+    "days": 5,
+    "lieu": 2,
+    "hol": 10,
+    "notes": "One Lieu from March 6th, One from additional hours. Working 25/04"
+  },
+  {
+    "dest": "Porto",
+    "start": "29/08/2026",
+    "end": "06/09/2026",
+    "ret": "07/09/2026",
+    "days": 4,
+    "lieu": 1,
+    "hol": 4,
+    "notes": "One Lieu from additional hours"
+  },
+  {
+    "dest": "Hamburg",
+    "start": "18/09/2026",
+    "end": "20/09/2026",
+    "ret": "21/09/2026",
+    "days": 2,
+    "lieu": 0,
+    "hol": 2,
+    "notes": ""
+  },
+  {
+    "dest": "Gothenburg",
+    "start": "09/10/2026",
+    "end": "11/10/2026",
+    "ret": "12/10/2026",
+    "days": 2,
+    "lieu": 1,
+    "hol": 0,
+    "notes": "One Lieu from additional hours"
+  },
+  {
+    "dest": "Cyprus",
+    "start": "23/12/2026",
+    "end": "30/12/2026",
+    "ret": "31/12/2026",
+    "days": 2,
+    "lieu": 1,
+    "hol": 4,
+    "notes": "One Lieu from additional hours."
+  },
+  {
+    "dest": "Hong Kong & Taiwan",
+    "start": "27/03/2027",
+    "end": "11/04/2027",
+    "ret": "12/04/2027",
+    "days": 0,
+    "lieu": 0,
+    "hol": 3,
+    "notes": "3 Holiday Days from 2025/26 Allowance - Remainder 2027"
+  }
+];
+
+function inp(val, cls, placeholder) {
+  const i = document.createElement('input');
+  i.type = 'text';
+  i.value = val !== undefined ? val : '';
+  if (placeholder) i.placeholder = placeholder;
+  if (cls) i.className = cls;
+  i.addEventListener('input', recalc);
+  return i;
+}
+
+function cell(label, content, cls) {
+  const d = document.createElement('div');
+  d.className = 'cell' + (cls ? ' ' + cls : '');
+  const l = document.createElement('div');
+  l.className = 'cell-label';
+  l.textContent = label;
+  d.appendChild(l);
+  d.appendChild(content);
+  return d;
+}
+
+function addTrip(data) {
+  const d = data || { dest: '', start: '', end: '', ret: '', days: '', lieu: '', hol: '', notes: '' };
+  const card = document.createElement('div');
+  card.className = 'trip-card';
+
+  const header = document.createElement('div');
+  header.className = 'card-header';
+  header.appendChild(cell('Destination', inp(d.dest, 'dest-input', 'e.g. Paris')));
+  header.appendChild(cell('Start date',  inp(d.start, '', 'dd/mm/yyyy')));
+  header.appendChild(cell('End date',    inp(d.end,   '', 'dd/mm/yyyy')));
+  header.appendChild(cell('Return date', inp(d.ret,   '', 'dd/mm/yyyy')));
+
+  const delCell = document.createElement('div');
+  delCell.className = 'cell del-cell';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'del-btn';
+  delBtn.title = 'Remove trip';
+  delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  delBtn.addEventListener('click', () => { card.remove(); recalc(); });
+  delCell.appendChild(delBtn);
+  header.appendChild(delCell);
+
+  const footer = document.createElement('div');
+  footer.className = 'card-footer';
+  footer.appendChild(cell('Days off',     inp(d.days, 'num-input',           '0'), 'num-cell'));
+  footer.appendChild(cell('Lieu time',    inp(d.lieu, 'num-input',           '0'), 'num-cell'));
+  footer.appendChild(cell('Holiday days', inp(d.hol,  'num-input hol-input', '0'), 'num-cell'));
+  footer.appendChild(cell('Notes',        inp(d.notes, '', 'Add a note…')));
+
+  card.appendChild(header);
+  card.appendChild(footer);
+
+  const container = document.getElementById('cards');
+  container.insertBefore(card, container.querySelector('.add-card'));
+  recalc();
+  if (!data) card.querySelector('input').focus();
+}
+
+function recalc() {
+  let days = 0, lieu = 0, hol = 0;
+  document.querySelectorAll('.trip-card').forEach(card => {
+    const nums = card.querySelectorAll('.num-input');
+    days += parseInt(nums[0]?.value) || 0;
+    lieu += parseInt(nums[1]?.value) || 0;
+    hol  += parseInt(nums[2]?.value) || 0;
+  });
+  const remaining = ALLOWANCE - hol;
+  document.getElementById('tot-days').textContent = days;
+  document.getElementById('tot-lieu').textContent = lieu;
+  document.getElementById('tot-hol').textContent  = hol;
+  document.getElementById('tot-remain').textContent = remaining;
+
+  const remainEl   = document.getElementById('tot-remain');
+  const remainStat = document.getElementById('remain-stat');
+  const remainSub  = document.getElementById('remain-sub');
+
+  if (remaining < 0) {
+    remainEl.className = 'stat-val red';
+    remainStat.classList.add('danger');
+    remainSub.textContent = Math.abs(remaining) + ' day' + (Math.abs(remaining) !== 1 ? 's' : '') + ' over allowance';
+  } else if (remaining <= 3) {
+    remainEl.className = 'stat-val orange';
+    remainStat.classList.remove('danger');
+    remainSub.textContent = remaining === 0 ? 'Allowance fully used' : remaining + ' day' + (remaining !== 1 ? 's' : '') + ' left';
+  } else {
+    remainEl.className = 'stat-val green';
+    remainStat.classList.remove('danger');
+    remainSub.textContent = remaining + ' of ' + ALLOWANCE + ' days remaining';
+  }
+}
+
+trips.forEach(addTrip);
+</script>
+</body>
+</html>
