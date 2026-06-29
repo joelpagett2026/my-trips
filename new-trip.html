@@ -1193,28 +1193,19 @@ function addDay(d) {
     const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
     bookedCell.style.alignItems = 'center';
     const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked';
-    const toggleWrap = document.createElement('div'); toggleWrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:4px;';
+    const cbWrap = document.createElement('label'); cbWrap.style.cssText = 'display:flex;align-items:center;gap:7px;cursor:pointer;margin-top:4px;';
     const toggle = document.createElement('input'); toggle.type = 'checkbox';
     toggle.dataset.key = 'tk_booked';
     toggle.checked = data.tk_booked === true || data.tk_booked === 'true';
-    toggle.style.cssText = 'display:none;'; // hidden — we use a custom slider
-    const slider = document.createElement('label');
-    slider.style.cssText = 'position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0;cursor:pointer;';
-    slider.innerHTML = '<span class="tk-slider-track" style="position:absolute;inset:0;border-radius:11px;background:#ddd;transition:background 0.2s;"></span><span class="tk-slider-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.2s;"></span>';
-    const track = slider.querySelector('.tk-slider-track');
-    const thumb = slider.querySelector('.tk-slider-thumb');
-    function updateSlider() {
-      if (toggle.checked) { track.style.background = '#34c759'; thumb.style.transform = 'translateX(16px)'; }
-      else { track.style.background = '#ddd'; thumb.style.transform = 'none'; }
-    }
-    updateSlider();
-    slider.addEventListener('click', () => { pushUndo(); toggle.checked = !toggle.checked; updateSlider(); scheduleSave(); });
-    const bookedTxt = document.createElement('span'); bookedTxt.style.cssText = 'font-size:11px;font-weight:600;color:#888;';
-    const updateBookedTxt = () => { bookedTxt.textContent = toggle.checked ? 'Booked' : 'Not booked'; bookedTxt.style.color = toggle.checked ? '#34c759' : '#aaa'; };
-    updateBookedTxt();
-    slider.addEventListener('click', updateBookedTxt);
-    toggleWrap.appendChild(toggle); toggleWrap.appendChild(slider); toggleWrap.appendChild(bookedTxt);
-    bookedCell.appendChild(bookedLbl); bookedCell.appendChild(toggleWrap);
+    toggle.style.cssText = 'appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:5px;border:2px solid #ccc;background:#fff;cursor:pointer;flex-shrink:0;transition:all 0.15s;position:relative;';
+    const updateCb = () => {
+      if (toggle.checked) { toggle.style.background = '#0e7a87'; toggle.style.borderColor = '#0e7a87'; toggle.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'20 6 9 17 4 12\'/%3E%3C/svg%3E")'; toggle.style.backgroundRepeat = 'no-repeat'; toggle.style.backgroundPosition = 'center'; }
+      else { toggle.style.background = '#fff'; toggle.style.borderColor = '#ccc'; toggle.style.backgroundImage = 'none'; }
+    };
+    updateCb();
+    toggle.addEventListener('change', () => { pushUndo(); updateCb(); scheduleSave(); });
+    cbWrap.appendChild(toggle);
+    bookedCell.appendChild(bookedLbl); bookedCell.appendChild(cbWrap);
     row.appendChild(bookedCell);
 
     // Delete
