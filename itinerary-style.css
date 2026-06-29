@@ -107,7 +107,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .s-itin .cell-lbl{color:#555555;}
 .s-tickets .row-inner{background:rgba(14,122,135,0.02);}
 .s-tickets .cell-lbl{color:#555555;}
-.s-tickets .row-inner{display:grid;grid-template-columns:2fr 1.2fr 0.6fr 0.7fr auto;}
+.s-tickets .row-inner{display:grid;grid-template-columns:2fr 1.2fr 0.6fr 0.7fr 0.5fr auto;}
 
 .row-inner{display:grid;}
 .cell{padding:8px 14px;border-right:0.5px solid rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:3px;}
