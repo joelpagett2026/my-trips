@@ -1214,7 +1214,7 @@ function addDay(d) {
     };
     const naBookedBtn = document.createElement('button');
     naBookedBtn.type = 'button'; naBookedBtn.textContent = 'N/A';
-    naBookedBtn.style.cssText = 'background:none;border:1.5px solid #ddd;border-radius:20px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;color:#bbb;padding:2px 7px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;';
+    naBookedBtn.style.cssText = 'background:none;border:1px solid #e0e0e0;border-radius:20px;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;color:#ccc;padding:1px 5px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;';
     const updateNA_booked = () => {
       const isNA = toggle.dataset.na === '1';
       if (isNA) { naBookedBtn.style.background='#f0f0f0';naBookedBtn.style.borderColor='#bbb';naBookedBtn.style.color='#888'; toggle.style.opacity='0.3';toggle.style.pointerEvents='none'; }
@@ -1248,7 +1248,7 @@ function addDay(d) {
     });
     const naTimeBtn = document.createElement('button');
     naTimeBtn.type = 'button'; naTimeBtn.textContent = 'N/A';
-    naTimeBtn.style.cssText = 'background:none;border:1.5px solid #ddd;border-radius:20px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;color:#bbb;padding:2px 7px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;flex-shrink:0;';
+    naTimeBtn.style.cssText = 'background:none;border:1px solid #e0e0e0;border-radius:20px;font-family:Montserrat,sans-serif;font-size:9px;font-weight:700;color:#ccc;padding:1px 5px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;flex-shrink:0;';
     const isTimeNA = data.tk_time === 'na';
     const updateNA_time = () => {
       const isNA = timeInp.dataset.na === '1';
