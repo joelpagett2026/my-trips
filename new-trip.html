@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=77">
+<link rel="stylesheet" href="/itinerary-style.css?v=78">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -233,7 +233,10 @@ function collectState() {
   // Sync all bullet lists into their hidden inputs first
   document.querySelectorAll('.bullet-list').forEach(bl => {
     const hidden = bl.parentElement.querySelector('.bullet-hidden');
-    if (hidden) hidden.value = Array.from(bl.querySelectorAll('input')).map(i => i.value).join('\n');
+    if (hidden) hidden.value = Array.from(bl.querySelectorAll('.bullet-row-inp')).map(inp => {
+      const url = inp.parentElement.querySelector('.bullet-url')?.value || '';
+      return url ? inp.value + '|||' + url : inp.value;
+    }).join('\n');
   });
   const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
   const mapsUrl = document.getElementById('maps-url-val').value || '';
@@ -948,7 +951,7 @@ function addDay(d) {
     bulletList.className = 'bullet-list';
     block.appendChild(bulletList);
 
-    function addBulletRow(val, focusIt) {
+    function addBulletRow(val, focusIt, ticketUrl) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:flex-start;gap:7px;margin-bottom:2px;';
       const dot = document.createElement('div');
@@ -961,27 +964,110 @@ function addDay(d) {
       i.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === 'Tab') {
           e.preventDefault();
-          // If this is the last row, add a new one; otherwise move to next
-          const rows = Array.from(bulletList.querySelectorAll('input'));
+          const rows = Array.from(bulletList.querySelectorAll('.bullet-row-inp'));
           const idx = rows.indexOf(i);
-          if (idx === rows.length - 1) {
-            const newRow = addBulletRow('', true);
-          } else {
-            rows[idx + 1].focus();
-          }
+          if (idx === rows.length - 1) { addBulletRow('', true); }
+          else { rows[idx + 1].focus(); }
         } else if (e.key === 'Backspace' && i.value === '') {
-          // Remove empty row on backspace, focus previous
-          const rows = Array.from(bulletList.querySelectorAll('input'));
+          const rows = Array.from(bulletList.querySelectorAll('.bullet-row-inp'));
           const idx = rows.indexOf(i);
           if (rows.length > 1) {
-            e.preventDefault();
-            row.remove();
+            e.preventDefault(); row.remove();
             rows[Math.max(0, idx - 1)].focus();
             scheduleSave();
           }
         }
       });
-      row.appendChild(dot); row.appendChild(i);
+      i.className = 'bullet-row-inp';
+
+      // Ticket link button
+      const ticketBtn = document.createElement('button');
+      ticketBtn.type = 'button';
+      ticketBtn.title = 'Add ticket link';
+      ticketBtn.style.cssText = 'background:none;border:none;cursor:pointer;flex-shrink:0;padding:2px;border-radius:4px;display:flex;align-items:center;opacity:0.25;transition:opacity 0.15s;margin-top:3px;';
+      ticketBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+
+      // Hidden URL store per row
+      const urlStore = document.createElement('input');
+      urlStore.type = 'hidden'; urlStore.className = 'bullet-url';
+      urlStore.value = ticketUrl || '';
+
+      function updateTicketBtn() {
+        const url = urlStore.value;
+        if (url) {
+          ticketBtn.style.opacity = '1';
+          ticketBtn.style.color = '#0e7a87';
+          ticketBtn.title = 'Open ticket / Edit link';
+        } else {
+          ticketBtn.style.opacity = '0.25';
+          ticketBtn.style.color = '';
+          ticketBtn.title = 'Add ticket link';
+        }
+      }
+      updateTicketBtn();
+
+      ticketBtn.addEventListener('click', () => {
+        const url = urlStore.value;
+        // If URL set and not shift-clicking, open it; shift-click to edit
+        if (url && !ticketBtn._editing) {
+          window.open(url, '_blank');
+        } else {
+          // Show inline edit
+          ticketBtn._editing = true;
+          const existing = urlStore.value;
+          const inp2 = document.createElement('input');
+          inp2.type = 'url'; inp2.value = existing;
+          inp2.placeholder = 'https://…';
+          inp2.style.cssText = 'position:absolute;z-index:50;background:#fff;border:1.5px solid #0e7a87;border-radius:8px;padding:6px 10px;font-family:Montserrat,sans-serif;font-size:12px;color:#444;outline:none;box-shadow:0 4px 16px rgba(0,0,0,0.12);width:220px;font-size:16px;';
+          // Position below the button
+          const rect = ticketBtn.getBoundingClientRect();
+          inp2.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+          inp2.style.left = Math.max(4, rect.left - 180) + 'px';
+          inp2.style.position = 'fixed';
+          inp2.style.top = (rect.bottom + 4) + 'px';
+
+          const wrap2 = document.createElement('div');
+          wrap2.style.cssText = 'position:fixed;z-index:50;display:flex;flex-direction:column;gap:4px;background:#fff;border:1.5px solid #0e7a87;border-radius:10px;padding:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:240px;';
+          wrap2.style.top = (rect.bottom + 4) + 'px';
+          wrap2.style.left = Math.max(4, rect.left - 160) + 'px';
+
+          const lbl = document.createElement('div');
+          lbl.style.cssText = 'font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;';
+          lbl.textContent = 'Ticket / Booking link';
+
+          const urlInp = document.createElement('input');
+          urlInp.type = 'url'; urlInp.value = urlStore.value;
+          urlInp.placeholder = 'https://…';
+          urlInp.style.cssText = 'border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;outline:none;width:100%;box-sizing:border-box;';
+
+          const btnRow = document.createElement('div');
+          btnRow.style.cssText = 'display:flex;gap:6px;margin-top:2px;';
+
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button'; saveBtn.textContent = 'Save';
+          saveBtn.style.cssText = 'flex:1;background:#0e7a87;color:#fff;border:none;border-radius:6px;padding:6px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
+          saveBtn.onclick = () => { urlStore.value = urlInp.value.trim(); updateTicketBtn(); scheduleSave(); wrap2.remove(); ticketBtn._editing = false; };
+
+          const clearBtn = document.createElement('button');
+          clearBtn.type = 'button'; clearBtn.textContent = 'Clear';
+          clearBtn.style.cssText = 'background:#f0f0f0;color:#888;border:none;border-radius:6px;padding:6px 10px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:600;cursor:pointer;';
+          clearBtn.onclick = () => { urlStore.value = ''; updateTicketBtn(); scheduleSave(); wrap2.remove(); ticketBtn._editing = false; };
+
+          btnRow.appendChild(saveBtn); btnRow.appendChild(clearBtn);
+          wrap2.appendChild(lbl); wrap2.appendChild(urlInp); wrap2.appendChild(btnRow);
+          document.body.appendChild(wrap2);
+          urlInp.focus();
+
+          const close = (e) => { if (!wrap2.contains(e.target) && e.target !== ticketBtn) { wrap2.remove(); ticketBtn._editing = false; document.removeEventListener('mousedown', close); } };
+          setTimeout(() => document.addEventListener('mousedown', close), 100);
+          urlInp.addEventListener('keydown', e => { if (e.key === 'Enter') saveBtn.click(); if (e.key === 'Escape') { wrap2.remove(); ticketBtn._editing = false; } });
+        }
+      });
+
+      // Right-click / long-press on ticket btn to edit even when URL set
+      ticketBtn.addEventListener('contextmenu', e => { e.preventDefault(); ticketBtn._editing = true; ticketBtn.click(); });
+
+      row.appendChild(dot); row.appendChild(i); row.appendChild(ticketBtn); row.appendChild(urlStore);
       bulletList.appendChild(row);
       if (focusIt) setTimeout(() => i.focus(), 0);
       return row;
@@ -990,8 +1076,14 @@ function addDay(d) {
     // Restore existing lines or start with one blank bullet
     const existing = data['act_' + period] || '';
     const lines = existing.split('\n').filter(l => l.trim() !== '');
-    if (lines.length > 0) { lines.forEach(l => addBulletRow(l)); }
-    else { addBulletRow(''); }
+    if (lines.length > 0) {
+      lines.forEach(l => {
+        const sep = l.indexOf('|||');
+        const text = sep >= 0 ? l.slice(0, sep) : l;
+        const url  = sep >= 0 ? l.slice(sep + 3) : '';
+        addBulletRow(text, false, url);
+      });
+    } else { addBulletRow(''); }
 
     // Hidden input to hold serialised value for collectState
     const hidden = document.createElement('input');
@@ -1002,7 +1094,10 @@ function addDay(d) {
     // Keep hidden in sync before save
     const origCollect = scheduleSave;
     bulletList.addEventListener('input', () => {
-      hidden.value = Array.from(bulletList.querySelectorAll('input')).map(i => i.value).join('\n');
+      hidden.value = Array.from(bulletList.querySelectorAll('.bullet-row-inp')).map(inp => {
+        const url = inp.parentElement.querySelector('.bullet-url')?.value || '';
+        return url ? inp.value + '|||' + url : inp.value;
+      }).join('\n');
     });
     // Sync once on load
     hidden.value = lines.join('\n');
