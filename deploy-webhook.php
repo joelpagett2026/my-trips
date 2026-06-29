@@ -114,8 +114,11 @@ const RECORD_ID = slug;";
         $page = str_replace($placeholder, $baked, $template);
         $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($trip['dest']) . ' · Itinerary</title>', $page);
 
-        $outPath = PUBLIC_HTML . '/trips/' . $trip['filename'];
-        if (file_put_contents($outPath, $page) !== false) {
+        $outPath     = PUBLIC_HTML . '/trips/' . $trip['filename'];
+        $outPathRoot = PUBLIC_HTML . '/' . $trip['filename'];
+        $written = file_put_contents($outPath, $page);
+        file_put_contents($outPathRoot, $page); // keep root copy in sync
+        if ($written !== false) {
             $regenerated[] = $trip['filename'];
         } else {
             $regen_failed[] = $trip['filename'];
