@@ -128,7 +128,7 @@ const RECORD_ID = slug;";
 
 // ── COPY CORE + NON-ITINERARY FILES FROM REPO ────────────────────────
 $coreFiles = [
-    'api.php', 'auth.js', 'db.js', 'datepicker.js', 'chat-widget.js',
+    'api.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'deploy-webhook.php',
     'index.html', 'new-trip.html', 'settings.html',
 ];
