@@ -197,3 +197,103 @@ body {
   letter-spacing: 0.03em; transition: all 0.15s; width: 100%;
 }
 .add-card:hover { border-color: #0e7a87; color: #0e7a87; background: rgba(14,122,135,0.04); }
+
+/* ── PRINT STYLES ── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  body { background: #fff !important; color: #222 !important; font-size: 11px; }
+
+  .nav, .year-tabs, .add-card, .del-btn, .del-cell, .nav-btn { display: none !important; }
+
+  .large-title-area { padding: 0 0 8px; }
+  .large-title { font-size: 20px; color: #222 !important; }
+  .large-title svg { display: none; }
+  .large-subtitle { font-size: 11px; color: #555 !important; }
+
+  .stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(4,1fr) !important;
+    gap: 8px !important;
+    padding: 10px 0 !important;
+  }
+
+  .stat-card {
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    box-shadow: none !important;
+  }
+  .stat-card::before { height: 2px !important; }
+  .stat-card.hol-stat::before { background: #ff9500 !important; }
+  .stat-card.remain-stat::before { background: #34c759 !important; }
+  .stat-card.remain-stat.danger::before { background: #ff3b30 !important; }
+
+  .stat-val { font-size: 22px !important; }
+  .stat-lbl { font-size: 8px !important; opacity: 1 !important; color: #666 !important; }
+  .stat-sub { font-size: 8px !important; color: #888 !important; }
+
+  .sec-hd { font-size: 13px !important; padding: 8px 0 6px !important; color: #222 !important; }
+
+  .cards-container { padding: 0 !important; gap: 7px !important; }
+
+  .trip-card {
+    border: 1px solid #ddd !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .card-header {
+    grid-template-columns: 180px 1fr 1fr 1fr !important;
+  }
+
+  .cell { padding: 7px 10px !important; }
+  .cell-label { font-size: 7.5px !important; color: #888 !important; }
+
+  .cell input.dest-input { font-size: 12px !important; font-weight: 700 !important; color: #0e7a87 !important; }
+  .cell input { font-size: 11px !important; color: #222 !important; }
+  .cell input.num-input { font-size: 14px !important; font-weight: 700 !important; color: #0e7a87 !important; }
+  .cell input.hol-input { color: #e07b08 !important; }
+
+  .card-footer {
+    grid-template-columns: 90px 90px 90px 1fr !important;
+    background: #f8f8f8 !important;
+  }
+
+  .print-footer {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+    font-size: 9px;
+    color: #aaa;
+  }
+
+  .print-sig {
+    display: flex !important;
+    gap: 40px;
+    margin-top: 16px;
+  }
+  .print-sig-block {
+    flex: 1;
+    border-top: 1px solid #bbb;
+    padding-top: 4px;
+    font-size: 9px;
+    color: #888;
+  }
+}
+
+/* Hidden on screen, shown on print */
+.print-footer, .print-sig, .print-sig-block { display: none; }
+
+/* Print button style */
+.nav-btn.print-btn {
+  background: transparent;
+  color: #0e7a87;
+  border: 1.5px solid #0e7a87;
+}
+.nav-btn.print-btn:hover { background: rgba(14,122,135,0.08); }
