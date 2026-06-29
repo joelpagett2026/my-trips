@@ -29,7 +29,7 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Planning
       </button>
-    </div><button class="nav-btn maps-btn" id="maps-btn" onclick="handleMapsBtn()" title="Google Maps"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text" id="maps-btn-text">Maps</span></button><input type="hidden" id="maps-url-val"><div id="maps-popover" style="display:none;position:fixed;top:56px;right:12px;z-index:200;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);padding:14px 16px;width:320px;"><div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Google Maps URL</div><input id="maps-url-inp" type="url" placeholder="https://maps.app.goo.gl/…" style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;outline:none;box-sizing:border-box;" oninput="document.getElementById('maps-url-val').value=this.value;scheduleSave();updateMapsBtn();"><div style="display:flex;gap:8px;margin-top:10px;"><button onclick="if(document.getElementById('maps-url-val').value){window.open(document.getElementById('maps-url-val').value,'_blank');}closeMapsPopover();" style="flex:1;background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:8px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Open Maps</button><button onclick="document.getElementById('maps-url-inp').value='';document.getElementById('maps-url-val').value='';scheduleSave();updateMapsBtn();closeMapsPopover();" style="background:#f0f0f0;color:#666;border:none;border-radius:8px;padding:8px 12px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Clear</button><button onclick="closeMapsPopover();" style="background:#f0f0f0;color:#666;border:none;border-radius:8px;padding:8px 12px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Done</button></div></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="nav-btn-text">Save</span></button><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span class="nav-btn-text">Undo</span></button><button class="nav-btn danger" onclick="deleteTrip()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span class="nav-btn-text">Delete</span></button></div>
+    </div><span id="maps-nav-wrap" style="display:none;align-items:center;gap:4px;"><a id="maps-link-btn" href="#" target="_blank" class="nav-btn maps-btn has-url" title="Open Google Maps"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></a><button id="maps-edit-btn" onclick="openMapsPopover()" title="Edit Maps link" style="background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,0.45);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color 0.15s;" onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></span><button id="maps-add-btn" onclick="openMapsPopover()" class="nav-btn maps-btn" title="Add Google Maps link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></button><input type="hidden" id="maps-url-val"><div id="maps-popover" style="display:none;position:fixed;top:56px;right:12px;z-index:200;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);padding:14px 16px;width:300px;"><div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Google Maps link</div><input id="maps-url-inp" type="url" placeholder="https://maps.app.goo.gl/…" style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;outline:none;box-sizing:border-box;font-size:16px;" oninput="setMapsUrl(this.value)"><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;"><button onclick="clearMapsUrl()" style="background:none;border:none;color:#bbb;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;padding:0;">Clear link</button><button onclick="closeMapsPopover()" style="background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button></div></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="nav-btn-text">Save</span></button><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span class="nav-btn-text">Undo</span></button><button class="nav-btn danger" onclick="deleteTrip()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span class="nav-btn-text">Delete</span></button></div>
 </div>
 
 <div style="background:linear-gradient(135deg,#0e7a87,#0d9e8c);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -997,29 +997,44 @@ function restoreState(state) {
   if (state.days) state.days.forEach(d => addDay(d));
 }
 function updateMapsBtn() {
-  const url = document.getElementById('maps-url-val').value;
-  const btn  = document.getElementById('maps-btn');
-  const text = document.getElementById('maps-btn-text');
-  if (url) { btn.classList.add('has-url'); text.textContent = 'Maps'; }
-  else      { btn.classList.remove('has-url'); text.textContent = 'Maps'; }
-}
-function handleMapsBtn() {
-  const url = document.getElementById('maps-url-val').value;
-  const pop = document.getElementById('maps-popover');
-  if (pop.style.display === 'none') {
-    pop.style.display = 'block';
-    document.getElementById('maps-url-inp').focus();
+  const url  = document.getElementById('maps-url-val').value;
+  const wrap = document.getElementById('maps-nav-wrap');
+  const addBtn = document.getElementById('maps-add-btn');
+  const link = document.getElementById('maps-link-btn');
+  if (url) {
+    wrap.style.display = 'flex';
+    addBtn.style.display = 'none';
+    link.href = url;
   } else {
-    closeMapsPopover();
+    wrap.style.display = 'none';
+    addBtn.style.display = '';
   }
+}
+function setMapsUrl(val) {
+  document.getElementById('maps-url-val').value = val;
+  scheduleSave();
+  updateMapsBtn();
+}
+function clearMapsUrl() {
+  document.getElementById('maps-url-inp').value = '';
+  document.getElementById('maps-url-val').value = '';
+  scheduleSave();
+  updateMapsBtn();
+  closeMapsPopover();
+}
+function openMapsPopover() {
+  const pop = document.getElementById('maps-popover');
+  pop.style.display = 'block';
+  document.getElementById('maps-url-inp').focus();
 }
 function closeMapsPopover() {
   document.getElementById('maps-popover').style.display = 'none';
 }
 document.addEventListener('click', e => {
-  const pop = document.getElementById('maps-popover');
-  const btn = document.getElementById('maps-btn');
-  if (pop && pop.style.display !== 'none' && !pop.contains(e.target) && !btn.contains(e.target)) closeMapsPopover();
+  const pop     = document.getElementById('maps-popover');
+  const addBtn  = document.getElementById('maps-add-btn');
+  const editBtn = document.getElementById('maps-edit-btn');
+  if (pop && pop.style.display !== 'none' && !pop.contains(e.target) && !addBtn.contains(e.target) && !editBtn.contains(e.target)) closeMapsPopover();
 });
 document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", scheduleSave); });
 renderStatusToggle(); // Show correct badge immediately on load
