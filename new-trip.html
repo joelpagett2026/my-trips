@@ -274,7 +274,15 @@ function collectState() {
     obj._itinRemoved  = !card.querySelector('.s-itin');
     obj._ticketsRemoved = !card.querySelector('.s-tickets');
     obj._tickets = Array.from(card.querySelectorAll('.ticket-row')).map(row => {
-      const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.type === 'checkbox' ? el.checked : el.value; }); return o;
+      const o = {};
+      row.querySelectorAll('[data-key]').forEach(el => {
+        if (el.type === 'checkbox') {
+          o[el.dataset.key] = el.dataset.na === '1' ? 'na' : el.checked;
+        } else {
+          o[el.dataset.key] = el.dataset.na === '1' ? 'na' : el.value;
+        }
+      });
+      return o;
     });
     obj._periods = Array.from(card.querySelectorAll('[data-period]')).map(b => b.dataset.period);
     return obj;
@@ -1190,56 +1198,45 @@ function addDay(d) {
     row.appendChild(priceCell);
 
     // Booked toggle
-    // Booked cell — dismissable
-    const bookedHidden = document.createElement('input'); bookedHidden.type = 'hidden'; bookedHidden.dataset.key = 'tk_booked_hidden'; bookedHidden.value = data.tk_booked_hidden || '';
-    row.appendChild(bookedHidden);
+    // Booked cell — with N/A option
     const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
     bookedCell.style.alignItems = 'center';
-    const bookedVisible = data.tk_booked_hidden !== 'removed';
-    const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl';
-    bookedLbl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
-    const bookedLblTxt = document.createElement('span'); bookedLblTxt.textContent = 'Booked';
-    const bookedX = document.createElement('button');
-    bookedX.innerHTML = '&times;'; bookedX.title = 'Remove';
-    bookedX.style.cssText = 'background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;line-height:1;padding:0;margin-left:4px;';
-    bookedX.onmouseover = () => bookedX.style.color = '#ff3b30';
-    bookedX.onmouseout  = () => bookedX.style.color = '#ccc';
-    bookedLbl.appendChild(bookedLblTxt); bookedLbl.appendChild(bookedX);
-    const cbWrap = document.createElement('label'); cbWrap.style.cssText = 'display:flex;align-items:center;gap:7px;cursor:pointer;margin-top:4px;';
+    const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked';
+    const isBookedNA = data.tk_booked === 'na';
+    const cbWrap = document.createElement('div'); cbWrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:4px;';
     const toggle = document.createElement('input'); toggle.type = 'checkbox';
     toggle.dataset.key = 'tk_booked';
     toggle.checked = data.tk_booked === true || data.tk_booked === 'true';
-    toggle.style.cssText = 'appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:5px;border:2px solid #ccc;background:#fff;cursor:pointer;flex-shrink:0;transition:all 0.15s;position:relative;';
+    toggle.style.cssText = 'appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:5px;border:2px solid #ccc;background:#fff;cursor:pointer;flex-shrink:0;transition:all 0.15s;';
     const updateCb = () => {
-      if (toggle.checked) { toggle.style.background = '#0e7a87'; toggle.style.borderColor = '#0e7a87'; toggle.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'20 6 9 17 4 12\'/%3E%3C/svg%3E")'; toggle.style.backgroundRepeat = 'no-repeat'; toggle.style.backgroundPosition = 'center'; }
-      else { toggle.style.background = '#fff'; toggle.style.borderColor = '#ccc'; toggle.style.backgroundImage = 'none'; }
+      if (toggle.checked) { toggle.style.background='#0e7a87';toggle.style.borderColor='#0e7a87';toggle.style.backgroundImage='url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'3\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'20 6 9 17 4 12\'/%3E%3C/svg%3E")';toggle.style.backgroundRepeat='no-repeat';toggle.style.backgroundPosition='center'; }
+      else { toggle.style.background='#fff';toggle.style.borderColor='#ccc';toggle.style.backgroundImage='none'; }
     };
-    updateCb();
-    toggle.addEventListener('change', () => { pushUndo(); updateCb(); scheduleSave(); });
-    cbWrap.appendChild(toggle);
-    const bookedInner = document.createElement('div');
-    bookedInner.appendChild(bookedLbl); bookedInner.appendChild(cbWrap);
-    const bookedPlaceholder = document.createElement('div');
-    bookedPlaceholder.style.cssText = 'display:none;';
-    bookedX.onclick = () => { pushUndo(); bookedInner.style.display = 'none'; bookedHidden.value = 'removed'; scheduleSave(); };
-    if (!bookedVisible) bookedInner.style.display = 'none';
-    bookedCell.appendChild(bookedInner); bookedCell.appendChild(bookedPlaceholder);
+    const naBookedBtn = document.createElement('button');
+    naBookedBtn.type = 'button'; naBookedBtn.textContent = 'N/A';
+    naBookedBtn.style.cssText = 'background:none;border:1.5px solid #ddd;border-radius:20px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;color:#bbb;padding:2px 7px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;';
+    const updateNA_booked = () => {
+      const isNA = toggle.dataset.na === '1';
+      if (isNA) { naBookedBtn.style.background='#f0f0f0';naBookedBtn.style.borderColor='#bbb';naBookedBtn.style.color='#888'; toggle.style.opacity='0.3';toggle.style.pointerEvents='none'; }
+      else { naBookedBtn.style.background='none';naBookedBtn.style.borderColor='#ddd';naBookedBtn.style.color='#bbb'; toggle.style.opacity='1';toggle.style.pointerEvents=''; }
+    };
+    if (isBookedNA) { toggle.dataset.na = '1'; toggle.dataset.key = 'tk_booked'; toggle.value = 'na'; }
+    updateNA_booked(); updateCb();
+    toggle.addEventListener('change', () => { pushUndo(); toggle.dataset.na = ''; updateCb(); updateNA_booked(); scheduleSave(); });
+    naBookedBtn.addEventListener('click', () => {
+      pushUndo();
+      if (toggle.dataset.na === '1') { toggle.dataset.na = ''; }
+      else { toggle.dataset.na = '1'; toggle.checked = false; updateCb(); }
+      updateNA_booked(); scheduleSave();
+    });
+    cbWrap.appendChild(toggle); cbWrap.appendChild(naBookedBtn);
+    bookedCell.appendChild(bookedLbl); bookedCell.appendChild(cbWrap);
     row.appendChild(bookedCell);
 
-    // Time cell — dismissable
-    const timeHidden = document.createElement('input'); timeHidden.type = 'hidden'; timeHidden.dataset.key = 'tk_time_hidden'; timeHidden.value = data.tk_time_hidden || '';
-    row.appendChild(timeHidden);
+    // Time cell — with N/A option
     const timeCell = document.createElement('div'); timeCell.className = 'cell';
-    const timeVisible = data.tk_time_hidden !== 'removed';
-    const timeLblWrap = document.createElement('div'); timeLblWrap.className = 'cell-lbl';
-    timeLblWrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
-    const timeLblTxt = document.createElement('span'); timeLblTxt.textContent = 'Time';
-    const timeX = document.createElement('button');
-    timeX.innerHTML = '&times;'; timeX.title = 'Remove';
-    timeX.style.cssText = 'background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;line-height:1;padding:0;margin-left:4px;';
-    timeX.onmouseover = () => timeX.style.color = '#ff3b30';
-    timeX.onmouseout  = () => timeX.style.color = '#ccc';
-    timeLblWrap.appendChild(timeLblTxt); timeLblWrap.appendChild(timeX);
+    const timeLbl = document.createElement('div'); timeLbl.className = 'cell-lbl'; timeLbl.textContent = 'Time';
+    const timeWrap = document.createElement('div'); timeWrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:2px;';
     const timeInp = document.createElement('input');
     timeInp.type = 'text'; timeInp.inputMode = 'numeric'; timeInp.maxLength = 5;
     timeInp.value = data.tk_time || ''; timeInp.dataset.key = 'tk_time';
@@ -1249,11 +1246,25 @@ function addDay(d) {
       if (v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2,4);
       timeInp.value = v; scheduleSave();
     });
-    const timeInner = document.createElement('div');
-    timeInner.appendChild(timeLblWrap); timeInner.appendChild(timeInp);
-    timeX.onclick = () => { pushUndo(); timeInner.style.display = 'none'; timeHidden.value = 'removed'; scheduleSave(); };
-    if (!timeVisible) timeInner.style.display = 'none';
-    timeCell.appendChild(timeInner);
+    const naTimeBtn = document.createElement('button');
+    naTimeBtn.type = 'button'; naTimeBtn.textContent = 'N/A';
+    naTimeBtn.style.cssText = 'background:none;border:1.5px solid #ddd;border-radius:20px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;color:#bbb;padding:2px 7px;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;flex-shrink:0;';
+    const isTimeNA = data.tk_time === 'na';
+    const updateNA_time = () => {
+      const isNA = timeInp.dataset.na === '1';
+      if (isNA) { naTimeBtn.style.background='#f0f0f0';naTimeBtn.style.borderColor='#bbb';naTimeBtn.style.color='#888'; timeInp.style.opacity='0.3';timeInp.style.pointerEvents='none'; timeInp.placeholder='N/A'; }
+      else { naTimeBtn.style.background='none';naTimeBtn.style.borderColor='#ddd';naTimeBtn.style.color='#bbb'; timeInp.style.opacity='1';timeInp.style.pointerEvents=''; timeInp.placeholder='09:00'; }
+    };
+    if (isTimeNA) { timeInp.dataset.na = '1'; timeInp.value = ''; }
+    updateNA_time();
+    naTimeBtn.addEventListener('click', () => {
+      pushUndo();
+      if (timeInp.dataset.na === '1') { timeInp.dataset.na = ''; timeInp.value = data.tk_time !== 'na' ? (data.tk_time || '') : ''; }
+      else { timeInp.dataset.na = '1'; timeInp.value = ''; }
+      updateNA_time(); scheduleSave();
+    });
+    timeWrap.appendChild(timeInp); timeWrap.appendChild(naTimeBtn);
+    timeCell.appendChild(timeLbl); timeCell.appendChild(timeWrap);
     row.appendChild(timeCell);
 
     row.appendChild(delBtn(() => { row.remove(); recalc(); }));
