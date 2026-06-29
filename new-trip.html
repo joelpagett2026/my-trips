@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=78">
+<link rel="stylesheet" href="/itinerary-style.css?v=79">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -57,12 +57,28 @@
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.5" opacity="0.3"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
 </div>
 
-<div id="acc-total-box" style="display:none;margin:0 20px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+<div id="acc-total-box" style="display:none;margin:0 20px 10px;background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
   <div>
     <div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Accommodation Total</div>
     <div id="acc-total-val" style="font-size:20px;font-weight:600;color:#0e7a87;letter-spacing:-0.3px;">£0.00</div>
   </div>
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.5" opacity="0.3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+</div>
+
+<div id="tickets-total-box" style="display:none;margin:0 20px 10px;background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Things To Do Total</div>
+    <div id="tickets-total-val" style="font-size:20px;font-weight:600;color:#0e7a87;letter-spacing:-0.3px;">£0.00</div>
+  </div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="1.5" opacity="0.3"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+</div>
+
+<div id="grand-total-box" style="display:none;margin:0 20px 12px;background:#0e7a87;border-radius:14px;box-shadow:0 2px 8px rgba(14,122,135,0.25);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Grand Total</div>
+    <div id="grand-total-val" style="font-size:24px;font-weight:700;color:#fff;letter-spacing:-0.5px;">£0.00</div>
+  </div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.4"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
 </div>
 
 <button class="add-day" onclick="pushUndo(); addDay();">
@@ -256,6 +272,10 @@ function collectState() {
     obj._accRemoved   = !card.querySelector('.s-acc');
     obj._foodRemoved  = !card.querySelector('.s-food');
     obj._itinRemoved  = !card.querySelector('.s-itin');
+    obj._ticketsRemoved = !card.querySelector('.s-tickets');
+    obj._tickets = Array.from(card.querySelectorAll('.ticket-row')).map(row => {
+      const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.type === 'checkbox' ? el.checked : el.value; }); return o;
+    });
     obj._periods = Array.from(card.querySelectorAll('[data-period]')).map(b => b.dataset.period);
     return obj;
   });
@@ -1113,6 +1133,101 @@ function addDay(d) {
   is_.appendChild(periodsRow);
   card.appendChild(is_);
   } // end !_itinRemoved
+
+  // ── TICKETS SECTION ───────────────────────────────────────────────
+  if (d._ticketsRemoved !== true) {
+  const tks = document.createElement('div'); tks.className = 's-tickets';
+  const tkb = document.createElement('div'); tkb.className = 'sec-bar';
+  const tkDelBtn = document.createElement('button'); tkDelBtn.className = 'del-sec-btn'; tkDelBtn.innerHTML = '&times;';
+  tkDelBtn.onclick = () => { pushUndo(); tks.remove(); scheduleSave(); };
+  const tkAddBtn = document.createElement('button'); tkAddBtn.className = 'add-row-btn'; tkAddBtn.textContent = '+';
+  tkb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg><span class="sec-label"><span class="sec-label-text">Tickets</span></span>';
+  tkb.appendChild(tkAddBtn); tkb.appendChild(tkDelBtn);
+  tks.appendChild(tkb);
+  const tkRows = document.createElement('div');
+
+  function makeTicketRow(data) {
+    data = data || {};
+    const row = document.createElement('div'); row.className = 'row-inner ticket-row';
+    row.style.gridTemplateColumns = '2fr 1.2fr 0.6fr 0.7fr auto';
+
+    // Attraction
+    const attrCell = document.createElement('div'); attrCell.className = 'cell';
+    const attrLbl = document.createElement('div'); attrLbl.className = 'cell-lbl'; attrLbl.textContent = 'Attraction / Experience';
+    const attrInp = inp(data.tk_name, 'tk_name', 'bold', '');
+    attrCell.appendChild(attrLbl); attrCell.appendChild(attrInp); row.appendChild(attrCell);
+
+    // Booking link
+    const linkCell = document.createElement('div'); linkCell.className = 'cell';
+    const linkLbl = document.createElement('div'); linkLbl.className = 'cell-lbl'; linkLbl.textContent = 'Booking Link';
+    const linkInp = inp(data.tk_link, 'tk_link', '', '');
+    linkInp.placeholder = 'https://…';
+    linkInp.style.cssText = 'font-size:12px;color:#0e7a87;';
+    const openLink = document.createElement('a');
+    openLink.style.cssText = 'font-size:10px;color:#0e7a87;text-decoration:none;display:none;align-items:center;gap:3px;margin-top:2px;';
+    openLink.target = '_blank';
+    openLink.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open';
+    const updateOpenLink = () => {
+      const v = linkInp.value.trim();
+      if (v) { openLink.href = v; openLink.style.display = 'flex'; }
+      else { openLink.style.display = 'none'; }
+    };
+    linkInp.addEventListener('input', () => { updateOpenLink(); scheduleSave(); recalc(); });
+    updateOpenLink();
+    linkCell.appendChild(linkLbl); linkCell.appendChild(linkInp); linkCell.appendChild(openLink);
+    row.appendChild(linkCell);
+
+    // Price per ticket
+    const priceCell = document.createElement('div'); priceCell.className = 'cell';
+    const priceLbl = document.createElement('div'); priceLbl.className = 'cell-lbl'; priceLbl.textContent = 'Price / Ticket';
+    const priceWrap = document.createElement('div'); priceWrap.style.cssText = 'display:flex;align-items:center;gap:2px;';
+    const pfx = document.createElement('span'); pfx.textContent = '£'; pfx.style.cssText = 'font-size:13px;color:#333;flex-shrink:0;';
+    const priceInp = inp(data.tk_price, 'tk_price', '', '');
+    priceInp.inputMode = 'decimal';
+    priceInp.addEventListener('input', () => { scheduleSave(); recalc(); });
+    priceWrap.appendChild(pfx); priceWrap.appendChild(priceInp);
+    priceCell.appendChild(priceLbl); priceCell.appendChild(priceWrap);
+    row.appendChild(priceCell);
+
+    // Booked toggle
+    const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
+    bookedCell.style.alignItems = 'center';
+    const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked';
+    const toggleWrap = document.createElement('div'); toggleWrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:4px;';
+    const toggle = document.createElement('input'); toggle.type = 'checkbox';
+    toggle.dataset.key = 'tk_booked';
+    toggle.checked = data.tk_booked === true || data.tk_booked === 'true';
+    toggle.style.cssText = 'display:none;'; // hidden — we use a custom slider
+    const slider = document.createElement('label');
+    slider.style.cssText = 'position:relative;display:inline-block;width:38px;height:22px;flex-shrink:0;cursor:pointer;';
+    slider.innerHTML = '<span class="tk-slider-track" style="position:absolute;inset:0;border-radius:11px;background:#ddd;transition:background 0.2s;"></span><span class="tk-slider-thumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.2s;"></span>';
+    const track = slider.querySelector('.tk-slider-track');
+    const thumb = slider.querySelector('.tk-slider-thumb');
+    function updateSlider() {
+      if (toggle.checked) { track.style.background = '#34c759'; thumb.style.transform = 'translateX(16px)'; }
+      else { track.style.background = '#ddd'; thumb.style.transform = 'none'; }
+    }
+    updateSlider();
+    slider.addEventListener('click', () => { pushUndo(); toggle.checked = !toggle.checked; updateSlider(); scheduleSave(); });
+    const bookedTxt = document.createElement('span'); bookedTxt.style.cssText = 'font-size:11px;font-weight:600;color:#888;';
+    const updateBookedTxt = () => { bookedTxt.textContent = toggle.checked ? 'Booked' : 'Not booked'; bookedTxt.style.color = toggle.checked ? '#34c759' : '#aaa'; };
+    updateBookedTxt();
+    slider.addEventListener('click', updateBookedTxt);
+    toggleWrap.appendChild(toggle); toggleWrap.appendChild(slider); toggleWrap.appendChild(bookedTxt);
+    bookedCell.appendChild(bookedLbl); bookedCell.appendChild(toggleWrap);
+    row.appendChild(bookedCell);
+
+    // Delete
+    row.appendChild(delBtn(() => { row.remove(); recalc(); }));
+    tkRows.appendChild(row);
+  }
+
+  tkAddBtn.onclick = () => { pushUndo(); makeTicketRow({}); scheduleSave(); };
+  (d._tickets || []).forEach(t => makeTicketRow(t));
+  if (!(d._tickets && d._tickets.length)) makeTicketRow({});
+  tks.appendChild(tkRows);
+  card.appendChild(tks);
+  } // end !_ticketsRemoved
   document.getElementById('days').appendChild(card);
   recalc();
   if (!d.date) card.querySelector('input').focus();
@@ -1121,25 +1236,30 @@ function recalc() {
   const cards = document.querySelectorAll('.day-card');
   document.getElementById('s-days').textContent = cards.length;
 
-  let acc = 0, trans = 0;
+  let acc = 0, trans = 0, tickets = 0;
   cards.forEach(c => {
     c.querySelectorAll('.cost-inp').forEach(i => { acc += parseFloat(i.value) || 0; });
     c.querySelectorAll('[data-key="trans_cost"]').forEach(i => { trans += parseFloat(i.value) || 0; });
+    c.querySelectorAll('[data-key="tk_price"]').forEach(i => { tickets += parseFloat(i.value) || 0; });
   });
+
+  const grand = acc + trans + tickets;
 
   const accBox = document.getElementById('acc-total-box');
   const accVal = document.getElementById('acc-total-val');
-  if (accBox && accVal) {
-    accBox.style.display = acc > 0 ? 'flex' : 'none';
-    accVal.textContent = '£' + acc.toFixed(2);
-  }
+  if (accBox && accVal) { accBox.style.display = acc > 0 ? 'flex' : 'none'; accVal.textContent = '£' + acc.toFixed(2); }
 
   const transBox = document.getElementById('trans-total-box');
   const transVal = document.getElementById('trans-total-val');
-  if (transBox && transVal) {
-    transBox.style.display = trans > 0 ? 'flex' : 'none';
-    transVal.textContent = '£' + trans.toFixed(2);
-  }
+  if (transBox && transVal) { transBox.style.display = trans > 0 ? 'flex' : 'none'; transVal.textContent = '£' + trans.toFixed(2); }
+
+  const tkBox = document.getElementById('tickets-total-box');
+  const tkVal = document.getElementById('tickets-total-val');
+  if (tkBox && tkVal) { tkBox.style.display = tickets > 0 ? 'flex' : 'none'; tkVal.textContent = '£' + tickets.toFixed(2); }
+
+  const grandBox = document.getElementById('grand-total-box');
+  const grandVal = document.getElementById('grand-total-val');
+  if (grandBox && grandVal) { grandBox.style.display = grand > 0 ? 'flex' : 'none'; grandVal.textContent = '£' + grand.toFixed(2); }
 }
 function restoreState(state) {
   if (state.header) {
