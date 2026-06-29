@@ -47,92 +47,65 @@
   <input type="hidden" id="page-title" value="New Trip">
 </div>
 
+<button class="add-day" onclick="pushUndo(); addDay();" style="margin-bottom:0;border-radius:0;border-bottom:1px solid rgba(14,122,135,0.1);">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Add Day
+</button>
+
 <div class="days" id="days"></div>
 
-<div id="cost-summary" style="display:none;margin:0 20px 12px;">
-  <div style="background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);overflow:hidden;">
+<div id="cost-summary" style="display:none;margin:0 20px 16px;">
+  <div style="font-size:9px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;padding-left:2px;">Trip Cost Summary</div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
 
-    <!-- rows -->
-    <div id="cs-trans-row" style="display:none;padding:12px 18px;border-bottom:1px solid rgba(0,0,0,0.06);display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:28px;height:28px;border-radius:8px;background:rgba(14,122,135,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
-          </div>
-          <span style="font-size:12px;font-weight:600;color:#555;">Transport</span>
-        </div>
-        <div style="display:flex;gap:24px;align-items:center;">
-          <div style="text-align:right;">
-            <div style="font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;">Per Person</div>
-            <div id="cs-trans-pp" style="font-size:14px;font-weight:700;color:#0e7a87;">—</div>
-          </div>
-          <div style="text-align:right;min-width:70px;">
-            <div style="font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;">Total</div>
-            <div id="cs-trans-tot" style="font-size:14px;font-weight:700;color:#0e7a87;">—</div>
-          </div>
-        </div>
+    <div id="cs-trans-row" style="display:none;align-items:center;gap:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.05);">
+      <div style="width:4px;align-self:stretch;background:#0e7a87;opacity:0.4;flex-shrink:0;"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;flex:1;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.6;"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>
+        <span style="font-size:11px;font-weight:600;color:#666;flex:1;">Transport</span>
+        <span style="font-size:10px;color:#aaa;font-weight:500;margin-right:4px;">pp</span>
+        <span id="cs-trans-pp" style="font-size:13px;font-weight:700;color:#0e7a87;min-width:60px;text-align:right;"></span>
+        <div style="width:1px;height:20px;background:#eee;margin:0 8px;"></div>
+        <span style="font-size:10px;color:#aaa;font-weight:500;margin-right:4px;">total</span>
+        <span id="cs-trans-tot" style="font-size:13px;font-weight:700;color:#0e7a87;min-width:60px;text-align:right;"></span>
       </div>
     </div>
 
-    <div id="cs-acc-row" style="display:none;padding:12px 18px;border-bottom:1px solid rgba(0,0,0,0.06);">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:28px;height:28px;border-radius:8px;background:rgba(14,122,135,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          </div>
-          <span style="font-size:12px;font-weight:600;color:#555;">Accommodation</span>
-        </div>
-        <div style="display:flex;gap:24px;align-items:center;">
-          <div style="text-align:right;">
-            <div style="font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;">Per Person</div>
-            <div id="cs-acc-pp" style="font-size:14px;font-weight:700;color:#0e7a87;">—</div>
-          </div>
-          <div style="text-align:right;min-width:70px;">
-            <div style="font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;">Total</div>
-            <div id="cs-acc-tot" style="font-size:14px;font-weight:700;color:#0e7a87;">—</div>
-          </div>
-        </div>
+    <div id="cs-acc-row" style="display:none;align-items:center;gap:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.05);">
+      <div style="width:4px;align-self:stretch;background:#0e7a87;opacity:0.4;flex-shrink:0;"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;flex:1;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.6;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span style="font-size:11px;font-weight:600;color:#666;flex:1;">Accommodation</span>
+        <span style="font-size:10px;color:#aaa;font-weight:500;margin-right:4px;">pp</span>
+        <span id="cs-acc-pp" style="font-size:13px;font-weight:700;color:#0e7a87;min-width:60px;text-align:right;"></span>
+        <div style="width:1px;height:20px;background:#eee;margin:0 8px;"></div>
+        <span style="font-size:10px;color:#aaa;font-weight:500;margin-right:4px;">total</span>
+        <span id="cs-acc-tot" style="font-size:13px;font-weight:700;color:#0e7a87;min-width:60px;text-align:right;"></span>
       </div>
     </div>
 
-    <div id="cs-tk-row" style="display:none;padding:12px 18px;border-bottom:1px solid rgba(0,0,0,0.06);">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:28px;height:28px;border-radius:8px;background:rgba(14,122,135,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-          </div>
-          <span style="font-size:12px;font-weight:600;color:#555;">Things To Do</span>
-        </div>
-        <div style="display:flex;gap:24px;align-items:center;">
-          <div style="text-align:right;">
-            <div style="font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;">Per Person</div>
-            <div id="cs-tk-pp" style="font-size:14px;font-weight:700;color:#0e7a87;">—</div>
-          </div>
-          <div style="text-align:right;min-width:70px;">
-            <div style="font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;">Total</div>
-            <div id="cs-tk-tot" style="font-size:14px;font-weight:700;color:#0e7a87;">—</div>
-          </div>
-        </div>
+    <div id="cs-tk-row" style="display:none;align-items:center;gap:0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06),0 0 0 0.5px rgba(0,0,0,0.05);">
+      <div style="width:4px;align-self:stretch;background:#0e7a87;opacity:0.4;flex-shrink:0;"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;flex:1;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.6;"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+        <span style="font-size:11px;font-weight:600;color:#666;flex:1;">Things To Do</span>
+        <span style="font-size:10px;color:#aaa;font-weight:500;margin-right:4px;">pp</span>
+        <span id="cs-tk-pp" style="font-size:13px;font-weight:700;color:#0e7a87;min-width:60px;text-align:right;"></span>
+        <div style="width:1px;height:20px;background:#eee;margin:0 8px;"></div>
+        <span style="font-size:10px;color:#aaa;font-weight:500;margin-right:4px;">total</span>
+        <span id="cs-tk-tot" style="font-size:13px;font-weight:700;color:#0e7a87;min-width:60px;text-align:right;"></span>
       </div>
     </div>
 
-    <!-- Grand total -->
-    <div style="padding:14px 18px;background:#0e7a87;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);">Grand Total</span>
-      </div>
-      <div style="display:flex;gap:24px;align-items:center;">
-        <div style="text-align:right;">
-          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;">Per Person</div>
-          <div id="cs-grand-pp" style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.3px;">—</div>
-        </div>
-        <div style="text-align:right;min-width:70px;">
-          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;">Total</div>
-          <div id="cs-grand-tot" style="font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.3px;">—</div>
-        </div>
+    <div style="display:flex;align-items:center;gap:0;background:#0e7a87;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(14,122,135,0.2);">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;flex:1;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.7;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.8);flex:1;">Grand Total</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:500;margin-right:4px;">pp</span>
+        <span id="cs-grand-pp" style="font-size:14px;font-weight:800;color:#fff;min-width:60px;text-align:right;"></span>
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.2);margin:0 8px;"></div>
+        <span style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:500;margin-right:4px;">total</span>
+        <span id="cs-grand-tot" style="font-size:14px;font-weight:800;color:#fff;min-width:60px;text-align:right;"></span>
       </div>
     </div>
 
@@ -1374,7 +1347,7 @@ function recalc() {
     const row = document.getElementById(rowId);
     if (!row) return;
     if (totVal > 0) {
-      row.style.display = 'block';
+      row.style.display = 'flex';
       document.getElementById(ppId).textContent  = fmt(ppVal);
       document.getElementById(totId).textContent = fmt(totVal);
     } else {
@@ -1383,7 +1356,7 @@ function recalc() {
   };
 
   setRow('cs-trans-row', 'cs-trans-pp', 'cs-trans-tot', trans / travellers, trans);
-  setRow('cs-acc-row',   'cs-acc-pp',   'cs-acc-tot',   acc  / travellers, acc);
+  setRow('cs-acc-row',   'cs-acc-pp',   'cs-acc-tot',   acc / travellers, acc);  // acc is room total, pp = total ÷ travellers
   setRow('cs-tk-row',    'cs-tk-pp',    'cs-tk-tot',    ticketsPP, ticketsTot);
 
   if (grand > 0) {
