@@ -6,8 +6,136 @@
 <title>Holiday Allowance</title>
 <script src="/auth.js"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
+<style>
+  .hol-index-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 20px 20px 32px;
+  }
+
+  .hol-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .col-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 4px;
+    padding-left: 2px;
+  }
+
+  .person-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+    text-decoration: none;
+    color: #444;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: box-shadow 0.15s;
+  }
+  .person-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.06);
+  }
+  .person-card.active {
+    box-shadow: 0 0 0 2px #0e7a87, 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .pc-year {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pc-dates {
+    font-size: 11px;
+    color: #888;
+    font-weight: 500;
+  }
+  .current-badge {
+    background: #0e7a87;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Stat cards at bottom of column */
+  .col-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .col-stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .col-stat-card::before {
+    display: none;
+  }
+
+  .csc-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .csc-icon.teal   { background: rgba(14,122,135,0.1);  color: #0e7a87; }
+  .csc-icon.orange { background: rgba(255,149,0,0.1);   color: #ff9500; }
+  .csc-icon.green  { background: rgba(52,199,89,0.1);   color: #34c759; }
+  .csc-icon.red    { background: rgba(255,59,48,0.1);   color: #ff3b30; }
+
+  .csc-body { flex: 1; }
+  .csc-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .csc-val {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    color: #0e7a87;
+  }
+  .csc-val.orange { color: #ff9500; }
+  .csc-val.green  { color: #34c759; }
+  .csc-val.red    { color: #ff3b30; }
+  .csc-sub {
+    font-size: 10px;
+    color: #bbb;
+    font-weight: 500;
+    margin-top: 1px;
+  }
+</style>
 </head>
 <body>
+
 <nav class="nav">
   <a class="nav-back" href="/">
     <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
@@ -16,6 +144,7 @@
   <div class="nav-title">Holiday Allowance</div>
   <div class="nav-actions"></div>
 </nav>
+
 <div class="large-title-area">
   <div class="large-title">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,50 +155,115 @@
   <div class="large-subtitle">Manage annual leave for Joel &amp; Jonathan</div>
 </div>
 
-<div style="padding: 20px 20px 8px;">
-  <div style="font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#999;margin-bottom:10px;">Joel Pagett &nbsp;·&nbsp; Apr – Mar</div>
-  <div style="display:flex;flex-direction:column;gap:10px;max-width:480px;">
+<div class="hol-index-grid">
+
+  <!-- ── JOEL ── -->
+  <div class="hol-column">
+    <div class="col-label">Joel Pagett · Apr – Mar</div>
+
     <a href="/holidays/2025-26.html" class="person-card">
       <div class="pc-year">2025 / 26</div>
-      <div class="pc-dates">1st April 2025 – 31st March 2026</div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="pc-dates">Apr 25 – Mar 26</div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+
     <a href="/holidays/2026-27.html" class="person-card active">
-      <div class="pc-year">2026 / 27 <span class="current-badge">Current</span></div>
-      <div class="pc-dates">1st April 2026 – 31st March 2027</div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="pc-year">2026 / 27 <span class="current-badge">Now</span></div>
+      <div class="pc-dates">Apr 26 – Mar 27</div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+
     <a href="/holidays/2027-28.html" class="person-card">
       <div class="pc-year">2027 / 28</div>
-      <div class="pc-dates">1st April 2027 – 31st March 2028</div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="pc-dates">Apr 27 – Mar 28</div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
-  </div>
-</div>
 
-<div style="padding: 20px 20px 32px;">
-  <div style="font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#999;margin-bottom:10px;">Jonathan Pagett &nbsp;·&nbsp; Jan – Dec</div>
-  <div style="display:flex;flex-direction:column;gap:10px;max-width:480px;">
+    <div class="col-stats">
+      <div class="col-stat-card">
+        <div class="csc-icon teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="csc-body">
+          <div class="csc-label">Trips booked</div>
+          <div class="csc-val" id="joel-trips">6</div>
+          <div class="csc-sub">this allowance year</div>
+        </div>
+      </div>
+      <div class="col-stat-card">
+        <div class="csc-icon orange">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </div>
+        <div class="csc-body">
+          <div class="csc-label">Days used</div>
+          <div class="csc-val orange" id="joel-used">23</div>
+          <div class="csc-sub">of 28 day allowance</div>
+        </div>
+      </div>
+      <div class="col-stat-card">
+        <div class="csc-icon" id="joel-rem-icon" style="background:rgba(52,199,89,0.1);color:#34c759;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="csc-body">
+          <div class="csc-label">Days remaining</div>
+          <div class="csc-val green" id="joel-rem">5</div>
+          <div class="csc-sub" id="joel-rem-sub">5 of 28 remaining</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── JONATHAN ── -->
+  <div class="hol-column">
+    <div class="col-label">Jonathan Pagett · Jan – Dec</div>
+
     <a href="/holidays/jonathan/2026.html" class="person-card active">
-      <div class="pc-year">2026 <span class="current-badge">Current</span></div>
-      <div class="pc-dates">1st January – 31st December 2026</div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="pc-year">2026 <span class="current-badge">Now</span></div>
+      <div class="pc-dates">Jan – Dec 2026</div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+
     <a href="/holidays/jonathan/2027.html" class="person-card">
       <div class="pc-year">2027</div>
-      <div class="pc-dates">1st January – 31st December 2027</div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="pc-dates">Jan – Dec 2027</div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+
+    <div class="col-stats">
+      <div class="col-stat-card">
+        <div class="csc-icon teal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="csc-body">
+          <div class="csc-label">Trips booked</div>
+          <div class="csc-val" id="jon-trips">0</div>
+          <div class="csc-sub">this allowance year</div>
+        </div>
+      </div>
+      <div class="col-stat-card">
+        <div class="csc-icon orange">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </div>
+        <div class="csc-body">
+          <div class="csc-label">Days used</div>
+          <div class="csc-val orange" id="jon-used">0</div>
+          <div class="csc-sub">of 28 day allowance</div>
+        </div>
+      </div>
+      <div class="col-stat-card">
+        <div class="csc-icon" id="jon-rem-icon" style="background:rgba(52,199,89,0.1);color:#34c759;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="csc-body">
+          <div class="csc-label">Days remaining</div>
+          <div class="csc-val green" id="jon-rem">28</div>
+          <div class="csc-sub" id="jon-rem-sub">28 of 28 remaining</div>
+        </div>
+      </div>
+    </div>
   </div>
+
 </div>
 
-<style>
-.person-card { background:#fff;border-radius:16px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);text-decoration:none;color:#444444;display:flex;align-items:center;gap:12px;transition:box-shadow 0.15s; }
-.person-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06); }
-.person-card.active { box-shadow:0 0 0 2px #0e7a87,0 1px 3px rgba(0,0,0,0.08); }
-.pc-year { font-size:15px;font-weight:700;letter-spacing:-0.2px;flex:1;display:flex;align-items:center;gap:10px; }
-.pc-dates { font-size:12px;color:#888888;font-weight:500; }
-.current-badge { background:#0e7a87;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.04em; }
-</style>
 </body>
 </html>
