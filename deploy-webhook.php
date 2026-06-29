@@ -33,6 +33,11 @@ $subdirFiles = [
     'holidays/2025-26.html' => 'holidays/2025-26.html',
     'holidays/2026-27.html' => 'holidays/2026-27.html',
     'holidays/2027-28.html' => 'holidays/2027-28.html',
+    'holidays/jonathan/index.html' => 'holidays/jonathan/index.html',
+    'holidays/jonathan/2024.html' => 'holidays/jonathan/2024.html',
+    'holidays/jonathan/2025.html' => 'holidays/jonathan/2025.html',
+    'holidays/jonathan/2026.html' => 'holidays/jonathan/2026.html',
+    'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
 ];
 
@@ -72,7 +77,7 @@ $itineraries = [
 ];
 
 // ── ENSURE SUBDIRECTORIES EXIST ──────────────────────────────────────
-foreach (['trips', 'holidays', 'concerts'] as $dir) {
+foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts'] as $dir) {
     $dirPath = PUBLIC_HTML . '/' . $dir;
     if (!is_dir($dirPath)) {
         mkdir($dirPath, 0755, true);
@@ -154,6 +159,11 @@ $subdirFiles = [
     'holidays/2025-26.html' => 'holidays/2025-26.html',
     'holidays/2026-27.html' => 'holidays/2026-27.html',
     'holidays/2027-28.html' => 'holidays/2027-28.html',
+    'holidays/jonathan/index.html' => 'holidays/jonathan/index.html',
+    'holidays/jonathan/2024.html' => 'holidays/jonathan/2024.html',
+    'holidays/jonathan/2025.html' => 'holidays/jonathan/2025.html',
+    'holidays/jonathan/2026.html' => 'holidays/jonathan/2026.html',
+    'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
 ];
 
