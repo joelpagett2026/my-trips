@@ -1103,10 +1103,6 @@ function addDay(d) {
     // Sync once on load
     hidden.value = lines.join('\n');
 
-    const linkWrap = document.createElement('div'); linkWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:8px;';
-    const linkIcon = document.createElement('span'); linkIcon.style.cssText = 'font-size:10px;color:#aaa;flex-shrink:0;'; linkIcon.textContent = String.fromCodePoint(0x1F517);
-    const li = inp(data['link_' + period] || '', 'link_' + period, '', 'https://'); li.style.cssText = 'font-size:11px;color:#aaa;flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;';
-    linkWrap.appendChild(linkIcon); linkWrap.appendChild(li); block.appendChild(linkWrap);
     container.appendChild(block);
     return block;
   }
