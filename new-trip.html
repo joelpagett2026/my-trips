@@ -1096,7 +1096,18 @@ function addDay(d) {
       // Right-click / long-press on ticket btn to edit even when URL set
       ticketBtn.addEventListener('contextmenu', e => { e.preventDefault(); ticketBtn._editing = true; ticketBtn.click(); });
 
-      row.appendChild(dot); row.appendChild(i); row.appendChild(ticketBtn); row.appendChild(urlStore);
+      const delX = document.createElement('button');
+      delX.type = 'button'; delX.innerHTML = '&times;';
+      delX.style.cssText = 'background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0;flex-shrink:0;margin-top:3px;transition:color 0.1s;';
+      delX.onmouseover = () => delX.style.color = '#ff3b30';
+      delX.onmouseout  = () => delX.style.color = '#ccc';
+      delX.onclick = () => {
+        const rows = Array.from(bulletList.querySelectorAll('.bullet-row-inp'));
+        const idx = rows.indexOf(i);
+        if (rows.length > 1) { pushUndo(); row.remove(); if (rows[idx - 1]) rows[idx - 1].focus(); scheduleSave(); }
+        else { i.value = ''; scheduleSave(); }
+      };
+      row.appendChild(dot); row.appendChild(i); row.appendChild(ticketBtn); row.appendChild(delX); row.appendChild(urlStore);
       bulletList.appendChild(row);
       if (focusIt) setTimeout(() => i.focus(), 0);
       return row;
