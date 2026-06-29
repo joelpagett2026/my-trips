@@ -1190,9 +1190,21 @@ function addDay(d) {
     row.appendChild(priceCell);
 
     // Booked toggle
+    // Booked cell — dismissable
+    const bookedHidden = document.createElement('input'); bookedHidden.type = 'hidden'; bookedHidden.dataset.key = 'tk_booked_hidden'; bookedHidden.value = data.tk_booked_hidden || '';
+    row.appendChild(bookedHidden);
     const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
     bookedCell.style.alignItems = 'center';
-    const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked';
+    const bookedVisible = data.tk_booked_hidden !== 'removed';
+    const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl';
+    bookedLbl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
+    const bookedLblTxt = document.createElement('span'); bookedLblTxt.textContent = 'Booked';
+    const bookedX = document.createElement('button');
+    bookedX.innerHTML = '&times;'; bookedX.title = 'Remove';
+    bookedX.style.cssText = 'background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;line-height:1;padding:0;margin-left:4px;';
+    bookedX.onmouseover = () => bookedX.style.color = '#ff3b30';
+    bookedX.onmouseout  = () => bookedX.style.color = '#ccc';
+    bookedLbl.appendChild(bookedLblTxt); bookedLbl.appendChild(bookedX);
     const cbWrap = document.createElement('label'); cbWrap.style.cssText = 'display:flex;align-items:center;gap:7px;cursor:pointer;margin-top:4px;';
     const toggle = document.createElement('input'); toggle.type = 'checkbox';
     toggle.dataset.key = 'tk_booked';
@@ -1205,13 +1217,29 @@ function addDay(d) {
     updateCb();
     toggle.addEventListener('change', () => { pushUndo(); updateCb(); scheduleSave(); });
     cbWrap.appendChild(toggle);
-    bookedCell.appendChild(bookedLbl); bookedCell.appendChild(cbWrap);
+    const bookedInner = document.createElement('div');
+    bookedInner.appendChild(bookedLbl); bookedInner.appendChild(cbWrap);
+    const bookedPlaceholder = document.createElement('div');
+    bookedPlaceholder.style.cssText = 'display:none;';
+    bookedX.onclick = () => { pushUndo(); bookedInner.style.display = 'none'; bookedHidden.value = 'removed'; scheduleSave(); };
+    if (!bookedVisible) bookedInner.style.display = 'none';
+    bookedCell.appendChild(bookedInner); bookedCell.appendChild(bookedPlaceholder);
     row.appendChild(bookedCell);
 
-    // Delete
-    // Time slot
+    // Time cell — dismissable
+    const timeHidden = document.createElement('input'); timeHidden.type = 'hidden'; timeHidden.dataset.key = 'tk_time_hidden'; timeHidden.value = data.tk_time_hidden || '';
+    row.appendChild(timeHidden);
     const timeCell = document.createElement('div'); timeCell.className = 'cell';
-    const timeLbl = document.createElement('div'); timeLbl.className = 'cell-lbl'; timeLbl.textContent = 'Time';
+    const timeVisible = data.tk_time_hidden !== 'removed';
+    const timeLblWrap = document.createElement('div'); timeLblWrap.className = 'cell-lbl';
+    timeLblWrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
+    const timeLblTxt = document.createElement('span'); timeLblTxt.textContent = 'Time';
+    const timeX = document.createElement('button');
+    timeX.innerHTML = '&times;'; timeX.title = 'Remove';
+    timeX.style.cssText = 'background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;line-height:1;padding:0;margin-left:4px;';
+    timeX.onmouseover = () => timeX.style.color = '#ff3b30';
+    timeX.onmouseout  = () => timeX.style.color = '#ccc';
+    timeLblWrap.appendChild(timeLblTxt); timeLblWrap.appendChild(timeX);
     const timeInp = document.createElement('input');
     timeInp.type = 'text'; timeInp.inputMode = 'numeric'; timeInp.maxLength = 5;
     timeInp.value = data.tk_time || ''; timeInp.dataset.key = 'tk_time';
@@ -1221,7 +1249,11 @@ function addDay(d) {
       if (v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2,4);
       timeInp.value = v; scheduleSave();
     });
-    timeCell.appendChild(timeLbl); timeCell.appendChild(timeInp);
+    const timeInner = document.createElement('div');
+    timeInner.appendChild(timeLblWrap); timeInner.appendChild(timeInp);
+    timeX.onclick = () => { pushUndo(); timeInner.style.display = 'none'; timeHidden.value = 'removed'; scheduleSave(); };
+    if (!timeVisible) timeInner.style.display = 'none';
+    timeCell.appendChild(timeInner);
     row.appendChild(timeCell);
 
     row.appendChild(delBtn(() => { row.remove(); recalc(); }));
