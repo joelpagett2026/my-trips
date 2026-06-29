@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=76">
+<link rel="stylesheet" href="/itinerary-style.css?v=77">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -230,6 +230,11 @@ function scheduleSave() {
   saveTimer = setTimeout(() => saveData(collectState()), 1400);
 }
 function collectState() {
+  // Sync all bullet lists into their hidden inputs first
+  document.querySelectorAll('.bullet-list').forEach(bl => {
+    const hidden = bl.parentElement.querySelector('.bullet-hidden');
+    if (hidden) hidden.value = Array.from(bl.querySelectorAll('input')).map(i => i.value).join('\n');
+  });
   const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
   const mapsUrl = document.getElementById('maps-url-val').value || '';
   const days = Array.from(document.querySelectorAll('.day-card')).map(card => {
@@ -937,7 +942,71 @@ function addDay(d) {
     rmBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:#bbb;font-size:14px;line-height:1;padding:0;';
     rmBtn.onclick = () => { pushUndo(); block.remove(); refreshBorders(); scheduleSave(); };
     headRow.appendChild(heading); headRow.appendChild(rmBtn); block.appendChild(headRow);
-    const at = ta(data['act_' + period] || '', 'act_' + period, ''); at.style.minHeight = '60px'; at.classList.add('itin-ta'); block.appendChild(at);
+
+    // ── Bullet list ──────────────────────────────────────────────────
+    const bulletList = document.createElement('div');
+    bulletList.className = 'bullet-list';
+    block.appendChild(bulletList);
+
+    function addBulletRow(val, focusIt) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:7px;margin-bottom:2px;';
+      const dot = document.createElement('div');
+      dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#0e7a87;opacity:0.5;flex-shrink:0;margin-top:7px;';
+      const i = document.createElement('input');
+      i.type = 'text'; i.value = val || '';
+      i.style.cssText = 'border:none;background:transparent;font-family:Montserrat,sans-serif;font-size:13px;color:#333;width:100%;outline:none;padding:2px 0;line-height:1.4;';
+      i.addEventListener('input', scheduleSave);
+      i.addEventListener('focus', pushUndo);
+      i.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === 'Tab') {
+          e.preventDefault();
+          // If this is the last row, add a new one; otherwise move to next
+          const rows = Array.from(bulletList.querySelectorAll('input'));
+          const idx = rows.indexOf(i);
+          if (idx === rows.length - 1) {
+            const newRow = addBulletRow('', true);
+          } else {
+            rows[idx + 1].focus();
+          }
+        } else if (e.key === 'Backspace' && i.value === '') {
+          // Remove empty row on backspace, focus previous
+          const rows = Array.from(bulletList.querySelectorAll('input'));
+          const idx = rows.indexOf(i);
+          if (rows.length > 1) {
+            e.preventDefault();
+            row.remove();
+            rows[Math.max(0, idx - 1)].focus();
+            scheduleSave();
+          }
+        }
+      });
+      row.appendChild(dot); row.appendChild(i);
+      bulletList.appendChild(row);
+      if (focusIt) setTimeout(() => i.focus(), 0);
+      return row;
+    }
+
+    // Restore existing lines or start with one blank bullet
+    const existing = data['act_' + period] || '';
+    const lines = existing.split('\n').filter(l => l.trim() !== '');
+    if (lines.length > 0) { lines.forEach(l => addBulletRow(l)); }
+    else { addBulletRow(''); }
+
+    // Hidden input to hold serialised value for collectState
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden'; hidden.dataset.key = 'act_' + period;
+    hidden.className = 'bullet-hidden';
+    block.appendChild(hidden);
+
+    // Keep hidden in sync before save
+    const origCollect = scheduleSave;
+    bulletList.addEventListener('input', () => {
+      hidden.value = Array.from(bulletList.querySelectorAll('input')).map(i => i.value).join('\n');
+    });
+    // Sync once on load
+    hidden.value = lines.join('\n');
+
     const linkWrap = document.createElement('div'); linkWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:8px;';
     const linkIcon = document.createElement('span'); linkIcon.style.cssText = 'font-size:10px;color:#aaa;flex-shrink:0;'; linkIcon.textContent = String.fromCodePoint(0x1F517);
     const li = inp(data['link_' + period] || '', 'link_' + period, '', 'https://'); li.style.cssText = 'font-size:11px;color:#aaa;flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;';
