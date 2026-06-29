@@ -36,6 +36,24 @@
   .tool-card:hover .tool-arrow { color: #0e7a87; transform: translateX(2px); }
   .hub-footer { text-align: center; padding: 0 24px 32px; font-size: 11px; color: #3d444d; font-weight: 500; }
   .hub-footer span { display: inline-block; width: 3px; height: 3px; background: #3d444d; border-radius: 50%; vertical-align: middle; margin: 0 8px 2px; }
+  /* Holiday pair */
+  .hol-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .hol-person-card { background: #161b22; border: 1px solid #21262d; border-radius: 16px; padding: 16px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 14px; transition: border-color 0.15s, transform 0.1s; position: relative; overflow: hidden; }
+  .hol-person-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(14,122,135,0.06) 0%, transparent 60%); opacity: 0; transition: opacity 0.2s; }
+  .hol-person-card:hover { border-color: #0e7a87; transform: translateY(-1px); }
+  .hol-person-card:hover::before { opacity: 1; }
+  .hol-person-card:hover .tool-arrow { color: #0e7a87; }
+  .hpc-top { display: flex; align-items: center; gap: 10px; }
+  .hpc-name { font-size: 14px; font-weight: 700; color: #e6edf3; letter-spacing: -0.01em; }
+  .hpc-period { font-size: 10px; color: #7d8590; font-weight: 500; margin-top: 2px; }
+  .hpc-stats { display: flex; align-items: center; gap: 0; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px 0; }
+  .hpc-stat { flex: 1; text-align: center; }
+  .hpc-val { font-size: 20px; font-weight: 800; color: #e6edf3; line-height: 1; letter-spacing: -0.02em; }
+  .hpc-val.orange { color: #f0910a; }
+  .hpc-val.green  { color: #3fb950; }
+  .hpc-val.red    { color: #f85149; }
+  .hpc-lbl { font-size: 9px; color: #3d444d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .hpc-divider { width: 1px; background: #21262d; align-self: stretch; }
 </style>
 </head>
 <body>
@@ -71,39 +89,64 @@
     <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
   </a>
 
-  <a class="tool-card" href="/holidays/2026-27.html">
-    <div class="tool-icon green">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-    </div>
-    <div class="tool-body">
-      <div class="tool-name">Joel's Holidays</div>
-      <div class="tool-desc" id="hol-desc">2026 / 27 · Apr – Mar</div>
-    </div>
-    <div class="tool-stat">
-      <div class="stat-num green" id="hol-stat">—</div>
-      <div class="stat-label">days left</div>
-    </div>
-    <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </a>
-
-  <a class="tool-card" href="/holidays/jonathan/2026.html">
-    <div class="tool-icon green">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-    </div>
-    <div class="tool-body">
-      <div class="tool-name">Jonathan's Holidays</div>
-      <div class="tool-desc" id="jhol-desc">2026 · Jan – Dec</div>
-    </div>
-    <div class="tool-stat">
-      <div class="stat-num green" id="jhol-stat">—</div>
-      <div class="stat-label">days left</div>
-    </div>
-    <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </a>
+  <div class="hol-pair">
+    <a class="hol-person-card" href="/holidays/2026-27.html">
+      <div class="hpc-top">
+        <div class="tool-icon green" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="hpc-name">Joel</div>
+          <div class="hpc-period">2026/27 · Apr – Mar</div>
+        </div>
+        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="hpc-stats">
+        <div class="hpc-stat">
+          <div class="hpc-val" id="joel-trips">6</div>
+          <div class="hpc-lbl">trips</div>
+        </div>
+        <div class="hpc-divider"></div>
+        <div class="hpc-stat">
+          <div class="hpc-val orange" id="joel-used">23</div>
+          <div class="hpc-lbl">days used</div>
+        </div>
+        <div class="hpc-divider"></div>
+        <div class="hpc-stat">
+          <div class="hpc-val green" id="joel-rem">5</div>
+          <div class="hpc-lbl">remaining</div>
+        </div>
+      </div>
+    </a>
+    <a class="hol-person-card" href="/holidays/jonathan/2026.html">
+      <div class="hpc-top">
+        <div class="tool-icon green" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="hpc-name">Jonathan</div>
+          <div class="hpc-period">2026 · Jan – Dec</div>
+        </div>
+        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="hpc-stats">
+        <div class="hpc-stat">
+          <div class="hpc-val" id="jon-trips">0</div>
+          <div class="hpc-lbl">trips</div>
+        </div>
+        <div class="hpc-divider"></div>
+        <div class="hpc-stat">
+          <div class="hpc-val orange" id="jon-used">0</div>
+          <div class="hpc-lbl">days used</div>
+        </div>
+        <div class="hpc-divider"></div>
+        <div class="hpc-stat">
+          <div class="hpc-val green" id="jon-rem">28</div>
+          <div class="hpc-lbl">remaining</div>
+        </div>
+      </div>
+    </a>
+  </div>
 
   <a class="tool-card" href="/concerts/">
     <div class="tool-icon amber">
@@ -145,19 +188,6 @@ async function loadStats() {
       } else {
         document.getElementById('trips-desc').textContent = trips.length + ' trips planned & completed';
       }
-    }
-  } catch(e) {}
-
-  try {
-    const hol = await window.dbLoad('holiday-allowance');
-    if (hol && typeof hol.remaining === 'number') {
-      const rem = hol.remaining;
-      const el = document.getElementById('hol-stat');
-      el.textContent = rem;
-      el.className = 'stat-num ' + (rem <= 0 ? 'red' : rem <= 5 ? 'amber' : 'green');
-      document.getElementById('hol-desc').textContent = (28 - rem) + ' of 28 days used this year';
-    } else {
-      document.getElementById('hol-stat').textContent = '28';
     }
   } catch(e) {}
 

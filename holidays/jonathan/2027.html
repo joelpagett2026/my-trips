@@ -10,9 +10,9 @@
 <body>
 
 <nav class="nav">
-  <a class="nav-back" href="/holidays/jonathan/">
+  <a class="nav-back" href="/holidays/">
     <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
-    Jonathan's Holidays
+    Holiday Allowance
   </a>
   <div class="nav-title">2027</div>
   <div class="nav-actions">
@@ -32,8 +32,6 @@
 </div>
 
 <div class="year-tabs">
-  <a href="/holidays/jonathan/2024.html" class="year-tab">2024</a>
-  <a href="/holidays/jonathan/2025.html" class="year-tab">2025</a>
   <a href="/holidays/jonathan/2026.html" class="year-tab">2026</a>
   <a href="/holidays/jonathan/2027.html" class="year-tab active">2027</a>
 </div>
@@ -109,34 +107,28 @@ function addTrip(data) {
   const d = data || { dest: '', start: '', end: '', ret: '', days: '', lieu: '', hol: '', notes: '' };
   const card = document.createElement('div');
   card.className = 'trip-card';
-
   const header = document.createElement('div');
   header.className = 'card-header';
   header.appendChild(cell('Destination', inp(d.dest, 'dest-input', 'e.g. Paris')));
   header.appendChild(cell('Start date',  inp(d.start, '', 'dd/mm/yyyy')));
   header.appendChild(cell('End date',    inp(d.end,   '', 'dd/mm/yyyy')));
   header.appendChild(cell('Return date', inp(d.ret,   '', 'dd/mm/yyyy')));
-
   const delCell = document.createElement('div');
   delCell.className = 'cell del-cell';
   const delBtn = document.createElement('button');
   delBtn.className = 'del-btn';
-  delBtn.title = 'Remove trip';
   delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   delBtn.addEventListener('click', () => { card.remove(); recalc(); });
   delCell.appendChild(delBtn);
   header.appendChild(delCell);
-
   const footer = document.createElement('div');
   footer.className = 'card-footer';
   footer.appendChild(cell('Days off',     inp(d.days, 'num-input',           '0'), 'num-cell'));
   footer.appendChild(cell('Lieu time',    inp(d.lieu, 'num-input',           '0'), 'num-cell'));
   footer.appendChild(cell('Holiday days', inp(d.hol,  'num-input hol-input', '0'), 'num-cell'));
   footer.appendChild(cell('Notes',        inp(d.notes, '', 'Add a note…')));
-
   card.appendChild(header);
   card.appendChild(footer);
-
   const container = document.getElementById('cards');
   container.insertBefore(card, container.querySelector('.add-card'));
   recalc();
@@ -156,22 +148,17 @@ function recalc() {
   document.getElementById('tot-lieu').textContent = lieu;
   document.getElementById('tot-hol').textContent  = hol;
   document.getElementById('tot-remain').textContent = remaining;
-
   const remainEl   = document.getElementById('tot-remain');
   const remainStat = document.getElementById('remain-stat');
   const remainSub  = document.getElementById('remain-sub');
-
   if (remaining < 0) {
-    remainEl.className = 'stat-val red';
-    remainStat.classList.add('danger');
+    remainEl.className = 'stat-val red'; remainStat.classList.add('danger');
     remainSub.textContent = Math.abs(remaining) + ' day' + (Math.abs(remaining) !== 1 ? 's' : '') + ' over allowance';
   } else if (remaining <= 3) {
-    remainEl.className = 'stat-val orange';
-    remainStat.classList.remove('danger');
+    remainEl.className = 'stat-val orange'; remainStat.classList.remove('danger');
     remainSub.textContent = remaining === 0 ? 'Allowance fully used' : remaining + ' day' + (remaining !== 1 ? 's' : '') + ' left';
   } else {
-    remainEl.className = 'stat-val green';
-    remainStat.classList.remove('danger');
+    remainEl.className = 'stat-val green'; remainStat.classList.remove('danger');
     remainSub.textContent = remaining + ' of ' + ALLOWANCE + ' days remaining';
   }
 }
