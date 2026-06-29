@@ -75,6 +75,21 @@
 <div class="settings-left">
 <div class="settings-wrap">
 
+  <!-- BACKUP -->
+  <div class="settings-group-label">Backup</div>
+  <div class="settings-section">
+    <div class="settings-row">
+      <div class="settings-row-icon green">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <span class="settings-row-label">Download Backup</span>
+      <span class="settings-row-value" id="last-backup-label">Never</span>
+      <button class="settings-row-btn" onclick="openPanel('backup')" style="width:auto;padding:0;">
+        <svg class="settings-row-chevron" width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1 1l6 5.5L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
   <!-- DATABASE -->
   <div class="settings-group-label">Database</div>
   <div class="settings-section">
@@ -371,6 +386,169 @@ document.getElementById('pp-del').addEventListener('click', () => {
   updatePinUI();
 });
 </script>
+<!-- ── BACKUP PANEL ── -->
+<div class="slide-panel" id="panel-backup">
+  <div class="slide-panel-overlay" onclick="closePanel('backup')"></div>
+  <div class="slide-panel-sheet">
+    <div class="panel-handle"></div>
+    <div class="panel-title">Download Backup</div>
+    <div class="panel-sub">Exports all your itinerary data from the database as a JSON file. Keep it somewhere safe.</div>
+    <div class="panel-body">
+      <div id="backup-status" class="status-badge ok" style="display:none;"></div>
+      <div style="background:#e8e8e8;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:12px;color:#666;line-height:1.6;">
+        <strong style="color:#444;display:block;margin-bottom:4px;">What's included</strong>
+        All trip itinerary data · Settings · Registry
+        <br><span style="opacity:0.6;">Code &amp; templates are backed up automatically via GitHub.</span>
+      </div>
+      <div id="backup-last" style="font-size:12px;color:#888;margin-bottom:16px;text-align:center;font-weight:500;"></div>
+      <button class="panel-btn" id="backup-btn" onclick="doBackup()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download backup.json
+      </button>
+      <button class="panel-btn ghost" onclick="closePanel('backup')" style="margin-top:4px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── WEEKLY REMINDER MODAL ── -->
+<div id="backup-reminder" style="display:none;position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);" onclick="dismissReminder(false)"></div>
+  <div style="position:relative;background:#fff;border-radius:20px;padding:28px 24px 20px;max-width:320px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.2);text-align:center;">
+    <div style="width:56px;height:56px;background:#e8f8ed;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:#444;margin-bottom:8px;letter-spacing:-0.3px;">Time to back up</div>
+    <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px;" id="reminder-msg">It's been over a week since your last backup. Download a fresh copy to keep your data safe.</div>
+    <button onclick="dismissReminder(true)" style="width:100%;background:#34c759;color:#fff;border:none;border-radius:12px;padding:13px;font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">Back up now</button>
+    <button onclick="dismissReminder(false)" style="width:100%;background:none;border:none;color:#aaa;font-family:Montserrat,sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:8px;">Remind me later</button>
+  </div>
+</div>
+
+<script>
+// ── BACKUP ────────────────────────────────────────────────────────────
+const BACKUP_KEY = 'mytrips_last_backup';
+const REMINDER_DAYS = 7;
+
+function getLastBackup() {
+  const ts = localStorage.getItem(BACKUP_KEY);
+  return ts ? new Date(parseInt(ts)) : null;
+}
+
+function formatLastBackup(date) {
+  if (!date) return 'Never backed up';
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+  if (days === 0) return 'Backed up today';
+  if (days === 1) return 'Backed up yesterday';
+  return `Backed up ${days} days ago`;
+}
+
+function updateBackupLabels() {
+  const last = getLastBackup();
+  const label = formatLastBackup(last);
+  const el = document.getElementById('last-backup-label');
+  if (el) el.textContent = last ? label : 'Never';
+  const panelEl = document.getElementById('backup-last');
+  if (panelEl) panelEl.textContent = label;
+}
+
+async function doBackup() {
+  const btn = document.getElementById('backup-btn');
+  const statusEl = document.getElementById('backup-status');
+  btn.textContent = 'Fetching data…';
+  btn.disabled = true;
+
+  try {
+    const token = getToken();
+
+    // Fetch all itinerary records
+    const listRes = await fetch('/api.php?action=list', {
+      headers: { 'X-Auth-Token': token }
+    });
+    const listJson = await listRes.json();
+
+    // Fetch each record's full data
+    const records = {};
+    if (listJson.ok && listJson.data) {
+      for (const id of listJson.data) {
+        try {
+          const r = await fetch(`/api.php?action=load&id=${encodeURIComponent(id)}`, {
+            headers: { 'X-Auth-Token': token }
+          });
+          const rj = await r.json();
+          if (rj.ok) records[id] = rj.data;
+        } catch {}
+      }
+    }
+
+    const backup = {
+      exported_at: new Date().toISOString(),
+      version: 1,
+      records
+    };
+
+    // Trigger download
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href     = url;
+    a.download = `mytrips-backup-${date}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Save timestamp
+    localStorage.setItem(BACKUP_KEY, Date.now().toString());
+    updateBackupLabels();
+
+    statusEl.className = 'status-badge ok';
+    statusEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backup downloaded successfully';
+    statusEl.style.display = 'flex';
+    btn.textContent = '✓ Downloaded';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download backup.json';
+      btn.disabled = false;
+    }, 3000);
+
+  } catch(e) {
+    statusEl.className = 'status-badge not';
+    statusEl.innerHTML = 'Export failed — check connection';
+    statusEl.style.display = 'flex';
+    btn.textContent = 'Try again';
+    btn.disabled = false;
+  }
+}
+
+// ── WEEKLY REMINDER ───────────────────────────────────────────────────
+function checkBackupReminder() {
+  const last = getLastBackup();
+  const modal = document.getElementById('backup-reminder');
+  if (!modal) return;
+  if (!last) {
+    // Never backed up — show after a short delay
+    document.getElementById('reminder-msg').textContent = "You haven't backed up your trip data yet. Download a copy to keep it safe.";
+    setTimeout(() => { modal.style.display = 'flex'; }, 2000);
+    return;
+  }
+  const daysSince = (Date.now() - last.getTime()) / 86400000;
+  if (daysSince >= REMINDER_DAYS) {
+    const days = Math.floor(daysSince);
+    document.getElementById('reminder-msg').textContent = `It's been ${days} day${days !== 1 ? 's' : ''} since your last backup. Download a fresh copy to keep your data safe.`;
+    setTimeout(() => { modal.style.display = 'flex'; }, 1500);
+  }
+}
+
+function dismissReminder(doBackupNow) {
+  document.getElementById('backup-reminder').style.display = 'none';
+  if (doBackupNow) {
+    openPanel('backup');
+    setTimeout(doBackup, 400);
+  }
+}
+
+updateBackupLabels();
+checkBackupReminder();
+</script>
+
 <script src="/datepicker.js"></script>
 <script src="/chat-widget.js"></script>
 </body>
