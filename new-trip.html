@@ -12,7 +12,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=80">
+<link rel="stylesheet" href="/itinerary-style.css?v=81">
 <script src="/auth.js"></script>
 <script src="/db.js"></script>
 </head>
@@ -967,6 +967,61 @@ function addDay(d) {
   periodsRow.className = 'row-inner';
   periodsRow.style.cssText = isMobile() ? 'display:flex;flex-direction:column;' : 'display:flex;';
 
+  // Drop zone for period blocks dragged from other days
+  periodsRow.addEventListener('dragover', e => {
+    if (!window._dragPeriodBlock) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    periodsRow.classList.add('period-dropzone-active');
+    document.querySelectorAll('.period-drop-indicator').forEach(el => el.remove());
+    const blocks = Array.from(periodsRow.children).filter(c => c.dataset.period && c !== window._dragPeriodBlock);
+    let insertBefore = null;
+    for (const b of blocks) {
+      const rect = b.getBoundingClientRect();
+      if (e.clientX < rect.left + rect.width / 2) { insertBefore = b; break; }
+    }
+    const ind = document.createElement('div');
+    ind.className = 'period-drop-indicator';
+    ind.style.cssText = 'width:3px;background:#0e7a87;border-radius:3px;align-self:stretch;flex-shrink:0;pointer-events:none;';
+    if (insertBefore) periodsRow.insertBefore(ind, insertBefore);
+    else periodsRow.appendChild(ind);
+  });
+  periodsRow.addEventListener('dragleave', e => {
+    if (!periodsRow.contains(e.relatedTarget)) {
+      periodsRow.classList.remove('period-dropzone-active');
+      document.querySelectorAll('.period-drop-indicator').forEach(el => el.remove());
+    }
+  });
+  periodsRow.addEventListener('drop', e => {
+    if (!window._dragPeriodBlock) return;
+    e.preventDefault();
+    pushUndo();
+    const dragged = window._dragPeriodBlock;
+    const srcRow = window._dragPeriodSrc;
+    document.querySelectorAll('.period-drop-indicator').forEach(el => el.remove());
+    periodsRow.classList.remove('period-dropzone-active');
+    const blocks = Array.from(periodsRow.children).filter(c => c.dataset.period && c !== dragged);
+    let insertBefore = null;
+    for (const b of blocks) {
+      const rect = b.getBoundingClientRect();
+      if (e.clientX < rect.left + rect.width / 2) { insertBefore = b; break; }
+    }
+    if (insertBefore) periodsRow.insertBefore(dragged, insertBefore);
+    else periodsRow.appendChild(dragged);
+    // Refresh borders on both source and destination rows
+    if (srcRow && srcRow !== periodsRow) {
+      const srcSibs = Array.from(srcRow.children).filter(c => c.dataset.period);
+      srcSibs.forEach((b, idx) => {
+        const last = idx === srcSibs.length - 1;
+        if (isMobile()) { b.style.borderBottom = last ? '' : '0.5px solid rgba(0,0,0,0.07)'; b.style.borderRight = ''; }
+        else { b.style.borderRight = last ? '' : '0.5px solid rgba(0,0,0,0.07)'; b.style.borderBottom = ''; }
+      });
+    }
+    refreshBorders();
+    window._dragPeriodBlock = null;
+    window._dragPeriodSrc = null;
+    scheduleSave();
+  });
+
   function refreshBorders() {
     const sibs = Array.from(periodsRow.children).filter(c => c.dataset.period);
     sibs.forEach((b, idx) => {
@@ -985,22 +1040,116 @@ function addDay(d) {
       container.style.flexDirection = isMobile() ? 'column' : 'row';
       refreshBorders();
     }, { passive: true });
-    const headRow = document.createElement('div'); headRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
-    const heading = document.createElement('div'); heading.style.cssText = 'font-size:11px;font-weight:700;color:#0e7a87;text-transform:uppercase;letter-spacing:0.06em;';
+    const headRow = document.createElement('div'); headRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:4px;';
+    // Period block drag handle
+    const periodGrip = document.createElement('div');
+    periodGrip.className = 'period-grip';
+    periodGrip.title = 'Drag to move this column to another day';
+    periodGrip.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="none"><circle cx="3" cy="2.5" r="1.2" fill="#0e7a87"/><circle cx="7" cy="2.5" r="1.2" fill="#0e7a87"/><circle cx="3" cy="7" r="1.2" fill="#0e7a87"/><circle cx="7" cy="7" r="1.2" fill="#0e7a87"/><circle cx="3" cy="11.5" r="1.2" fill="#0e7a87"/><circle cx="7" cy="11.5" r="1.2" fill="#0e7a87"/></svg>';
+    periodGrip.style.cssText = 'cursor:grab;display:flex;align-items:center;padding:2px;opacity:0;transition:opacity 0.15s;flex-shrink:0;';
+    block.addEventListener('mouseenter', () => periodGrip.style.opacity = '0.5');
+    block.addEventListener('mouseleave', () => periodGrip.style.opacity = '0');
+    block.draggable = true;
+    block.addEventListener('dragstart', e => {
+      // Only start period-block drag from the period grip
+      if (!e.target.closest('.period-grip')) { e.preventDefault(); return; }
+      e.stopPropagation();
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', period);
+      window._dragPeriodBlock = block;
+      window._dragPeriodSrc = container;
+      setTimeout(() => block.style.opacity = '0.4', 0);
+    });
+    block.addEventListener('dragend', () => {
+      block.style.opacity = '';
+      document.querySelectorAll('.period-drop-indicator').forEach(el => el.remove());
+      document.querySelectorAll('.period-dropzone-active').forEach(el => el.classList.remove('period-dropzone-active'));
+    });
+    const heading = document.createElement('div'); heading.style.cssText = 'font-size:11px;font-weight:700;color:#0e7a87;text-transform:uppercase;letter-spacing:0.06em;flex:1;';
     heading.textContent = period.charAt(0).toUpperCase() + period.slice(1);
     const rmBtn = document.createElement('button'); rmBtn.innerHTML = '&times;';
     rmBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:#bbb;font-size:14px;line-height:1;padding:0;';
     rmBtn.onclick = () => { pushUndo(); block.remove(); refreshBorders(); scheduleSave(); };
-    headRow.appendChild(heading); headRow.appendChild(rmBtn); block.appendChild(headRow);
+    headRow.appendChild(periodGrip); headRow.appendChild(heading); headRow.appendChild(rmBtn); block.appendChild(headRow);
 
     // ── Bullet list ──────────────────────────────────────────────────
     const bulletList = document.createElement('div');
     bulletList.className = 'bullet-list';
+    bulletList.addEventListener('dragover', e => {
+      if (!window._dragBulletRow) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      bulletList.classList.add('bullet-list-dropzone');
+      // Show insertion line
+      document.querySelectorAll('.bullet-drop-line').forEach(el => el.remove());
+      const rows = Array.from(bulletList.querySelectorAll('.bullet-drag-row'));
+      let insertBefore = null;
+      for (const r of rows) {
+        const rect = r.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) { insertBefore = r; break; }
+      }
+      const line = document.createElement('div');
+      line.className = 'bullet-drop-line';
+      line.style.cssText = 'height:2px;background:#0e7a87;border-radius:2px;margin:1px 0;pointer-events:none;';
+      if (insertBefore) bulletList.insertBefore(line, insertBefore);
+      else bulletList.appendChild(line);
+    });
+    bulletList.addEventListener('dragleave', e => {
+      if (!bulletList.contains(e.relatedTarget)) {
+        bulletList.classList.remove('bullet-list-dropzone');
+        document.querySelectorAll('.bullet-drop-line').forEach(el => el.remove());
+      }
+    });
+    bulletList.addEventListener('drop', e => {
+      if (!window._dragBulletRow) return;
+      e.preventDefault();
+      pushUndo();
+      const dragged = window._dragBulletRow;
+      document.querySelectorAll('.bullet-drop-line').forEach(el => el.remove());
+      bulletList.classList.remove('bullet-list-dropzone');
+      const rows = Array.from(bulletList.querySelectorAll('.bullet-drag-row'));
+      let insertBefore = null;
+      for (const r of rows) {
+        if (r === dragged) continue;
+        const rect = r.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) { insertBefore = r; break; }
+      }
+      if (insertBefore) bulletList.insertBefore(dragged, insertBefore);
+      else bulletList.appendChild(dragged);
+      window._dragBulletRow = null;
+      scheduleSave();
+    });
     block.appendChild(bulletList);
 
     function addBulletRow(val, focusIt, ticketUrl) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:flex-start;gap:7px;margin-bottom:2px;';
+      row.className = 'bullet-drag-row';
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:7px;margin-bottom:2px;position:relative;';
+      row.draggable = true;
+
+      // Drag grip handle
+      const grip = document.createElement('div');
+      grip.className = 'bullet-grip';
+      grip.title = 'Drag to reorder or move to another day';
+      grip.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="none"><circle cx="3" cy="2.5" r="1.2" fill="#ccc"/><circle cx="7" cy="2.5" r="1.2" fill="#ccc"/><circle cx="3" cy="7" r="1.2" fill="#ccc"/><circle cx="7" cy="7" r="1.2" fill="#ccc"/><circle cx="3" cy="11.5" r="1.2" fill="#ccc"/><circle cx="7" cy="11.5" r="1.2" fill="#ccc"/></svg>';
+      grip.style.cssText = 'flex-shrink:0;cursor:grab;display:flex;align-items:center;padding:2px 0;opacity:0;transition:opacity 0.15s;margin-top:3px;';
+      row.addEventListener('mouseenter', () => grip.style.opacity = '1');
+      row.addEventListener('mouseleave', () => grip.style.opacity = '0');
+
+      // Only start drag from the grip
+      row.addEventListener('dragstart', e => {
+        if (!e.target.closest('.bullet-grip')) { e.preventDefault(); return; }
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', '');
+        window._dragBulletRow = row;
+        window._dragBulletSrc = bulletList;
+        setTimeout(() => row.style.opacity = '0.4', 0);
+      });
+      row.addEventListener('dragend', () => {
+        row.style.opacity = '';
+        document.querySelectorAll('.bullet-drop-line').forEach(el => el.remove());
+        document.querySelectorAll('.bullet-list-dropzone').forEach(el => el.classList.remove('bullet-list-dropzone'));
+      });
+
       const dot = document.createElement('div');
       dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#0e7a87;opacity:0.5;flex-shrink:0;margin-top:7px;';
       const i = document.createElement('input');
@@ -1125,7 +1274,7 @@ function addDay(d) {
         if (rows.length > 1) { pushUndo(); row.remove(); if (rows[idx - 1]) rows[idx - 1].focus(); scheduleSave(); }
         else { i.value = ''; scheduleSave(); }
       };
-      row.appendChild(dot); row.appendChild(i); row.appendChild(ticketBtn); row.appendChild(delX); row.appendChild(urlStore);
+      row.appendChild(grip); row.appendChild(dot); row.appendChild(i); row.appendChild(ticketBtn); row.appendChild(delX); row.appendChild(urlStore);
       bulletList.appendChild(row);
       if (focusIt) setTimeout(() => i.focus(), 0);
       return row;
