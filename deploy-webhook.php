@@ -75,7 +75,7 @@ $itineraries = [
 ];
 
 // ── ENSURE SUBDIRECTORIES EXIST ──────────────────────────────────────
-foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts'] as $dir) {
+foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'icons'] as $dir) {
     $dirPath = PUBLIC_HTML . '/' . $dir;
     if (!is_dir($dirPath)) {
         mkdir($dirPath, 0755, true);
@@ -165,6 +165,20 @@ $subdirFiles = [
     'holidays/jonathan/2026.html' => 'holidays/jonathan/2026.html',
     'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
+    'icons/favicon.ico' => 'icons/favicon.ico',
+    'icons/icon-32.png' => 'icons/icon-32.png',
+    'icons/icon-192.png' => 'icons/icon-192.png',
+    'icons/icon-512.png' => 'icons/icon-512.png',
+    'icons/apple-touch-icon.png' => 'icons/apple-touch-icon.png',
+    'icons/trips-favicon.ico' => 'icons/trips-favicon.ico',
+    'icons/trips-icon-32.png' => 'icons/trips-icon-32.png',
+    'icons/trips-apple-touch-icon.png' => 'icons/trips-apple-touch-icon.png',
+    'icons/holidays-favicon.ico' => 'icons/holidays-favicon.ico',
+    'icons/holidays-icon-32.png' => 'icons/holidays-icon-32.png',
+    'icons/holidays-apple-touch-icon.png' => 'icons/holidays-apple-touch-icon.png',
+    'icons/concerts-favicon.ico' => 'icons/concerts-favicon.ico',
+    'icons/concerts-icon-32.png' => 'icons/concerts-icon-32.png',
+    'icons/concerts-apple-touch-icon.png' => 'icons/concerts-apple-touch-icon.png',
 ];
 
 foreach ($subdirFiles as $src => $dest) {
