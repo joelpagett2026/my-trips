@@ -425,7 +425,4 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .bullet-grip:active { cursor: grabbing; }
 .bullet-list-dropzone { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 .bullet-drag-row.dragging { opacity: 0.4; }
-.period-grip { user-select: none; -webkit-user-select: none; }
-.period-grip:active { cursor: grabbing; }
-.period-dropzone-active { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 
