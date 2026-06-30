@@ -131,6 +131,7 @@ $coreFiles = [
     'api.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'deploy-webhook.php',
     'index.html', 'new-trip.html', 'settings.html',
+    'robots.txt', '.htaccess',
 ];
 
 $copied = [];
