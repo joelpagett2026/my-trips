@@ -1046,20 +1046,21 @@ function addDay(d) {
       const row = document.createElement('div');
       row.className = 'bullet-drag-row';
       row.style.cssText = 'display:flex;align-items:flex-start;gap:7px;margin-bottom:2px;position:relative;';
-      row.draggable = true;
+      row.draggable = false;
 
-      // Drag grip handle
+      // Drag grip handle — enable draggable only while mouse is held on the grip
       const grip = document.createElement('div');
       grip.className = 'bullet-grip';
       grip.title = 'Drag to reorder or move to another day';
       grip.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="none"><circle cx="3" cy="2.5" r="1.2" fill="#ccc"/><circle cx="7" cy="2.5" r="1.2" fill="#ccc"/><circle cx="3" cy="7" r="1.2" fill="#ccc"/><circle cx="7" cy="7" r="1.2" fill="#ccc"/><circle cx="3" cy="11.5" r="1.2" fill="#ccc"/><circle cx="7" cy="11.5" r="1.2" fill="#ccc"/></svg>';
-      grip.style.cssText = 'flex-shrink:0;cursor:grab;display:flex;align-items:center;padding:2px 0;opacity:0;transition:opacity 0.15s;margin-top:3px;';
+      grip.style.cssText = 'flex-shrink:0;cursor:grab;display:flex;align-items:center;padding:2px 0;opacity:0;transition:opacity 0.15s;margin-top:3px;user-select:none;-webkit-user-select:none;';
       row.addEventListener('mouseenter', () => grip.style.opacity = '1');
       row.addEventListener('mouseleave', () => grip.style.opacity = '0');
 
-      // Only start drag from the grip
+      grip.addEventListener('mousedown', () => { row.draggable = true; });
+      document.addEventListener('mouseup', () => { row.draggable = false; }, { passive: true });
+
       row.addEventListener('dragstart', e => {
-        if (!e.target.closest('.bullet-grip')) { e.preventDefault(); return; }
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', '');
         window._dragBulletRow = row;
@@ -1067,6 +1068,7 @@ function addDay(d) {
         setTimeout(() => row.style.opacity = '0.4', 0);
       });
       row.addEventListener('dragend', () => {
+        row.draggable = false;
         row.style.opacity = '';
         document.querySelectorAll('.bullet-drop-line').forEach(el => el.remove());
         document.querySelectorAll('.bullet-list-dropzone').forEach(el => el.classList.remove('bullet-list-dropzone'));
