@@ -582,11 +582,11 @@ function updateFoodRowVisibility(row) {
       placeLinkEl.style.display = 'none';
     }
   }
-  // "Included with hotel rate" badge — own centered column
+  // "Included with hotel rate" badge — own labeled column
   const badgeCell = row.querySelector('[data-bf-badge-cell]');
-  if (badgeCell) badgeCell.style.display = isHotelBreakfastRow ? 'flex' : 'none';
+  if (badgeCell) badgeCell.style.display = isHotelBreakfastRow ? '' : 'none';
   if (isHotelBreakfastRow) {
-    row.style.gridTemplateColumns = '0.55fr 1.3fr 0.65fr';
+    row.style.gridTemplateColumns = '0.55fr 1.05fr 0.9fr';
   } else if (hideBookedCols) {
     row.style.gridTemplateColumns = '0.55fr 1.1fr';
   } else {
@@ -641,16 +641,17 @@ function makeFoodRow(data, container, hotelBreakfast) {
   placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
   placeCell.appendChild(placeLbl); placeCell.appendChild(placeRow);
   row.appendChild(placeCell);
-  // "Included with hotel rate" badge — own centered column.
-  // Styled like the section icons: teal circle, white icon.
+  // "Included with hotel rate" badge — own labeled column, matching the
+  // Meal/Location/Booked? cells (label + content).
   const badgeCell = document.createElement('div');
   badgeCell.className = 'cell'; badgeCell.setAttribute('data-bf-badge-cell', '1');
-  badgeCell.style.cssText = 'display:none;align-items:center;justify-content:center;';
+  badgeCell.style.display = 'none';
+  const badgeLbl = document.createElement('div'); badgeLbl.className = 'cell-lbl'; badgeLbl.textContent = 'Breakfast Included';
   const bfBadge = document.createElement('span');
   bfBadge.title = 'Included with hotel rate';
-  bfBadge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0e7a87,#0d9e8c);flex-shrink:0;cursor:default;';
-  bfBadge.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M9,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M13,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M5,11 L17,11 L16,18 C16,19.5 14.5,20 11,20 C7.5,20 6,19.5 6,18 Z" fill="#fff"/><path d="M17,12.5 C20,12.5 20,17 17,17" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
-  badgeCell.appendChild(bfBadge);
+  bfBadge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#0e7a87,#0d9e8c);flex-shrink:0;cursor:default;';
+  bfBadge.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24"><path d="M9,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M13,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M5,11 L17,11 L16,18 C16,19.5 14.5,20 11,20 C7.5,20 6,19.5 6,18 Z" fill="#fff"/><path d="M17,12.5 C20,12.5 20,17 17,17" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  badgeCell.appendChild(badgeLbl); badgeCell.appendChild(bfBadge);
   row.appendChild(badgeCell);
   // Booked? dropdown
   const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
