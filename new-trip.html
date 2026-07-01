@@ -506,15 +506,18 @@ function makeTransRow(data, container) {
       // Visual order for Train: Mode, From, Depart, To, Arrive, Cost, Booked
       row.style.gridTemplateColumns = '0.8fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 0.7fr';
     } else {
-      row.style.gridTemplateColumns = '0.8fr 0.5fr 1fr 1.2fr 0.6fr 1fr 0.6fr 1fr';
+      // Visual order for standard: Mode, Booking Reference, From, Depart, To, Arrive, Cost
+      row.style.gridTemplateColumns = '0.8fr 1fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 1fr';
     }
     row.querySelectorAll('[data-std]').forEach(c => c.style.display = isCarHire ? 'none' : '');
     row.querySelectorAll('[data-ch]').forEach(c => c.style.display = isCarHire ? '' : 'none');
     // Booking Reference isn't needed for Train — a Booked toggle shows instead
     stdRef.style.display = (isCarHire || isTrain) ? 'none' : '';
     trainBookedCell.style.display = (isCarHire || !isTrain) ? 'none' : '';
-    // For Train, shift Cost to sit right next to the Booked toggle at the end
-    transCostCell.style.order = isTrain ? '6' : '';
+    // For Train, shift Cost to sit right next to the Booked toggle at the end.
+    // For standard (Flight/Ferry/Taxi/Bus), shift Cost to the end too:
+    // Mode, Booking Reference, From, Depart, To, Arrive, Cost.
+    transCostCell.style.order = isTrain ? '6' : (isCarHire ? '' : '10');
     trainBookedCell.style.order = isTrain ? '7' : '';
     if (isCarHire) applyCarHireRole();
   };
