@@ -539,8 +539,9 @@ function makeTransRow(data, container) {
     scheduleSave(); showMode();
     // If changed to Flight, move this row to top of tRows
     if (modeSel.value === 'Flight') {
-      const parent = row.parentElement;
-      if (parent) parent.prepend(row);
+      const rowWrap = row.closest('.trans-row-wrap') || row;
+      const parent = rowWrap.parentElement;
+      if (parent) parent.prepend(rowWrap);
     }
   });
   showMode();
@@ -593,7 +594,7 @@ function makeTransRow(data, container) {
           if (nextDayTop) nextDayTop.after(nextTrans); else nextCard.prepend(nextTrans);
         } else {
           // Remove existing non-car-hire rows
-          nextTrans.querySelectorAll('.trans-row').forEach(r => r.remove());
+          nextTrans.querySelectorAll('.trans-row').forEach(r => (r.closest('.trans-row-wrap') || r).remove());
         }
         const nextTRows = document.createElement('div'); nextTrans.appendChild(nextTRows);
         makeTransRow({ mode: 'Car Hire', trans_cost: dailyCost, ch_supplier: supplier, ch_ref: ref, ch_days: String(days), ch_total_cost: chTotalCostInp.value, _carHireRole: role }, nextTRows);
@@ -613,9 +614,42 @@ function makeTransRow(data, container) {
     scheduleSave();
   }
 
-  container.appendChild(row);
+  // ── Drag-and-drop reordering (matches itinerary bullet items) ─────────
+  const wrap = document.createElement('div');
+  wrap.className = 'trans-row-wrap';
+  wrap.style.cssText = 'display:flex;align-items:stretch;gap:2px;position:relative;';
+  wrap.draggable = false;
+
+  const grip = document.createElement('div');
+  grip.className = 'trans-grip';
+  grip.title = 'Drag to reorder';
+  grip.innerHTML = '<svg width="10" height="14" viewBox="0 0 10 14" fill="none"><circle cx="3" cy="2.5" r="1.2" fill="#ccc"/><circle cx="7" cy="2.5" r="1.2" fill="#ccc"/><circle cx="3" cy="7" r="1.2" fill="#ccc"/><circle cx="7" cy="7" r="1.2" fill="#ccc"/><circle cx="3" cy="11.5" r="1.2" fill="#ccc"/><circle cx="7" cy="11.5" r="1.2" fill="#ccc"/></svg>';
+  grip.style.cssText = 'flex-shrink:0;cursor:grab;display:flex;align-items:center;justify-content:center;width:14px;opacity:0;transition:opacity 0.15s;user-select:none;-webkit-user-select:none;';
+  wrap.addEventListener('mouseenter', () => grip.style.opacity = '1');
+  wrap.addEventListener('mouseleave', () => grip.style.opacity = '0');
+
+  grip.addEventListener('mousedown', () => { wrap.draggable = true; });
+  document.addEventListener('mouseup', () => { wrap.draggable = false; }, { passive: true });
+
+  wrap.addEventListener('dragstart', e => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+    window._dragTransRow = wrap;
+    setTimeout(() => wrap.style.opacity = '0.4', 0);
+  });
+  wrap.addEventListener('dragend', () => {
+    wrap.draggable = false;
+    wrap.style.opacity = '';
+    document.querySelectorAll('.trans-drop-line').forEach(el => el.remove());
+    document.querySelectorAll('.trans-rows-dropzone').forEach(el => el.classList.remove('trans-rows-dropzone'));
+  });
+
+  wrap.style.flex = '1';
+  row.style.flex = '1';
+  wrap.appendChild(grip);
+  wrap.appendChild(row);
+  container.appendChild(wrap);
 }
-// Is this food row's day currently set to hotel-included breakfast?
 function isHotelBreakfastActive(row) {
   const card = row.closest('.day-card');
   if (!card) return false;
@@ -836,20 +870,59 @@ function addDay(d) {
     dBtn.onclick = () => {
       pushUndo();
       const rows = tRows.querySelectorAll('.trans-row');
-      if (rows.length > 0) { rows[rows.length - 1].remove(); scheduleSave(); }
+      if (rows.length > 0) { (rows[rows.length - 1].closest('.trans-row-wrap') || rows[rows.length - 1]).remove(); scheduleSave(); }
       else { ts.remove(); scheduleSave(); }
     };
     tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg><span class="sec-label"><span class="sec-label-text">Transport</span></span>';
     tb.appendChild(aBtn); tb.appendChild(dBtn); ts.appendChild(tb);
     const tRows = document.createElement('div'); ts.appendChild(tRows);
+    // Drag-and-drop reordering — same pattern as itinerary bullet items
+    tRows.addEventListener('dragover', e => {
+      if (!window._dragTransRow) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      tRows.classList.add('trans-rows-dropzone');
+      document.querySelectorAll('.trans-drop-line').forEach(el => el.remove());
+      const wraps = Array.from(tRows.querySelectorAll('.trans-row-wrap'));
+      let insertBefore = null;
+      for (const w of wraps) {
+        const rect = w.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) { insertBefore = w; break; }
+      }
+      const line = document.createElement('div');
+      line.className = 'trans-drop-line';
+      line.style.cssText = 'height:2px;background:#0e7a87;border-radius:2px;margin:1px 0;pointer-events:none;';
+      if (insertBefore) tRows.insertBefore(line, insertBefore);
+      else tRows.appendChild(line);
+    });
+    tRows.addEventListener('dragleave', e => {
+      if (!tRows.contains(e.relatedTarget)) {
+        tRows.classList.remove('trans-rows-dropzone');
+        document.querySelectorAll('.trans-drop-line').forEach(el => el.remove());
+      }
+    });
+    tRows.addEventListener('drop', e => {
+      if (!window._dragTransRow) return;
+      e.preventDefault();
+      pushUndo();
+      const dragged = window._dragTransRow;
+      document.querySelectorAll('.trans-drop-line').forEach(el => el.remove());
+      tRows.classList.remove('trans-rows-dropzone');
+      const wraps = Array.from(tRows.querySelectorAll('.trans-row-wrap'));
+      let insertBefore = null;
+      for (const w of wraps) {
+        if (w === dragged) continue;
+        const rect = w.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) { insertBefore = w; break; }
+      }
+      if (insertBefore) tRows.insertBefore(dragged, insertBefore);
+      else tRows.appendChild(dragged);
+      window._dragTransRow = null;
+      scheduleSave();
+    });
     if (d._transport && d._transport.length) {
-      // Flights always first
-      const sorted = [...d._transport].sort((a, b) => {
-        if (a.mode === 'Flight' && b.mode !== 'Flight') return -1;
-        if (b.mode === 'Flight' && a.mode !== 'Flight') return 1;
-        return 0;
-      });
-      sorted.forEach(t => makeTransRow(t, tRows));
+      // Preserve the saved order (manual drag-and-drop reordering relies on this;
+      // Flight rows still jump to the top automatically when a mode is changed to Flight)
+      d._transport.forEach(t => makeTransRow(t, tRows));
     }
     card.appendChild(ts);
   }

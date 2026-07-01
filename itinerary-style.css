@@ -433,6 +433,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .bullet-grip:active { cursor: grabbing; }
 .bullet-list-dropzone { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 .bullet-drag-row.dragging { opacity: 0.4; }
+.trans-grip { user-select: none; -webkit-user-select: none; }
+.trans-grip:active { cursor: grabbing; }
+.trans-rows-dropzone { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 
 /* ── Read-only share view ──────────────────────────────────────────
    Blocks all editing/dragging inside the itinerary body while still
@@ -447,5 +450,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .share-readonly .add-row-btn,
 .share-readonly .del-sec-btn,
 .share-readonly .bullet-grip,
+.share-readonly .trans-grip,
 .share-readonly .add-period-btn { display: none !important; }
 
