@@ -470,6 +470,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .bullet-grip:active { cursor: grabbing; }
 .bullet-list-dropzone { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 .bullet-drag-row.dragging { opacity: 0.4; }
+.trans-grip { user-select: none; -webkit-user-select: none; }
+.trans-grip:active { cursor: grabbing; }
+.trans-rows-dropzone { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 
 /* ── Read-only share view ──────────────────────────────────────────
    Blocks all editing/dragging inside the itinerary body while still
@@ -484,5 +487,56 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .share-readonly .add-row-btn,
 .share-readonly .del-sec-btn,
 .share-readonly .bullet-grip,
+.share-readonly .trans-grip,
 .share-readonly .add-period-btn { display: none !important; }
+
+/* ── Trip Map Panel (pins from a Google list, test: Porto) ─────────── */
+body.has-map-panel .nav,
+body.has-map-panel #trip-header-bar,
+body.has-map-panel .days { margin-right: 340px !important; transition: margin-right 0.2s; }
+/* cost-summary has no internal padding (unlike .days), so it needs the
+   extra 20px added directly to its margin to align with the day cards' edge */
+body.has-map-panel #cost-summary { margin-right: 360px !important; transition: margin-right 0.2s; }
+
+#map-panel { display: none; }
+#map-panel.active {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  background: #fff;
+  border-left: 1px solid rgba(0,0,0,0.08);
+  z-index: 40;
+}
+#map-panel-head { padding: 14px 16px; border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+#map-panel-city { font-size: 13px; font-weight: 700; color: #0e7a87; display: flex; align-items: center; gap: 6px; }
+#map-panel-synced { font-size: 9px; color: #b8b8b8; text-align: right; line-height: 1.3; white-space: nowrap; }
+#map-panel-leaflet { width: 100%; height: 240px; flex-shrink: 0; background: #f2f2f2; }
+#map-panel-list { overflow-y: auto; flex: 1; padding: 4px 0; scrollbar-width: none; -ms-overflow-style: none; }
+#map-panel-list::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.map-pin-row { padding: 7px 16px; font-size: 12px; color: #444; font-weight: 600; border-bottom: 1px solid rgba(0,0,0,0.04); cursor: pointer; transition: background 0.1s; }
+.map-pin-row:hover { background: rgba(14,122,135,0.05); }
+.map-pin-row:last-child { border-bottom: none; }
+.map-pin-cat { font-size: 10px; color: #aaa; font-weight: 500; margin-top: 1px; }
+.map-pin-empty { padding: 20px 16px; font-size: 12px; color: #bbb; text-align: center; }
+
+@media (max-width: 900px) {
+  body.has-map-panel .nav,
+  body.has-map-panel #trip-header-bar,
+  body.has-map-panel .days,
+  body.has-map-panel #cost-summary { margin-right: 0 !important; }
+  #map-panel.active {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 20px 16px;
+    border-left: none;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  #map-panel-leaflet { height: 190px; }
+  #map-panel-list { max-height: 220px; }
+}
 
