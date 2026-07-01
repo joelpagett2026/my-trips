@@ -1702,7 +1702,7 @@ function lockDownForShareView() {
   // (no PIN access from here), just a label + Print button.
   const navActions = document.querySelector('.nav-actions');
   if (navActions) {
-    navActions.innerHTML = '<div class="nav-status saved" style="opacity:0.85;"><span>Shared itinerary · view only</span></div><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button>';
+    navActions.innerHTML = '<div style="background:#fff;color:#0e7a87;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;letter-spacing:0.02em;">Shared itinerary · view only</div><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button>';
   }
   const tabBar = document.getElementById('itin-tab-bar');
   if (tabBar) tabBar.style.display = 'none';
