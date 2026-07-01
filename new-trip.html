@@ -510,11 +510,12 @@ function makeTransRow(data, container) {
       row.style.gridTemplateColumns = isFirstDay ? '0.8fr 0.5fr 1fr 1fr 0.6fr 0.6fr 1fr 1fr' : '0.8fr 0.5fr 1.2fr 0.7fr 1.2fr 0.8fr 1fr 1fr';
     } else if (isTrain) {
       // Visual order for Train: Mode, From, Depart, To, Arrive, Cost, Booked
-      row.style.gridTemplateColumns = '0.8fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 0.7fr';
+      // Percentages (not fr) so Bus's matching columns render the exact same pixel widths
+      row.style.gridTemplateColumns = '14.815% 22.222% 11.111% 18.519% 11.111% 9.259% 12.963%';
     } else if (isBus) {
       // Visual order for Bus: Mode, Departure Time, Departure Stop, Arrival Stop, Duration (no Cost)
-      // Column widths match Train's Mode/From/Depart/To/Arrive so the two row types line up
-      row.style.gridTemplateColumns = '0.8fr 1.2fr 0.6fr 1fr 0.6fr';
+      // Same percentages as Train's Mode/Depart/From/To/Arrive so the two row types line up exactly
+      row.style.gridTemplateColumns = '14.815% 11.111% 22.222% 18.519% 11.111%';
     } else {
       // Visual order for standard: Mode, Booking Reference, From, Depart, To, Arrive, Cost
       row.style.gridTemplateColumns = '0.8fr 1fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 1fr';
