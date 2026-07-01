@@ -285,7 +285,7 @@ function collectState() {
       obj[el.dataset.key] = val;
     });
     obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
-    obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); o._hotelBf = !row.querySelector('[data-key="notes"]'); return o; });
+    obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); o._hotelBf = (o.meal === 'Breakfast' && isHotelBreakfastActive(row)); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
     obj._accRemoved   = !card.querySelector('.s-acc');
     obj._foodRemoved  = !card.querySelector('.s-food');
@@ -542,6 +542,35 @@ function makeTransRow(data, container) {
 
   container.appendChild(row);
 }
+// Is this food row's day currently set to hotel-included breakfast?
+function isHotelBreakfastActive(row) {
+  const card = row.closest('.day-card');
+  if (!card) return false;
+  const bf = card.querySelector('.s-acc [data-key="breakfast"]');
+  return !!bf && bf.value === 'Yes';
+}
+// Shows/hides the Booked? and Time Booked cells on a food row —
+// hidden for Inflight/Airport Lounge meals, and for a Breakfast row
+// on a day where the hotel's breakfast toggle is switched on (not relevant
+// since it's already included/booked with the room).
+function updateFoodRowVisibility(row) {
+  const mealSel = row.querySelector('[data-key="meal"]');
+  if (!mealSel) return;
+  const isInflight = mealSel.value === 'Inflight' || mealSel.value === 'Airport Lounge';
+  const isHotelBreakfastRow = mealSel.value === 'Breakfast' && isHotelBreakfastActive(row);
+  const hideBookedCols = isInflight || isHotelBreakfastRow;
+  const notesEl = row.querySelector('[data-key="notes"]');
+  Array.from(row.querySelectorAll('.cell')).forEach(c => {
+    const lbl = c.querySelector('.cell-lbl');
+    if (!lbl) return;
+    if (lbl.textContent === 'Booked?') {
+      c.style.display = hideBookedCols ? 'none' : '';
+    } else if (lbl.textContent === 'Time Booked') {
+      c.style.display = hideBookedCols ? 'none' : ((notesEl && notesEl.value === 'Booked') ? '' : 'none');
+    }
+  });
+  row.style.gridTemplateColumns = hideBookedCols ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
+}
 function makeFoodRow(data, container, hotelBreakfast) {
   data = data || {};
   const row = document.createElement('div'); row.className = 'row-inner food-row';
@@ -560,23 +589,14 @@ function makeFoodRow(data, container, hotelBreakfast) {
   });
   mealSel.addEventListener('change', () => {
     scheduleSave();
-    const isInflight = mealSel.value === 'Inflight' || mealSel.value === 'Airport Lounge';
     // Auto-fill place field with Inflight
     const pi = row.querySelector('[data-key="place"]');
     if (pi) {
       if (mealSel.value === 'Inflight') pi.value = 'Inflight';
       pi.dispatchEvent(new Event('input'));
     }
-    // Show/hide notes and time cells
-    const cells = Array.from(row.querySelectorAll('.cell'));
-    cells.forEach(c => {
-      const lbl = c.querySelector('.cell-lbl');
-      if (lbl && (lbl.textContent === 'Booked?' || lbl.textContent === 'Time Booked')) {
-        c.style.display = isInflight ? 'none' : (lbl.textContent === 'Time Booked' ? (row.querySelector('[data-key="notes"]')?.value === 'Booked' ? '' : 'none') : '');
-      }
-    });
-    // Adjust grid columns
-    row.style.gridTemplateColumns = isInflight ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
+    // Show/hide Booked?/Time Booked cells (Inflight, or hotel-included Breakfast)
+    updateFoodRowVisibility(row);
   });
   mealCell.appendChild(mealLbl); mealCell.appendChild(mealSel);
   row.appendChild(mealCell);
@@ -606,36 +626,37 @@ function makeFoodRow(data, container, hotelBreakfast) {
   placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
   placeCell.appendChild(placeLbl); placeCell.appendChild(placeRow);
   row.appendChild(placeCell);
-  if (!hotelBreakfast) {
-    // Booked? dropdown
-    const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
-    const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked?';
-    const bookedSel = document.createElement('select');
-    bookedSel.className = 'cell-inp'; bookedSel.dataset.key = 'notes';
-    bookedSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
-    ['', 'Booked', 'Walk In Only', 'No Information'].forEach(opt => {
-      const o = document.createElement('option');
-      o.value = opt; o.textContent = opt || 'Select…';
-      if ((data.notes || '') === opt) o.selected = true;
-      bookedSel.appendChild(o);
-    });
-    bookedSel.addEventListener('change', () => {
-      scheduleSave();
-      const timeCell = row.querySelector('[data-time-cell]');
-      if (timeCell) timeCell.style.display = bookedSel.value === 'Booked' ? '' : 'none';
-    });
-    bookedCell.appendChild(bookedLbl); bookedCell.appendChild(bookedSel);
-    row.appendChild(bookedCell);
-    // Time Booked — only visible when Booked is selected
-    const timeCell = document.createElement('div'); timeCell.className = 'cell'; timeCell.setAttribute('data-time-cell', '1');
-    const timeLbl = document.createElement('div'); timeLbl.className = 'cell-lbl'; timeLbl.textContent = 'Time Booked';
-    const timeInp2 = inp(data.time, 'time', '', '');
-    timeInp2.addEventListener('input', scheduleSave);
-    timeCell.appendChild(timeLbl); timeCell.appendChild(timeInp2);
-    timeCell.style.display = (data.notes === 'Booked') ? '' : 'none';
-    row.appendChild(timeCell);
-  }
+  // Booked? dropdown
+  const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
+  const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked?';
+  const bookedSel = document.createElement('select');
+  bookedSel.className = 'cell-inp'; bookedSel.dataset.key = 'notes';
+  bookedSel.style.cssText = 'background:transparent;border:none;outline:none;font-family:Montserrat,sans-serif;font-size:13px;font-weight:400;color:#333;padding:0;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;';
+  ['', 'Booked', 'Walk In Only', 'No Information'].forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt; o.textContent = opt || 'Select…';
+    if ((data.notes || '') === opt) o.selected = true;
+    bookedSel.appendChild(o);
+  });
+  bookedSel.addEventListener('change', () => {
+    scheduleSave();
+    const timeCell = row.querySelector('[data-time-cell]');
+    if (timeCell) timeCell.style.display = bookedSel.value === 'Booked' ? '' : 'none';
+  });
+  bookedCell.appendChild(bookedLbl); bookedCell.appendChild(bookedSel);
+  row.appendChild(bookedCell);
+  // Time Booked — only visible when Booked is selected
+  const timeCell = document.createElement('div'); timeCell.className = 'cell'; timeCell.setAttribute('data-time-cell', '1');
+  const timeLbl = document.createElement('div'); timeLbl.className = 'cell-lbl'; timeLbl.textContent = 'Time Booked';
+  const timeInp2 = inp(data.time, 'time', '', '');
+  timeInp2.addEventListener('input', scheduleSave);
+  timeCell.appendChild(timeLbl); timeCell.appendChild(timeInp2);
+  timeCell.style.display = (data.notes === 'Booked') ? '' : 'none';
+  row.appendChild(timeCell);
   container.appendChild(row);
+  // Defer until the row is attached under its day-card so we can check
+  // the hotel breakfast toggle state (hides Booked?/Time Booked when relevant)
+  setTimeout(() => updateFoodRowVisibility(row), 0);
 }
 function addDay(d) {
   d = d || {};
@@ -923,6 +944,9 @@ function addDay(d) {
     bfUpdate();
     // propagateHotel handles all subsequent nights' acc fields AND breakfast rows
     propagateHotel();
+    // Refresh Booked?/Time Booked visibility for this day's own food rows too
+    // (propagateHotel only touches later nights, not the check-in day itself)
+    card.querySelectorAll('.food-row').forEach(r => updateFoodRowVisibility(r));
     scheduleSave();
   };
   // bfToggle is placed inside hotelCell below
