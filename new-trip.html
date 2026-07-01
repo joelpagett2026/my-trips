@@ -333,7 +333,14 @@ function collectState() {
     obj._periods = Array.from(card.querySelectorAll('[data-period]')).map(b => b.dataset.period);
     return obj;
   });
-  return { header, days, mapsUrl };
+  // Preserve map-panel pin data across saves — it's set via sync, not through
+  // any on-page field, so it must be explicitly carried forward here or every
+  // autosave would silently wipe it.
+  const extra = {};
+  if (window._loadedMapPins) extra.mapPins = window._loadedMapPins;
+  if (window._loadedPinsSyncedAt) extra.pinsSyncedAt = window._loadedPinsSyncedAt;
+  if (window._loadedMapListUrl) extra.mapListUrl = window._loadedMapListUrl;
+  return { header, days, mapsUrl, ...extra };
 }
 function inp(val, key, cls, ph) {
   const i = document.createElement('input'); i.type = 'text'; i.value = val || '';
@@ -1958,6 +1965,9 @@ async function init() {
   let state = null;
   try { state = await loadData(); } catch { /* silent */ }
   if (state && state.days && state.days.length) {
+    if (state.mapPins) window._loadedMapPins = state.mapPins;
+    if (state.pinsSyncedAt) window._loadedPinsSyncedAt = state.pinsSyncedAt;
+    if (state.mapListUrl) window._loadedMapListUrl = state.mapListUrl;
     restoreState(state);
     setStatus('saved', 'All saved');
     initMapPanel(state);
