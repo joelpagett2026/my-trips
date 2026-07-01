@@ -413,11 +413,6 @@ function makeTransRow(data, container) {
   const stdArr   = cell('Arrive', timeInp(data.arrive, 'arrive')); stdArr.dataset.std = '1';
   [stdRef, stdFrom, stdDep, stdTo, stdArr].forEach(c => row.appendChild(c));
 
-  // Duration — Bus mode only, replaces the Arrive time field
-  const busDurationCell = cell('Duration', inp(data.bus_duration, 'bus_duration', '', 'e.g. 1h 30m')); busDurationCell.dataset.bus = '1';
-  busDurationCell.querySelector('input').addEventListener('input', () => { scheduleSave(); recalc(); });
-  row.appendChild(busDurationCell);
-
   // Car Hire fields
   const chSupplierCell = cell('Supplier', inp(data.ch_supplier, 'ch_supplier', '', '')); chSupplierCell.dataset.ch = '1';
   chSupplierCell.querySelector('input').addEventListener('blur', () => { if (modeSel.value === 'Car Hire') propagateCarHire(); });
@@ -513,9 +508,8 @@ function makeTransRow(data, container) {
       // Percentages (not fr) so Bus's matching columns render the exact same pixel widths
       row.style.gridTemplateColumns = '14.815% 22.222% 11.111% 18.519% 11.111% 9.259% 12.963%';
     } else if (isBus) {
-      // Visual order for Bus: Mode, Departure Time, Departure Stop, Arrival Stop, Duration (no Cost)
-      // Same percentages as Train's Mode/Depart/From/To/Arrive so the two row types line up exactly
-      row.style.gridTemplateColumns = '14.815% 11.111% 22.222% 18.519% 11.111%';
+      // Bus: identical fields to Train — Mode, From, Depart, To, Arrive — just without Cost or Booked
+      row.style.gridTemplateColumns = '14.815% 22.222% 11.111% 18.519% 11.111%';
     } else {
       // Visual order for standard: Mode, Booking Reference, From, Depart, To, Arrive, Cost
       row.style.gridTemplateColumns = '0.8fr 1fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 1fr';
@@ -526,22 +520,11 @@ function makeTransRow(data, container) {
     stdRef.style.display = (isCarHire || isTrain || isBus) ? 'none' : '';
     trainBookedCell.style.display = (isCarHire || !isTrain) ? 'none' : '';
     // For Train, shift Cost to sit right next to the Booked toggle at the end.
-    // For standard (Flight/Ferry/Taxi), shift Cost to the end too:
-    // Mode, Booking Reference, From, Depart, To, Arrive, Cost.
+    // For standard (Flight/Ferry/Taxi), shift Cost to the end too.
     // Bus doesn't show Cost at all.
     transCostCell.style.display = isBus ? 'none' : '';
     transCostCell.style.order = isTrain ? '6' : (isCarHire ? '' : '10');
     trainBookedCell.style.order = isTrain ? '7' : '';
-    // Bus: relabel From/Depart/To, replace Arrive with Duration, reorder
-    stdArr.style.display = (isCarHire || isBus) ? 'none' : '';
-    busDurationCell.style.display = (isCarHire || !isBus) ? 'none' : '';
-    stdDep.querySelector('.cell-lbl').textContent = isBus ? 'Departure Time' : 'Depart';
-    stdFrom.querySelector('.cell-lbl').textContent = isBus ? 'Departure Stop' : 'From';
-    stdTo.querySelector('.cell-lbl').textContent = isBus ? 'Arrival Stop' : 'To';
-    stdDep.style.order = isBus ? '2' : '';
-    stdFrom.style.order = isBus ? '3' : '';
-    stdTo.style.order = isBus ? '4' : '';
-    busDurationCell.style.order = isBus ? '5' : '';
     if (isCarHire) applyCarHireRole();
   };
 
