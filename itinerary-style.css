@@ -457,7 +457,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 body.has-map-panel .nav,
 body.has-map-panel #trip-header-bar,
 body.has-map-panel .days,
-body.has-map-panel #cost-summary { margin-right: 340px; transition: margin-right 0.2s; }
+body.has-map-panel #cost-summary { margin-right: 340px !important; transition: margin-right 0.2s; }
 
 #map-panel { display: none; }
 #map-panel.active {
@@ -488,7 +488,7 @@ body.has-map-panel #cost-summary { margin-right: 340px; transition: margin-right
   body.has-map-panel .nav,
   body.has-map-panel #trip-header-bar,
   body.has-map-panel .days,
-  body.has-map-panel #cost-summary { margin-right: 0; }
+  body.has-map-panel #cost-summary { margin-right: 0 !important; }
   #map-panel.active {
     position: static;
     width: auto;
