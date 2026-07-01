@@ -524,9 +524,10 @@ function makeTransRow(data, container) {
     stdRef.style.display = (isCarHire || isTrain || isBus) ? 'none' : '';
     trainBookedCell.style.display = (isCarHire || !isTrain) ? 'none' : '';
     // For Train, shift Cost to sit right next to the Booked toggle at the end.
-    // For standard (Flight/Ferry/Taxi/Bus), shift Cost to the end too:
+    // For standard (Flight/Ferry/Taxi), shift Cost to the end too:
     // Mode, Booking Reference, From, Depart, To, Arrive, Cost.
-    transCostCell.style.order = isTrain ? '6' : (isCarHire ? '' : '10');
+    // Bus keeps Cost in its natural position (Mode, Cost, ...).
+    transCostCell.style.order = isTrain ? '6' : ((isCarHire || isBus) ? '' : '10');
     trainBookedCell.style.order = isTrain ? '7' : '';
     // Bus: relabel From/Depart/To, replace Arrive with Duration, reorder
     stdArr.style.display = (isCarHire || isBus) ? 'none' : '';
