@@ -413,6 +413,11 @@ function makeTransRow(data, container) {
   const stdArr   = cell('Arrive', timeInp(data.arrive, 'arrive')); stdArr.dataset.std = '1';
   [stdRef, stdFrom, stdDep, stdTo, stdArr].forEach(c => row.appendChild(c));
 
+  // Duration — Bus mode only, replaces the Arrive time field
+  const busDurationCell = cell('Duration', inp(data.bus_duration, 'bus_duration', '', 'e.g. 1h 30m')); busDurationCell.dataset.bus = '1';
+  busDurationCell.querySelector('input').addEventListener('input', () => { scheduleSave(); recalc(); });
+  row.appendChild(busDurationCell);
+
   // Car Hire fields
   const chSupplierCell = cell('Supplier', inp(data.ch_supplier, 'ch_supplier', '', '')); chSupplierCell.dataset.ch = '1';
   chSupplierCell.querySelector('input').addEventListener('blur', () => { if (modeSel.value === 'Car Hire') propagateCarHire(); });
@@ -499,26 +504,40 @@ function makeTransRow(data, container) {
   const showMode = () => {
     const isCarHire = modeSel.value === 'Car Hire';
     const isTrain = modeSel.value === 'Train';
+    const isBus = modeSel.value === 'Bus';
     row.classList.toggle('car-hire-row', isCarHire);
     if (isCarHire) {
       row.style.gridTemplateColumns = isFirstDay ? '0.8fr 0.5fr 1fr 1fr 0.6fr 0.6fr 1fr 1fr' : '0.8fr 0.5fr 1.2fr 0.7fr 1.2fr 0.8fr 1fr 1fr';
     } else if (isTrain) {
       // Visual order for Train: Mode, From, Depart, To, Arrive, Cost, Booked
       row.style.gridTemplateColumns = '0.8fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 0.7fr';
+    } else if (isBus) {
+      // Visual order for Bus: Mode, Cost, Departure Time, Departure Stop, Arrival Stop, Duration
+      row.style.gridTemplateColumns = '0.8fr 0.5fr 0.6fr 1.1fr 1.1fr 0.7fr';
     } else {
       // Visual order for standard: Mode, Booking Reference, From, Depart, To, Arrive, Cost
       row.style.gridTemplateColumns = '0.8fr 1fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 1fr';
     }
     row.querySelectorAll('[data-std]').forEach(c => c.style.display = isCarHire ? 'none' : '');
     row.querySelectorAll('[data-ch]').forEach(c => c.style.display = isCarHire ? '' : 'none');
-    // Booking Reference isn't needed for Train — a Booked toggle shows instead
-    stdRef.style.display = (isCarHire || isTrain) ? 'none' : '';
+    // Booking Reference isn't needed for Train or Bus
+    stdRef.style.display = (isCarHire || isTrain || isBus) ? 'none' : '';
     trainBookedCell.style.display = (isCarHire || !isTrain) ? 'none' : '';
     // For Train, shift Cost to sit right next to the Booked toggle at the end.
     // For standard (Flight/Ferry/Taxi/Bus), shift Cost to the end too:
     // Mode, Booking Reference, From, Depart, To, Arrive, Cost.
     transCostCell.style.order = isTrain ? '6' : (isCarHire ? '' : '10');
     trainBookedCell.style.order = isTrain ? '7' : '';
+    // Bus: relabel From/Depart/To, replace Arrive with Duration, reorder
+    stdArr.style.display = (isCarHire || isBus) ? 'none' : '';
+    busDurationCell.style.display = (isCarHire || !isBus) ? 'none' : '';
+    stdDep.querySelector('.cell-lbl').textContent = isBus ? 'Departure Time' : 'Depart';
+    stdFrom.querySelector('.cell-lbl').textContent = isBus ? 'Departure Stop' : 'From';
+    stdTo.querySelector('.cell-lbl').textContent = isBus ? 'Arrival Stop' : 'To';
+    stdDep.style.order = isBus ? '3' : '';
+    stdFrom.style.order = isBus ? '4' : '';
+    stdTo.style.order = isBus ? '5' : '';
+    busDurationCell.style.order = isBus ? '6' : '';
     if (isCarHire) applyCarHireRole();
   };
 
