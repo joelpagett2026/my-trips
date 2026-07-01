@@ -73,3 +73,28 @@ async function dbLoadRegistry() {
 async function dbSaveRegistry(trips) {
     return dbSave('trip-registry', { trips });
 }
+
+// ── SHARE LINKS ──────────────────────────────────────────────────────
+
+/** Create a new read-only share link for a trip. Returns the token. */
+async function dbCreateShare(tripId) {
+    const result = await apiCall('create_share', {}, { trip_id: tripId });
+    return result ? result.token : null;
+}
+
+/** List active share links for a trip. */
+async function dbListShares(tripId) {
+    const result = await apiCall('list_shares', { trip_id: tripId });
+    return result || [];
+}
+
+/** Revoke a share link. */
+async function dbRevokeShare(token) {
+    return apiCall('revoke_share', { token }, null, 'DELETE');
+}
+
+/** Load a shared (read-only, sanitized) itinerary by token. No auth needed. */
+async function dbLoadShare(token) {
+    const result = await apiCall('share_load', { token });
+    return result || null;
+}

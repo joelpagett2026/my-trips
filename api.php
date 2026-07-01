@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 // Every request (except /auth) must include a valid session token header
 $action = $_GET['action'] ?? '';
 
-if ($action !== 'auth') {
+if ($action !== 'auth' && $action !== 'share_load') {
     $token = $_SERVER['HTTP_X_AUTH_TOKEN'] ?? '';
     if ($token !== getActivePinHash()) {
         http_response_code(401);
@@ -284,6 +284,54 @@ Be concise in explanations. Execute changes directly — do not ask for confirma
         $text = $data['content'][0]['text'] ?? '';
         ok(['reply' => $text]);
 
+    // ── SHARE: CREATE A SHARE LINK (owner only) ────────────────────────
+    // POST /api.php?action=create_share  { "trip_id": "gothenburg-2026" }
+    case 'create_share':
+        $tripId = $body['trip_id'] ?? '';
+        if (!$tripId) fail('Missing trip_id');
+        ensureSharesTable();
+        $token = bin2hex(random_bytes(12));
+        db()->prepare("INSERT INTO shares (token, trip_id, created_at) VALUES (?, ?, NOW())")
+            ->execute([$token, $tripId]);
+        ok(['token' => $token]);
+
+    // ── SHARE: LIST ACTIVE SHARE LINKS FOR A TRIP (owner only) ─────────
+    // GET /api.php?action=list_shares&trip_id=...
+    case 'list_shares':
+        $tripId = $_GET['trip_id'] ?? '';
+        if (!$tripId) fail('Missing trip_id');
+        ensureSharesTable();
+        $stmt = db()->prepare("SELECT token, created_at FROM shares WHERE trip_id = ? ORDER BY created_at DESC");
+        $stmt->execute([$tripId]);
+        ok($stmt->fetchAll());
+
+    // ── SHARE: REVOKE A SHARE LINK (owner only) ─────────────────────────
+    // DELETE /api.php?action=revoke_share&token=...
+    case 'revoke_share':
+        $token = $_GET['token'] ?? $body['token'] ?? '';
+        if (!$token) fail('Missing token');
+        ensureSharesTable();
+        db()->prepare("DELETE FROM shares WHERE token = ?")->execute([$token]);
+        ok();
+
+    // ── SHARE: LOAD A SHARED ITINERARY (PUBLIC — no PIN required) ──────
+    // Booking references are stripped before returning.
+    // GET /api.php?action=share_load&token=...
+    case 'share_load':
+        $token = $_GET['token'] ?? '';
+        if (!$token) fail('Missing token');
+        ensureSharesTable();
+        $stmt = db()->prepare("SELECT trip_id FROM shares WHERE token = ?");
+        $stmt->execute([$token]);
+        $share = $stmt->fetch();
+        if (!$share) fail('This share link is no longer valid', 404);
+        $stmt2 = db()->prepare("SELECT data FROM itinerary WHERE id = ?");
+        $stmt2->execute([$share['trip_id']]);
+        $row = $stmt2->fetch();
+        if (!$row) fail('Trip not found', 404);
+        $data = stripBookingRefs(json_decode($row['data'], true));
+        ok(['data' => $data, 'trip_id' => $share['trip_id']]);
+
     // ── DELETE A RECORD ──────────────────────────────────────────────
     // DELETE /api.php?action=delete&id=...
     case 'delete':
@@ -329,4 +377,29 @@ function getActivePinHash(): string {
     } catch (\Exception $e) {
         return PIN_HASH;
     }
+}
+
+function ensureSharesTable(): void {
+    static $done = false;
+    if ($done) return;
+    db()->exec("CREATE TABLE IF NOT EXISTS shares (
+        token VARCHAR(40) PRIMARY KEY,
+        trip_id VARCHAR(255) NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )");
+    $done = true;
+}
+
+// Recursively blanks booking-reference fields ('ref', 'ch_ref') anywhere
+// in the itinerary data tree before it's returned to a public share link.
+function stripBookingRefs(mixed $data): mixed {
+    if (!is_array($data)) return $data;
+    foreach ($data as $k => $v) {
+        if ($k === 'ref' || $k === 'ch_ref') {
+            $data[$k] = '';
+        } elseif (is_array($v)) {
+            $data[$k] = stripBookingRefs($v);
+        }
+    }
+    return $data;
 }

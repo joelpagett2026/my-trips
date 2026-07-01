@@ -34,7 +34,7 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Planning
       </button>
-    </div><span id="maps-nav-wrap" style="display:none;align-items:center;gap:4px;"><a id="maps-link-btn" href="#" target="_blank" class="nav-btn maps-btn has-url" title="Open Google Maps"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></a><button id="maps-edit-btn" onclick="openMapsPopover()" title="Edit Maps link" style="background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,0.45);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color 0.15s;" onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></span><button id="maps-add-btn" onclick="openMapsPopover()" class="nav-btn maps-btn" title="Add Google Maps link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></button><input type="hidden" id="maps-url-val"><div id="maps-popover" style="display:none;position:fixed;top:56px;right:12px;z-index:200;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);padding:14px 16px;width:300px;"><div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Google Maps link</div><input id="maps-url-inp" type="url" placeholder="https://maps.app.goo.gl/…" style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;outline:none;box-sizing:border-box;font-size:16px;" oninput="setMapsUrl(this.value)"><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;"><button onclick="clearMapsUrl()" style="background:none;border:none;color:#bbb;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;padding:0;">Clear link</button><button onclick="closeMapsPopover()" style="background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button></div></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="nav-btn-text">Save</span></button><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span class="nav-btn-text">Undo</span></button><button class="nav-btn" onclick="pushUndo(); addDay();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="nav-btn-text">Day</span></button><button class="nav-btn danger" onclick="deleteTrip()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span class="nav-btn-text">Delete</span></button></div>
+    </div><span id="maps-nav-wrap" style="display:none;align-items:center;gap:4px;"><a id="maps-link-btn" href="#" target="_blank" class="nav-btn maps-btn has-url" title="Open Google Maps"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></a><button id="maps-edit-btn" onclick="openMapsPopover()" title="Edit Maps link" style="background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,0.45);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color 0.15s;" onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></span><button id="maps-add-btn" onclick="openMapsPopover()" class="nav-btn maps-btn" title="Add Google Maps link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></button><input type="hidden" id="maps-url-val"><div id="maps-popover" style="display:none;position:fixed;top:56px;right:12px;z-index:200;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);padding:14px 16px;width:300px;"><div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Google Maps link</div><input id="maps-url-inp" type="url" placeholder="https://maps.app.goo.gl/…" style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;outline:none;box-sizing:border-box;font-size:16px;" oninput="setMapsUrl(this.value)"><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;"><button onclick="clearMapsUrl()" style="background:none;border:none;color:#bbb;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;padding:0;">Clear link</button><button onclick="closeMapsPopover()" style="background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button></div></div><button id="share-btn" onclick="openSharePopover()" class="nav-btn" title="Share a read-only link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg><span class="nav-btn-text">Share</span></button><div id="share-popover" style="display:none;position:fixed;top:56px;right:12px;z-index:200;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);padding:14px 16px;width:320px;"><div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Share this itinerary</div><div style="font-size:11px;color:#999;margin-bottom:10px;line-height:1.4;">Anyone with the link can view and print — no PIN needed. They can't edit anything, and booking references are hidden.</div><div id="share-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div style="display:flex;justify-content:space-between;align-items:center;"><button onclick="closeSharePopover()" style="background:none;border:none;color:#bbb;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;padding:0;">Close</button><button onclick="createShareLink()" style="background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ New link</button></div></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="nav-btn-text">Save</span></button><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button><button class="nav-btn" id="undo-btn" onclick="undoState()" style="pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span class="nav-btn-text">Undo</span></button><button class="nav-btn" onclick="pushUndo(); addDay();"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="nav-btn-text">Day</span></button><button class="nav-btn danger" onclick="deleteTrip()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span class="nav-btn-text">Delete</span></button></div>
 </div>
 
 <div style="background:linear-gradient(135deg,#0e7a87,#0d9e8c);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -117,6 +117,9 @@ const slug   = params.get('slug') || 'new-trip';
 
 // Use slug as the database record ID
 const RECORD_ID = slug;
+
+// Read-only share link token, if this page was opened via a share link
+const SHARE_TOKEN = new URLSearchParams(window.location.search).get('share');
 
 // ── STATUS BADGE ──────────────────────────────────────────────────────
 let currentStatus = status;
@@ -213,6 +216,7 @@ let undoLock = false;
 const undoStack = [];
 const UNDO_LIMIT = 20;
 function pushUndo() {
+  if (SHARE_TOKEN) return; // read-only share view
   if (undoLock) return;
   undoStack.push(JSON.stringify(collectState()));
   if (undoStack.length > UNDO_LIMIT) undoStack.shift();
@@ -260,6 +264,7 @@ async function ensureRegistered() {
 }
 
 function scheduleSave() {
+  if (SHARE_TOKEN) return; // read-only share view — never writes
   setStatus('saving', 'Unsaved changes');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveData(collectState()), 1400);
@@ -744,6 +749,7 @@ function addDay(d) {
 
   // Remove button
   const delDayBtn = document.createElement('button');
+  delDayBtn.className = 'del-day-btn';
   delDayBtn.style.cssText = 'background:none;border:1.5px solid rgba(0,0,0,0.15);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#999;font-size:13px;line-height:1;padding:0;margin:0 12px;flex-shrink:0;transition:all 0.15s;align-self:center;';
   delDayBtn.innerHTML = '&times;';
   delDayBtn.title = 'Remove day';
@@ -1535,8 +1541,73 @@ document.addEventListener('click', e => {
   const pop     = document.getElementById('maps-popover');
   const addBtn  = document.getElementById('maps-add-btn');
   const editBtn = document.getElementById('maps-edit-btn');
-  if (pop && pop.style.display !== 'none' && !pop.contains(e.target) && !addBtn.contains(e.target) && !editBtn.contains(e.target)) closeMapsPopover();
+  if (pop && addBtn && editBtn && pop.style.display !== 'none' && !pop.contains(e.target) && !addBtn.contains(e.target) && !editBtn.contains(e.target)) closeMapsPopover();
 });
+
+// ── SHARE LINKS ────────────────────────────────────────────────────────
+function shareUrlFor(token) {
+  return location.origin + location.pathname + '?share=' + token;
+}
+async function openSharePopover() {
+  const pop = document.getElementById('share-popover');
+  pop.style.display = 'block';
+  await renderShareList();
+}
+function closeSharePopover() {
+  document.getElementById('share-popover').style.display = 'none';
+}
+async function renderShareList() {
+  const list = document.getElementById('share-list');
+  list.innerHTML = '<div style="font-size:12px;color:#bbb;">Loading…</div>';
+  let shares = [];
+  try { shares = await window.dbListShares(RECORD_ID); } catch { /* silent */ }
+  if (!shares.length) {
+    list.innerHTML = '<div style="font-size:12px;color:#bbb;">No active share links yet.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  shares.forEach(s => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;background:#f7f7f7;border-radius:8px;padding:7px 10px;';
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;';
+    const dateStr = (s.created_at || '').split(' ')[0];
+    info.innerHTML = '<div style="font-size:11px;font-weight:600;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + shareUrlFor(s.token) + '</div><div style="font-size:9px;color:#aaa;margin-top:1px;">Created ' + dateStr + '</div>';
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.style.cssText = 'flex-shrink:0;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px 8px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;color:#555;cursor:pointer;';
+    copyBtn.onclick = () => copyShareLink(s.token, copyBtn);
+    const revokeBtn = document.createElement('button');
+    revokeBtn.textContent = 'Revoke';
+    revokeBtn.style.cssText = 'flex-shrink:0;background:none;border:none;color:#e53e3e;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;cursor:pointer;padding:4px 2px;';
+    revokeBtn.onclick = () => revokeShareLink(s.token);
+    row.appendChild(info); row.appendChild(copyBtn); row.appendChild(revokeBtn);
+    list.appendChild(row);
+  });
+}
+async function createShareLink() {
+  try {
+    const token = await window.dbCreateShare(RECORD_ID);
+    if (token) await renderShareList();
+  } catch { /* silent */ }
+}
+async function copyShareLink(token, btn) {
+  try {
+    await navigator.clipboard.writeText(shareUrlFor(token));
+    if (btn) { const orig = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = orig, 1200); }
+  } catch { /* clipboard unavailable — silent */ }
+}
+async function revokeShareLink(token) {
+  if (!confirm('Revoke this share link? Anyone using it will lose access immediately.')) return;
+  try { await window.dbRevokeShare(token); } catch { /* silent */ }
+  await renderShareList();
+}
+document.addEventListener('click', e => {
+  const pop = document.getElementById('share-popover');
+  const btn = document.getElementById('share-btn');
+  if (pop && btn && pop.style.display !== 'none' && !pop.contains(e.target) && !btn.contains(e.target)) closeSharePopover();
+});
+
 document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", () => { scheduleSave(); recalc(); }); });
 document.getElementById('hdr-trav').addEventListener('input', function() {
   this.value = this.value.replace(/[^0-9]/g, '');
@@ -1608,8 +1679,45 @@ async function init() {
   }
   checkAutoComplete();
 }
+// Load a shared (read-only, sanitized) itinerary via its token — no PIN needed
+async function initShareView() {
+  try {
+    const result = await window.dbLoadShare(SHARE_TOKEN);
+    if (result && result.data && result.data.days && result.data.days.length) {
+      restoreState(result.data);
+    }
+  } catch { /* silent */ }
+  lockDownForShareView();
+}
+// Strip every editing affordance and make the page purely read-only + printable
+function lockDownForShareView() {
+  document.body.classList.add('share-readonly');
+  document.querySelectorAll('.days input, .days select, .days textarea, #hdr-dest, #hdr-dep, #hdr-ret, #hdr-trav').forEach(el => {
+    if (el.type === 'checkbox' || el.type === 'radio' || el.tagName === 'SELECT') el.disabled = true;
+    else el.readOnly = true;
+  });
+  document.querySelectorAll('[draggable]').forEach(el => { el.draggable = false; });
+  document.addEventListener('dragstart', e => e.preventDefault());
+  // Replace the nav bar with a minimal read-only bar: back to home removed
+  // (no PIN access from here), just a label + Print button.
+  const navActions = document.querySelector('.nav-actions');
+  if (navActions) {
+    navActions.innerHTML = '<div class="nav-status saved" style="opacity:0.85;"><span>Shared itinerary · view only</span></div><button class="nav-btn" onclick="window.print()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button>';
+  }
+  const tabBar = document.getElementById('itin-tab-bar');
+  if (tabBar) tabBar.style.display = 'none';
+  const chatPanel = document.getElementById('jt-chat-panel');
+  if (chatPanel) chatPanel.style.display = 'none';
+}
 // Wait for auth then run init
 (function waitForAuth() {
+  if (SHARE_TOKEN) {
+    initShareView().finally(() => {
+      const l = document.getElementById('loading');
+      if (l) l.classList.add('hidden');
+    });
+    return;
+  }
   if (typeof isAuthed === 'function' && isAuthed()) {
     init().finally(() => {
       const l = document.getElementById('loading');

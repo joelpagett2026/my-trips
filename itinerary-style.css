@@ -426,3 +426,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .bullet-list-dropzone { background: rgba(14,122,135,0.04); border-radius: 8px; outline: 2px dashed rgba(14,122,135,0.35); outline-offset: 2px; }
 .bullet-drag-row.dragging { opacity: 0.4; }
 
+/* ── Read-only share view ──────────────────────────────────────────
+   Blocks all editing/dragging inside the itinerary body while still
+   allowing Maps and ticket links to be opened. */
+.share-readonly #days { pointer-events: none; }
+.share-readonly #days a { pointer-events: auto; }
+.share-readonly .day-badge-num,
+.share-readonly input,
+.share-readonly select,
+.share-readonly textarea { cursor: default !important; }
+.share-readonly .del-day-btn,
+.share-readonly .add-row-btn,
+.share-readonly .del-sec-btn,
+.share-readonly .bullet-grip,
+.share-readonly .add-period-btn { display: none !important; }
+

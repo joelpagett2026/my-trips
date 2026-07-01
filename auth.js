@@ -3,6 +3,11 @@
 //  Uses pure-JS SHA-256 so it works on HTTP and HTTPS
 // ══════════════════════════════════════════════════════════════════════
 
+// Read-only share links bypass the PIN entirely — the itinerary page
+// itself loads sanitized, read-only data via a token instead.
+const IS_SHARE_VIEW = new URLSearchParams(window.location.search).has('share');
+if (IS_SHARE_VIEW) document.documentElement.style.visibility = 'visible';
+
 const SESSION_KEY = 'jh_auth';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 
@@ -90,8 +95,8 @@ function clearSession() {
     localStorage.removeItem(SESSION_KEY);
 }
 
-// Block page immediately if not authed
-if (!isAuthed()) {
+// Block page immediately if not authed (share links are always visible)
+if (!isAuthed() && !IS_SHARE_VIEW) {
     document.documentElement.style.visibility = 'hidden';
 }
 
@@ -186,7 +191,10 @@ function showPinOverlay() {
     });
 }
 
-if (isAuthed()) {
+if (IS_SHARE_VIEW) {
+    // Read-only share link — no PIN prompt, page stays visible.
+    document.documentElement.style.visibility = 'visible';
+} else if (isAuthed()) {
     document.documentElement.style.visibility = 'visible';
     window._mytripsAuthed = true;
     document.addEventListener('DOMContentLoaded', () => document.dispatchEvent(new Event('mytrips:authed')));
