@@ -12,7 +12,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=82">
+<link rel="stylesheet" href="/itinerary-style.css?v=83">
 <script src="/auth.js?v=2"></script>
 <script src="/db.js?v=2"></script>
 </head>
@@ -103,6 +103,18 @@
     </div>
 
   </div>
+</div>
+
+<div id="map-panel">
+  <div id="map-panel-head">
+    <span id="map-panel-city">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span id="map-panel-city-text">Pins</span>
+    </span>
+    <span id="map-panel-synced"></span>
+  </div>
+  <div id="map-panel-leaflet"></div>
+  <div id="map-panel-list"></div>
 </div>
 
 <script>
@@ -1802,6 +1814,141 @@ function generateDaysFromDates() {
   }
 }
 
+// ── Trip Map Panel (pins from a Google list) ──────────────────────────
+// Test rollout: Porto only. Add a slug here to enable it on another trip.
+const MAP_PIN_TRIPS = ['porto-2026'];
+let mapPanelLeaflet = null;
+let mapPanelMarkersLayer = null;
+let mapPanelCurrentCity = null;
+let mapPanelPinsByCity = {};
+let mapPanelObserver = null;
+
+function parseUKDate(str) {
+  if (!str) return null;
+  const parts = str.split('/');
+  if (parts.length !== 3) return null;
+  const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10), y = parseInt(parts[2], 10);
+  if (!d || !m || !y) return null;
+  return new Date(y, m - 1, d, 23, 59, 59);
+}
+
+function cityForDayLocation(loc) {
+  if (!loc) return 'Porto';
+  const l = loc.toLowerCase();
+  if (l.includes('braga')) return 'Braga';
+  if (l.includes('aveiro')) return 'Aveiro';
+  return 'Porto';
+}
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const then = new Date(iso);
+  const mins = Math.floor((Date.now() - then.getTime()) / 60000);
+  if (mins < 1) return 'Synced just now';
+  if (mins < 60) return `Synced ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Synced ${hrs}h ago`;
+  return `Synced ${Math.floor(hrs / 24)}d ago`;
+}
+
+function loadLeafletAssets() {
+  return new Promise((resolve) => {
+    if (window.L) { resolve(); return; }
+    const cssLink = document.createElement('link');
+    cssLink.rel = 'stylesheet';
+    cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(cssLink);
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = resolve;
+    document.head.appendChild(script);
+  });
+}
+
+async function initMapPanel(state) {
+  if (!MAP_PIN_TRIPS.includes(RECORD_ID)) return;
+  const pins = state.mapPins;
+  if (!pins || !pins.length) return;
+  // Once the trip's return date has passed, the panel goes away entirely
+  const retDate = parseUKDate(state.header && state.header.ret);
+  if (retDate && new Date() > retDate) return;
+
+  mapPanelPinsByCity = {};
+  pins.forEach(p => {
+    if (!mapPanelPinsByCity[p.city]) mapPanelPinsByCity[p.city] = [];
+    mapPanelPinsByCity[p.city].push(p);
+  });
+
+  await loadLeafletAssets();
+
+  document.body.classList.add('has-map-panel');
+  document.getElementById('map-panel').classList.add('active');
+  const syncedEl = document.getElementById('map-panel-synced');
+  if (syncedEl) syncedEl.textContent = timeAgo(state.pinsSyncedAt);
+
+  mapPanelLeaflet = L.map('map-panel-leaflet', { zoomControl: false, attributionControl: false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd', maxZoom: 19, detectRetina: true
+  }).addTo(mapPanelLeaflet);
+  mapPanelMarkersLayer = L.layerGroup().addTo(mapPanelLeaflet);
+
+  // Switch city based on which day card is currently in view
+  const dayCards = Array.from(document.querySelectorAll('.day-card'));
+  if (dayCards.length && 'IntersectionObserver' in window) {
+    const visibleMap = new Map();
+    mapPanelObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => visibleMap.set(e.target, e.intersectionRatio));
+      let best = null, bestRatio = 0;
+      visibleMap.forEach((ratio, el) => { if (ratio > bestRatio) { bestRatio = ratio; best = el; } });
+      if (best) {
+        const locInput = best.querySelector('[data-key="to"]');
+        const city = cityForDayLocation(locInput ? locInput.value : '');
+        if (city !== mapPanelCurrentCity) renderMapPanelCity(city);
+      }
+    }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+    dayCards.forEach(c => mapPanelObserver.observe(c));
+  }
+
+  const firstLoc = dayCards[0] ? (dayCards[0].querySelector('[data-key="to"]')?.value || '') : '';
+  renderMapPanelCity(cityForDayLocation(firstLoc));
+}
+
+function renderMapPanelCity(city) {
+  mapPanelCurrentCity = city;
+  const pins = mapPanelPinsByCity[city] || [];
+  const cityTextEl = document.getElementById('map-panel-city-text');
+  if (cityTextEl) cityTextEl.textContent = city + (pins.length ? ` · ${pins.length} pin${pins.length === 1 ? '' : 's'}` : '');
+
+  mapPanelMarkersLayer.clearLayers();
+  const listEl = document.getElementById('map-panel-list');
+  listEl.innerHTML = '';
+
+  if (!pins.length) {
+    listEl.innerHTML = '<div class="map-pin-empty">No pins for ' + city + ' yet</div>';
+    mapPanelLeaflet.setView([41.15, -8.6], 12);
+    return;
+  }
+
+  const bounds = [];
+  pins.forEach(p => {
+    const marker = L.circleMarker([p.lat, p.lng], {
+      radius: 6, color: '#0e7a87', weight: 2, fillColor: '#0e7a87', fillOpacity: 0.6
+    }).bindTooltip(p.name, { direction: 'top' });
+    marker.addTo(mapPanelMarkersLayer);
+    bounds.push([p.lat, p.lng]);
+
+    const row = document.createElement('div');
+    row.className = 'map-pin-row';
+    row.innerHTML = '<div>' + p.name + '</div>' + (p.category ? '<div class="map-pin-cat">' + p.category + '</div>' : '');
+    row.addEventListener('click', () => { mapPanelLeaflet.setView([p.lat, p.lng], 16); marker.openTooltip(); });
+    listEl.appendChild(row);
+  });
+
+  if (bounds.length === 1) mapPanelLeaflet.setView(bounds[0], 15);
+  else mapPanelLeaflet.fitBounds(bounds, { padding: [24, 24] });
+  setTimeout(() => mapPanelLeaflet.invalidateSize(), 100);
+}
+
 async function init() {
   try {
     const trips = await window.dbLoadRegistry();
@@ -1813,6 +1960,7 @@ async function init() {
   if (state && state.days && state.days.length) {
     restoreState(state);
     setStatus('saved', 'All saved');
+    initMapPanel(state);
   } else {
     generateDaysFromDates();
     setStatus('saving', 'Not yet saved');
