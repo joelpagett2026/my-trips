@@ -12,7 +12,9 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=82">
+<link rel="stylesheet" href="/itinerary-style.css?v=83">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/auth.js?v=2"></script>
 <script src="/db.js?v=2"></script>
 </head>
@@ -1818,9 +1820,9 @@ async function deleteTrip() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
     Undo
   </button>
-  <button class="itin-tab-btn" onclick="document.getElementById('jt-chat-panel').classList.toggle('open')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    Chat
+  <button class="itin-tab-btn" onclick="openMapOverlay()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    Map
   </button>
   <div class="itin-tab-switch">
     <div class="itin-tab-switch-label">Status</div>
@@ -1838,6 +1840,103 @@ async function deleteTrip() {
     Delete
   </button>
 </div>
+
+<!-- ── MOBILE TRIP MAP OVERLAY ── -->
+<div class="itin-map-panel" id="itin-map-panel">
+  <div class="itin-map-panel-header">
+    <div class="itin-map-panel-title">Trip Map</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a id="itin-map-gmaps-link" href="#" target="_blank" class="itin-map-gmaps-link">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Google Maps
+      </a>
+      <button id="itin-map-close" onclick="document.getElementById('itin-map-panel').classList.remove('open')">✕</button>
+    </div>
+  </div>
+  <div id="itin-map-canvas" class="itin-map-canvas"></div>
+  <div id="itin-map-empty" class="itin-map-empty" style="display:none;">
+    <div>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.35;margin-bottom:8px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <div>Add a hotel name or day location to see it plotted here.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── MOBILE TRIP MAP OVERLAY ─────────────────────────────────────────
+let _tripMapInited = false;
+let _tripLeafletMap = null;
+const _tripGeocodeCache = {};
+
+async function geocodeTripPlace(place) {
+  if (!place) return null;
+  if (_tripGeocodeCache[place]) return _tripGeocodeCache[place];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&accept-language=en`, { headers: { 'Accept-Language': 'en' } });
+    const j = await r.json();
+    if (j && j[0]) {
+      const result = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), label: place };
+      _tripGeocodeCache[place] = result;
+      return result;
+    }
+  } catch {}
+  return null;
+}
+
+function openMapOverlay() {
+  document.getElementById('itin-map-panel').classList.add('open');
+
+  const gUrl = document.getElementById('maps-url-val')?.value || '';
+  const gLink = document.getElementById('itin-map-gmaps-link');
+  if (gLink) gLink.style.display = gUrl ? 'flex' : 'none';
+  if (gLink && gUrl) gLink.href = gUrl;
+
+  if (_tripMapInited) {
+    setTimeout(() => _tripLeafletMap && _tripLeafletMap.invalidateSize(), 60);
+    return;
+  }
+  _tripMapInited = true;
+  buildTripMap();
+}
+
+async function buildTripMap() {
+  const canvasEl = document.getElementById('itin-map-canvas');
+  const emptyEl = document.getElementById('itin-map-empty');
+  const state = collectState();
+
+  // Prefer hotel names (most specific pin); fall back to each day's location
+  const hotelNames = [...new Set(state.days.map(d => (d.hotel || '').trim()).filter(Boolean))];
+  const locNames = [...new Set(state.days.map(d => (d.to || d.from || '').trim()).filter(Boolean))];
+  const places = hotelNames.length ? hotelNames : locNames;
+
+  if (!places.length) { canvasEl.style.display = 'none'; emptyEl.style.display = 'flex'; return; }
+
+  const results = (await Promise.all(places.map(geocodeTripPlace))).filter(Boolean);
+  if (!results.length) { canvasEl.style.display = 'none'; emptyEl.style.display = 'flex'; return; }
+
+  canvasEl.style.display = 'block'; emptyEl.style.display = 'none';
+
+  const points = results.map(r => [r.lat, r.lon]);
+  _tripLeafletMap = L.map('itin-map-canvas', { zoomControl: true, attributionControl: false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, detectRetina: true }).addTo(_tripLeafletMap);
+
+  if (points.length > 1) {
+    _tripLeafletMap.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
+    L.polyline(points, { color: '#0e7a87', weight: 3, opacity: 0.85, dashArray: '6,4' }).addTo(_tripLeafletMap);
+  } else {
+    _tripLeafletMap.setView(points[0], 14);
+  }
+
+  results.forEach((r, i) => {
+    const isEnd = i === 0 || i === results.length - 1;
+    L.circleMarker([r.lat, r.lon], { radius: isEnd ? 8 : 6, fillColor: '#0e7a87', color: '#fff', weight: 2, fillOpacity: 1 })
+      .addTo(_tripLeafletMap)
+      .bindPopup(`<b>${r.label}</b>`);
+  });
+
+  setTimeout(() => _tripLeafletMap.invalidateSize(), 100);
+}
+</script>
 
 <script>
 // Show tab bar on mobile, sync undo state and status toggle
