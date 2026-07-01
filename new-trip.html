@@ -290,7 +290,17 @@ function collectState() {
       }
       obj[el.dataset.key] = val;
     });
-    obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); return o; });
+    obj._transport = Array.from(card.querySelectorAll('.trans-row')).map(row => {
+      const o = {};
+      row.querySelectorAll('[data-key]').forEach(el => {
+        if (el.type === 'checkbox') {
+          o[el.dataset.key] = el.dataset.na === '1' ? 'na' : el.checked;
+        } else {
+          o[el.dataset.key] = el.value;
+        }
+      });
+      return o;
+    });
     obj._food = Array.from(card.querySelectorAll('.food-row')).map(row => { const o = {}; row.querySelectorAll('[data-key]').forEach(el => { o[el.dataset.key] = el.value; }); o._hotelBf = (o.meal === 'Breakfast' && isHotelBreakfastActive(row)); return o; });
     obj._transRemoved = !card.querySelector('.s-trans');
     obj._accRemoved   = !card.querySelector('.s-acc');
