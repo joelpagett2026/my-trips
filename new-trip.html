@@ -569,6 +569,8 @@ function updateFoodRowVisibility(row) {
       c.style.display = hideBookedCols ? 'none' : ((notesEl && notesEl.value === 'Booked') ? '' : 'none');
     }
   });
+  const badge = row.querySelector('[data-bf-badge]');
+  if (badge) badge.style.display = isHotelBreakfastRow ? 'inline-flex' : 'none';
   row.style.gridTemplateColumns = hideBookedCols ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
 }
 function makeFoodRow(data, container, hotelBreakfast) {
@@ -619,11 +621,19 @@ function makeFoodRow(data, container, hotelBreakfast) {
   };
   placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
   updatePlaceLink();
+  // "Included with hotel rate" badge — shown for a Breakfast row on a day
+  // where the hotel's breakfast toggle is on. A globe icon since it's the
+  // same location as the hotel; hover shows the explanation.
+  const bfBadge = document.createElement('span');
+  bfBadge.setAttribute('data-bf-badge', '1');
+  bfBadge.title = 'Included with hotel rate';
+  bfBadge.style.cssText = 'display:none;align-items:center;justify-content:center;color:#0e7a87;flex-shrink:0;line-height:1;cursor:default;';
+  bfBadge.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
   // Apply Inflight state after full row is in DOM
   if (data.meal === 'Inflight' || data.meal === 'Airport Lounge') {
     setTimeout(() => mealSel.dispatchEvent(new Event('change')), 0);
   }
-  placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
+  placeRow.appendChild(placeInp); placeRow.appendChild(placeLink); placeRow.appendChild(bfBadge);
   placeCell.appendChild(placeLbl); placeCell.appendChild(placeRow);
   row.appendChild(placeCell);
   // Booked? dropdown
