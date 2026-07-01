@@ -46,9 +46,10 @@
     <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Departure</span><input class="th-inp sm hdr-field" id="hdr-dep" placeholder="dd/mm/yyyy" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:110px;line-height:1;text-align:center;" value=""></div>
     <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
     <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Return</span><input class="th-inp sm hdr-field" id="hdr-ret" placeholder="dd/mm/yyyy" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:110px;line-height:1;text-align:center;" value=""></div>
+    <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Travellers</span><input class="th-inp sm hdr-field" id="hdr-trav" inputmode="numeric" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:36px;line-height:1;text-align:center;" value="2"></div>
   </div>
 </div>
-  <input type="hidden" id="hdr-trav" value="2">
   <input type="hidden" id="page-title" value="New Trip">
 </div>
 
@@ -1537,6 +1538,12 @@ document.addEventListener('click', e => {
   if (pop && pop.style.display !== 'none' && !pop.contains(e.target) && !addBtn.contains(e.target) && !editBtn.contains(e.target)) closeMapsPopover();
 });
 document.querySelectorAll(".hdr-field").forEach(el => { el.addEventListener("focus", () => pushUndo()); el.addEventListener("input", () => { scheduleSave(); recalc(); }); });
+document.getElementById('hdr-trav').addEventListener('input', function() {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
+document.getElementById('hdr-trav').addEventListener('blur', function() {
+  if (!this.value || parseInt(this.value) < 1) { this.value = '1'; scheduleSave(); recalc(); }
+});
 renderStatusToggle(); // Show correct badge immediately on load
 
 async function manualSave() {
