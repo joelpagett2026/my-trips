@@ -582,11 +582,16 @@ function updateFoodRowVisibility(row) {
       placeLinkEl.style.display = 'none';
     }
   }
-  // "Included with hotel rate" badge — shown inline at the end of the
-  // Location row, vertically centered
-  const badge = row.querySelector('[data-bf-badge]');
-  if (badge) badge.style.display = isHotelBreakfastRow ? 'inline-flex' : 'none';
-  row.style.gridTemplateColumns = hideBookedCols ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
+  // "Included with hotel rate" badge — own centered column
+  const badgeCell = row.querySelector('[data-bf-badge-cell]');
+  if (badgeCell) badgeCell.style.display = isHotelBreakfastRow ? 'flex' : 'none';
+  if (isHotelBreakfastRow) {
+    row.style.gridTemplateColumns = '0.55fr 1.3fr 0.65fr';
+  } else if (hideBookedCols) {
+    row.style.gridTemplateColumns = '0.55fr 1.1fr';
+  } else {
+    row.style.gridTemplateColumns = '0.55fr 1.1fr 1.1fr 0.75fr';
+  }
 }
 function makeFoodRow(data, container, hotelBreakfast) {
   data = data || {};
@@ -633,16 +638,20 @@ function makeFoodRow(data, container, hotelBreakfast) {
   if (data.meal === 'Inflight' || data.meal === 'Airport Lounge') {
     setTimeout(() => mealSel.dispatchEvent(new Event('change')), 0);
   }
-  // "Included with hotel rate" badge — pinned to the end of this row,
-  // vertically centered. Styled like the section icons: teal circle, white icon.
-  const bfBadge = document.createElement('span');
-  bfBadge.setAttribute('data-bf-badge', '1');
-  bfBadge.title = 'Included with hotel rate';
-  bfBadge.style.cssText = 'display:none;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0e7a87,#0d9e8c);flex-shrink:0;cursor:default;margin-left:auto;';
-  bfBadge.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M9,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M13,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M5,11 L17,11 L16,18 C16,19.5 14.5,20 11,20 C7.5,20 6,19.5 6,18 Z" fill="#fff"/><path d="M17,12.5 C20,12.5 20,17 17,17" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
-  placeRow.appendChild(placeInp); placeRow.appendChild(placeLink); placeRow.appendChild(bfBadge);
+  placeRow.appendChild(placeInp); placeRow.appendChild(placeLink);
   placeCell.appendChild(placeLbl); placeCell.appendChild(placeRow);
   row.appendChild(placeCell);
+  // "Included with hotel rate" badge — own centered column.
+  // Styled like the section icons: teal circle, white icon.
+  const badgeCell = document.createElement('div');
+  badgeCell.className = 'cell'; badgeCell.setAttribute('data-bf-badge-cell', '1');
+  badgeCell.style.cssText = 'display:none;align-items:center;justify-content:center;';
+  const bfBadge = document.createElement('span');
+  bfBadge.title = 'Included with hotel rate';
+  bfBadge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0e7a87,#0d9e8c);flex-shrink:0;cursor:default;';
+  bfBadge.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M9,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M13,4c-.5,1-.5,2,.5,3s.5,2,0,3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M5,11 L17,11 L16,18 C16,19.5 14.5,20 11,20 C7.5,20 6,19.5 6,18 Z" fill="#fff"/><path d="M17,12.5 C20,12.5 20,17 17,17" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  badgeCell.appendChild(bfBadge);
+  row.appendChild(badgeCell);
   // Booked? dropdown
   const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
   const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked?';
