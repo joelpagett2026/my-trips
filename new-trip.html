@@ -569,6 +569,20 @@ function updateFoodRowVisibility(row) {
       c.style.display = hideBookedCols ? 'none' : ((notesEl && notesEl.value === 'Booked') ? '' : 'none');
     }
   });
+  // Location Maps link — hidden for Inflight and for hotel-included breakfast
+  // (same place as the hotel, so the link isn't relevant)
+  const placeLinkEl = row.querySelector('[data-place-link]');
+  const placeInpEl = row.querySelector('[data-key="place"]');
+  if (placeLinkEl) {
+    const v = placeInpEl ? placeInpEl.value.trim() : '';
+    if (v && !isInflight && !isHotelBreakfastRow) {
+      placeLinkEl.href = 'https://www.google.com/maps/search/' + encodeURIComponent(v);
+      placeLinkEl.style.display = 'inline-flex';
+    } else {
+      placeLinkEl.style.display = 'none';
+    }
+  }
+  // "Included with hotel rate" badge
   const badge = row.querySelector('[data-bf-badge]');
   if (badge) badge.style.display = isHotelBreakfastRow ? 'inline-flex' : 'none';
   row.style.gridTemplateColumns = hideBookedCols ? '0.55fr 1.1fr' : '0.55fr 1.1fr 1.1fr 0.75fr';
@@ -609,26 +623,19 @@ function makeFoodRow(data, container, hotelBreakfast) {
   const placeInp = inp(data.place, 'place', '', '');
   placeInp.style.flex = '1';
   const placeLink = document.createElement('a');
+  placeLink.setAttribute('data-place-link', '1');
   placeLink.target = '_blank';
   placeLink.style.cssText = 'display:none;color:#0e7a87;flex-shrink:0;line-height:1;';
   placeLink.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
-  const updatePlaceLink = () => {
-    const v = placeInp.value.trim();
-    const meal = row.querySelector('[data-key="meal"]');
-    const isInflight = meal && meal.value === 'Inflight';
-    if (v && !isInflight) { placeLink.href = 'https://www.google.com/maps/search/' + encodeURIComponent(v); placeLink.style.display = 'inline-flex'; }
-    else { placeLink.style.display = 'none'; }
-  };
-  placeInp.addEventListener('input', () => { scheduleSave(); updatePlaceLink(); });
-  updatePlaceLink();
+  placeInp.addEventListener('input', () => { scheduleSave(); updateFoodRowVisibility(row); });
   // "Included with hotel rate" badge — shown for a Breakfast row on a day
-  // where the hotel's breakfast toggle is on. A globe icon since it's the
-  // same location as the hotel; hover shows the explanation.
+  // where the hotel's breakfast toggle is on. Location link is hidden since
+  // it's the same place as the hotel, so the badge is the more prominent cue.
   const bfBadge = document.createElement('span');
   bfBadge.setAttribute('data-bf-badge', '1');
   bfBadge.title = 'Included with hotel rate';
-  bfBadge.style.cssText = 'display:none;align-items:center;justify-content:center;color:#0e7a87;flex-shrink:0;line-height:1;cursor:default;';
-  bfBadge.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+  bfBadge.style.cssText = 'display:none;align-items:center;justify-content:center;gap:3px;flex-shrink:0;line-height:1;cursor:default;font-size:15px;background:#fdf1de;border:1px solid #f0d9ae;border-radius:20px;padding:3px 8px;';
+  bfBadge.innerHTML = '🥐';
   // Apply Inflight state after full row is in DOM
   if (data.meal === 'Inflight' || data.meal === 'Airport Lounge') {
     setTimeout(() => mealSel.dispatchEvent(new Event('change')), 0);
