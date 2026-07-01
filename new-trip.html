@@ -513,7 +513,8 @@ function makeTransRow(data, container) {
       row.style.gridTemplateColumns = '0.8fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 0.7fr';
     } else if (isBus) {
       // Visual order for Bus: Mode, Departure Time, Departure Stop, Arrival Stop, Duration (no Cost)
-      row.style.gridTemplateColumns = '0.8fr 0.6fr 1.2fr 1.2fr 0.8fr';
+      // Column widths match Train's Mode/From/Depart/To/Arrive so the two row types line up
+      row.style.gridTemplateColumns = '0.8fr 1.2fr 0.6fr 1fr 0.6fr';
     } else {
       // Visual order for standard: Mode, Booking Reference, From, Depart, To, Arrive, Cost
       row.style.gridTemplateColumns = '0.8fr 1fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 1fr';
