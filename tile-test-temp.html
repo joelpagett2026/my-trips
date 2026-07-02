@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tile Gap Test - Control (no fix)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  body { margin: 0; font-family: sans-serif; }
+  #label { padding: 8px 12px; background: #222; color: #fff; font-size: 13px; }
+  #map { width: 340px; height: 400px; }
+</style>
+</head>
+<body>
+<div id="label">CONTROL — no fix applied</div>
+<div id="map"></div>
+<script>
+const map = L.map('map', { zoomControl: false, attributionControl: false });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+  subdomains: 'abcd', maxZoom: 19, detectRetina: true
+}).addTo(map);
+const pins = [
+  [41.1579,-8.6291],[41.1456,-8.6146],[41.1493,-8.6069],[41.1483,-8.6710],
+  [41.1376,-8.6087],[41.1372,-8.6089],[41.1450,-8.6069],[41.1421,-8.6103]
+];
+const markers = L.layerGroup().addTo(map);
+pins.forEach(p => L.circleMarker(p, {radius:6,color:'#0e7a87',weight:2,fillColor:'#0e7a87',fillOpacity:0.6}).addTo(markers));
+map.fitBounds(pins, {padding:[24,24]});
+window._map = map;
+</script>
+</body>
+</html>
