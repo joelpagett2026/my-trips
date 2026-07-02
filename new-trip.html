@@ -12,7 +12,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=90">
+<link rel="stylesheet" href="/itinerary-style.css?v=91">
 <script src="/auth.js?v=2"></script>
 <script src="/db.js?v=2"></script>
 </head>
@@ -1955,7 +1955,7 @@ function renderMapPanelCity(city) {
   });
 
   if (bounds.length === 1) mapPanelLeaflet.setView(bounds[0], 15);
-  else mapPanelLeaflet.fitBounds(bounds, { padding: [24, 24] });
+  else mapPanelLeaflet.fitBounds(bounds, { padding: [32, 32], maxZoom: 16 });
   setTimeout(() => mapPanelLeaflet.invalidateSize(), 100);
 }
 
@@ -2091,7 +2091,17 @@ function openMobileMaps() {
   const panel = document.getElementById('map-panel');
   if (panel && panel.classList.contains('active')) {
     panel.classList.add('mobile-open');
-    setTimeout(() => { if (typeof mapPanelLeaflet !== 'undefined' && mapPanelLeaflet) mapPanelLeaflet.invalidateSize(); }, 60);
+    // The map was originally fitted to its bounds while the panel was
+    // display:none (zero-size container), so the zoom/center is wrong.
+    // Now that it's actually visible, resize the tiles and re-fit bounds.
+    setTimeout(() => {
+      if (typeof mapPanelLeaflet !== 'undefined' && mapPanelLeaflet) {
+        mapPanelLeaflet.invalidateSize();
+        if (typeof renderMapPanelCity === 'function' && mapPanelCurrentCity) {
+          renderMapPanelCity(mapPanelCurrentCity);
+        }
+      }
+    }, 60);
     return;
   }
   const url = document.getElementById('maps-url-val')?.value || '';
