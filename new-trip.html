@@ -518,6 +518,10 @@ function makeTransRow(data, container) {
   trainBookedCell.appendChild(trainBookedLbl); trainBookedCell.appendChild(trainCbWrap);
   row.appendChild(trainBookedCell);
 
+  // Bus Number — Bus mode only, appended at the very end of the row
+  const busNumberCell = cell('Bus Number', inp(data.bus_number, 'bus_number', '', '')); busNumberCell.dataset.bus = '1';
+  row.appendChild(busNumberCell);
+
   const showMode = () => {
     const isCarHire = modeSel.value === 'Car Hire';
     const isTrain = modeSel.value === 'Train';
@@ -530,8 +534,9 @@ function makeTransRow(data, container) {
       // Percentages (not fr) so Bus's matching columns render the exact same pixel widths
       row.style.gridTemplateColumns = '14.815% 22.222% 11.111% 18.519% 11.111% 9.259% 12.963%';
     } else if (isBus) {
-      // Bus: identical fields to Train — Mode, From, Depart, To, Arrive — just without Cost or Booked
-      row.style.gridTemplateColumns = '14.815% 22.222% 11.111% 18.519% 11.111%';
+      // Visual order for Bus: Mode, From, Depart, To, Arrive, Cost, Bus Number
+      // Same column widths as Train so the two line up
+      row.style.gridTemplateColumns = '14.815% 22.222% 11.111% 18.519% 11.111% 9.259% 12.963%';
     } else {
       // Visual order for standard: Mode, Booking Reference, From, Depart, To, Arrive, Cost
       row.style.gridTemplateColumns = '0.8fr 1fr 1.2fr 0.6fr 1fr 0.6fr 0.5fr 1fr';
@@ -541,12 +546,12 @@ function makeTransRow(data, container) {
     // Booking Reference isn't needed for Train or Bus
     stdRef.style.display = (isCarHire || isTrain || isBus) ? 'none' : '';
     trainBookedCell.style.display = (isCarHire || !isTrain) ? 'none' : '';
+    busNumberCell.style.display = (isCarHire || !isBus) ? 'none' : '';
     // For Train, shift Cost to sit right next to the Booked toggle at the end.
-    // For standard (Flight/Ferry/Taxi), shift Cost to the end too.
-    // Bus doesn't show Cost at all.
-    transCostCell.style.display = isBus ? 'none' : '';
-    transCostCell.style.order = isTrain ? '6' : (isCarHire ? '' : '10');
+    // For standard and Bus, shift Cost to the end too.
+    transCostCell.style.order = (isTrain || isBus) ? '6' : (isCarHire ? '' : '10');
     trainBookedCell.style.order = isTrain ? '7' : '';
+    busNumberCell.style.order = isBus ? '7' : '';
     if (isCarHire) applyCarHireRole();
   };
 
