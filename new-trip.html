@@ -1903,9 +1903,21 @@ async function initMapPanel(state) {
   if (syncedEl) syncedEl.textContent = timeAgo(state.pinsSyncedAt);
 
   mapPanelLeaflet = L.map('map-panel-leaflet', { zoomControl: false, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+  const mapPanelTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd', maxZoom: 19, detectRetina: true
-  }).addTo(mapPanelLeaflet);
+  });
+  // Close hairline gaps between adjacent tiles (subpixel rounding at non-integer
+  // device pixel ratios) by growing each tile 1px past its grid size. Done via
+  // JS inside Leaflet's own tile-init path — not CSS — so it can't collide with
+  // Leaflet's inline positioning styles or drift markers out of alignment.
+  const origInitTile = mapPanelTileLayer._initTile;
+  mapPanelTileLayer._initTile = function(tile) {
+    origInitTile.call(this, tile);
+    const size = this.getTileSize();
+    tile.style.width = (size.x + 1) + 'px';
+    tile.style.height = (size.y + 1) + 'px';
+  };
+  mapPanelTileLayer.addTo(mapPanelLeaflet);
   mapPanelMarkersLayer = L.layerGroup().addTo(mapPanelLeaflet);
 
   // Switch city based on which day card is currently in view

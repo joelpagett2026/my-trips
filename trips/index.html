@@ -913,7 +913,20 @@ function makeYearGroup(year, yearTrips) {
 years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
 
 // ── MAPS ─────────────────────────────────────────────────────────────
-const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',detectRetina:true,updateWhenZooming:false,keepBuffer:2});
+const tiles = () => {
+  const layer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',detectRetina:true,updateWhenZooming:false,keepBuffer:2});
+  // Close hairline gaps between adjacent tiles (subpixel rounding at non-integer
+  // device pixel ratios) by growing each tile 1px past its grid size, patched
+  // inside Leaflet's own tile-init path so it can't drift markers/route lines.
+  const origInitTile = layer._initTile;
+  layer._initTile = function(tile) {
+    origInitTile.call(this, tile);
+    const size = this.getTileSize();
+    tile.style.width = (size.x + 1) + 'px';
+    tile.style.height = (size.y + 1) + 'px';
+  };
+  return layer;
+};
 function makeMap(id,center,zoom,points,color){
   const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
   tiles().addTo(map);
