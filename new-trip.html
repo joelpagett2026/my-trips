@@ -1849,9 +1849,10 @@ function parseUKDate(str) {
 
 function cityForDayLocation(loc) {
   if (!loc) return 'Porto';
-  const l = loc.toLowerCase();
+  const l = loc.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // strip accents
   if (l.includes('braga')) return 'Braga';
   if (l.includes('aveiro')) return 'Aveiro';
+  if (l.includes('guimaraes')) return 'Guimarães';
   return 'Porto';
 }
 
