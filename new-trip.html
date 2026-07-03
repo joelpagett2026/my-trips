@@ -1867,16 +1867,25 @@ function timeAgo(iso) {
   return `Synced ${Math.floor(hrs / 24)}d ago`;
 }
 
-function loadLeafletAssets() {
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8';
+// Minimal, label-light map style so the panel matches the site's clean aesthetic
+const GOOGLE_MAPS_STYLE = [
+  { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dce5ea' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f6f5f1' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5ecdf' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+];
+
+function loadGoogleMapsAssets() {
   return new Promise((resolve) => {
-    if (window.L) { resolve(); return; }
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(cssLink);
+    if (window.google && window.google.maps) { resolve(); return; }
+    window._gmapsReady = resolve;
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = resolve;
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&loading=async&callback=_gmapsReady';
     document.head.appendChild(script);
   });
 }
@@ -1895,18 +1904,21 @@ async function initMapPanel(state) {
     mapPanelPinsByCity[p.city].push(p);
   });
 
-  await loadLeafletAssets();
+  await loadGoogleMapsAssets();
 
   document.body.classList.add('has-map-panel');
   document.getElementById('map-panel').classList.add('active');
   const syncedEl = document.getElementById('map-panel-synced');
   if (syncedEl) syncedEl.textContent = timeAgo(state.pinsSyncedAt);
 
-  mapPanelLeaflet = L.map('map-panel-leaflet', { zoomControl: false, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd', maxZoom: 19, detectRetina: true
-  }).addTo(mapPanelLeaflet);
-  mapPanelMarkersLayer = L.layerGroup().addTo(mapPanelLeaflet);
+  mapPanelLeaflet = new google.maps.Map(document.getElementById('map-panel-leaflet'), {
+    center: { lat: 41.15, lng: -8.6 },
+    zoom: 12,
+    disableDefaultUI: true,
+    styles: GOOGLE_MAPS_STYLE,
+    clickableIcons: false,
+  });
+  mapPanelMarkersLayer = [];
 
   // Switch city based on which day card is currently in view
   const dayCards = Array.from(document.querySelectorAll('.day-card'));
@@ -1935,34 +1947,55 @@ function renderMapPanelCity(city) {
   const cityTextEl = document.getElementById('map-panel-city-text');
   if (cityTextEl) cityTextEl.textContent = city + (pins.length ? ` · ${pins.length} pin${pins.length === 1 ? '' : 's'}` : '');
 
-  mapPanelMarkersLayer.clearLayers();
+  mapPanelMarkersLayer.forEach(m => m.setMap(null));
+  mapPanelMarkersLayer = [];
   const listEl = document.getElementById('map-panel-list');
   listEl.innerHTML = '';
 
   if (!pins.length) {
     listEl.innerHTML = '<div class="map-pin-empty">No pins for ' + city + ' yet</div>';
-    mapPanelLeaflet.setView([41.15, -8.6], 12);
+    mapPanelLeaflet.setCenter({ lat: 41.15, lng: -8.6 });
+    mapPanelLeaflet.setZoom(12);
     return;
   }
 
-  const bounds = [];
+  const bounds = new google.maps.LatLngBounds();
   pins.forEach(p => {
-    const marker = L.circleMarker([p.lat, p.lng], {
-      radius: 6, color: '#0e7a87', weight: 2, fillColor: '#0e7a87', fillOpacity: 0.6
-    }).bindTooltip(p.name, { direction: 'top' });
-    marker.addTo(mapPanelMarkersLayer);
-    bounds.push([p.lat, p.lng]);
+    const marker = new google.maps.Marker({
+      position: { lat: p.lat, lng: p.lng },
+      map: mapPanelLeaflet,
+      title: p.name,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 6,
+        fillColor: '#0e7a87',
+        fillOpacity: 0.75,
+        strokeColor: '#0e7a87',
+        strokeWeight: 2,
+      },
+    });
+    mapPanelMarkersLayer.push(marker);
+    bounds.extend({ lat: p.lat, lng: p.lng });
 
     const row = document.createElement('div');
     row.className = 'map-pin-row';
     row.innerHTML = '<div>' + p.name + '</div>' + (p.category ? '<div class="map-pin-cat">' + p.category + '</div>' : '');
-    row.addEventListener('click', () => { mapPanelLeaflet.setView([p.lat, p.lng], 16); marker.openTooltip(); });
+    row.addEventListener('click', () => {
+      mapPanelLeaflet.setCenter({ lat: p.lat, lng: p.lng });
+      mapPanelLeaflet.setZoom(16);
+    });
     listEl.appendChild(row);
   });
 
-  if (bounds.length === 1) mapPanelLeaflet.setView(bounds[0], 15);
-  else mapPanelLeaflet.fitBounds(bounds, { padding: [32, 32], maxZoom: 16 });
-  setTimeout(() => mapPanelLeaflet.invalidateSize(), 100);
+  if (pins.length === 1) {
+    mapPanelLeaflet.setCenter({ lat: pins[0].lat, lng: pins[0].lng });
+    mapPanelLeaflet.setZoom(15);
+  } else {
+    mapPanelLeaflet.fitBounds(bounds, 32);
+    const listener = google.maps.event.addListenerOnce(mapPanelLeaflet, 'bounds_changed', () => {
+      if (mapPanelLeaflet.getZoom() > 16) mapPanelLeaflet.setZoom(16);
+    });
+  }
 }
 
 async function init() {
@@ -2102,7 +2135,7 @@ function openMobileMaps() {
     // Now that it's actually visible, resize the tiles and re-fit bounds.
     setTimeout(() => {
       if (typeof mapPanelLeaflet !== 'undefined' && mapPanelLeaflet) {
-        mapPanelLeaflet.invalidateSize();
+        google.maps.event.trigger(mapPanelLeaflet, 'resize');
         if (typeof renderMapPanelCity === 'function' && mapPanelCurrentCity) {
           renderMapPanelCity(mapPanelCurrentCity);
         }
