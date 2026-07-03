@@ -45,7 +45,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
    Service — this only scales it down to be less visually prominent on
    these small cards, it doesn't hide or reduce its legibility. */
 .card-map .gm-style-cc,.card-map .gmnoprint{transform:scale(0.75);transform-origin:bottom right;}
-.card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:450;}
+.card-map-flags{position:absolute;top:8px;left:8px;display:flex;gap:4px;z-index:450;}
 .card-map-flags img{width:32px;height:21px;object-fit:cover;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.95);}
 .card-status-pill{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;backdrop-filter:blur(12px);z-index:450;font-family:'Montserrat',sans-serif;}
 .pill-upcoming{background:rgba(14,122,135,0.18);color:#0e7a87;border:1px solid rgba(14,122,135,0.25);}
@@ -920,6 +920,9 @@ const GOOGLE_MAPS_STYLE = [
   { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
   { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.country', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.province', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dce5ea' }] },
   { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f6f5f1' }] },
   { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5ecdf' }] },
