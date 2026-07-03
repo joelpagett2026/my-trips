@@ -1914,7 +1914,7 @@ async function initMapPanel(state) {
   // Wait a tick for the browser to actually lay out the now-visible container —
   // Google Maps (unlike Leaflet) reads its container's size once at construction
   // time and won't self-correct if that happens before layout settles.
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await new Promise(r => setTimeout(r, 50));
 
   mapPanelLeaflet = new google.maps.Map(document.getElementById('map-panel-leaflet'), {
     center: { lat: 41.15, lng: -8.6 },
@@ -2025,7 +2025,7 @@ async function init() {
     if (state.mapListUrl) window._loadedMapListUrl = state.mapListUrl;
     restoreState(state);
     setStatus('saved', 'All saved');
-    initMapPanel(state);
+    initMapPanel(state).catch(e => console.error('initMapPanel failed:', e));
   } else {
     generateDaysFromDates();
     setStatus('saving', 'Not yet saved');
