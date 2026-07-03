@@ -1911,6 +1911,11 @@ async function initMapPanel(state) {
   const syncedEl = document.getElementById('map-panel-synced');
   if (syncedEl) syncedEl.textContent = timeAgo(state.pinsSyncedAt);
 
+  // Wait a tick for the browser to actually lay out the now-visible container —
+  // Google Maps (unlike Leaflet) reads its container's size once at construction
+  // time and won't self-correct if that happens before layout settles.
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
   mapPanelLeaflet = new google.maps.Map(document.getElementById('map-panel-leaflet'), {
     center: { lat: 41.15, lng: -8.6 },
     zoom: 12,
@@ -1939,6 +1944,14 @@ async function initMapPanel(state) {
 
   const firstLoc = dayCards[0] ? (dayCards[0].querySelector('[data-key="to"]')?.value || '') : '';
   renderMapPanelCity(cityForDayLocation(firstLoc));
+  // Safety net: if the container's size still wasn't settled at construction
+  // time, force Google Maps to re-measure and re-fit once more shortly after.
+  setTimeout(() => {
+    if (mapPanelLeaflet) {
+      google.maps.event.trigger(mapPanelLeaflet, 'resize');
+      if (mapPanelCurrentCity) renderMapPanelCity(mapPanelCurrentCity);
+    }
+  }, 300);
 }
 
 function renderMapPanelCity(city) {
