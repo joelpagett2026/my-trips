@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Google Maps Key Test</title>
+<style>
+  body { margin: 0; font-family: sans-serif; }
+  #status { padding: 10px; background: #222; color: #fff; font-size: 13px; }
+  #map { width: 400px; height: 300px; }
+</style>
+</head>
+<body>
+<div id="status">Loading...</div>
+<div id="map"></div>
+<script>
+window.gm_authFailure = function() {
+  document.getElementById('status').textContent = 'AUTH FAILURE — key invalid or referrer blocked';
+  document.getElementById('status').style.background = '#a00';
+};
+function initMap() {
+  document.getElementById('status').textContent = 'SUCCESS — map initialized';
+  document.getElementById('status').style.background = '#080';
+  new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 41.1579, lng: -8.6291 },
+    zoom: 13
+  });
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8&callback=initMap"></script>
+</body>
+</html>

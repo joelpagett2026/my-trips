@@ -134,6 +134,7 @@ $coreFiles = [
     'itinerary-style.css', 'deploy-webhook.php',
     'index.html', 'new-trip.html', 'settings.html',
     'robots.txt', '.htaccess', 'favicon.ico',
+    'gmaps-test-temp.html',
 ];
 
 $copied = [];
