@@ -1831,7 +1831,7 @@ function generateDaysFromDates() {
 
 // ── Trip Map Panel (pins from a Google list) ──────────────────────────
 // Test rollout: Porto only. Add a slug here to enable it on another trip.
-const MAP_PIN_TRIPS = ['porto-2026'];
+const MAP_PIN_TRIPS = ['porto-2026', 'hamburg', 'gothenburg-2026', 'cyprus-2026'];
 let mapPanelLeaflet = null;
 let mapPanelMarkersLayer = null;
 let mapPanelCurrentCity = null;
@@ -1847,13 +1847,16 @@ function parseUKDate(str) {
   return new Date(y, m - 1, d, 23, 59, 59);
 }
 
-function cityForDayLocation(loc) {
-  if (!loc) return 'Porto';
-  const l = loc.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // strip accents
-  if (l.includes('braga')) return 'Braga';
-  if (l.includes('aveiro')) return 'Aveiro';
-  if (l.includes('guimaraes')) return 'Guimarães';
-  return 'Porto';
+function cityForDayLocation(loc, availableCities) {
+  const cities = availableCities || Object.keys(mapPanelPinsByCity || {});
+  if (!cities.length) return '';
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const l = norm(loc);
+  if (l) {
+    const match = cities.find(c => { const cn = norm(c); return l.includes(cn) || cn.includes(l); });
+    if (match) return match;
+  }
+  return cities[0];
 }
 
 function timeAgo(iso) {
