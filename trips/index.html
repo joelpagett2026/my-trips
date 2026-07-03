@@ -9,8 +9,6 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>Joel Pagett's Trip Planner</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -42,9 +40,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .trip-card:hover{transform:scale(1.015);box-shadow:0 8px 24px rgba(0,0,0,0.12);}
 .trip-card:active{transform:scale(0.985);}
 .card-image-area{height:140px;position:relative;overflow:hidden;isolation:isolate;}
-.card-map{width:100%;height:100%;pointer-events:none;}.card-map .leaflet-tile-pane{will-change:transform;}.card-map .leaflet-tile{will-change:transform;transform:translate3d(0,0,0);image-rendering:auto;}
-.card-map .leaflet-control-container{display:none!important;}
-.card-map .leaflet-bottom,.card-map .leaflet-top{display:none!important;}
+.card-map{width:100%;height:100%;pointer-events:none;}
 .card-map-flags{position:absolute;bottom:8px;left:10px;display:flex;gap:4px;z-index:450;}
 .card-map-flags img{width:32px;height:21px;object-fit:cover;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,0.3);border:1.5px solid rgba(255,255,255,0.95);}
 .card-status-pill{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;backdrop-filter:blur(12px);z-index:450;font-family:'Montserrat',sans-serif;}
@@ -913,18 +909,58 @@ function makeYearGroup(year, yearTrips) {
 years.forEach(year => historyEl.appendChild(makeYearGroup(year, byYear[year])));
 
 // ── MAPS ─────────────────────────────────────────────────────────────
-const tiles = () => L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'',detectRetina:true,updateWhenZooming:false,keepBuffer:2});
-function makeMap(id,center,zoom,points,color){
-  const map=L.map(id,{center,zoom,zoomControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
-  tiles().addTo(map);
-  L.polyline(points,{color,weight:2.5,opacity:0.85,dashArray:'6,4'}).addTo(map);
-  points.forEach((p,i)=>L.circleMarker(p,{radius:i===0||i===points.length-1?6:4,fillColor:color,color:'#fff',weight:2,fillOpacity:1}).addTo(map));
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8';
+const GOOGLE_MAPS_STYLE = [
+  { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dce5ea' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f6f5f1' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5ecdf' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+];
+function loadGoogleMapsAssets() {
+  return new Promise((resolve) => {
+    if (window.google && window.google.maps) { resolve(); return; }
+    if (window._gmapsLoading) { window._gmapsWaiters = window._gmapsWaiters || []; window._gmapsWaiters.push(resolve); return; }
+    window._gmapsLoading = true;
+    window._gmapsReady = () => { resolve(); (window._gmapsWaiters || []).forEach(fn => fn()); };
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&loading=async&callback=_gmapsReady';
+    document.head.appendChild(script);
+  });
+}
+function dashedLine(path, color, map) {
+  const dash = { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2.5 };
+  return new google.maps.Polyline({ path, map, strokeOpacity: 0, icons: [{ icon: dash, offset: '0', repeat: '10px' }], strokeColor: color });
+}
+async function makeMap(id,center,zoom,points,color){
+  await loadGoogleMapsAssets();
+  await new Promise(r => setTimeout(r, 30));
+  const el = document.getElementById(id);
+  if (!el) return;
+  const map = new google.maps.Map(el, {
+    center: { lat: center[0], lng: center[1] }, zoom,
+    disableDefaultUI: true, gestureHandling: 'none', keyboardShortcuts: false,
+    styles: GOOGLE_MAPS_STYLE, clickableIcons: false,
+  });
+  const path = points.map(p => ({ lat: p[0], lng: p[1] }));
+  dashedLine(path, color, map);
+  points.forEach((p,i) => {
+    new google.maps.Marker({
+      position: { lat: p[0], lng: p[1] }, map,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: (i===0||i===points.length-1)?6:4, fillColor: color, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+    });
+  });
+  setTimeout(() => google.maps.event.trigger(map, 'resize'), 200);
 }
 makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#0e7a87');
 makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#0e7a87');
 makeMap('map-dubai',[24.4,54.8],7,[[48.8566,2.3522],[25.2532,51.6100],[25.2048,55.2708],[24.4539,54.3773],[25.2048,55.2708]],'#0e7a87');
 makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#0e7a87');
 makeMap('map-china',[33.5,109.0],4,[[31.2304,121.4737],[31.2989,120.5853],[30.5728,104.0668],[30.9964,103.6673],[34.3416,108.9398],[39.9042,116.4074]],'#0e7a87');
+
 
 // ── MODAL & REGISTRY ─────────────────────────────────────────────────
 const SB_URL = localStorage.getItem('sb_url')||'';
@@ -1015,18 +1051,30 @@ function buildDynamicCard(t) {
       if (!points.length) return;
 
       const mapColor = t.status === 'planning' ? '#ff9500' : t.status === 'past' ? '#b8b8b8' : '#0e7a87';
-      const bounds = L.latLngBounds(points);
-      const map = L.map(mapId, {center: bounds.getCenter(), zoom: 5, zoomControl:false, scrollWheelZoom:false, dragging:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, attributionControl:false});
-      tiles().addTo(map);
+      await loadGoogleMapsAssets();
+      await new Promise(r => setTimeout(r, 30));
+      const bounds = new google.maps.LatLngBounds();
+      points.forEach(p => bounds.extend({ lat: p[0], lng: p[1] }));
+      const map = new google.maps.Map(mapEl, {
+        center: bounds.getCenter(), zoom: 5,
+        disableDefaultUI: true, gestureHandling: 'none', keyboardShortcuts: false,
+        styles: GOOGLE_MAPS_STYLE, clickableIcons: false,
+      });
       if (points.length > 1) {
-        map.fitBounds(bounds, {padding: [32, 32], maxZoom: 7});
-        L.polyline(points, {color:mapColor, weight:2.5, opacity:0.85, dashArray:'6,4'}).addTo(map);
+        map.fitBounds(bounds, 32);
+        google.maps.event.addListenerOnce(map, 'bounds_changed', () => { if (map.getZoom() > 7) map.setZoom(7); });
+        dashedLine(points.map(p => ({ lat: p[0], lng: p[1] })), mapColor, map);
       } else {
-        map.setView(points[0], 6);
+        map.setCenter({ lat: points[0][0], lng: points[0][1] });
+        map.setZoom(6);
       }
       points.forEach((p, i) => {
-        L.circleMarker(p, {radius: i===0||i===points.length-1 ? 6 : 4, fillColor:mapColor, color:'#fff', weight:2, fillOpacity:1}).addTo(map);
+        new google.maps.Marker({
+          position: { lat: p[0], lng: p[1] }, map,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: (i===0||i===points.length-1)?6:4, fillColor: mapColor, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+        });
       });
+      setTimeout(() => google.maps.event.trigger(map, 'resize'), 200);
     } catch(e) { console.warn('Card map error:', e); }
   }, 100);
 
