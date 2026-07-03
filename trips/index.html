@@ -920,16 +920,17 @@ const GOOGLE_MAPS_STYLE = [
   { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5ecdf' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
 ];
+let _gmapsPromise = null;
 function loadGoogleMapsAssets() {
-  return new Promise((resolve) => {
+  if (_gmapsPromise) return _gmapsPromise;
+  _gmapsPromise = new Promise((resolve) => {
     if (window.google && window.google.maps) { resolve(); return; }
-    if (window._gmapsLoading) { window._gmapsWaiters = window._gmapsWaiters || []; window._gmapsWaiters.push(resolve); return; }
-    window._gmapsLoading = true;
-    window._gmapsReady = () => { resolve(); (window._gmapsWaiters || []).forEach(fn => fn()); };
+    window._gmapsReady = resolve;
     const script = document.createElement('script');
     script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&loading=async&callback=_gmapsReady';
     document.head.appendChild(script);
   });
+  return _gmapsPromise;
 }
 function dashedLine(path, color, map) {
   const dash = { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2.5 };
