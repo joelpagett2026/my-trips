@@ -362,10 +362,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   /* Ticket rows: stack into 2 cols — Attraction & Booking Link get full width
      since they hold long text/URLs, Price/Booked/Time pair up below */
-  .ticket-row { grid-template-columns: 1fr 1fr !important; }
+  .ticket-row { grid-template-columns: 1fr 1fr !important; position: relative; }
   .ticket-row .cell:nth-child(1),
   .ticket-row .cell:nth-child(2) { grid-column: 1 / -1; }
-  .ticket-row .row-del { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding: 4px 0; }
+  .ticket-row .row-del {
+    position: absolute; top: 6px; right: 6px;
+    grid-column: unset; padding: 0; border-right: none !important;
+  }
 
   /* Morning/Afternoon/Evening: stack vertically instead of side by side */
   .s-itin [style*="display:flex"] {
