@@ -340,6 +340,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .cell-inp:focus, .cell-ta:focus, select:focus { font-size: 16px !important; }
   .day-date-wrap input:focus, .day-loc-wrap input:focus { font-size: 16px !important; }
   .days { padding: 16px 12px 0; gap: 10px; }
+  #cost-summary { margin: 0 12px 16px !important; }
   .add-day { margin-bottom: 0; }
   .day-card { border-radius: 14px; }
 
@@ -418,6 +419,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .large-title { font-size: 20px; }
   .stats-row { padding: 10px 12px; gap: 6px; }
   .days { padding: 16px 10px 0; }
+  #cost-summary { margin: 0 10px 16px !important; }
   .trip-hdr { margin: 0 10px 12px; }
   .sec-hd { padding: 10px 12px 6px; }
   .trans-row { grid-template-columns: 1fr !important; }
