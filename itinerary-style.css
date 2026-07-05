@@ -505,6 +505,7 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; transition: m
   }
   #map-panel-leaflet { height: 190px; }
   #map-panel-list { max-height: 220px; }
+  .hdr-trav-block, .hdr-trav-divider { display: none !important; }
 }
 
 /* On mobile, the map panel is reached via the bottom tab bar "Map" button
