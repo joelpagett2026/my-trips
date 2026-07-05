@@ -48,6 +48,7 @@
     <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Return</span><input class="th-inp sm hdr-field" id="hdr-ret" placeholder="dd/mm/yyyy" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:110px;line-height:1;text-align:center;" value=""></div>
     <div style="width:1px;height:36px;background:rgba(255,255,255,0.25);align-self:center;"></div>
     <div style="display:flex;flex-direction:column;align-items:center;"><span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;text-align:center;">Travellers</span><input class="th-inp sm hdr-field" id="hdr-trav" inputmode="numeric" style="font-size:18px;font-weight:700;color:#fff;background:transparent;border:none;outline:none;padding:0;width:36px;line-height:1;text-align:center;" value="2"></div>
+    <input type="hidden" id="hdr-trav-calc" value="">
   </div>
 </div>
   <input type="hidden" id="page-title" value="New Trip">
@@ -293,7 +294,7 @@ function collectState() {
       return url ? inp.value + '|||' + url : inp.value;
     }).join('\n');
   });
-  const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value };
+  const header = { dest: document.getElementById('hdr-dest').value, dep: document.getElementById('hdr-dep').value, ret: document.getElementById('hdr-ret').value, trav: document.getElementById('hdr-trav').value, travCalc: document.getElementById('hdr-trav-calc').value };
   const mapsUrl = document.getElementById('maps-url-val').value || '';
   const days = Array.from(document.querySelectorAll('.day-card')).map(card => {
     const obj = {};
@@ -1612,7 +1613,8 @@ function recalc() {
   const cards = document.querySelectorAll('.day-card');
   document.getElementById('s-days').textContent = cards.length;
 
-  const travellers = parseInt(document.getElementById('hdr-trav').value) || 1;
+  const travCalcOverride = document.getElementById('hdr-trav-calc').value;
+  const travellers = parseInt(travCalcOverride) || parseInt(document.getElementById('hdr-trav').value) || 1;
   let acc = 0, trans = 0, ticketsPP = 0;
 
   cards.forEach(c => {
@@ -1660,6 +1662,7 @@ function restoreState(state) {
     document.getElementById('hdr-dep').value  = state.header.dep  || dep;
     document.getElementById('hdr-ret').value  = state.header.ret  || ret;
     document.getElementById('hdr-trav').value = state.header.trav || trav;
+    document.getElementById('hdr-trav-calc').value = state.header.travCalc || '';
     document.getElementById('page-title').textContent = state.header.dest || dest;
     const _nt2 = document.getElementById('nav-title'); if(_nt2) _nt2.textContent = state.header.dest || dest;
   }
