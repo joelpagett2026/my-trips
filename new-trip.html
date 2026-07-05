@@ -12,7 +12,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=99">
+<link rel="stylesheet" href="/itinerary-style.css?v=100">
 <script src="/auth.js?v=2"></script>
 <script src="/db.js?v=2"></script>
 </head>
@@ -1527,7 +1527,7 @@ function addDay(d) {
 
     // Booked toggle
     // Booked cell — with N/A option
-    const bookedCell = document.createElement('div'); bookedCell.className = 'cell';
+    const bookedCell = document.createElement('div'); bookedCell.className = 'cell'; bookedCell.dataset.tkBooked = '1';
     bookedCell.style.alignItems = 'center';
     const bookedLbl = document.createElement('div'); bookedLbl.className = 'cell-lbl'; bookedLbl.textContent = 'Booked';
     const isBookedNA = data.tk_booked === 'na';

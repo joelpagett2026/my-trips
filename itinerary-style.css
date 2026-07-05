@@ -509,6 +509,7 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; transition: m
   #map-panel-list { max-height: 220px; }
   .hdr-trav-block, .hdr-trav-divider { display: none !important; }
   .trans-row [data-train="1"] { display: none !important; }
+  .ticket-row [data-tk-booked="1"] { display: none !important; }
 }
 
 /* On mobile, the map panel is reached via the bottom tab bar "Map" button
