@@ -459,9 +459,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .share-readonly .add-period-btn { display: none !important; }
 
 /* ── Trip Map Panel (pins from a Google list, test: Porto) ─────────── */
-body.has-map-panel .nav,
 body.has-map-panel #trip-header-bar,
 body.has-map-panel .days { margin-right: 340px !important; transition: margin-right 0.2s; }
+/* .nav is position:fixed with explicit left/right, so margin-right has no
+   effect on it — set right directly instead, so the bottom bar stops where
+   the map panel begins rather than running underneath it */
+body.has-map-panel .nav { right: 340px !important; transition: right 0.2s; }
 /* cost-summary has no internal padding (unlike .days), so it needs the
    extra 20px added directly to its margin to align with the day cards' edge */
 body.has-map-panel #cost-summary { margin-right: 360px !important; transition: margin-right 0.2s; }
@@ -500,6 +503,7 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; transition: m
   body.has-map-panel #trip-header-bar,
   body.has-map-panel .days,
   body.has-map-panel #cost-summary { margin-right: 0 !important; }
+  body.has-map-panel .nav { right: 0 !important; }
   #map-panel.active {
     position: static;
     width: auto;
