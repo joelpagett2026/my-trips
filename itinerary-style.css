@@ -499,11 +499,14 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; transition: m
 .map-pin-empty { padding: 20px 16px; font-size: 12px; color: #bbb; text-align: center; }
 
 @media (max-width: 900px) {
-  body.has-map-panel .nav,
   body.has-map-panel #trip-header-bar,
   body.has-map-panel .days,
   body.has-map-panel #cost-summary { margin-right: 0 !important; }
-  body.has-map-panel .nav { right: 0 !important; }
+  /* Nav now sits in normal document flow at this width (its DOM position is
+     between cost-summary and map-panel), so it appears right after the main
+     itinerary content and before the map panel — not floating below it. */
+  .nav { position: static !important; left: auto; right: auto; bottom: auto; margin-bottom: 16px; }
+  body { padding-bottom: 0; }
   #map-panel.active {
     position: static;
     width: auto;
@@ -519,6 +522,12 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; transition: m
   .ticket-row [data-tk-booked="1"] { display: none !important; }
   .del-day-btn, .sec-bar .del-sec-btn { opacity: 0.35; border-color: rgba(0,0,0,0.08) !important; }
   .row-del-btn { opacity: 0.45; }
+}
+/* True mobile (<=700px) still needs its 70px reservation for the separate
+   bottom tab bar — re-assert it here since the 900px rule above would
+   otherwise win the cascade tie and clobber it back to 0 at that width too. */
+@media (max-width: 700px) {
+  body { padding-bottom: 70px !important; }
 }
 
 /* On mobile, the map panel is reached via the bottom tab bar "Map" button
