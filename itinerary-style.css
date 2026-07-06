@@ -1,10 +1,10 @@
 /* ── APPLE DESIGN SYSTEM ── shared across all itinerary pages */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-height:100vh;}
+body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-height:100vh;padding-bottom:68px;}
 
 /* NAV */
-.nav{background:rgba(232,232,232,0.95);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(0,0,0,0.08);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav{background:rgba(232,232,232,0.95);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid rgba(0,0,0,0.08);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;z-index:100;}
 .nav-back{display:flex;align-items:center;gap:4px;font-size:17px;font-weight:400;color:#0e7a87;text-decoration:none;cursor:pointer;}
 .nav-back svg{margin-right:2px;}
 .nav-title{font-size:17px;font-weight:600;letter-spacing:-0.4px;color:#444444;}
@@ -473,7 +473,7 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; transition: m
   position: fixed;
   top: 0;
   right: 0;
-  bottom: 0;
+  bottom: 52px;
   width: 340px;
   background: #fff;
   border-left: 1px solid rgba(0,0,0,0.08);
