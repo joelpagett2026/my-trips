@@ -12,7 +12,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 #status-toggle{display:flex;}
 .nav-btn{font-size:11px;font-weight:700;color:#fff;background:#0e7a87;border:none;border-radius:7px;padding:7px 9px;cursor:pointer;font-family:Montserrat,sans-serif;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
 .nav-btn-text{display:none;}
-#maps-nav-wrap,#maps-add-btn{display:none!important;}
+#maps-nav-wrap,#maps-add-btn,#undo-btn{display:none!important;}
 .nav-btn:hover{background:#0a6570;}
 .nav-btn:active{transform:scale(0.97);}
 .nav-btn.danger{background:#c0392b;}
