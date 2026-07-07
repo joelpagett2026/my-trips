@@ -476,7 +476,7 @@ body.has-map-panel #cost-summary { margin-right: 360px !important; }
   position: fixed;
   top: 0;
   right: 0;
-  bottom: 52px;
+  bottom: 0;
   width: 340px;
   background: #fff;
   border-left: 1px solid rgba(0,0,0,0.08);
