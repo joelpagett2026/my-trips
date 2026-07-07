@@ -10,7 +10,9 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .nav-title{font-size:17px;font-weight:600;letter-spacing:-0.4px;color:#444444;}
 .nav-actions{display:flex;align-items:center;gap:6px;}
 #status-toggle{display:flex;}
-.nav-btn{font-size:11px;font-weight:700;color:#fff;background:#0e7a87;border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:Montserrat,sans-serif;transition:all 0.15s;}
+.nav-btn{font-size:11px;font-weight:700;color:#fff;background:#0e7a87;border:none;border-radius:7px;padding:7px 9px;cursor:pointer;font-family:Montserrat,sans-serif;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.nav-btn-text{display:none;}
+#maps-nav-wrap,#maps-add-btn{display:none!important;}
 .nav-btn:hover{background:#0a6570;}
 .nav-btn:active{transform:scale(0.97);}
 .nav-btn.danger{background:#c0392b;}
