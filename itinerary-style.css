@@ -18,7 +18,7 @@ body{font-family:'Montserrat',sans-serif;background:#e8e8e8;color:#444444;min-he
 .nav-btn.maps-btn{background:transparent;border:1.5px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.75);}
 .nav-btn.maps-btn:hover{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.6);}
 .nav-btn.maps-btn.has-url{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.5);color:#fff;}
-.nav-status{font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:5px;padding-right:4px;}
+.nav-status{display:none;}
 .nav-status.saving{color:#ffcc00;}
 .nav-status.error{color:#ff6b6b;}
 
