@@ -237,12 +237,17 @@ async function init() {
   // Stats
   document.getElementById('stat-concerts').textContent = list.length;
   const artistSet = new Set();
+  const addArtists = s => (s || '').split(',').forEach(a => {
+    const k = a.trim().toLowerCase();
+    if (k) artistSet.add(k);
+  });
   list.forEach(c => {
     if (c.type === 'festival') {
       (c.artistsSeen || []).forEach(a => { const k = a.trim().toLowerCase(); if (k) artistSet.add(k); });
     } else {
-      const k = (c.artist || '').trim().toLowerCase();
-      if (k) artistSet.add(k);
+      addArtists(c.artist);
+      addArtists(c.support);
+      addArtists(c.guests);
     }
   });
   document.getElementById('stat-artists').textContent = artistSet.size;
