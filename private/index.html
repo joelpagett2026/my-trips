@@ -68,17 +68,17 @@
 (function () {
   const PW_HASH = '0c252e6d0e16d7f3c41e26b97ed1dc70f6333b2a66273129f842e61b1ff79610';
   const SESSION_KEY = 'jp_private_auth';
-  const SESSION_TTL = 12 * 60 * 60 * 1000;
 
+  // sessionStorage: survives reloads/navigation within the session,
+  // but is cleared when the browser (or tab) is closed — password
+  // must be re-entered on the next visit.
   function isAuthed() {
-    try {
-      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-      return s && s.ok && (Date.now() - s.ts) < SESSION_TTL;
-    } catch { return false; }
+    try { return sessionStorage.getItem(SESSION_KEY) === '1'; }
+    catch { return false; }
   }
 
   function storeSession() {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ ok: true, ts: Date.now() }));
+    sessionStorage.setItem(SESSION_KEY, '1');
   }
 
   async function hash(str) {
