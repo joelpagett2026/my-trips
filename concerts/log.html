@@ -125,6 +125,7 @@
     font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
     letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 2px; margin-left: 8px;
   }
+  .fest-badge.concert { background: rgba(68,68,68,0.07); color: #888; }
 
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
   .m-btn {
@@ -350,7 +351,8 @@ function render() {
       html += '<img class="cc-photo" id="photo-' + c.id + '"' + (c.thumb ? ' src="' + c.thumb + '"' : '') + ' alt="">';
     }
     html += '<div class="cc-body">';
-    html += '<div class="cc-artist">' + esc(isFest ? c.name : c.artist) + (isFest ? '<span class="fest-badge">Festival</span>' : '') + '</div>';
+    html += '<div class="cc-artist">' + esc(isFest ? c.name : c.artist)
+      + (isFest ? '<span class="fest-badge">Festival</span>' : '<span class="fest-badge concert">Concert</span>') + '</div>';
     if (!isFest && c.tour) html += '<div class="cc-tour">' + esc(c.tour) + '</div>';
     html += '<div class="cc-meta">';
     html += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(isFest ? c.location : c.venue);
