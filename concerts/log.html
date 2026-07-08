@@ -112,6 +112,20 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
 
+  .type-toggle { display: flex; gap: 6px; margin-bottom: 16px; }
+  .type-btn {
+    flex: 1; padding: 8px 0; border-radius: 9px; border: 1px solid #e0e0e0;
+    background: #fff; color: #666; font-family: Montserrat, sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .type-btn.on { background: #0e7a87; border-color: #0e7a87; color: #fff; }
+
+  .fest-badge {
+    display: inline-block; background: rgba(14,122,135,0.1); color: #0e7a87;
+    font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 2px; margin-left: 8px;
+  }
+
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
   .m-btn {
     font-family: Montserrat, sans-serif; font-size: 13px; font-weight: 700;
@@ -155,8 +169,13 @@
   <div class="modal">
     <div class="modal-title" id="modal-title">Add concert</div>
 
+    <div class="type-toggle" id="type-toggle">
+      <button type="button" class="type-btn on" onclick="setModalType('concert')">Concert</button>
+      <button type="button" class="type-btn" onclick="setModalType('festival')">Festival</button>
+    </div>
+
     <div class="f-group">
-      <label class="f-label">Artist / Artists</label>
+      <label class="f-label" id="lbl-artist">Artist / Artists</label>
       <input class="f-input" id="f-artist" placeholder="e.g. Foo Fighters">
     </div>
 
@@ -166,17 +185,17 @@
         <input class="f-input" id="f-date" placeholder="dd/mm/yyyy">
       </div>
       <div class="f-group">
-        <label class="f-label">Venue</label>
+        <label class="f-label" id="lbl-venue">Venue</label>
         <input class="f-input" id="f-venue" placeholder="e.g. First Direct Arena">
       </div>
     </div>
 
-    <div class="f-group">
+    <div class="f-group" id="grp-tour">
       <label class="f-label">Tour / Event name</label>
       <input class="f-input" id="f-tour" placeholder="e.g. Everything Or Nothing At All Tour">
     </div>
 
-    <div class="f-group">
+    <div class="f-group" id="grp-support">
       <label class="f-label">Support acts</label>
       <input class="f-input" id="f-support" placeholder="Comma separated — leave blank if none">
     </div>
@@ -190,7 +209,7 @@
     </div>
 
     <div class="f-group">
-      <label class="f-label">Setlist — one song per line</label>
+      <label class="f-label" id="lbl-setlist">Setlist — one song per line</label>
       <textarea class="f-textarea" id="f-setlist" placeholder="Song one&#10;Song two&#10;Song three"></textarea>
     </div>
 
@@ -220,6 +239,26 @@ let editingId = null;     // id being edited, or null for new
 let modalPhoto = null;    // { full, thumb } if photo chosen/changed
 let modalPhotoRemoved = false;
 let modalRating = 0;
+let modalType = 'concert';
+
+function setModalType(t) {
+  modalType = t;
+  const btns = document.querySelectorAll('#type-toggle .type-btn');
+  btns[0].classList.toggle('on', t === 'concert');
+  btns[1].classList.toggle('on', t === 'festival');
+
+  const isFest = t === 'festival';
+  document.getElementById('modal-title').textContent =
+    (editingId ? 'Edit ' : 'Add ') + (isFest ? 'festival' : 'concert');
+  document.getElementById('lbl-artist').textContent  = isFest ? 'Festival name' : 'Artist / Artists';
+  document.getElementById('f-artist').placeholder    = isFest ? 'e.g. Glastonbury' : 'e.g. Foo Fighters';
+  document.getElementById('lbl-venue').textContent   = isFest ? 'Location' : 'Venue';
+  document.getElementById('f-venue').placeholder     = isFest ? 'e.g. Worthy Farm, Somerset' : 'e.g. First Direct Arena';
+  document.getElementById('lbl-setlist').textContent = isFest ? 'Artists seen — one per line' : 'Setlist — one song per line';
+  document.getElementById('f-setlist').placeholder   = isFest ? 'Artist one\nArtist two\nArtist three' : 'Song one\nSong two\nSong three';
+  document.getElementById('grp-tour').style.display    = isFest ? 'none' : '';
+  document.getElementById('grp-support').style.display = isFest ? 'none' : '';
+}
 
 function parseDMY(s) {
   const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -286,26 +325,31 @@ function render() {
   list.forEach(c => {
     const card = document.createElement('div');
     card.className = 'concert-card';
+    const isFest = c.type === 'festival';
 
     let html = '';
     if (c.hasPhoto) {
       html += '<img class="cc-photo" id="photo-' + c.id + '"' + (c.thumb ? ' src="' + c.thumb + '"' : '') + ' alt="">';
     }
     html += '<div class="cc-body">';
-    html += '<div class="cc-artist">' + esc(c.artist) + '</div>';
-    if (c.tour) html += '<div class="cc-tour">' + esc(c.tour) + '</div>';
+    html += '<div class="cc-artist">' + esc(isFest ? c.name : c.artist) + (isFest ? '<span class="fest-badge">Festival</span>' : '') + '</div>';
+    if (!isFest && c.tour) html += '<div class="cc-tour">' + esc(c.tour) + '</div>';
     html += '<div class="cc-meta">';
-    html += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(c.venue);
+    html += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(isFest ? c.location : c.venue);
     html += '<span style="color:#d5d5d5;">·</span>';
     html += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(c.date);
     html += '</div>';
-    if (c.support) html += '<div class="cc-support"><b>Support:</b> ' + esc(c.support) + '</div>';
+    if (!isFest && c.support) html += '<div class="cc-support"><b>Support:</b> ' + esc(c.support) + '</div>';
     if (c.rating) html += starsRow(c.rating);
-    if (c.setlist && c.setlist.length) {
+    const sub = isFest ? (c.artistsSeen || []) : (c.setlist || []);
+    if (sub.length) {
+      const lbl = isFest
+        ? 'Artists seen · ' + sub.length
+        : 'Setlist · ' + sub.length + ' songs';
       html += '<button class="setlist-toggle" onclick="toggleSetlist(this)">'
         + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
-        + 'Setlist · ' + c.setlist.length + ' songs</button>';
-      html += '<div class="cc-setlist"><ol>' + c.setlist.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div>';
+        + lbl + '</button>';
+      html += '<div class="cc-setlist"><ol>' + sub.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div>';
     }
     html += '</div>';
 
@@ -373,13 +417,19 @@ async function openModal(id) {
   modalPhotoRemoved = false;
   const c = id ? concerts.find(x => x.id === id) : null;
 
-  document.getElementById('modal-title').textContent = c ? 'Edit concert' : 'Add concert';
-  document.getElementById('f-artist').value  = c ? c.artist  : '';
+  setModalType(c ? (c.type === 'festival' ? 'festival' : 'concert') : 'concert');
+  document.getElementById('type-toggle').style.display = c ? 'none' : 'flex';
+
+  document.getElementById('modal-title').textContent =
+    (c ? 'Edit ' : 'Add ') + (modalType === 'festival' ? 'festival' : 'concert');
+  document.getElementById('f-artist').value  = c ? (c.artist || c.name || '') : '';
   document.getElementById('f-date').value    = c ? c.date    : '';
-  document.getElementById('f-venue').value   = c ? c.venue   : '';
+  document.getElementById('f-venue').value   = c ? (c.venue || c.location || '') : '';
   document.getElementById('f-tour').value    = c ? (c.tour || '')    : '';
   document.getElementById('f-support').value = c ? (c.support || '') : '';
-  document.getElementById('f-setlist').value = c && c.setlist ? c.setlist.join('\n') : '';
+  document.getElementById('f-setlist').value = c
+    ? ((c.type === 'festival' ? c.artistsSeen : c.setlist) || []).join('\n')
+    : '';
   modalRating = c ? (c.rating || 0) : 0;
   buildStarPicker();
   setPhotoPreview(c && c.hasPhoto ? (c.thumb || null) : null);
@@ -426,7 +476,8 @@ async function saveConcert() {
   const artist = document.getElementById('f-artist').value.trim();
   const date   = document.getElementById('f-date').value.trim();
   const venue  = document.getElementById('f-venue').value.trim();
-  if (!artist || !date) { alert('Artist and date are required'); return; }
+  const isFest = modalType === 'festival';
+  if (!artist || !date) { alert((isFest ? 'Festival name' : 'Artist') + ' and date are required'); return; }
   if (!parseDMY(date))  { alert('Date must be dd/mm/yyyy'); return; }
 
   const btn = document.getElementById('save-btn');
@@ -436,15 +487,26 @@ async function saveConcert() {
 
   const id = editingId || ('c' + Date.now());
   const existing = concerts.find(x => x.id === id);
+  const lines = document.getElementById('f-setlist').value.split('\n').map(s => s.trim()).filter(Boolean);
 
-  const entry = {
+  const entry = isFest ? {
+    id,
+    type: 'festival',
+    name: artist,
+    location: venue,
+    date,
+    artistsSeen: lines,
+    rating:  modalRating,
+    thumb:   existing ? existing.thumb : null,
+    hasPhoto: existing ? !!existing.hasPhoto : false,
+  } : {
     id,
     artist,
     date,
     venue,
     tour:    document.getElementById('f-tour').value.trim(),
     support: document.getElementById('f-support').value.trim(),
-    setlist: document.getElementById('f-setlist').value.split('\n').map(s => s.trim()).filter(Boolean),
+    setlist: lines,
     rating:  modalRating,
     thumb:   existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
@@ -485,7 +547,7 @@ async function saveConcert() {
 
 async function deleteConcert(id) {
   const c = concerts.find(x => x.id === id);
-  if (!confirm('Delete ' + (c ? c.artist : 'this concert') + '?')) return;
+  if (!confirm('Delete ' + (c ? (c.artist || c.name || 'this entry') : 'this entry') + '?')) return;
   await loadFresh();
   concerts = concerts.filter(x => x.id !== id);
   try {

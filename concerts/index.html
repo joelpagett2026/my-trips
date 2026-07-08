@@ -234,10 +234,18 @@ async function init() {
 
   // Stats
   document.getElementById('stat-concerts').textContent = list.length;
-  document.getElementById('stat-artists').textContent =
-    new Set(list.map(c => (c.artist || '').trim().toLowerCase()).filter(Boolean)).size;
+  const artistSet = new Set();
+  list.forEach(c => {
+    if (c.type === 'festival') {
+      (c.artistsSeen || []).forEach(a => { const k = a.trim().toLowerCase(); if (k) artistSet.add(k); });
+    } else {
+      const k = (c.artist || '').trim().toLowerCase();
+      if (k) artistSet.add(k);
+    }
+  });
+  document.getElementById('stat-artists').textContent = artistSet.size;
   document.getElementById('stat-venues').textContent =
-    new Set(list.map(c => (c.venue || '').trim().toLowerCase()).filter(Boolean)).size;
+    new Set(list.map(c => ((c.venue || c.location || '')).trim().toLowerCase()).filter(Boolean)).size;
 
   // Year cards — every year present in the data, plus the current year
   const counts = {};
@@ -263,9 +271,9 @@ async function init() {
   if (latest) {
     document.getElementById('latest-wrap').style.display = 'block';
     document.getElementById('latest-card').href = '/concerts/log.html?year=' + yearOf(latest);
-    document.getElementById('latest-artist').textContent = latest.artist || '';
+    document.getElementById('latest-artist').textContent = latest.artist || latest.name || '';
     document.getElementById('latest-meta').textContent =
-      [latest.venue, latest.date].filter(Boolean).join(' · ');
+      [latest.venue || latest.location, latest.date].filter(Boolean).join(' · ');
     if (latest.thumb) {
       const img = document.getElementById('latest-photo');
       img.src = latest.thumb;

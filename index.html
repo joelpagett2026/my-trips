@@ -202,7 +202,7 @@ async function loadStats() {
       const count = concerts.list.length;
       document.getElementById('concerts-stat').textContent = count;
       const latest = concerts.list[concerts.list.length - 1];
-      if (latest) document.getElementById('concerts-desc').textContent = 'Last: ' + latest.artist + ' at ' + latest.venue;
+      if (latest) document.getElementById('concerts-desc').textContent = 'Last: ' + (latest.artist || latest.name || '') + ' at ' + (latest.venue || latest.location || '');
     } else {
       document.getElementById('concerts-stat').textContent = '0';
     }
