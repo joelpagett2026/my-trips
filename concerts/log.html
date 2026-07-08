@@ -477,9 +477,8 @@ function closeModal() {
   document.getElementById('overlay').classList.remove('open');
 }
 
-document.getElementById('overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
+// Note: clicking outside the modal intentionally does NOT close it,
+// so typed-in details can't be lost by an accidental click.
 
 document.getElementById('f-photo').addEventListener('change', async e => {
   const file = e.target.files[0];
