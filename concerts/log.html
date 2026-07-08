@@ -530,13 +530,23 @@ function knownArtists() {
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
-function attachSuggest(el, mode, enabled) {
+function knownVenues() {
+  const seen = new Map();
+  concerts.forEach(c => {
+    const k = ((c.venue || c.location || '')).trim();
+    if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k);
+  });
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+function attachSuggest(el, mode, enabled, source) {
   const box = document.createElement('div');
   box.className = 'suggest-box';
   el.parentElement.style.position = 'relative';
   el.parentElement.appendChild(box);
 
   function token() {
+    if (mode === 'whole') return { text: el.value, start: 0, end: el.value.length };
     const pos = el.selectionStart;
     const before = el.value.slice(0, pos);
     const sep = mode === 'line' ? '\n' : ',';
@@ -549,7 +559,7 @@ function attachSuggest(el, mode, enabled) {
     const t = token();
     const q = t.text.trim().toLowerCase();
     if (!q) { box.style.display = 'none'; return; }
-    const matches = knownArtists().filter(a => {
+    const matches = (source || knownArtists)().filter(a => {
       const l = a.toLowerCase();
       return l.includes(q) && l !== q;
     }).slice(0, 6);
@@ -583,6 +593,7 @@ attachSuggest(document.getElementById('f-artist'),  'comma', () => modalType ===
 attachSuggest(document.getElementById('f-support'), 'comma');
 attachSuggest(document.getElementById('f-guests'),  'comma');
 attachSuggest(document.getElementById('f-setlist'), 'line',  () => modalType === 'festival');
+attachSuggest(document.getElementById('f-venue'),   'whole', null, knownVenues);
 
 document.getElementById('f-photo').addEventListener('change', async e => {
   const file = e.target.files[0];
