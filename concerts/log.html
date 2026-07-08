@@ -593,7 +593,11 @@ async function deleteConcert(id) {
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
-(async () => { await loadFresh(); render(); })();
+(async () => {
+  await loadFresh();
+  render();
+  if (params.get('add') === '1') openModal();
+})();
 </script>
 </body>
 </html>
