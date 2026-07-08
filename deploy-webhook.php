@@ -37,7 +37,6 @@ $subdirFiles = [
     'holidays/jonathan/2026.html' => 'holidays/jonathan/2026.html',
     'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
-    'concerts/log.html' => 'concerts/log.html',
     'concerts/artists.html' => 'concerts/artists.html',
 ];
 
@@ -85,6 +84,9 @@ if (is_dir($privDir)) {
     @unlink($privDir . '/index.html');
     @rmdir($privDir);
 }
+
+// One-time cleanup: retired concerts year-log page
+@unlink(PUBLIC_HTML . '/concerts/log.html');
 
 foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'icons'] as $dir) {
     $dirPath = PUBLIC_HTML . '/' . $dir;
@@ -176,7 +178,6 @@ $subdirFiles = [
     'holidays/jonathan/2026.html' => 'holidays/jonathan/2026.html',
     'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
-    'concerts/log.html' => 'concerts/log.html',
     'concerts/artists.html' => 'concerts/artists.html',
     'icons/favicon.ico' => 'icons/favicon.ico',
     'icons/icon-32.png' => 'icons/icon-32.png',

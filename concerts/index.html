@@ -13,7 +13,7 @@
 <script src="/db.js"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
 <style>
-  /* ── TWO COLUMN LAYOUT (trips-style) ── */
+  /* ── TWO COLUMN LAYOUT ── */
   .page-layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; align-items: start; }
   .main-col { min-width: 0; }
   .dash-col {
@@ -22,8 +22,6 @@
     overflow-y: auto; align-self: start; scrollbar-width: none;
   }
   .dash-col::-webkit-scrollbar { display: none; }
-
-  .large-title-area { padding: 8px 20px 4px; }
 
   .section { padding: 0 20px 24px; }
   .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: #444444; margin-bottom: 10px; }
@@ -34,12 +32,19 @@
   .concerts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
   .c-card {
     background: #ffffff; border-radius: 18px; overflow: hidden;
-    text-decoration: none; color: inherit; display: block;
+    color: inherit; display: block; cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.05);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
   }
   .c-card:hover { transform: scale(1.015); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
   .c-card:active { transform: scale(0.985); }
+  .c-card.upcoming { box-shadow: 0 0 0 2px #0e7a87, 0 2px 8px rgba(0,0,0,0.08); position: relative; }
+  .cd-pill {
+    position: absolute; top: 8px; right: 8px; z-index: 5;
+    font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.9); color: #fff; backdrop-filter: blur(8px);
+  }
   .c-card-img { width: 100%; height: 140px; object-fit: cover; display: block; background: #f0f0f0; }
   .c-card-img.placeholder { display: flex; align-items: center; justify-content: center; color: #d5d5d5; }
   .c-card-body { padding: 12px 14px 14px; }
@@ -50,25 +55,6 @@
     font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
     letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 2px; margin-left: 6px;
   }
-  .c-card.upcoming { box-shadow: 0 0 0 2px #0e7a87, 0 2px 8px rgba(0,0,0,0.08); position: relative; }
-  .cd-pill {
-    position: absolute; top: 8px; right: 8px; z-index: 5;
-    font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    background: rgba(14,122,135,0.9); color: #fff; backdrop-filter: blur(8px);
-  }
-  .dash-countdown {
-    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    border-radius: 14px; padding: 16px; margin: 8px 16px 0;
-    position: relative; overflow: hidden; display: block; text-decoration: none;
-  }
-  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .dash-countdown-name { font-size: 14px; font-weight: 700; color: #fff; }
-  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; margin-bottom: 10px; }
-  .dash-cd-block { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 10px; text-align: center; display: inline-block; min-width: 90px; }
-  .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
-  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
-
   .c-stars { display: flex; gap: 2px; margin-top: 7px; }
   .c-stars svg { color: #d5d5d5; }
   .c-stars svg.on { color: #0e7a87; }
@@ -85,11 +71,22 @@
   .dash-section-title { font-size: 11px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
   .dash-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 16px 16px 0; }
 
-  /* Latest concert hero */
+  .dash-countdown {
+    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
+    border-radius: 14px; padding: 16px; margin: 8px 16px 0;
+    position: relative; overflow: hidden; display: block; cursor: pointer;
+  }
+  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .dash-countdown-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; margin-bottom: 10px; }
+  .dash-cd-block { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 10px; text-align: center; display: inline-block; min-width: 90px; }
+  .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
+  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
   .dash-hero {
     border-radius: 14px; margin: 8px 16px 0; position: relative; overflow: hidden;
     background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    display: block; text-decoration: none; min-height: 150px;
+    display: block; min-height: 150px; cursor: pointer;
   }
   .dash-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; }
   .dash-hero-body { position: relative; padding: 14px 16px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 150px; background: linear-gradient(to top, rgba(10,20,22,0.75) 0%, rgba(10,20,22,0.1) 60%); }
@@ -97,22 +94,148 @@
   .dash-hero-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
   .dash-hero-meta { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 500; margin-top: 3px; }
 
-  /* Icon stat rows */
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
   .dash-stat:last-child { margin-bottom: 0; }
-  .dash-stat-icon {
-    flex-shrink: 0; color: #0e7a87;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
-  /* Top artists */
   .top-artist { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
   .top-artist:last-child { border-bottom: none; }
   .top-artist-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 18px; opacity: 0.7; }
   .top-artist-name { flex: 1; font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top-artist-count { font-size: 11px; font-weight: 700; color: #888; }
+
+  /* ── DETAIL LIGHTBOX ── */
+  .detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 180;
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 32px 16px; overflow-y: auto;
+  }
+  .detail-overlay.open { display: flex; }
+  .detail-card {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    width: 100%; max-width: 620px; box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    position: relative;
+  }
+  .detail-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #f0f0f0; }
+  .detail-close {
+    position: absolute; top: 12px; right: 12px; z-index: 10;
+    width: 32px; height: 32px; border: none; border-radius: 10px; cursor: pointer;
+    background: rgba(0,0,0,0.45); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .detail-close:hover { background: rgba(0,0,0,0.65); }
+  .detail-close.no-photo { background: #f0f0f0; color: #888; }
+  .detail-body { padding: 18px 22px 20px; }
+  .detail-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: #444; padding-right: 24px; }
+  .detail-tour { font-size: 13px; font-weight: 600; color: #0e7a87; margin-top: 2px; }
+  .detail-meta { font-size: 12px; color: #888; font-weight: 500; margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .detail-meta svg { flex-shrink: 0; color: #b8b8b8; }
+  .detail-line { font-size: 12px; color: #888; font-weight: 500; margin-top: 6px; }
+  .detail-line b { color: #666; font-weight: 600; }
+  .detail-stars { display: flex; gap: 3px; margin-top: 11px; }
+  .detail-stars svg { color: #d5d5d5; }
+  .detail-stars svg.on { color: #0e7a87; }
+  .detail-setlist { margin-top: 14px; padding: 12px 14px; background: #f7f7f7; border-radius: 12px; }
+  .detail-setlist-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; margin-bottom: 6px; }
+  .detail-setlist ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
+  .detail-setlist li { font-size: 12px; color: #555; font-weight: 500; padding: 2px 0; break-inside: avoid; }
+  .fest-badge {
+    display: inline-block; background: rgba(14,122,135,0.1); color: #0e7a87;
+    font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 3px; margin-left: 8px;
+  }
+  .fest-badge.concert { background: rgba(68,68,68,0.07); color: #888; }
+  .fest-badge.upcoming { background: #0e7a87; color: #fff; }
+  .detail-actions { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
+  .d-btn {
+    font-family: Montserrat, sans-serif; font-size: 12.5px; font-weight: 700;
+    border-radius: 10px; padding: 9px 18px; cursor: pointer; border: none;
+    display: flex; align-items: center; gap: 7px; transition: all 0.15s;
+  }
+  .d-btn.edit { background: #0e7a87; color: #fff; }
+  .d-btn.edit:hover { background: #0a6570; }
+  .d-btn.album { background: rgba(14,122,135,0.1); color: #0e7a87; text-decoration: none; }
+  .d-btn.album:hover { background: rgba(14,122,135,0.2); }
+  .d-btn.delete { background: none; color: #b8b8b8; margin-left: auto; padding: 9px 10px; }
+  .d-btn.delete:hover { color: #e53e3e; background: #fee; }
+
+  /* ── ADD/EDIT MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 24px 16px; overflow-y: auto;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 18px; padding: 22px;
+    width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: #444; margin-bottom: 16px; letter-spacing: -0.3px; }
+  .f-group { margin-bottom: 13px; }
+  .f-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #999; margin-bottom: 5px; display: block;
+  }
+  .f-input, .f-textarea {
+    width: 100%; border: 1px solid #e0e0e0; border-radius: 9px;
+    padding: 9px 11px; font-family: Montserrat, sans-serif;
+    font-size: 13px; color: #444; outline: none; background: #fff;
+    transition: border-color 0.15s;
+  }
+  .f-input:focus, .f-textarea:focus { border-color: #0e7a87; }
+  .f-input::placeholder, .f-textarea::placeholder { color: #b8b8b8; }
+  .f-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  .f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .star-picker { display: flex; gap: 4px; }
+  .star-picker button { background: none; border: none; cursor: pointer; padding: 2px; color: #d5d5d5; transition: color 0.1s, transform 0.1s; }
+  .star-picker button:hover { transform: scale(1.15); }
+  .star-picker button.on { color: #0e7a87; }
+
+  .photo-drop {
+    border: 2px dashed #d5d5d5; border-radius: 12px; padding: 18px;
+    text-align: center; cursor: pointer; color: #999; font-size: 11px;
+    font-weight: 600; transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .photo-drop:hover { border-color: #0e7a87; color: #0e7a87; background: #f4fafb; }
+  .photo-drop img { width: 100%; border-radius: 8px; display: block; }
+  .photo-drop .pd-remove {
+    position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+    background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 7px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  .type-toggle { display: flex; gap: 6px; margin-bottom: 16px; }
+  .type-btn {
+    flex: 1; padding: 8px 0; border-radius: 9px; border: 1px solid #e0e0e0;
+    background: #fff; color: #666; font-family: Montserrat, sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .type-btn.on { background: #0e7a87; border-color: #0e7a87; color: #fff; }
+
+  .suggest-box {
+    position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 9px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 60;
+    display: none; overflow: hidden;
+  }
+  .suggest-item { padding: 8px 12px; font-size: 12.5px; font-weight: 600; color: #444; cursor: pointer; }
+  .suggest-item:hover { background: #e6f9f7; color: #0e7a87; }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .m-btn {
+    font-family: Montserrat, sans-serif; font-size: 13px; font-weight: 700;
+    border-radius: 9px; padding: 9px 20px; cursor: pointer; border: none;
+    transition: all 0.15s;
+  }
+  .m-btn.cancel { background: #f0f0f0; color: #666; }
+  .m-btn.cancel:hover { background: #e2e2e2; }
+  .m-btn.save { background: #0e7a87; color: #fff; }
+  .m-btn.save:hover { background: #0a6570; }
+  .m-btn.save:disabled { opacity: 0.5; cursor: default; }
 
   /* ── MOBILE ── */
   @media (max-width: 700px) {
@@ -121,6 +244,7 @@
     .dash-col { position: static; height: auto; border-left: none; border-top: 0.5px solid rgba(0,0,0,0.1); width: 100%; }
     .concerts-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
     .c-card-img { height: 110px; }
+    .detail-setlist ol { columns: 1; }
   }
   @media (max-width: 430px) {
     .concerts-grid { grid-template-columns: 1fr; }
@@ -137,7 +261,7 @@
   </a>
   <div class="nav-title">Concert Log</div>
   <div class="nav-actions">
-    <a class="nav-btn" href="/concerts/log.html?add=1" style="text-decoration:none;">+ Concert</a>
+    <button class="nav-btn" onclick="openModal()">+ Concert</button>
   </div>
 </nav>
 
@@ -145,7 +269,7 @@
 
   <!-- ── MAIN COLUMN ── -->
   <div class="main-col">
-    <div id="year-sections" style="padding-top:12px;"></div>
+    <div id="year-sections" style="padding-top:16px;"></div>
   </div>
 
   <!-- ── DASHBOARD ── -->
@@ -226,9 +350,93 @@
 
 </div>
 
-<script>
-const STAR = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+<!-- ── DETAIL LIGHTBOX ── -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-card" id="detail-card"></div>
+</div>
 
+<!-- ── ADD / EDIT MODAL ── -->
+<div class="modal-overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Add concert</div>
+
+    <div class="type-toggle" id="type-toggle">
+      <button type="button" class="type-btn on" onclick="setModalType('concert')">Concert</button>
+      <button type="button" class="type-btn" onclick="setModalType('festival')">Day Festival</button>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label" id="lbl-artist">Artist / Artists</label>
+      <input class="f-input" id="f-artist" placeholder="e.g. Foo Fighters">
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Date</label>
+        <input class="f-input" id="f-date" placeholder="dd/mm/yyyy">
+      </div>
+      <div class="f-group">
+        <label class="f-label" id="lbl-venue">Venue</label>
+        <input class="f-input" id="f-venue" placeholder="e.g. First Direct Arena">
+      </div>
+    </div>
+
+    <div class="f-group" id="grp-tour">
+      <label class="f-label">Tour / Event name</label>
+      <input class="f-input" id="f-tour" placeholder="e.g. Everything Or Nothing At All Tour">
+    </div>
+
+    <div class="f-group" id="grp-support">
+      <label class="f-label">Support acts</label>
+      <input class="f-input" id="f-support" placeholder="Comma separated — leave blank if none">
+    </div>
+
+    <div class="f-group" id="grp-guests">
+      <label class="f-label">Guest performers</label>
+      <input class="f-input" id="f-guests" placeholder="Comma separated — leave blank if none">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Photo album link</label>
+      <input class="f-input" id="f-album" placeholder="e.g. https://photos.app.goo.gl/…">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Lead photograph</label>
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('f-photo').click()">
+        <span id="pd-hint">Tap to choose a photo</span>
+      </div>
+      <input type="file" id="f-photo" accept="image/*" style="display:none;">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label" id="lbl-setlist">Setlist — one song per line</label>
+      <textarea class="f-textarea" id="f-setlist" placeholder="Song one&#10;Song two&#10;Song three"></textarea>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Rating</label>
+      <div class="star-picker" id="star-picker"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="m-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="m-btn save" id="save-btn" onclick="saveConcert()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAR = '<svg width="__S__" height="__S__" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+let concerts = [];
+let editingId = null;
+let modalPhoto = null;
+let modalPhotoRemoved = false;
+let modalRating = 0;
+let modalType = 'concert';
+
+// ── HELPERS ──────────────────────────────────────────────────────────
 function parseDMY(s) {
   const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
@@ -237,29 +445,71 @@ function yearOf(c) {
   const m = (c.date || '').match(/(\d{4})/);
   return m ? +m[1] : null;
 }
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s || '';
-  return d.innerHTML;
-}
-function starsRow(rating) {
-  let html = '<div class="c-stars">';
-  for (let i = 1; i <= 5; i++) html += STAR.replace('<svg', '<svg class="' + (i <= rating ? 'on' : '') + '"');
-  return html + '</div>';
-}
-
 function daysUntil(c) {
   const d = parseDMY(c.date);
   if (!d) return null;
   const today = new Date(); today.setHours(0,0,0,0);
   return Math.round((d - today) / 86400000);
 }
+function isUpcoming(c) {
+  const n = daysUntil(c);
+  return n !== null && n > 0;
+}
+function fmtDate(s) {
+  const d = parseDMY(s);
+  return d ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (s || '');
+}
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+function starsRow(rating, size, cls) {
+  let html = '<div class="' + cls + '">';
+  for (let i = 1; i <= 5; i++) html += STAR.replace(/__S__/g, size).replace('<svg', '<svg class="' + (i <= rating ? 'on' : '') + '"');
+  return html + '</div>';
+}
 
+// ── IMAGE COMPRESSION ────────────────────────────────────────────────
+function drawScaled(source, w, h, maxW, quality) {
+  const scale = Math.min(1, maxW / w);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
+  canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+async function compress(file, maxW, quality) {
+  if (window.createImageBitmap) {
+    try {
+      const bmp = await createImageBitmap(file);
+      const out = drawScaled(bmp, bmp.width, bmp.height, maxW, quality);
+      bmp.close();
+      return out;
+    } catch (e) { /* fall through */ }
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try { resolve(drawScaled(img, img.width, img.height, maxW, quality)); }
+      catch (e) { reject(e); }
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('unsupported image format'));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// ── HOMEPAGE RENDER ──────────────────────────────────────────────────
 function concertCard(c, upcoming) {
   const isFest = c.type === 'festival';
-  const a = document.createElement('a');
+  const a = document.createElement('div');
   a.className = 'c-card' + (upcoming ? ' upcoming' : '');
-  a.href = '/concerts/log.html?year=' + yearOf(c);
+  a.onclick = () => openDetail(c.id);
   let html = '';
   if (upcoming) {
     const n = daysUntil(c);
@@ -272,27 +522,20 @@ function concertCard(c, upcoming) {
   const d = parseDMY(c.date);
   const dateStr = d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : (c.date || '');
   html += '<div class="c-card-meta">' + esc(isFest ? c.location : c.venue) + ' · ' + dateStr + '</div>';
-  if (c.rating) html += starsRow(c.rating);
+  if (c.rating) html += starsRow(c.rating, 12, 'c-stars');
   html += '</div>';
   a.innerHTML = html;
   return a;
 }
 
-async function init() {
-  let list = [];
-  try {
-    const rec = await dbLoad('concerts');
-    if (rec && Array.isArray(rec.list)) list = rec.list;
-  } catch (e) {}
-
-  // ── Split upcoming vs seen ──
+function renderAll() {
   const today = new Date(); today.setHours(0,0,0,0);
-  const isUpcoming = c => { const d = parseDMY(c.date); return d && d > today; };
-  const upcoming = list.filter(isUpcoming).sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
-  const seen = list.filter(c => !isUpcoming(c));
+  const upcoming = concerts.filter(isUpcoming).sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
+  const seen = concerts.filter(c => !isUpcoming(c));
 
   // ── Year sections ──
   const sections = document.getElementById('year-sections');
+  sections.innerHTML = '';
 
   if (upcoming.length) {
     const sec = document.createElement('div');
@@ -320,10 +563,12 @@ async function init() {
   }
 
   years.forEach((y, i) => {
-    if (i > 0) {
-      const div = document.createElement('div');
-      div.className = 'year-divider';
-      sections.appendChild(div);
+    if (i > 0 || upcoming.length) {
+      if (i > 0) {
+        const div = document.createElement('div');
+        div.className = 'year-divider';
+        sections.appendChild(div);
+      }
     }
     const sec = document.createElement('div');
     sec.className = 'section';
@@ -335,7 +580,7 @@ async function init() {
     grid.className = 'concerts-grid';
     byYear[y]
       .sort((a, b) => (parseDMY(b.date) || 0) - (parseDMY(a.date) || 0))
-      .forEach(c => grid.appendChild(concertCard(c)));
+      .forEach(c => grid.appendChild(concertCard(c, false)));
     sec.appendChild(grid);
     sections.appendChild(sec);
   });
@@ -345,7 +590,7 @@ async function init() {
   document.getElementById('s-festivals').textContent = seen.filter(c => c.type === 'festival').length;
   document.getElementById('s-total').textContent = seen.length;
 
-  const artistCounts = new Map(); // lower -> {name, count}
+  const artistCounts = new Map();
   const bump = a => {
     const k = (a || '').trim();
     if (!k) return;
@@ -369,6 +614,7 @@ async function init() {
   // ── Top artists ──
   const top = [...artistCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5);
   const topWrap = document.getElementById('top-artists');
+  topWrap.innerHTML = '';
   if (!top.length) topWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Log some concerts first</div>';
   top.forEach((t, i) => {
     const row = document.createElement('div');
@@ -379,31 +625,30 @@ async function init() {
     topWrap.appendChild(row);
   });
 
-  // ── Latest concert hero ──
-  const dated = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
-  const latest = dated[0];
-
   // ── Next concert countdown ──
   const next = upcoming[0];
+  const cd = document.getElementById('dash-countdown');
   if (next) {
-    const cd = document.getElementById('dash-countdown');
     cd.style.display = 'block';
-    cd.href = '/concerts/log.html?year=' + yearOf(next);
+    cd.onclick = () => openDetail(next.id);
     document.getElementById('cd-name').textContent = next.artist || next.name || '';
     document.getElementById('cd-meta').textContent =
       [next.venue || next.location, next.date].filter(Boolean).join(' · ');
-    const n = daysUntil(next);
-    document.getElementById('cd-days').textContent = n;
-  }
+    document.getElementById('cd-days').textContent = daysUntil(next);
+  } else cd.style.display = 'none';
+
+  // ── Latest concert hero ──
+  const dated = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
+  const latest = dated[0];
+  const hero = document.getElementById('dash-hero');
   if (latest) {
-    const hero = document.getElementById('dash-hero');
     hero.style.display = 'block';
-    hero.href = '/concerts/log.html?year=' + yearOf(latest);
+    hero.onclick = () => openDetail(latest.id);
     document.getElementById('hero-name').textContent = latest.artist || latest.name || '';
     document.getElementById('hero-meta').textContent =
       [latest.venue || latest.location, latest.date].filter(Boolean).join(' · ');
+    const img = document.getElementById('hero-img');
     if (latest.thumb) {
-      const img = document.getElementById('hero-img');
       img.src = latest.thumb;
       img.style.display = 'block';
       if (latest.hasPhoto) {
@@ -411,11 +656,387 @@ async function init() {
           .then(rec => { if (rec && rec.photo) img.src = rec.photo; })
           .catch(() => {});
       }
-    }
+    } else img.style.display = 'none';
+  } else hero.style.display = 'none';
+}
+
+// ── DETAIL LIGHTBOX ──────────────────────────────────────────────────
+function openDetail(id) {
+  const c = concerts.find(x => x.id === id);
+  if (!c) return;
+  const isFest = c.type === 'festival';
+  const upcoming = isUpcoming(c);
+  const du = daysUntil(c);
+  const card = document.getElementById('detail-card');
+
+  let html = '<button class="detail-close' + (c.hasPhoto ? '' : ' no-photo') + '" onclick="closeDetail()">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+
+  if (c.hasPhoto) {
+    html += '<img class="detail-photo" id="detail-photo"' + (c.thumb ? ' src="' + c.thumb + '"' : '') + ' alt="">';
+  }
+
+  html += '<div class="detail-body">';
+  html += '<div class="detail-name">' + esc(isFest ? c.name : c.artist)
+    + (isFest ? '<span class="fest-badge">Day Festival</span>' : '<span class="fest-badge concert">Concert</span>')
+    + (upcoming ? '<span class="fest-badge upcoming">' + (du === 1 ? 'Tomorrow' : 'In ' + du + ' days') + '</span>' : '')
+    + '</div>';
+  if (!isFest && c.tour) html += '<div class="detail-tour">' + esc(c.tour) + '</div>';
+
+  html += '<div class="detail-meta">';
+  html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(isFest ? c.location : c.venue);
+  html += '<span style="color:#d5d5d5;">·</span>';
+  html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(c.date);
+  html += '</div>';
+
+  if (!isFest && c.support) html += '<div class="detail-line"><b>Support:</b> ' + esc(c.support) + '</div>';
+  if (!isFest && c.guests)  html += '<div class="detail-line"><b>Guests:</b> ' + esc(c.guests) + '</div>';
+  if (c.rating) html += starsRow(c.rating, 16, 'detail-stars');
+
+  const sub = isFest ? (c.artistsSeen || []) : (c.setlist || []);
+  if (sub.length) {
+    const lbl = isFest ? (upcoming ? 'Artists' : 'Artists seen') : 'Setlist';
+    html += '<div class="detail-setlist"><div class="detail-setlist-title">' + lbl + ' · ' + sub.length + '</div>'
+      + '<ol>' + sub.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div>';
+  }
+
+  html += '<div class="detail-actions">';
+  html += '<button class="d-btn edit" onclick="editFromDetail(\'' + c.id + '\')">'
+    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>Edit</button>';
+  if (c.album) {
+    html += '<a class="d-btn album" href="' + esc(c.album) + '" target="_blank" rel="noopener">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Photos &amp; videos</a>';
+  }
+  html += '<button class="d-btn delete" onclick="deleteConcert(\'' + c.id + '\')" title="Delete">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+  html += '</div></div>';
+
+  card.innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('open');
+
+  if (c.hasPhoto) {
+    dbLoad('concert-photo-' + c.id)
+      .then(rec => {
+        if (rec && rec.photo) {
+          const img = document.getElementById('detail-photo');
+          if (img) img.src = rec.photo;
+        }
+      }).catch(() => {});
   }
 }
 
-init();
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+document.getElementById('detail-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDetail();
+});
+
+function editFromDetail(id) {
+  closeDetail();
+  openModal(id);
+}
+
+// ── ADD/EDIT MODAL ───────────────────────────────────────────────────
+function updateSetlistLabel() {
+  const isFest = modalType === 'festival';
+  const el = document.getElementById('lbl-setlist');
+  if (!isFest) { el.textContent = 'Setlist — one song per line'; return; }
+  const d = parseDMY(document.getElementById('f-date').value.trim());
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.textContent = (d && d > today) ? 'Artists — one per line' : 'Artists seen — one per line';
+}
+
+function setModalType(t) {
+  modalType = t;
+  const btns = document.querySelectorAll('#type-toggle .type-btn');
+  btns[0].classList.toggle('on', t === 'concert');
+  btns[1].classList.toggle('on', t === 'festival');
+
+  const isFest = t === 'festival';
+  document.getElementById('modal-title').textContent =
+    (editingId ? 'Edit ' : 'Add ') + (isFest ? 'day festival' : 'concert');
+  document.getElementById('lbl-artist').textContent  = isFest ? 'Festival name' : 'Artist / Artists';
+  document.getElementById('f-artist').placeholder    = isFest ? 'e.g. Glastonbury' : 'e.g. Foo Fighters';
+  document.getElementById('lbl-venue').textContent   = isFest ? 'Location' : 'Venue';
+  document.getElementById('f-venue').placeholder     = isFest ? 'e.g. Worthy Farm, Somerset' : 'e.g. First Direct Arena';
+  document.getElementById('f-setlist').placeholder   = isFest ? 'Artist one\nArtist two\nArtist three' : 'Song one\nSong two\nSong three';
+  document.getElementById('grp-tour').style.display    = isFest ? 'none' : '';
+  document.getElementById('grp-support').style.display = isFest ? 'none' : '';
+  document.getElementById('grp-guests').style.display  = isFest ? 'none' : '';
+  updateSetlistLabel();
+}
+
+function buildStarPicker() {
+  const wrap = document.getElementById('star-picker');
+  wrap.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = STAR.replace(/__S__/g, '22');
+    b.className = i <= modalRating ? 'on' : '';
+    b.onclick = () => { modalRating = (modalRating === i) ? 0 : i; buildStarPicker(); };
+    wrap.appendChild(b);
+  }
+}
+
+function setPhotoPreview(src) {
+  const drop = document.getElementById('photo-drop');
+  if (src) {
+    drop.innerHTML = '<img src="' + src + '"><button class="pd-remove" onclick="removePhoto(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  } else {
+    drop.innerHTML = '<span id="pd-hint">Tap to choose a photo</span>';
+  }
+}
+
+function removePhoto(e) {
+  e.stopPropagation();
+  modalPhoto = null;
+  modalPhotoRemoved = true;
+  document.getElementById('f-photo').value = '';
+  setPhotoPreview(null);
+}
+
+async function openModal(id) {
+  editingId = id || null;
+  modalPhoto = null;
+  modalPhotoRemoved = false;
+  const c = id ? concerts.find(x => x.id === id) : null;
+
+  setModalType(c ? (c.type === 'festival' ? 'festival' : 'concert') : 'concert');
+  document.getElementById('type-toggle').style.display = c ? 'none' : 'flex';
+
+  document.getElementById('modal-title').textContent =
+    (c ? 'Edit ' : 'Add ') + (modalType === 'festival' ? 'day festival' : 'concert');
+  document.getElementById('f-artist').value  = c ? (c.artist || c.name || '') : '';
+  document.getElementById('f-date').value    = c ? c.date    : '';
+  document.getElementById('f-venue').value   = c ? (c.venue || c.location || '') : '';
+  document.getElementById('f-tour').value    = c ? (c.tour || '')    : '';
+  document.getElementById('f-support').value = c ? (c.support || '') : '';
+  document.getElementById('f-guests').value  = c ? (c.guests || '')  : '';
+  document.getElementById('f-album').value   = c ? (c.album || '')   : '';
+  document.getElementById('f-setlist').value = c
+    ? ((c.type === 'festival' ? c.artistsSeen : c.setlist) || []).join('\n')
+    : '';
+  updateSetlistLabel();
+  modalRating = c ? (c.rating || 0) : 0;
+  buildStarPicker();
+  setPhotoPreview(c && c.hasPhoto ? (c.thumb || null) : null);
+
+  document.getElementById('overlay').classList.add('open');
+  if (!c) document.getElementById('f-artist').focus();
+
+  if (c && c.hasPhoto) {
+    try {
+      const rec = await dbLoad('concert-photo-' + c.id);
+      if (rec && rec.photo && !modalPhoto && !modalPhotoRemoved) setPhotoPreview(rec.photo);
+    } catch (e) {}
+  }
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// Note: clicking outside the edit modal intentionally does NOT close it,
+// so typed-in details can't be lost by an accidental click.
+
+// ── ARTIST / VENUE AUTOCOMPLETE ──────────────────────────────────────
+function knownArtists() {
+  const seen = new Map();
+  const push = a => { const k = (a || '').trim(); if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k); };
+  concerts.forEach(c => {
+    if (c.type === 'festival') (c.artistsSeen || []).forEach(push);
+    else {
+      (c.artist || '').split(',').forEach(push);
+      (c.support || '').split(',').forEach(push);
+      (c.guests || '').split(',').forEach(push);
+    }
+  });
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+function knownVenues() {
+  const seen = new Map();
+  concerts.forEach(c => {
+    const k = ((c.venue || c.location || '')).trim();
+    if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k);
+  });
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+function attachSuggest(el, mode, enabled, source) {
+  const box = document.createElement('div');
+  box.className = 'suggest-box';
+  el.parentElement.style.position = 'relative';
+  el.parentElement.appendChild(box);
+
+  function token() {
+    if (mode === 'whole') return { text: el.value, start: 0, end: el.value.length };
+    const pos = el.selectionStart;
+    const before = el.value.slice(0, pos);
+    const sep = mode === 'line' ? '\n' : ',';
+    const start = before.lastIndexOf(sep) + 1;
+    return { text: before.slice(start), start, end: pos };
+  }
+
+  function update() {
+    if (enabled && !enabled()) { box.style.display = 'none'; return; }
+    const t = token();
+    const q = t.text.trim().toLowerCase();
+    if (!q) { box.style.display = 'none'; return; }
+    const matches = (source || knownArtists)().filter(a => {
+      const l = a.toLowerCase();
+      return l.includes(q) && l !== q;
+    }).slice(0, 6);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '';
+    matches.forEach(m => {
+      const d = document.createElement('div');
+      d.className = 'suggest-item';
+      d.textContent = m;
+      d.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        const t2 = token();
+        let prefix = el.value.slice(0, t2.start);
+        if (mode !== 'line' && prefix && !prefix.endsWith(' ') && prefix.endsWith(',')) prefix += ' ';
+        el.value = prefix + m + el.value.slice(t2.end);
+        const np = (prefix + m).length;
+        el.setSelectionRange(np, np);
+        box.style.display = 'none';
+        el.focus();
+      });
+      box.appendChild(d);
+    });
+    box.style.display = 'block';
+  }
+
+  el.addEventListener('input', update);
+  el.addEventListener('blur', () => setTimeout(() => { box.style.display = 'none'; }, 150));
+}
+
+attachSuggest(document.getElementById('f-artist'),  'comma', () => modalType === 'concert');
+attachSuggest(document.getElementById('f-support'), 'comma');
+attachSuggest(document.getElementById('f-guests'),  'comma');
+attachSuggest(document.getElementById('f-setlist'), 'line',  () => modalType === 'festival');
+attachSuggest(document.getElementById('f-venue'),   'whole', null, knownVenues);
+
+document.getElementById('f-date').addEventListener('input', updateSetlistLabel);
+
+document.getElementById('f-photo').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const drop = document.getElementById('photo-drop');
+  drop.innerHTML = '<span>Processing photo…</span>';
+  try {
+    const full  = await compress(file, 1000, 0.72);
+    const thumb = await compress(file, 640, 0.7);
+    modalPhoto = { full, thumb };
+    modalPhotoRemoved = false;
+    setPhotoPreview(full);
+  } catch (err) {
+    setPhotoPreview(modalPhoto ? modalPhoto.full : null);
+    alert("Couldn't read that photo (" + (err.message || err) + "). If it's a HEIC image, try converting it to JPEG or picking a different photo.");
+  }
+  e.target.value = '';
+});
+
+// ── SAVE / DELETE ────────────────────────────────────────────────────
+async function loadFresh() {
+  try {
+    const rec = await dbLoad('concerts');
+    concerts = (rec && Array.isArray(rec.list)) ? rec.list : [];
+  } catch (e) { concerts = []; }
+}
+
+async function saveConcert() {
+  const artist = document.getElementById('f-artist').value.trim();
+  const date   = document.getElementById('f-date').value.trim();
+  const venue  = document.getElementById('f-venue').value.trim();
+  const isFest = modalType === 'festival';
+  if (!artist || !date) { alert((isFest ? 'Festival name' : 'Artist') + ' and date are required'); return; }
+  if (!parseDMY(date))  { alert('Date must be dd/mm/yyyy'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+
+  await loadFresh(); // always load fresh before saving
+
+  const id = editingId || ('c' + Date.now());
+  const existing = concerts.find(x => x.id === id);
+  const lines = document.getElementById('f-setlist').value.split('\n').map(s => s.trim()).filter(Boolean);
+
+  const entry = isFest ? {
+    id,
+    type: 'festival',
+    name: artist,
+    location: venue,
+    date,
+    artistsSeen: lines,
+    album: document.getElementById('f-album').value.trim(),
+    rating:  modalRating,
+    thumb:   existing ? existing.thumb : null,
+    hasPhoto: existing ? !!existing.hasPhoto : false,
+  } : {
+    id,
+    artist,
+    date,
+    venue,
+    tour:    document.getElementById('f-tour').value.trim(),
+    support: document.getElementById('f-support').value.trim(),
+    guests:  document.getElementById('f-guests').value.trim(),
+    album:   document.getElementById('f-album').value.trim(),
+    setlist: lines,
+    rating:  modalRating,
+    thumb:   existing ? existing.thumb : null,
+    hasPhoto: existing ? !!existing.hasPhoto : false,
+  };
+
+  if (modalPhoto) {
+    entry.thumb = modalPhoto.thumb;
+    entry.hasPhoto = true;
+  } else if (modalPhotoRemoved) {
+    entry.thumb = null;
+    entry.hasPhoto = false;
+  }
+
+  const idx = concerts.findIndex(x => x.id === id);
+  if (idx >= 0) concerts[idx] = entry; else concerts.push(entry);
+
+  try {
+    if (modalPhoto) await dbSave('concert-photo-' + id, { photo: modalPhoto.full });
+    else if (modalPhotoRemoved) { try { await dbDelete('concert-photo-' + id); } catch (e) {} }
+    await dbSave('concerts', { list: concerts });
+  } catch (e) {
+    alert('Save failed: ' + e.message);
+    btn.disabled = false;
+    return;
+  }
+
+  btn.disabled = false;
+  closeModal();
+  renderAll();
+}
+
+async function deleteConcert(id) {
+  const c = concerts.find(x => x.id === id);
+  if (!confirm('Delete ' + (c ? (c.artist || c.name || 'this entry') : 'this entry') + '?')) return;
+  closeDetail();
+  await loadFresh();
+  concerts = concerts.filter(x => x.id !== id);
+  try {
+    await dbSave('concerts', { list: concerts });
+    try { await dbDelete('concert-photo-' + id); } catch (e) {}
+  } catch (e) { alert('Delete failed: ' + e.message); return; }
+  renderAll();
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+(async () => {
+  await loadFresh();
+  renderAll();
+  if (new URLSearchParams(location.search).get('add') === '1') openModal();
+})();
 </script>
 </body>
 </html>
