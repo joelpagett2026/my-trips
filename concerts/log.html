@@ -15,7 +15,7 @@
 <style>
   .log-wrap {
     max-width: 1700px; margin: 0 auto; padding: 16px 28px 40px;
-    display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start;
+    display: grid; grid-template-columns: 1fr; gap: 14px;
   }
   @media (min-width: 640px)  { .log-wrap { grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 1000px) { .log-wrap { grid-template-columns: repeat(3, 1fr); } }
@@ -25,9 +25,10 @@
     background: #fff; border-radius: 16px; overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
     position: relative;
+    display: flex; flex-direction: column;
   }
+  .cc-body { padding: 14px 16px 16px; flex: 1; }
   .cc-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #f0f0f0; }
-  .cc-body { padding: 14px 16px 16px; }
 
   .cc-artist { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; color: #444; }
   .cc-tour { font-size: 12px; font-weight: 600; color: #0e7a87; margin-top: 2px; }
