@@ -142,6 +142,15 @@
   }
   .fest-badge.concert { background: rgba(68,68,68,0.07); color: #888; }
 
+  .suggest-box {
+    position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 9px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 60;
+    display: none; overflow: hidden;
+  }
+  .suggest-item { padding: 8px 12px; font-size: 12.5px; font-weight: 600; color: #444; cursor: pointer; }
+  .suggest-item:hover { background: #e6f9f7; color: #0e7a87; }
+
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
   .m-btn {
     font-family: Montserrat, sans-serif; font-size: 13px; font-weight: 700;
@@ -505,6 +514,75 @@ function closeModal() {
 
 // Note: clicking outside the modal intentionally does NOT close it,
 // so typed-in details can't be lost by an accidental click.
+
+// ── ARTIST AUTOCOMPLETE ──────────────────────────────────────────────
+function knownArtists() {
+  const seen = new Map();
+  const push = a => { const k = (a || '').trim(); if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k); };
+  concerts.forEach(c => {
+    if (c.type === 'festival') (c.artistsSeen || []).forEach(push);
+    else {
+      (c.artist || '').split(',').forEach(push);
+      (c.support || '').split(',').forEach(push);
+      (c.guests || '').split(',').forEach(push);
+    }
+  });
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+function attachSuggest(el, mode, enabled) {
+  const box = document.createElement('div');
+  box.className = 'suggest-box';
+  el.parentElement.style.position = 'relative';
+  el.parentElement.appendChild(box);
+
+  function token() {
+    const pos = el.selectionStart;
+    const before = el.value.slice(0, pos);
+    const sep = mode === 'line' ? '\n' : ',';
+    const start = before.lastIndexOf(sep) + 1;
+    return { text: before.slice(start), start, end: pos };
+  }
+
+  function update() {
+    if (enabled && !enabled()) { box.style.display = 'none'; return; }
+    const t = token();
+    const q = t.text.trim().toLowerCase();
+    if (!q) { box.style.display = 'none'; return; }
+    const matches = knownArtists().filter(a => {
+      const l = a.toLowerCase();
+      return l.includes(q) && l !== q;
+    }).slice(0, 6);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '';
+    matches.forEach(m => {
+      const d = document.createElement('div');
+      d.className = 'suggest-item';
+      d.textContent = m;
+      d.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        const t2 = token();
+        let prefix = el.value.slice(0, t2.start);
+        if (mode !== 'line' && prefix && !prefix.endsWith(' ') && prefix.endsWith(',')) prefix += ' ';
+        el.value = prefix + m + el.value.slice(t2.end);
+        const np = (prefix + m).length;
+        el.setSelectionRange(np, np);
+        box.style.display = 'none';
+        el.focus();
+      });
+      box.appendChild(d);
+    });
+    box.style.display = 'block';
+  }
+
+  el.addEventListener('input', update);
+  el.addEventListener('blur', () => setTimeout(() => { box.style.display = 'none'; }, 150));
+}
+
+attachSuggest(document.getElementById('f-artist'),  'comma', () => modalType === 'concert');
+attachSuggest(document.getElementById('f-support'), 'comma');
+attachSuggest(document.getElementById('f-guests'),  'comma');
+attachSuggest(document.getElementById('f-setlist'), 'line',  () => modalType === 'festival');
 
 document.getElementById('f-photo').addEventListener('change', async e => {
   const file = e.target.files[0];
