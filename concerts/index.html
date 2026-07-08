@@ -153,7 +153,18 @@
 
 <div class="concert-index">
 
-  <div class="col-label">Years</div>
+  <div id="latest-wrap" style="display:none;">
+    <div class="col-label">Latest concert</div>
+    <a id="latest-card" class="person-card" style="flex-direction:column; align-items:stretch; padding:0; overflow:hidden; gap:0;">
+      <img id="latest-photo" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:none; background:#f0f0f0;" alt="">
+      <div style="padding:13px 16px;">
+        <div id="latest-artist" style="font-size:15px; font-weight:700; letter-spacing:-0.2px; color:#444;"></div>
+        <div id="latest-meta" style="font-size:11px; color:#888; font-weight:500; margin-top:3px;"></div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-label" style="margin-top:8px;">Years</div>
   <div id="year-cards" style="display:flex; flex-direction:column; gap:8px;"></div>
 
   <div class="col-stats">
@@ -206,7 +217,7 @@ function yearOf(c) {
 function yearCard(year, count, isCurrent) {
   const a = document.createElement('a');
   a.className = 'person-card' + (isCurrent ? ' active' : '');
-  a.href = '/concerts/' + year + '.html';
+  a.href = '/concerts/log.html?year=' + year;
   a.innerHTML = `
     <div class="pc-year">${year}${isCurrent ? ' <span class="current-badge">Now</span>' : ''}</div>
     <div class="pc-dates">${count} concert${count !== 1 ? 's' : ''}</div>
@@ -240,6 +251,33 @@ async function init() {
   Object.keys(counts).map(Number).sort((a, b) => b - a).forEach(y => {
     container.appendChild(yearCard(y, counts[y], y === CURRENT_YEAR));
   });
+
+  // Latest concert hero
+  function parseDMY(s) {
+    const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+  }
+  const dated = list.filter(c => parseDMY(c.date))
+                    .sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
+  const latest = dated[0];
+  if (latest) {
+    document.getElementById('latest-wrap').style.display = 'block';
+    document.getElementById('latest-card').href = '/concerts/log.html?year=' + yearOf(latest);
+    document.getElementById('latest-artist').textContent = latest.artist || '';
+    document.getElementById('latest-meta').textContent =
+      [latest.venue, latest.date].filter(Boolean).join(' · ');
+    if (latest.thumb) {
+      const img = document.getElementById('latest-photo');
+      img.src = latest.thumb;
+      img.style.display = 'block';
+      // Swap in the full-res photo once loaded
+      if (latest.hasPhoto) {
+        dbLoad('concert-photo-' + latest.id)
+          .then(rec => { if (rec && rec.photo) img.src = rec.photo; })
+          .catch(() => {});
+      }
+    }
+  }
 }
 
 init();
