@@ -513,7 +513,7 @@ document.getElementById('f-photo').addEventListener('change', async e => {
   drop.innerHTML = '<span>Processing photo…</span>';
   try {
     const full  = await compress(file, 1000, 0.72);
-    const thumb = await compress(file, 280, 0.6);
+    const thumb = await compress(file, 640, 0.7);
     modalPhoto = { full, thumb };
     modalPhotoRemoved = false;
     setPhotoPreview(full);
