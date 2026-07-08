@@ -473,6 +473,13 @@ async function saveConcert() {
 
   btn.disabled = false;
   closeModal();
+
+  // If the concert belongs to a different year, go to that year's page
+  const entryYear = yearOf(entry);
+  if (entryYear && entryYear !== YEAR) {
+    location.href = '/concerts/log.html?year=' + entryYear;
+    return;
+  }
   render();
 }
 
