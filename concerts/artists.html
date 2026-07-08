@@ -144,10 +144,14 @@ function buildArtists(list) {
     const a = map.get(lower);
     a.count++;
     const isFest = entry.type === 'festival';
+    let show;
+    if (isFest) show = entry.name;
+    else if (role === 'support') show = (entry.tour ? entry.tour + ' · ' : '') + 'Supporting ' + (entry.artist || '');
+    else show = entry.tour || entry.artist;
     a.appearances.push({
       date: entry.date,
       dateObj: parseDMY(entry.date),
-      show: isFest ? entry.name : (entry.tour || entry.artist),
+      show: show,
       venue: isFest ? entry.location : entry.venue,
       role,
     });
