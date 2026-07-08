@@ -187,7 +187,7 @@
 
     <div class="type-toggle" id="type-toggle">
       <button type="button" class="type-btn on" onclick="setModalType('concert')">Concert</button>
-      <button type="button" class="type-btn" onclick="setModalType('festival')">Festival</button>
+      <button type="button" class="type-btn" onclick="setModalType('festival')">Day Festival</button>
     </div>
 
     <div class="f-group">
@@ -275,7 +275,7 @@ function setModalType(t) {
 
   const isFest = t === 'festival';
   document.getElementById('modal-title').textContent =
-    (editingId ? 'Edit ' : 'Add ') + (isFest ? 'festival' : 'concert');
+    (editingId ? 'Edit ' : 'Add ') + (isFest ? 'day festival' : 'concert');
   document.getElementById('lbl-artist').textContent  = isFest ? 'Festival name' : 'Artist / Artists';
   document.getElementById('f-artist').placeholder    = isFest ? 'e.g. Glastonbury' : 'e.g. Foo Fighters';
   document.getElementById('lbl-venue').textContent   = isFest ? 'Location' : 'Venue';
@@ -382,7 +382,7 @@ function render() {
         + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></a>';
     }
     html += '<div class="cc-artist"' + (c.album ? ' style="padding-right:38px;"' : '') + '>' + esc(isFest ? c.name : c.artist)
-      + (isFest ? '<span class="fest-badge">Festival</span>' : '<span class="fest-badge concert">Concert</span>') + '</div>';
+      + (isFest ? '<span class="fest-badge">Day Festival</span>' : '<span class="fest-badge concert">Concert</span>') + '</div>';
     if (!isFest && c.tour) html += '<div class="cc-tour">' + esc(c.tour) + '</div>';
     html += '<div class="cc-meta">';
     html += '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(isFest ? c.location : c.venue);
@@ -472,7 +472,7 @@ async function openModal(id) {
   document.getElementById('type-toggle').style.display = c ? 'none' : 'flex';
 
   document.getElementById('modal-title').textContent =
-    (c ? 'Edit ' : 'Add ') + (modalType === 'festival' ? 'festival' : 'concert');
+    (c ? 'Edit ' : 'Add ') + (modalType === 'festival' ? 'day festival' : 'concert');
   document.getElementById('f-artist').value  = c ? (c.artist || c.name || '') : '';
   document.getElementById('f-date').value    = c ? c.date    : '';
   document.getElementById('f-venue').value   = c ? (c.venue || c.location || '') : '';
