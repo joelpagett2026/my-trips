@@ -38,6 +38,7 @@ $subdirFiles = [
     'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
     'concerts/log.html' => 'concerts/log.html',
+    'concerts/artists.html' => 'concerts/artists.html',
 ];
 
 foreach ($subdirFiles as $src => $dest) {
@@ -176,6 +177,7 @@ $subdirFiles = [
     'holidays/jonathan/2027.html' => 'holidays/jonathan/2027.html',
     'concerts/index.html' => 'concerts/index.html',
     'concerts/log.html' => 'concerts/log.html',
+    'concerts/artists.html' => 'concerts/artists.html',
     'icons/favicon.ico' => 'icons/favicon.ico',
     'icons/icon-32.png' => 'icons/icon-32.png',
     'icons/icon-192.png' => 'icons/icon-192.png',

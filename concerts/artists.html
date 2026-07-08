@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/icons/concerts-favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/concerts-icon-32.png">
+<link rel="apple-touch-icon" href="/icons/concerts-apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Artists · Concert Log</title>
+<script src="/auth.js?v=2"></script>
+<script src="/db.js"></script>
+<link rel="stylesheet" href="/holidays/holiday-style.css">
+<style>
+  .artists-wrap { max-width: 760px; margin: 0 auto; padding: 16px 20px 48px; }
+
+  /* Controls */
+  .controls { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .search-box {
+    flex: 1; min-width: 200px; position: relative;
+  }
+  .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #b8b8b8; }
+  .search-box input {
+    width: 100%; border: none; border-radius: 12px; background: #fff;
+    padding: 11px 14px 11px 36px; font-family: Montserrat, sans-serif;
+    font-size: 13px; color: #444; outline: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+  }
+  .search-box input::placeholder { color: #b8b8b8; }
+  .sort-toggle { display: flex; background: #fff; border-radius: 12px; padding: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06); }
+  .sort-btn {
+    border: none; background: none; padding: 8px 16px; border-radius: 9px;
+    font-family: Montserrat, sans-serif; font-size: 12px; font-weight: 700;
+    color: #888; cursor: pointer; transition: all 0.15s;
+  }
+  .sort-btn.on { background: #0e7a87; color: #fff; }
+
+  /* Letter headers */
+  .letter-header {
+    font-size: 13px; font-weight: 700; color: #0e7a87;
+    padding: 18px 4px 8px; letter-spacing: 0.05em;
+  }
+  .letter-header:first-child { padding-top: 4px; }
+
+  /* Artist rows */
+  .artist-row {
+    background: #fff; border-radius: 14px; margin-bottom: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+  }
+  .artist-head {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    cursor: pointer; user-select: none;
+  }
+  .artist-head:hover { background: #fafafa; }
+  .artist-name { flex: 1; font-size: 14px; font-weight: 700; color: #444; letter-spacing: -0.2px; }
+  .artist-count {
+    background: rgba(14,122,135,0.1); color: #0e7a87;
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .artist-chevron { color: #b8b8b8; flex-shrink: 0; transition: transform 0.15s; }
+  .artist-row.open .artist-chevron { transform: rotate(90deg); }
+
+  .artist-detail { display: none; border-top: 0.5px solid rgba(0,0,0,0.07); padding: 4px 16px 10px; }
+  .artist-row.open .artist-detail { display: block; }
+  .appearance { display: flex; align-items: baseline; gap: 8px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
+  .appearance:last-child { border-bottom: none; }
+  .app-date { font-size: 10.5px; font-weight: 700; color: #0e7a87; min-width: 78px; flex-shrink: 0; }
+  .app-info { flex: 1; min-width: 0; }
+  .app-show { font-size: 12px; font-weight: 600; color: #444; line-height: 1.3; }
+  .app-venue { font-size: 11px; color: #888; font-weight: 500; margin-top: 1px; }
+  .app-role {
+    font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 7px; border-radius: 20px; flex-shrink: 0; align-self: center;
+  }
+  .role-headliner { background: rgba(14,122,135,0.1); color: #0e7a87; }
+  .role-support   { background: rgba(255,149,0,0.12); color: #c07000; }
+  .role-guest     { background: rgba(175,82,222,0.1); color: #af52de; }
+  .role-festival  { background: rgba(52,199,89,0.12); color: #1e9e4a; }
+
+  .empty-state {
+    background: #fff; border: 2px dashed #ccc; border-radius: 16px;
+    padding: 40px 24px; text-align: center; color: #999;
+    font-size: 12px; font-weight: 600;
+  }
+  .result-count { font-size: 11px; color: #999; font-weight: 600; padding: 0 4px 10px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/concerts/">
+    <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
+    Concerts
+  </a>
+  <div class="nav-title">Artists</div>
+  <div class="nav-actions"></div>
+</nav>
+
+<div class="artists-wrap">
+
+  <div class="controls">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" type="text" placeholder="Search artists…">
+    </div>
+    <div class="sort-toggle">
+      <button class="sort-btn on" id="sort-az" onclick="setSort('az')">A–Z</button>
+      <button class="sort-btn" id="sort-count" onclick="setSort('count')">Most seen</button>
+    </div>
+  </div>
+
+  <div class="result-count" id="result-count"></div>
+  <div id="artist-list"></div>
+
+</div>
+
+<script>
+let artists = [];   // [{ name, count, appearances: [{date, dateObj, show, venue, role}] }]
+let sortMode = 'az';
+
+function parseDMY(s) {
+  const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+}
+function fmtDate(s) {
+  const d = parseDMY(s);
+  return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (s || '');
+}
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function buildArtists(list) {
+  const map = new Map(); // lower -> artist obj
+  const add = (name, entry, role) => {
+    const k = (name || '').trim();
+    if (!k) return;
+    const lower = k.toLowerCase();
+    if (!map.has(lower)) map.set(lower, { name: k, count: 0, appearances: [] });
+    const a = map.get(lower);
+    a.count++;
+    const isFest = entry.type === 'festival';
+    a.appearances.push({
+      date: entry.date,
+      dateObj: parseDMY(entry.date),
+      show: isFest ? entry.name : (entry.tour || entry.artist),
+      venue: isFest ? entry.location : entry.venue,
+      role,
+    });
+  };
+  list.forEach(c => {
+    if (c.type === 'festival') {
+      (c.artistsSeen || []).forEach(a => add(a, c, 'festival'));
+    } else {
+      (c.artist || '').split(',').forEach(a => add(a, c, 'headliner'));
+      (c.support || '').split(',').forEach(a => add(a, c, 'support'));
+      (c.guests || '').split(',').forEach(a => add(a, c, 'guest'));
+    }
+  });
+  const arr = [...map.values()];
+  arr.forEach(a => a.appearances.sort((x, y) => (y.dateObj || 0) - (x.dateObj || 0)));
+  return arr;
+}
+
+const ROLE_LABEL = { headliner: 'Headliner', support: 'Support', guest: 'Guest', festival: 'Festival' };
+
+function render() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let list = artists.filter(a => !q || a.name.toLowerCase().includes(q));
+
+  if (sortMode === 'az') list.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+  else list.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  const wrap = document.getElementById('artist-list');
+  wrap.innerHTML = '';
+  document.getElementById('result-count').textContent =
+    list.length + ' artist' + (list.length !== 1 ? 's' : '') + (q ? ' matching "' + q + '"' : '');
+
+  if (!list.length) {
+    wrap.innerHTML = '<div class="empty-state">' + (q ? 'No artists match that search' : 'No artists yet — log some concerts first') + '</div>';
+    return;
+  }
+
+  let lastLetter = null;
+  list.forEach(a => {
+    if (sortMode === 'az') {
+      const letter = /^[a-z]/i.test(a.name) ? a.name[0].toUpperCase() : '#';
+      if (letter !== lastLetter) {
+        const h = document.createElement('div');
+        h.className = 'letter-header';
+        h.textContent = letter;
+        wrap.appendChild(h);
+        lastLetter = letter;
+      }
+    }
+
+    const row = document.createElement('div');
+    row.className = 'artist-row';
+
+    let detail = '';
+    a.appearances.forEach(ap => {
+      detail += '<div class="appearance">'
+        + '<div class="app-date">' + fmtDate(ap.date) + '</div>'
+        + '<div class="app-info">'
+        +   '<div class="app-show">' + esc(ap.show) + '</div>'
+        +   '<div class="app-venue">' + esc(ap.venue) + '</div>'
+        + '</div>'
+        + '<div class="app-role role-' + ap.role + '">' + ROLE_LABEL[ap.role] + '</div>'
+        + '</div>';
+    });
+
+    row.innerHTML =
+      '<div class="artist-head" onclick="this.parentElement.classList.toggle(\'open\')">'
+      + '<div class="artist-name">' + esc(a.name) + '</div>'
+      + '<div class="artist-count">' + a.count + '×</div>'
+      + '<svg class="artist-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</div>'
+      + '<div class="artist-detail">' + detail + '</div>';
+
+    wrap.appendChild(row);
+  });
+}
+
+function setSort(mode) {
+  sortMode = mode;
+  document.getElementById('sort-az').classList.toggle('on', mode === 'az');
+  document.getElementById('sort-count').classList.toggle('on', mode === 'count');
+  render();
+}
+
+document.getElementById('search').addEventListener('input', render);
+
+(async () => {
+  let list = [];
+  try {
+    const rec = await dbLoad('concerts');
+    if (rec && Array.isArray(rec.list)) list = rec.list;
+  } catch (e) {}
+  artists = buildArtists(list);
+  render();
+})();
+</script>
+</body>
+</html>
