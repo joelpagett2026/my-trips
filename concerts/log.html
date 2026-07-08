@@ -34,6 +34,14 @@
   .cc-tour { font-size: 12px; font-weight: 600; color: #0e7a87; margin-top: 2px; }
   .cc-meta { font-size: 11px; color: #888; font-weight: 500; margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .cc-meta svg { flex-shrink: 0; color: #b8b8b8; }
+  .cc-album {
+    position: absolute; top: 12px; right: 12px;
+    width: 30px; height: 30px; border-radius: 9px;
+    background: rgba(14,122,135,0.1); color: #0e7a87;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .cc-album:hover { background: #0e7a87; color: #fff; }
   .cc-support { font-size: 11px; color: #888; font-weight: 500; margin-top: 5px; }
   .cc-support b { color: #666; font-weight: 600; }
 
@@ -214,6 +222,11 @@
     </div>
 
     <div class="f-group">
+      <label class="f-label">Photo album link</label>
+      <input class="f-input" id="f-album" placeholder="e.g. https://photos.app.goo.gl/…">
+    </div>
+
+    <div class="f-group">
       <label class="f-label">Lead photograph</label>
       <div class="photo-drop" id="photo-drop" onclick="document.getElementById('f-photo').click()">
         <span id="pd-hint">Tap to choose a photo</span>
@@ -363,8 +376,12 @@ function render() {
     if (c.hasPhoto) {
       html += '<img class="cc-photo" id="photo-' + c.id + '"' + (c.thumb ? ' src="' + c.thumb + '"' : '') + ' alt="">';
     }
-    html += '<div class="cc-body">';
-    html += '<div class="cc-artist">' + esc(isFest ? c.name : c.artist)
+    html += '<div class="cc-body" style="position:relative;">';
+    if (c.album) {
+      html += '<a class="cc-album" href="' + esc(c.album) + '" target="_blank" rel="noopener" title="Photos & videos" onclick="event.stopPropagation()">'
+        + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></a>';
+    }
+    html += '<div class="cc-artist"' + (c.album ? ' style="padding-right:38px;"' : '') + '>' + esc(isFest ? c.name : c.artist)
       + (isFest ? '<span class="fest-badge">Festival</span>' : '<span class="fest-badge concert">Concert</span>') + '</div>';
     if (!isFest && c.tour) html += '<div class="cc-tour">' + esc(c.tour) + '</div>';
     html += '<div class="cc-meta">';
@@ -462,6 +479,7 @@ async function openModal(id) {
   document.getElementById('f-tour').value    = c ? (c.tour || '')    : '';
   document.getElementById('f-support').value = c ? (c.support || '') : '';
   document.getElementById('f-guests').value  = c ? (c.guests || '')  : '';
+  document.getElementById('f-album').value   = c ? (c.album || '')   : '';
   document.getElementById('f-setlist').value = c
     ? ((c.type === 'festival' ? c.artistsSeen : c.setlist) || []).join('\n')
     : '';
@@ -538,6 +556,7 @@ async function saveConcert() {
     location: venue,
     date,
     artistsSeen: lines,
+    album: document.getElementById('f-album').value.trim(),
     rating:  modalRating,
     thumb:   existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
@@ -549,6 +568,7 @@ async function saveConcert() {
     tour:    document.getElementById('f-tour').value.trim(),
     support: document.getElementById('f-support').value.trim(),
     guests:  document.getElementById('f-guests').value.trim(),
+    album:   document.getElementById('f-album').value.trim(),
     setlist: lines,
     rating:  modalRating,
     thumb:   existing ? existing.thumb : null,
