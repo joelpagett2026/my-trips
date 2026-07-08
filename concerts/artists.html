@@ -106,8 +106,8 @@
       <input id="search" type="text" placeholder="Search artists…">
     </div>
     <div class="sort-toggle">
-      <button class="sort-btn on" id="sort-az" onclick="setSort('az')">A–Z</button>
-      <button class="sort-btn" id="sort-count" onclick="setSort('count')">Most seen</button>
+      <button class="sort-btn" id="sort-az" onclick="setSort('az')">A–Z</button>
+      <button class="sort-btn on" id="sort-count" onclick="setSort('count')">Most seen</button>
     </div>
   </div>
 
@@ -118,7 +118,7 @@
 
 <script>
 let artists = [];   // [{ name, count, appearances: [{date, dateObj, show, venue, role}] }]
-let sortMode = 'az';
+let sortMode = 'count';
 
 function parseDMY(s) {
   const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
