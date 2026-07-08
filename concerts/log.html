@@ -277,6 +277,15 @@ let modalPhotoRemoved = false;
 let modalRating = 0;
 let modalType = 'concert';
 
+function updateSetlistLabel() {
+  const isFest = modalType === 'festival';
+  const el = document.getElementById('lbl-setlist');
+  if (!isFest) { el.textContent = 'Setlist — one song per line'; return; }
+  const d = parseDMY(document.getElementById('f-date').value.trim());
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.textContent = (d && d > today) ? 'Artists — one per line' : 'Artists seen — one per line';
+}
+
 function setModalType(t) {
   modalType = t;
   const btns = document.querySelectorAll('#type-toggle .type-btn');
@@ -290,7 +299,7 @@ function setModalType(t) {
   document.getElementById('f-artist').placeholder    = isFest ? 'e.g. Glastonbury' : 'e.g. Foo Fighters';
   document.getElementById('lbl-venue').textContent   = isFest ? 'Location' : 'Venue';
   document.getElementById('f-venue').placeholder     = isFest ? 'e.g. Worthy Farm, Somerset' : 'e.g. First Direct Arena';
-  document.getElementById('lbl-setlist').textContent = isFest ? 'Artists seen — one per line' : 'Setlist — one song per line';
+  updateSetlistLabel();
   document.getElementById('f-setlist').placeholder   = isFest ? 'Artist one\nArtist two\nArtist three' : 'Song one\nSong two\nSong three';
   document.getElementById('grp-tour').style.display    = isFest ? 'none' : '';
   document.getElementById('grp-support').style.display = isFest ? 'none' : '';
@@ -415,7 +424,7 @@ function render() {
     const sub = isFest ? (c.artistsSeen || []) : (c.setlist || []);
     if (sub.length) {
       const lbl = isFest
-        ? 'Artists seen · ' + sub.length
+        ? (isUpcoming ? 'Artists · ' : 'Artists seen · ') + sub.length
         : 'Setlist · ' + sub.length + ' songs';
       html += '<button class="setlist-toggle" onclick="toggleSetlist(this)">'
         + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
@@ -605,6 +614,8 @@ attachSuggest(document.getElementById('f-support'), 'comma');
 attachSuggest(document.getElementById('f-guests'),  'comma');
 attachSuggest(document.getElementById('f-setlist'), 'line',  () => modalType === 'festival');
 attachSuggest(document.getElementById('f-venue'),   'whole', null, knownVenues);
+
+document.getElementById('f-date').addEventListener('input', updateSetlistLabel);
 
 document.getElementById('f-photo').addEventListener('change', async e => {
   const file = e.target.files[0];
