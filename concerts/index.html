@@ -50,6 +50,25 @@
     font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
     letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 2px; margin-left: 6px;
   }
+  .c-card.upcoming { box-shadow: 0 0 0 2px #0e7a87, 0 2px 8px rgba(0,0,0,0.08); position: relative; }
+  .cd-pill {
+    position: absolute; top: 8px; right: 8px; z-index: 5;
+    font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.9); color: #fff; backdrop-filter: blur(8px);
+  }
+  .dash-countdown {
+    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
+    border-radius: 14px; padding: 16px; margin: 8px 16px 0;
+    position: relative; overflow: hidden; display: block; text-decoration: none;
+  }
+  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .dash-countdown-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; margin-bottom: 10px; }
+  .dash-cd-block { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 8px 10px; text-align: center; display: inline-block; min-width: 90px; }
+  .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
+  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
   .c-stars { display: flex; gap: 2px; margin-top: 7px; }
   .c-stars svg { color: #d5d5d5; }
   .c-stars svg.on { color: #0e7a87; }
@@ -132,6 +151,16 @@
   <!-- ── DASHBOARD ── -->
   <div class="dash-col">
     <div class="dash-inner">
+
+      <a class="dash-countdown" id="dash-countdown" style="display:none;">
+        <div class="dash-countdown-label">Next concert</div>
+        <div class="dash-countdown-name" id="cd-name"></div>
+        <div class="dash-countdown-meta" id="cd-meta"></div>
+        <div class="dash-cd-block">
+          <div class="dash-cd-num" id="cd-days">—</div>
+          <div class="dash-cd-unit">days to go</div>
+        </div>
+      </a>
 
       <a class="dash-hero" id="dash-hero" style="display:none;">
         <img id="hero-img" alt="" style="display:none;">
@@ -219,12 +248,23 @@ function starsRow(rating) {
   return html + '</div>';
 }
 
-function concertCard(c) {
+function daysUntil(c) {
+  const d = parseDMY(c.date);
+  if (!d) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+
+function concertCard(c, upcoming) {
   const isFest = c.type === 'festival';
   const a = document.createElement('a');
-  a.className = 'c-card';
+  a.className = 'c-card' + (upcoming ? ' upcoming' : '');
   a.href = '/concerts/log.html?year=' + yearOf(c);
   let html = '';
+  if (upcoming) {
+    const n = daysUntil(c);
+    html += '<div class="cd-pill">' + (n === 0 ? 'Today!' : n === 1 ? 'Tomorrow' : 'In ' + n + ' days') + '</div>';
+  }
   if (c.thumb) html += '<img class="c-card-img" src="' + c.thumb + '" alt="">';
   else html += '<div class="c-card-img placeholder"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>';
   html += '<div class="c-card-body">';
@@ -245,16 +285,37 @@ async function init() {
     if (rec && Array.isArray(rec.list)) list = rec.list;
   } catch (e) {}
 
+  // ── Split upcoming vs seen ──
+  const today = new Date(); today.setHours(0,0,0,0);
+  const isUpcoming = c => { const d = parseDMY(c.date); return d && d > today; };
+  const upcoming = list.filter(isUpcoming).sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
+  const seen = list.filter(c => !isUpcoming(c));
+
   // ── Year sections ──
   const sections = document.getElementById('year-sections');
+
+  if (upcoming.length) {
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = '<div class="section-title"><span class="year">Upcoming</span></div>';
+    const grid = document.createElement('div');
+    grid.className = 'concerts-grid';
+    upcoming.forEach(c => grid.appendChild(concertCard(c, true)));
+    sec.appendChild(grid);
+    sections.appendChild(sec);
+    const div = document.createElement('div');
+    div.className = 'year-divider';
+    sections.appendChild(div);
+  }
+
   const byYear = {};
-  list.forEach(c => {
+  seen.forEach(c => {
     const y = yearOf(c);
     if (y) (byYear[y] = byYear[y] || []).push(c);
   });
   const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
 
-  if (!years.length) {
+  if (!years.length && !upcoming.length) {
     sections.innerHTML = '<div class="empty-state">No concerts logged yet — tap + Concert to add your first</div>';
   }
 
@@ -280,9 +341,9 @@ async function init() {
   });
 
   // ── Stats ──
-  document.getElementById('s-concerts').textContent  = list.filter(c => c.type !== 'festival').length;
-  document.getElementById('s-festivals').textContent = list.filter(c => c.type === 'festival').length;
-  document.getElementById('s-total').textContent = list.length;
+  document.getElementById('s-concerts').textContent  = seen.filter(c => c.type !== 'festival').length;
+  document.getElementById('s-festivals').textContent = seen.filter(c => c.type === 'festival').length;
+  document.getElementById('s-total').textContent = seen.length;
 
   const artistCounts = new Map(); // lower -> {name, count}
   const bump = a => {
@@ -293,7 +354,7 @@ async function init() {
     cur.count++;
     artistCounts.set(lower, cur);
   };
-  list.forEach(c => {
+  seen.forEach(c => {
     if (c.type === 'festival') (c.artistsSeen || []).forEach(bump);
     else {
       (c.artist || '').split(',').forEach(bump);
@@ -303,7 +364,7 @@ async function init() {
   });
   document.getElementById('s-artists').textContent = artistCounts.size;
   document.getElementById('s-venues').textContent =
-    new Set(list.map(c => ((c.venue || c.location || '')).trim().toLowerCase()).filter(Boolean)).size;
+    new Set(seen.map(c => ((c.venue || c.location || '')).trim().toLowerCase()).filter(Boolean)).size;
 
   // ── Top artists ──
   const top = [...artistCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5);
@@ -319,8 +380,21 @@ async function init() {
   });
 
   // ── Latest concert hero ──
-  const dated = list.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
+  const dated = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
   const latest = dated[0];
+
+  // ── Next concert countdown ──
+  const next = upcoming[0];
+  if (next) {
+    const cd = document.getElementById('dash-countdown');
+    cd.style.display = 'block';
+    cd.href = '/concerts/log.html?year=' + yearOf(next);
+    document.getElementById('cd-name').textContent = next.artist || next.name || '';
+    document.getElementById('cd-meta').textContent =
+      [next.venue || next.location, next.date].filter(Boolean).join(' · ');
+    const n = daysUntil(next);
+    document.getElementById('cd-days').textContent = n;
+  }
   if (latest) {
     const hero = document.getElementById('dash-hero');
     hero.style.display = 'block';

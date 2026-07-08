@@ -152,6 +152,8 @@ function buildArtists(list) {
       role,
     });
   };
+  const today = new Date(); today.setHours(0,0,0,0);
+  list = list.filter(c => { const d = parseDMY(c.date); return !d || d <= today; });
   list.forEach(c => {
     if (c.type === 'festival') {
       (c.artistsSeen || []).forEach(a => add(a, c, 'festival'));
