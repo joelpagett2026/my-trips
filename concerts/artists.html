@@ -13,13 +13,7 @@
 <script src="/db.js"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
 <style>
-  .artists-wrap { max-width: 1700px; margin: 0 auto; padding: 16px 28px 48px; }
-  #artist-list {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 10px; align-items: start;
-  }
-  .letter-header { grid-column: 1 / -1; }
-  #artist-list .empty-state { grid-column: 1 / -1; }
+  .artists-wrap { max-width: 760px; margin: 0 auto; padding: 16px 20px 48px; }
 
   /* Controls */
   .controls { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
@@ -51,7 +45,7 @@
 
   /* Artist rows */
   .artist-row {
-    background: #fff; border-radius: 14px; overflow: hidden;
+    background: #fff; border-radius: 14px; margin-bottom: 8px; overflow: hidden;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
   }
   .artist-head {
@@ -211,7 +205,7 @@ function render() {
     }
 
     const row = document.createElement('div');
-    row.className = 'artist-row open';
+    row.className = 'artist-row';
 
     let detail = '';
     a.appearances.forEach(ap => {
