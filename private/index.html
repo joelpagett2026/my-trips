@@ -277,12 +277,6 @@
     <div class="subhead">Acts</div>
     <div class="acts-grid" id="acts-grid"></div>
 
-    <div class="subhead">Face Profile</div>
-    <div class="f-group">
-      <label class="f-label">Comments</label>
-      <textarea class="f-textarea" id="f-face" placeholder="Notes…"></textarea>
-    </div>
-
     <div class="subhead">Details</div>
     <div class="f-group">
       <textarea class="f-textarea" id="f-details" placeholder="Free text…" style="min-height:110px;"></textarea>
@@ -511,17 +505,14 @@ function openDetail(id) {
   html += '</div>'; // close head-profile
   html += '</div>'; // close header
 
-  // Full-width: Face Profile + Details
+  // Full-width: Details
   html += '<div class="detail-cols">';
-  if (c.face) {
-    html += '<div class="profile-block"><div class="profile-block-title">Face Profile</div>'
-      + '<div class="profile-item full"><div class="pi-val comment">' + esc(c.face) + '</div></div></div>';
-  }
   if (c.details) {
     html += '<div class="profile-block"><div class="profile-block-title">Details</div>'
       + '<div class="profile-item full"><div class="pi-val comment comment-box">' + esc(c.details) + '</div></div></div>';
+  } else {
+    html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No details</div>';
   }
-  if (!c.face && !c.details) html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No face profile or details</div>';
   html += '</div>'; // close cols
 
   card.innerHTML = html;
@@ -562,7 +553,6 @@ async function openModal(id) {
   document.getElementById('f-dicksize').value   = c ? (c.dicksize || 0) : 0;
   document.getElementById('f-dickrating').value = c ? (c.dickRating || 0) : 0;
   document.getElementById('f-assrating').value  = c ? (c.assRating || 0) : 0;
-  document.getElementById('f-face').value = c ? (c.face || '') : '';
   document.getElementById('f-details').value = c ? (c.details || '') : '';
   updateDickSize(); updateRating('dick'); updateRating('ass');
   actState = c && c.acts ? Object.assign({}, c.acts) : {};
@@ -618,7 +608,6 @@ async function saveEntry() {
     dicksize:   +document.getElementById('f-dicksize').value,
     dickRating: +document.getElementById('f-dickrating').value,
     assRating:  +document.getElementById('f-assrating').value,
-    face:       document.getElementById('f-face').value.trim(),
     details:    document.getElementById('f-details').value.trim(),
     acts:       Object.assign({}, actState),
     thumb:    existing ? existing.thumb : null,
