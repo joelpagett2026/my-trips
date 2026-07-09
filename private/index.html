@@ -94,6 +94,25 @@
   .f-textarea:focus { border-color: #0e7a87; }
   .f-textarea::placeholder { color: #3d444d; }
   .subhead { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #0fbdcf; margin: 18px 0 10px; }
+  .acts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .act-toggle {
+    display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;
+    background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 9px 11px;
+    transition: border-color 0.15s;
+  }
+  .act-toggle:hover { border-color: #30363d; }
+  .act-toggle.on { border-color: #0e7a87; background: rgba(14,122,135,0.08); }
+  .act-ico { color: #7d8590; flex-shrink: 0; transition: color 0.15s; }
+  .act-toggle.on .act-ico { color: #0fbdcf; }
+  .act-name { flex: 1; font-size: 12px; font-weight: 700; color: #e6edf3; text-transform: uppercase; letter-spacing: 0.03em; }
+  .act-yn { font-size: 11px; font-weight: 700; color: #3d444d; }
+  .act-toggle.on .act-yn { color: #0fbdcf; }
+
+  /* lightbox act chips */
+  .act-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .act-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .act-chip.yes { background: rgba(14,122,135,0.15); color: #0fbdcf; border: 1px solid rgba(14,122,135,0.3); }
+  .act-chip.no  { background: #0d1117; color: #3d444d; border: 1px solid #21262d; }
   .slider-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
   .slider-val { font-size: 14px; font-weight: 700; color: #0fbdcf; }
   input[type=range].slider {
@@ -230,6 +249,9 @@
       <input type="range" class="slider" id="f-assrating" min="0" max="10" step="1" value="0" oninput="updateRating('ass')">
     </div>
 
+    <div class="subhead">Acts</div>
+    <div class="acts-grid" id="acts-grid"></div>
+
     <div class="subhead">Face Profile</div>
     <div class="f-group">
       <label class="f-label">Comments</label>
@@ -258,6 +280,30 @@ function updateDickSize() {
 function updateRating(which) {
   const v = +document.getElementById('f-' + which + 'rating').value;
   document.getElementById(which + 'rating-val').textContent = v === 0 ? 'Not set' : v + ' / 10';
+}
+
+// Acts — original simple line icons (generic symbols, not from any external set)
+const ACTS = [
+  { key: 'wanking',  label: 'Wanking',  icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11V8a2 2 0 0 1 2-2h1"/><path d="M10 6V4a1.5 1.5 0 0 1 3 0v6"/><path d="M13 7a1.5 1.5 0 0 1 3 0v4"/><path d="M16 8.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3L4 12.5a1.6 1.6 0 0 1 2.7-1.7L8 12"/></svg>' },
+  { key: 'blowjob',  label: 'Blow Job', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14c0-3 2-5 5-5h6a3 3 0 0 1 0 6h-2"/><path d="M12 15a4 4 0 0 1-4 4H7a3 3 0 0 1-3-3"/><circle cx="18" cy="9" r="1"/></svg>' },
+  { key: 'rimming',  label: 'Rimming',  icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="9" ry="6"/><circle cx="12" cy="12" r="2.5"/></svg>' },
+  { key: 'analsex',  label: 'Anal Sex', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.5 1.3-2.5 3-2.5s3 1 3 2.5-1.3 2.5-3 2.5-3 1-3 2.5 1.3 2.5 3 2.5 3-1 3-2.5"/></svg>' },
+];
+let actState = {};
+
+function renderActs() {
+  const grid = document.getElementById('acts-grid');
+  grid.innerHTML = '';
+  ACTS.forEach(a => {
+    const on = !!actState[a.key];
+    const el = document.createElement('div');
+    el.className = 'act-toggle' + (on ? ' on' : '');
+    el.innerHTML = '<span class="act-ico">' + a.icon + '</span>'
+      + '<span class="act-name">' + a.label + '</span>'
+      + '<span class="act-yn">' + (on ? 'Yes' : 'No') + '</span>';
+    el.onclick = () => { actState[a.key] = !actState[a.key]; renderActs(); };
+    grid.appendChild(el);
+  });
 }
 
 function parseDMY(str) {
@@ -411,6 +457,14 @@ function openDetail(id) {
     if (c.dicksize)   html += '<div class="profile-item"><div class="pi-label">Dick Size</div><div class="pi-val">' + esc(sizeLabel(c.dicksize)) + '</div></div>';
     if (c.dickRating) html += '<div class="profile-item"><div class="pi-label">Dick Rating</div><div class="pi-val">' + c.dickRating + ' / 10</div></div>';
     if (c.assRating)  html += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + c.assRating + ' / 10</div></div>';
+    html += '</div></div>';
+  }
+  const acts = c.acts || {};
+  if (ACTS.some(a => acts[a.key])) {
+    html += '<div class="profile-block"><div class="profile-block-title">Acts</div><div class="act-chips">';
+    ACTS.forEach(a => {
+      if (acts[a.key]) html += '<span class="act-chip yes">' + a.icon.replace(/width="20" height="20"/, 'width="13" height="13"') + a.label + '</span>';
+    });
     html += '</div></div>';
   }
   if (c.face) {
