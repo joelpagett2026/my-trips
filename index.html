@@ -433,14 +433,28 @@ async function loadStats() {
   } catch(e) {}
 }
 
+function parseMY(str) {
+  str = (str || '').trim();
+  let m = str.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[2], +m[1] - 1, 1);
+  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2] - 1, 1);
+  return null;
+}
+function fmtMY(str) {
+  const d = parseMY(str);
+  return d ? d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : (str || '');
+}
+
 async function loadShows() {
   try {
     const rec = await window.dbLoad('shows');
     const list = (rec && Array.isArray(rec.list)) ? rec.list : [];
-    const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = list.filter(c => { const d = parseDMY(c.date); return d && d > today; })
-                         .sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
-    const seen = list.filter(c => { const d = parseDMY(c.date); return !d || d <= today; });
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const upcoming = list.filter(c => { const d = parseMY(c.date); return d && d > monthStart; })
+                         .sort((a, b) => parseMY(a.date) - parseMY(b.date));
+    const seen = list.filter(c => { const d = parseMY(c.date); return !d || d <= monthStart; });
 
     document.getElementById('sh-shows').textContent = seen.length;
     document.getElementById('sh-theatres').textContent =
@@ -450,11 +464,11 @@ async function loadShows() {
 
     const place = c => [c.theatre, c.location].filter(Boolean).join(', ');
 
-    const latest = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date))[0];
+    const latest = seen.filter(c => parseMY(c.date)).sort((a, b) => parseMY(b.date) - parseMY(a.date))[0];
     if (latest) {
       document.getElementById('latest-show-card').style.display = 'block';
       document.getElementById('ls-name').textContent = latest.name;
-      document.getElementById('ls-meta').textContent = [place(latest), latest.date].filter(Boolean).join(' · ');
+      document.getElementById('ls-meta').textContent = [place(latest), fmtMY(latest.date)].filter(Boolean).join(' · ');
       if (latest.thumb) {
         const img = document.getElementById('ls-img');
         img.src = latest.thumb;
@@ -464,11 +478,13 @@ async function loadShows() {
 
     const next = upcoming[0];
     if (next) {
-      const days = Math.round((parseDMY(next.date) - today) / 86400000);
+      const d = parseMY(next.date);
+      const months = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
       document.getElementById('next-stage-card').style.display = 'block';
       document.getElementById('nst-name').textContent = next.name;
-      document.getElementById('nst-meta').textContent = [place(next), next.date].filter(Boolean).join(' · ');
-      document.getElementById('nst-days').textContent = days;
+      document.getElementById('nst-meta').textContent = [place(next), fmtMY(next.date)].filter(Boolean).join(' · ');
+      document.getElementById('nst-days').textContent = months;
+      document.querySelector('#next-stage-card .cd-unit').textContent = months === 1 ? 'month to go' : 'months to go';
     }
   } catch(e) {}
 }
