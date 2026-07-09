@@ -55,6 +55,7 @@
   }
   .s-card-name { font-size: 15px; font-weight: 700; color: #444444; line-height: 1.25; padding-right: 8px; }
   .s-pill-row { margin-top: 6px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .s-card-comedian { font-size: 12px; font-weight: 600; color: #0e7a87; margin-top: 6px; }
   .kind-pill {
     display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 8px;
     border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;
@@ -349,6 +350,11 @@
       </div>
     </div>
 
+    <div class="f-group" id="grp-comedian" style="display:none;">
+      <label class="f-label">Comedian</label>
+      <input class="f-input" id="f-comedian" placeholder="e.g. Peter Kay">
+    </div>
+
     <div class="f-group">
       <label class="f-label">Rating</label>
       <div class="star-picker" id="star-picker"></div>
@@ -386,6 +392,7 @@ function setKind(k) {
   document.querySelectorAll('#kind-toggle .kind-btn').forEach((b, i) => {
     b.classList.toggle('on', KINDS[i] === modalKind);
   });
+  document.getElementById('grp-comedian').style.display = modalKind === 'comedy' ? '' : 'none';
 }
 
 function buildStarPicker() {
@@ -534,6 +541,7 @@ function showCard(c, upcoming) {
   html += '<div class="s-card-body">';
   html += '<div class="s-card-name">' + esc(c.name) + '</div>';
   if (c.kind) html += '<div class="s-pill-row"><span class="kind-pill ' + c.kind + '">' + KIND_LABEL[c.kind] + '</span></div>';
+  if (c.comedian) html += '<div class="s-card-comedian">' + esc(c.comedian) + '</div>';
   html += '<div class="s-card-theatre">' + esc(placeOf(c)) + '</div>';
   const dateStr = fmtMonthShort(c.date);
   html += '<div class="s-card-date"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + dateStr + '</div>';
@@ -668,6 +676,7 @@ function openDetail(id) {
   html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(c.date);
   html += '</div>';
 
+  if (c.comedian) html += '<div class="s-card-comedian" style="font-size:13px;margin-top:8px;">' + esc(c.comedian) + '</div>';
   if (c.rating) html += starsRow(c.rating, 16, 'detail-stars');
 
   html += '<div class="detail-actions">';
@@ -718,6 +727,8 @@ async function openModal(id) {
   document.querySelectorAll('#kind-toggle .kind-btn').forEach((b, i) => {
     b.classList.toggle('on', KINDS[i] === modalKind);
   });
+  document.getElementById('f-comedian').value = c ? (c.comedian || '') : '';
+  document.getElementById('grp-comedian').style.display = modalKind === 'comedy' ? '' : 'none';
   modalRating = c ? (c.rating || 0) : 0;
   buildStarPicker();
   setPhotoPreview(c && c.hasPhoto ? (c.thumb || null) : null);
@@ -786,6 +797,7 @@ function attachSuggest(el, source) {
 
 attachSuggest(document.getElementById('f-theatre'),  knownValues('theatre'));
 attachSuggest(document.getElementById('f-location'), knownValues('location'));
+attachSuggest(document.getElementById('f-comedian'), knownValues('comedian'));
 
 // ── SAVE / DELETE ────────────────────────────────────────────────────
 async function loadFresh() {
@@ -815,6 +827,7 @@ async function saveShow() {
     theatre:  document.getElementById('f-theatre').value.trim(),
     location: document.getElementById('f-location').value.trim(),
     kind:     modalKind,
+    comedian: modalKind === 'comedy' ? document.getElementById('f-comedian').value.trim() : '',
     rating:   modalRating,
     thumb:    existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
