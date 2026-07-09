@@ -75,6 +75,25 @@
   .detail-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: #e6edf3; padding-right: 34px; }
   .detail-meta { font-size: 12px; color: #7d8590; font-weight: 500; margin-top: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .detail-meta svg { color: #3d444d; flex-shrink: 0; }
+  .profile-block { margin-top: 16px; border-top: 1px solid #21262d; padding-top: 14px; }
+  .profile-block-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #7d8590; margin-bottom: 10px; }
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .profile-item { background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 8px 11px; }
+  .profile-item.full { grid-column: 1 / -1; }
+  .pi-label { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #3d444d; margin-bottom: 3px; }
+  .pi-val { font-size: 13px; font-weight: 600; color: #e6edf3; word-wrap: break-word; }
+  .pi-val.comment { font-weight: 500; color: #c9d1d9; white-space: pre-wrap; line-height: 1.5; }
+  .rating-stars { display: inline-flex; gap: 2px; }
+  .rating-stars svg { color: #21262d; }
+  .rating-stars svg.on { color: #0fbdcf; }
+  .star-picker { display: flex; gap: 4px; }
+  .star-picker button { background: none; border: none; cursor: pointer; padding: 2px; color: #21262d; transition: color 0.1s, transform 0.1s; }
+  .star-picker button:hover { transform: scale(1.15); }
+  .star-picker button.on { color: #0fbdcf; }
+  .f-textarea { width: 100%; border: 1px solid #30363d; border-radius: 9px; padding: 9px 11px; font-family: Montserrat, sans-serif; font-size: 13px; color: #e6edf3; outline: none; background: #0d1117; resize: vertical; min-height: 70px; line-height: 1.5; }
+  .f-textarea:focus { border-color: #0e7a87; }
+  .f-textarea::placeholder { color: #3d444d; }
+  .subhead { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #0fbdcf; margin: 18px 0 10px; }
   .detail-actions { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
   .d-btn { font-family: Montserrat, sans-serif; font-size: 12.5px; font-weight: 700; border-radius: 10px; padding: 9px 18px; cursor: pointer; border: none; display: flex; align-items: center; gap: 7px; transition: all 0.15s; }
   .d-btn.edit { background: #0e7a87; color: #fff; }
@@ -184,6 +203,26 @@
       <input type="file" id="f-photo" accept="image/*" style="display:none;">
     </div>
 
+    <div class="subhead">Body Profile</div>
+    <div class="f-group">
+      <label class="f-label">Dick Size</label>
+      <input class="f-input" id="f-dicksize" placeholder="e.g. 7 inches">
+    </div>
+    <div class="f-group">
+      <label class="f-label">Dick Rating</label>
+      <div class="star-picker" id="dick-stars"></div>
+    </div>
+    <div class="f-group">
+      <label class="f-label">Ass Rating</label>
+      <div class="star-picker" id="ass-stars"></div>
+    </div>
+
+    <div class="subhead">Face Profile</div>
+    <div class="f-group">
+      <label class="f-label">Comments</label>
+      <textarea class="f-textarea" id="f-face" placeholder="Notes…"></textarea>
+    </div>
+
     <div class="modal-actions">
       <button class="m-btn cancel" onclick="closeModal()">Cancel</button>
       <button class="m-btn save" id="save-btn" onclick="saveEntry()">Save</button>
@@ -196,6 +235,28 @@ let entries = [];
 let editingId = null;
 let modalPhoto = null;
 let modalPhotoRemoved = false;
+let dickRating = 0;
+let assRating = 0;
+
+const STAR = '<svg width="__S__" height="__S__" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+function buildStarPicker(wrapId, getVal, setVal) {
+  const wrap = document.getElementById(wrapId);
+  wrap.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = STAR.replace(/__S__/g, '22');
+    b.className = i <= getVal() ? 'on' : '';
+    b.onclick = () => { setVal(getVal() === i ? 0 : i); buildStarPicker(wrapId, getVal, setVal); };
+    wrap.appendChild(b);
+  }
+}
+function starsInline(rating) {
+  let h = '<span class="rating-stars">';
+  for (let i = 1; i <= 5; i++) h += STAR.replace(/__S__/g, '14').replace('<svg', '<svg class="' + (i <= rating ? 'on' : '') + '"');
+  return h + '</span>';
+}
 
 function parseDMY(str) {
   const m = (str || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -337,6 +398,19 @@ function openDetail(id) {
   html += '</div>';
 
   if (c.profile) html += '<div class="detail-profile"><div class="detail-profile-title">Body profile</div>' + esc(c.profile) + '</div>';
+
+  const hasBody = (c.dicksize) || c.dickRating || c.assRating;
+  if (hasBody) {
+    html += '<div class="profile-block"><div class="profile-block-title">Body Profile</div><div class="profile-grid">';
+    if (c.dicksize)   html += '<div class="profile-item"><div class="pi-label">Dick Size</div><div class="pi-val">' + esc(c.dicksize) + '</div></div>';
+    if (c.dickRating) html += '<div class="profile-item"><div class="pi-label">Dick Rating</div><div class="pi-val">' + starsInline(c.dickRating) + '</div></div>';
+    if (c.assRating)  html += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + starsInline(c.assRating) + '</div></div>';
+    html += '</div></div>';
+  }
+  if (c.face) {
+    html += '<div class="profile-block"><div class="profile-block-title">Face Profile</div>'
+      + '<div class="profile-item full"><div class="pi-label">Comments</div><div class="pi-val comment">' + esc(c.face) + '</div></div></div>';
+  }
 
   html += '<div class="detail-actions">';
   html += '<button class="d-btn edit" onclick="editFromDetail(\'' + c.id + '\')">'
