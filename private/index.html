@@ -253,6 +253,11 @@
       <textarea class="f-textarea" id="f-face" placeholder="Notes…"></textarea>
     </div>
 
+    <div class="subhead">Details</div>
+    <div class="f-group">
+      <textarea class="f-textarea" id="f-details" placeholder="Free text…" style="min-height:110px;"></textarea>
+    </div>
+
     <div class="modal-actions">
       <button class="m-btn cancel" onclick="closeModal()">Cancel</button>
       <button class="m-btn save" id="save-btn" onclick="saveEntry()">Save</button>
@@ -466,6 +471,10 @@ function openDetail(id) {
     html += '<div class="profile-block"><div class="profile-block-title">Face Profile</div>'
       + '<div class="profile-item full"><div class="pi-label">Comments</div><div class="pi-val comment">' + esc(c.face) + '</div></div></div>';
   }
+  if (c.details) {
+    html += '<div class="profile-block"><div class="profile-block-title">Details</div>'
+      + '<div class="profile-item full"><div class="pi-val comment">' + esc(c.details) + '</div></div></div>';
+  }
 
   html += '<div class="detail-actions">';
   html += '<button class="d-btn edit" onclick="editFromDetail(\'' + c.id + '\')">'
@@ -513,6 +522,7 @@ async function openModal(id) {
   document.getElementById('f-dickrating').value = c ? (c.dickRating || 0) : 0;
   document.getElementById('f-assrating').value  = c ? (c.assRating || 0) : 0;
   document.getElementById('f-face').value = c ? (c.face || '') : '';
+  document.getElementById('f-details').value = c ? (c.details || '') : '';
   updateDickSize(); updateRating('dick'); updateRating('ass');
   actState = c && c.acts ? Object.assign({}, c.acts) : {};
   renderActs();
@@ -567,6 +577,7 @@ async function saveEntry() {
     dickRating: +document.getElementById('f-dickrating').value,
     assRating:  +document.getElementById('f-assrating').value,
     face:       document.getElementById('f-face').value.trim(),
+    details:    document.getElementById('f-details').value.trim(),
     acts:       Object.assign({}, actState),
     thumb:    existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
