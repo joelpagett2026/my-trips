@@ -36,16 +36,19 @@
   .shows-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
   .s-card {
     background: #ffffff; border-radius: 18px; overflow: hidden;
-    color: inherit; display: block; cursor: pointer; padding: 16px;
+    color: inherit; display: block; cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.05);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
     position: relative;
   }
+  .s-card-img { width: 100%; height: 140px; object-fit: cover; display: block; background: #f0f0f0; }
+  .s-card-img.placeholder { display: flex; align-items: center; justify-content: center; color: #d5d5d5; }
+  .s-card-body { padding: 12px 14px 14px; }
   .s-card:hover { transform: scale(1.015); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
   .s-card:active { transform: scale(0.985); }
   .s-card.upcoming { box-shadow: 0 0 0 2px #0e7a87, 0 2px 8px rgba(0,0,0,0.08); }
   .cd-pill {
-    position: absolute; top: 12px; right: 12px;
+    position: absolute; top: 8px; right: 8px; z-index: 5;
     font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
     letter-spacing: 0.05em; text-transform: uppercase;
     background: rgba(14,122,135,0.9); color: #fff;
@@ -80,9 +83,11 @@
 
   .dash-latest {
     background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    border-radius: 14px; padding: 12px 16px; margin: 8px 16px 0;
-    display: block; cursor: pointer;
+    border-radius: 14px; margin: 8px 16px 0; position: relative; overflow: hidden;
+    display: block; cursor: pointer; min-height: 122px;
   }
+  .dash-latest img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; }
+  .dash-latest-body { position: relative; padding: 12px 16px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 122px; background: linear-gradient(to top, rgba(10,20,22,0.75) 0%, rgba(10,20,22,0.1) 60%); }
   .dash-latest .dash-countdown-meta { margin-bottom: 0; }
 
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
@@ -100,16 +105,21 @@
   .detail-overlay.open { display: flex; }
   .detail-card {
     background: #fff; border-radius: 20px; overflow: hidden;
-    width: 100%; max-width: 480px; box-shadow: 0 24px 80px rgba(0,0,0,0.35);
-    position: relative; padding: 22px;
+    width: 100%; max-width: 520px; box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    position: relative;
   }
+  .detail-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #f0f0f0; }
+  .detail-body { padding: 18px 22px 20px; }
   .detail-close {
-    position: absolute; top: 14px; right: 14px;
+    position: absolute; top: 12px; right: 12px; z-index: 10;
     width: 30px; height: 30px; border: none; border-radius: 9px; cursor: pointer;
-    background: #f0f0f0; color: #888;
+    background: rgba(0,0,0,0.45); color: #fff;
     display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   }
-  .detail-close:hover { background: #e2e2e2; color: #555; }
+  .detail-close:hover { background: rgba(0,0,0,0.65); }
+  .detail-close.no-photo { background: #f0f0f0; color: #888; }
+  .detail-close.no-photo:hover { background: #e2e2e2; color: #555; }
   .detail-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: #444; padding-right: 34px; }
   .detail-pill-row { margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; }
   .show-pill {
@@ -157,6 +167,19 @@
   .f-input:focus { border-color: #0e7a87; }
   .f-input::placeholder { color: #b8b8b8; }
   .f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .photo-drop {
+    border: 2px dashed #d5d5d5; border-radius: 12px; padding: 18px;
+    text-align: center; cursor: pointer; color: #999; font-size: 11px;
+    font-weight: 600; transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .photo-drop:hover { border-color: #0e7a87; color: #0e7a87; background: #f4fafb; }
+  .photo-drop img { width: 100%; border-radius: 8px; display: block; }
+  .photo-drop .pd-remove {
+    position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+    background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 7px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
 
   .suggest-box {
     position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
@@ -221,9 +244,12 @@
       </a>
 
       <a class="dash-latest" id="dash-latest" style="display:none;">
-        <div class="dash-countdown-label">Latest show</div>
-        <div class="dash-countdown-name" id="lt-name"></div>
-        <div class="dash-countdown-meta" id="lt-meta"></div>
+        <img id="lt-img" alt="" style="display:none;">
+        <div class="dash-latest-body">
+          <div class="dash-countdown-label">Latest show</div>
+          <div class="dash-countdown-name" id="lt-name"></div>
+          <div class="dash-countdown-meta" id="lt-meta"></div>
+        </div>
       </a>
 
       <div class="dash-section">
@@ -287,6 +313,14 @@
       </div>
     </div>
 
+    <div class="f-group">
+      <label class="f-label">Photo</label>
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('f-photo').click()">
+        <span id="pd-hint">Tap to choose a photo</span>
+      </div>
+      <input type="file" id="f-photo" accept="image/*" style="display:none;">
+    </div>
+
     <div class="modal-actions">
       <button class="m-btn cancel" onclick="closeModal()">Cancel</button>
       <button class="m-btn save" id="save-btn" onclick="saveShow()">Save</button>
@@ -297,6 +331,8 @@
 <script>
 let shows = [];
 let editingId = null;
+let modalPhoto = null;
+let modalPhotoRemoved = false;
 
 function parseDMY(s) {
   const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -329,6 +365,75 @@ function placeOf(c) {
   return [c.theatre, c.location].filter(Boolean).join(', ');
 }
 
+// ── IMAGE COMPRESSION ────────────────────────────────────────────────
+function drawScaled(source, w, h, maxW, quality) {
+  const scale = Math.min(1, maxW / w);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
+  canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+async function compress(file, maxW, quality) {
+  if (window.createImageBitmap) {
+    try {
+      const bmp = await createImageBitmap(file);
+      const out = drawScaled(bmp, bmp.width, bmp.height, maxW, quality);
+      bmp.close();
+      return out;
+    } catch (e) { /* fall through */ }
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try { resolve(drawScaled(img, img.width, img.height, maxW, quality)); }
+      catch (e) { reject(e); }
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('unsupported image format'));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function setPhotoPreview(src) {
+  const drop = document.getElementById('photo-drop');
+  if (src) {
+    drop.innerHTML = '<img src="' + src + '"><button class="pd-remove" onclick="removePhoto(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  } else {
+    drop.innerHTML = '<span id="pd-hint">Tap to choose a photo</span>';
+  }
+}
+
+function removePhoto(e) {
+  e.stopPropagation();
+  modalPhoto = null;
+  modalPhotoRemoved = true;
+  document.getElementById('f-photo').value = '';
+  setPhotoPreview(null);
+}
+
+document.getElementById('f-photo').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const drop = document.getElementById('photo-drop');
+  drop.innerHTML = '<span>Processing photo…</span>';
+  try {
+    const full  = await compress(file, 1000, 0.72);
+    const thumb = await compress(file, 640, 0.7);
+    modalPhoto = { full, thumb };
+    modalPhotoRemoved = false;
+    setPhotoPreview(full);
+  } catch (err) {
+    setPhotoPreview(modalPhoto ? modalPhoto.full : null);
+    alert("Couldn't read that photo (" + (err.message || err) + "). If it's a HEIC image, try converting it to JPEG or picking a different photo.");
+  }
+  e.target.value = '';
+});
+
 // ── RENDER ───────────────────────────────────────────────────────────
 function showCard(c, upcoming) {
   const a = document.createElement('div');
@@ -339,11 +444,15 @@ function showCard(c, upcoming) {
     const n = daysUntil(c);
     html += '<div class="cd-pill">' + (n === 0 ? 'Today!' : n === 1 ? 'Tomorrow' : 'In ' + n + ' days') + '</div>';
   }
+  if (c.thumb) html += '<img class="s-card-img" src="' + c.thumb + '" alt="">';
+  else html += '<div class="s-card-img placeholder"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg></div>';
+  html += '<div class="s-card-body">';
   html += '<div class="s-card-name">' + esc(c.name) + '</div>';
   html += '<div class="s-card-theatre">' + esc(placeOf(c)) + '</div>';
   const d = parseDMY(c.date);
   const dateStr = d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (c.date || '');
   html += '<div class="s-card-date"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + dateStr + '</div>';
+  html += '</div>';
   a.innerHTML = html;
   return a;
 }
@@ -431,6 +540,16 @@ function renderAll() {
     document.getElementById('lt-name').textContent = latest.name;
     document.getElementById('lt-meta').textContent =
       [placeOf(latest), latest.date].filter(Boolean).join(' · ');
+    const img = document.getElementById('lt-img');
+    if (latest.thumb) {
+      img.src = latest.thumb;
+      img.style.display = 'block';
+      if (latest.hasPhoto) {
+        dbLoad('show-photo-' + latest.id)
+          .then(rec => { if (rec && rec.photo) img.src = rec.photo; })
+          .catch(() => {});
+      }
+    } else img.style.display = 'none';
   } else lt.style.display = 'none';
 }
 
@@ -442,9 +561,13 @@ function openDetail(id) {
   const du = daysUntil(c);
   const card = document.getElementById('detail-card');
 
-  let html = '<button class="detail-close" onclick="closeDetail()">'
+  let html = '<button class="detail-close' + (c.hasPhoto ? '' : ' no-photo') + '" onclick="closeDetail()">'
     + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
 
+  if (c.hasPhoto) {
+    html += '<img class="detail-photo" id="detail-photo"' + (c.thumb ? ' src="' + c.thumb + '"' : '') + ' alt="">';
+  }
+  html += '<div class="detail-body">';
   html += '<div class="detail-name">' + esc(c.name) + '</div>';
   html += '<div class="detail-pill-row"><span class="show-pill">Stage Show</span>'
     + (upcoming ? '<span class="show-pill upcoming">' + (du === 1 ? 'Tomorrow' : 'In ' + du + ' days') + '</span>' : '')
@@ -461,10 +584,20 @@ function openDetail(id) {
     + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>Edit</button>';
   html += '<button class="d-btn delete" onclick="deleteShow(\'' + c.id + '\')" title="Delete">'
     + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
-  html += '</div>';
+  html += '</div></div>';
 
   card.innerHTML = html;
   document.getElementById('detail-overlay').classList.add('open');
+
+  if (c.hasPhoto) {
+    dbLoad('show-photo-' + c.id)
+      .then(rec => {
+        if (rec && rec.photo) {
+          const img = document.getElementById('detail-photo');
+          if (img) img.src = rec.photo;
+        }
+      }).catch(() => {});
+  }
 }
 
 function closeDetail() {
@@ -480,16 +613,26 @@ function editFromDetail(id) {
 }
 
 // ── MODAL ────────────────────────────────────────────────────────────
-function openModal(id) {
+async function openModal(id) {
   editingId = id || null;
+  modalPhoto = null;
+  modalPhotoRemoved = false;
   const c = id ? shows.find(x => x.id === id) : null;
   document.getElementById('modal-title').textContent = c ? 'Edit show' : 'Add show';
   document.getElementById('f-name').value     = c ? c.name : '';
   document.getElementById('f-date').value     = c ? c.date : '';
   document.getElementById('f-theatre').value  = c ? (c.theatre || '') : '';
   document.getElementById('f-location').value = c ? (c.location || '') : '';
+  setPhotoPreview(c && c.hasPhoto ? (c.thumb || null) : null);
   document.getElementById('overlay').classList.add('open');
   if (!c) document.getElementById('f-name').focus();
+
+  if (c && c.hasPhoto) {
+    try {
+      const rec = await dbLoad('show-photo-' + c.id);
+      if (rec && rec.photo && !modalPhoto && !modalPhotoRemoved) setPhotoPreview(rec.photo);
+    } catch (e) {}
+  }
 }
 
 function closeModal() {
@@ -567,18 +710,31 @@ async function saveShow() {
   await loadFresh(); // always load fresh before saving
 
   const id = editingId || ('s' + Date.now());
+  const existing = shows.find(x => x.id === id);
   const entry = {
     id,
     name,
     date,
     theatre:  document.getElementById('f-theatre').value.trim(),
     location: document.getElementById('f-location').value.trim(),
+    thumb:    existing ? existing.thumb : null,
+    hasPhoto: existing ? !!existing.hasPhoto : false,
   };
+
+  if (modalPhoto) {
+    entry.thumb = modalPhoto.thumb;
+    entry.hasPhoto = true;
+  } else if (modalPhotoRemoved) {
+    entry.thumb = null;
+    entry.hasPhoto = false;
+  }
 
   const idx = shows.findIndex(x => x.id === id);
   if (idx >= 0) shows[idx] = entry; else shows.push(entry);
 
   try {
+    if (modalPhoto) await dbSave('show-photo-' + id, { photo: modalPhoto.full });
+    else if (modalPhotoRemoved) { try { await dbDelete('show-photo-' + id); } catch (e) {} }
     await dbSave('shows', { list: shows });
   } catch (e) {
     alert('Save failed: ' + e.message);
@@ -599,6 +755,7 @@ async function deleteShow(id) {
   shows = shows.filter(x => x.id !== id);
   try {
     await dbSave('shows', { list: shows });
+    try { await dbDelete('show-photo-' + id); } catch (e) {}
   } catch (e) { alert('Delete failed: ' + e.message); return; }
   renderAll();
 }
