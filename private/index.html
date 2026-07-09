@@ -68,15 +68,15 @@
   .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 180; display: none; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 24px; }
   .detail-overlay.open { display: flex; }
   .detail-card { background: #161b22; border: 1px solid #21262d; border-radius: 20px; overflow: hidden; width: 100%; max-width: 980px; position: relative; }
-  .detail-header { display: flex; gap: 22px; padding: 28px 32px 0; align-items: flex-start; }
+  .detail-header { display: flex; gap: 22px; padding: 28px 32px 0; align-items: flex-start; flex-wrap: wrap; }
   .detail-photo-thumb { width: 180px; height: 180px; border-radius: 16px; object-fit: cover; flex-shrink: 0; background: #0d1117; }
   .detail-photo-thumb.placeholder { display: flex; align-items: center; justify-content: center; color: #21262d; border: 1px solid #21262d; }
-  .detail-head-text { flex: 1; min-width: 0; padding-top: 6px; }
-  .detail-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; padding: 8px 32px 32px; }
+  .detail-head-text { flex: 1; min-width: 220px; padding-top: 6px; }
+  .detail-head-profile { flex: 1; min-width: 240px; padding-top: 6px; }
+  .detail-cols { display: block; padding: 20px 32px 32px; }
   @media (max-width: 760px) {
     .detail-header { flex-direction: column; }
     .detail-photo-thumb { width: 100%; height: 200px; }
-    .detail-cols { grid-template-columns: 1fr; }
   }
   .detail-close { position: absolute; top: 20px; right: 20px; z-index: 10; width: 40px; height: 40px; border: none; border-radius: 12px; cursor: pointer; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background 0.15s; }
   .detail-close:hover { background: rgba(0,0,0,0.8); }
@@ -100,7 +100,14 @@
   .pi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7d8590; margin-bottom: 0; }
   .profile-item.full .pi-label { margin-bottom: 6px; }
   .pi-val { font-size: 14px; font-weight: 700; color: #e6edf3; word-wrap: break-word; }
-  .pi-val.comment { font-weight: 500; color: #c9d1d9; white-space: pre-wrap; line-height: 1.5; }
+  .pi-val.comment { font-weight: 500; color: #c9d1d9; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+  .detail-cols .profile-block { margin-top: 0; margin-bottom: 22px; }
+  .comment-box { max-height: 320px; overflow-y: auto; padding-right: 6px; }
+  .comment-box::-webkit-scrollbar { width: 8px; }
+  .comment-box::-webkit-scrollbar-track { background: #0d1117; border-radius: 8px; }
+  .comment-box::-webkit-scrollbar-thumb { background: #0e7a87; border-radius: 8px; }
+  .comment-box::-webkit-scrollbar-thumb:hover { background: #0fbdcf; }
+  .comment-box { scrollbar-width: thin; scrollbar-color: #0e7a87 #0d1117; }
   .rating-stars { display: inline-flex; gap: 2px; }
   .rating-stars svg { color: #21262d; }
   .rating-stars svg.on { color: #0fbdcf; }
@@ -475,44 +482,41 @@ function openDetail(id) {
   html += '<span class="dd-val">' + fmtDate(c.start) + '</span>';
   html += '<span class="dd-sep">→</span>';
   html += '<span class="dd-val">' + (c.end ? fmtDate(c.end) : 'Ongoing') + '</span>';
-  html += '</div></div></div>'; // close dates, head-text, header
+  html += '</div></div>'; // close dates, head-text
 
-  // Two columns: LEFT = body + acts, RIGHT = face + details
-  html += '<div class="detail-cols">';
-
-  let left = '<div>';
+  // Body Profile + Acts sit beside the name/date in the header
+  html += '<div class="detail-head-profile">';
   const hasBody = c.dicksize || c.dickRating || c.assRating;
   if (hasBody) {
-    left += '<div class="profile-block"><div class="profile-block-title">Body Profile</div><div class="profile-grid">';
-    if (c.dicksize)   left += '<div class="profile-item"><div class="pi-label">Dick Size</div><div class="pi-val">' + esc(sizeLabel(c.dicksize)) + '</div></div>';
-    if (c.dickRating) left += '<div class="profile-item"><div class="pi-label">Dick Rating</div><div class="pi-val">' + c.dickRating + ' / 10</div></div>';
-    if (c.assRating)  left += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + c.assRating + ' / 10</div></div>';
-    left += '</div></div>';
+    html += '<div class="profile-block"><div class="profile-block-title">Body Profile</div><div class="profile-grid">';
+    if (c.dicksize)   html += '<div class="profile-item"><div class="pi-label">Dick Size</div><div class="pi-val">' + esc(sizeLabel(c.dicksize)) + '</div></div>';
+    if (c.dickRating) html += '<div class="profile-item"><div class="pi-label">Dick Rating</div><div class="pi-val">' + c.dickRating + ' / 10</div></div>';
+    if (c.assRating)  html += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + c.assRating + ' / 10</div></div>';
+    html += '</div></div>';
   }
   const acts = c.acts || {};
   if (ACTS.some(a => acts[a.key])) {
-    left += '<div class="profile-block"><div class="profile-block-title">Acts</div><div class="act-chips">';
+    html += '<div class="profile-block"><div class="profile-block-title">Acts</div><div class="act-chips">';
     ACTS.forEach(a => {
-      if (acts[a.key]) left += '<span class="act-chip yes">' + a.icon.replace(/width="20" height="20"/, 'width="13" height="13"') + a.label + '</span>';
+      if (acts[a.key]) html += '<span class="act-chip yes">' + a.icon.replace(/width="20" height="20"/, 'width="13" height="13"') + a.label + '</span>';
     });
-    left += '</div></div>';
+    html += '</div></div>';
   }
-  if (!hasBody && !ACTS.some(a => acts[a.key])) left += '<div style="font-size:12px;color:#3d444d;font-weight:500;padding-top:22px;">No body profile or acts set</div>';
-  left += '</div>';
+  if (!hasBody && !ACTS.some(a => acts[a.key])) html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No body profile or acts set</div>';
+  html += '</div>'; // close head-profile
+  html += '</div>'; // close header
 
-  let right = '<div>';
+  // Full-width: Face Profile + Details
+  html += '<div class="detail-cols">';
   if (c.face) {
-    right += '<div class="profile-block"><div class="profile-block-title">Face Profile</div>'
+    html += '<div class="profile-block"><div class="profile-block-title">Face Profile</div>'
       + '<div class="profile-item full"><div class="pi-val comment">' + esc(c.face) + '</div></div></div>';
   }
   if (c.details) {
-    right += '<div class="profile-block"><div class="profile-block-title">Details</div>'
-      + '<div class="profile-item full"><div class="pi-val comment">' + esc(c.details) + '</div></div></div>';
+    html += '<div class="profile-block"><div class="profile-block-title">Details</div>'
+      + '<div class="profile-item full"><div class="pi-val comment comment-box">' + esc(c.details) + '</div></div></div>';
   }
-  if (!c.face && !c.details) right += '<div style="font-size:12px;color:#3d444d;font-weight:500;padding-top:22px;">No face profile or details</div>';
-  right += '</div>';
-
-  html += left + right;
+  if (!c.face && !c.details) html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No face profile or details</div>';
   html += '</div>'; // close cols
 
   card.innerHTML = html;
