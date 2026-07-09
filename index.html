@@ -13,52 +13,81 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Montserrat', sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; display: flex; flex-direction: column; }
-  .hero { padding: 56px 24px 40px; text-align: center; }
+  .hero { padding: 48px 24px 36px; text-align: center; }
   .hero-avatar { width: 64px; height: 64px; background: linear-gradient(135deg, #0e7a87, #0fbdcf); border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 0 1px rgba(15,189,207,0.2), 0 8px 32px rgba(14,122,135,0.35); }
   .hero-title { font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; margin-bottom: 6px; }
   .hero-sub { font-size: 13px; color: #7d8590; font-weight: 500; }
-  .tools-section { padding: 8px 16px 40px; flex: 1; max-width: 600px; margin: 0 auto; width: 100%; }
-  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #3d444d; margin-bottom: 12px; padding-left: 4px; }
-  .tool-card { display: flex; align-items: center; gap: 16px; background: #161b22; border: 1px solid #21262d; border-radius: 16px; padding: 18px 20px; text-decoration: none; color: inherit; margin-bottom: 10px; transition: border-color 0.15s, transform 0.1s; position: relative; overflow: hidden; }
-  .tool-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(14,122,135,0.06) 0%, transparent 60%); opacity: 0; transition: opacity 0.2s; }
-  .tool-card:hover { border-color: #0e7a87; transform: translateY(-1px); }
-  .tool-card:hover::before { opacity: 1; }
-  .tool-card:active { transform: translateY(0); }
-  .tool-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  .columns {
+    flex: 1; width: 100%; max-width: 1240px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+    padding: 8px 20px 48px; align-items: start;
+  }
+  @media (max-width: 980px) {
+    .columns { grid-template-columns: 1fr; max-width: 560px; }
+  }
+
+  .col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Column header — links to the tool */
+  .col-head {
+    display: flex; align-items: center; gap: 12px;
+    background: #161b22; border: 1px solid #21262d; border-radius: 16px;
+    padding: 14px 16px; text-decoration: none; color: inherit;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .col-head:hover { border-color: #0e7a87; transform: translateY(-1px); }
+  .col-head:hover .tool-arrow { color: #0e7a87; transform: translateX(2px); }
+  .tool-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .tool-icon.teal  { background: rgba(14,122,135,0.15); color: #0fbdcf; }
   .tool-icon.green { background: rgba(22,168,90,0.12);  color: #3fb950; }
   .tool-icon.amber { background: rgba(240,145,10,0.12); color: #f0910a; }
-  .tool-body { flex: 1; min-width: 0; }
-  .tool-name { font-size: 15px; font-weight: 700; color: #e6edf3; margin-bottom: 3px; letter-spacing: -0.01em; }
-  .tool-desc { font-size: 12px; color: #7d8590; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tool-stat { text-align: right; flex-shrink: 0; }
-  .stat-num { font-size: 22px; font-weight: 800; color: #0fbdcf; line-height: 1; letter-spacing: -0.02em; }
-  .stat-num.green { color: #3fb950; }
-  .stat-num.amber { color: #f0910a; }
-  .stat-num.red   { color: #f85149; }
-  .stat-label { font-size: 10px; color: #3d444d; font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .tool-arrow { color: #3d444d; flex-shrink: 0; margin-left: 4px; transition: color 0.15s, transform 0.15s; }
-  .tool-card:hover .tool-arrow { color: #0e7a87; transform: translateX(2px); }
-  .hub-footer { text-align: center; padding: 0 24px 32px; font-size: 11px; color: #3d444d; font-weight: 500; }
-  .hub-footer span { display: inline-block; width: 3px; height: 3px; background: #3d444d; border-radius: 50%; vertical-align: middle; margin: 0 8px 2px; }
-  /* Holiday pair */
-  .hol-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .hol-person-card { background: #161b22; border: 1px solid #21262d; border-radius: 16px; padding: 16px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 14px; transition: border-color 0.15s, transform 0.1s; position: relative; overflow: hidden; }
-  .hol-person-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(14,122,135,0.06) 0%, transparent 60%); opacity: 0; transition: opacity 0.2s; }
-  .hol-person-card:hover { border-color: #0e7a87; transform: translateY(-1px); }
-  .hol-person-card:hover::before { opacity: 1; }
-  .hol-person-card:hover .tool-arrow { color: #0e7a87; }
-  .hpc-top { display: flex; align-items: center; gap: 10px; }
+  .ch-name { font-size: 14px; font-weight: 700; color: #e6edf3; letter-spacing: -0.01em; }
+  .ch-desc { font-size: 11px; color: #7d8590; font-weight: 500; margin-top: 2px; }
+  .tool-arrow { color: #3d444d; flex-shrink: 0; margin-left: auto; transition: color 0.15s, transform 0.15s; }
+
+  /* Generic dark card */
+  .hub-card {
+    background: #161b22; border: 1px solid #21262d; border-radius: 16px;
+    padding: 16px; text-decoration: none; color: inherit; display: block;
+    transition: border-color 0.15s, transform 0.1s; position: relative; overflow: hidden;
+  }
+  a.hub-card:hover { border-color: #0e7a87; transform: translateY(-1px); }
+  .card-label { font-size: 9px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #3d444d; margin-bottom: 9px; }
+
+  /* Stats strip */
+  .stats-strip { display: flex; align-items: center; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px 0; }
+  .ss-stat { flex: 1; text-align: center; }
+  .ss-val { font-size: 20px; font-weight: 800; color: #e6edf3; line-height: 1; letter-spacing: -0.02em; }
+  .ss-val.teal   { color: #0fbdcf; }
+  .ss-val.orange { color: #f0910a; }
+  .ss-val.green  { color: #3fb950; }
+  .ss-val.red    { color: #f85149; }
+  .ss-lbl { font-size: 9px; color: #3d444d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .ss-divider { width: 1px; background: #21262d; align-self: stretch; }
+
+  /* Countdown / event rows */
+  .event-name { font-size: 15px; font-weight: 700; color: #e6edf3; letter-spacing: -0.01em; }
+  .event-meta { font-size: 11px; color: #7d8590; font-weight: 500; margin-top: 3px; }
+  .cd-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .cd-block { background: rgba(15,189,207,0.1); border: 1px solid rgba(15,189,207,0.18); border-radius: 10px; padding: 8px 14px; text-align: center; }
+  .cd-num { font-size: 22px; font-weight: 800; color: #0fbdcf; line-height: 1; letter-spacing: -0.02em; }
+  .cd-num.amber { color: #f0910a; }
+  .cd-block.amber { background: rgba(240,145,10,0.1); border-color: rgba(240,145,10,0.18); }
+  .cd-unit { font-size: 8.5px; color: #3d444d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+  /* Latest concert photo card */
+  .photo-card { padding: 0; }
+  .photo-card img { width: 100%; height: 120px; object-fit: cover; display: block; opacity: 0.85; }
+  .photo-card .pc-body { padding: 12px 16px 14px; }
+
+  /* Holiday person cards */
+  .hpc-top { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
   .hpc-name { font-size: 14px; font-weight: 700; color: #e6edf3; letter-spacing: -0.01em; }
   .hpc-period { font-size: 10px; color: #7d8590; font-weight: 500; margin-top: 2px; }
-  .hpc-stats { display: flex; align-items: center; gap: 0; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px 0; }
-  .hpc-stat { flex: 1; text-align: center; }
-  .hpc-val { font-size: 20px; font-weight: 800; color: #e6edf3; line-height: 1; letter-spacing: -0.02em; }
-  .hpc-val.orange { color: #f0910a; }
-  .hpc-val.green  { color: #3fb950; }
-  .hpc-val.red    { color: #f85149; }
-  .hpc-lbl { font-size: 9px; color: #3d444d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
-  .hpc-divider { width: 1px; background: #21262d; align-self: stretch; }
+
+  .hub-footer { text-align: center; padding: 0 24px 32px; font-size: 11px; color: #3d444d; font-weight: 500; }
+  .hub-footer span { display: inline-block; width: 3px; height: 3px; background: #3d444d; border-radius: 50%; vertical-align: middle; margin: 0 8px 2px; }
 </style>
 </head>
 <body>
@@ -73,102 +102,186 @@
   <div class="hero-sub">Personal tools &amp; trackers</div>
 </div>
 
-<div class="tools-section">
-  <div class="section-label">My tools</div>
+<div class="columns">
 
-  <a class="tool-card" href="/trips/">
-    <div class="tool-icon teal">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-      </svg>
-    </div>
-    <div class="tool-body">
-      <div class="tool-name">Holiday Planner</div>
-      <div class="tool-desc" id="trips-desc">Itineraries, maps &amp; more</div>
-    </div>
-    <div class="tool-stat">
-      <div class="stat-num" id="trips-stat">—</div>
-      <div class="stat-label">trips</div>
-    </div>
-    <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </a>
+  <!-- ── COLUMN 1: HOLIDAY PLANNER ── -->
+  <div class="col">
+    <a class="col-head" href="/trips/">
+      <div class="tool-icon teal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="ch-name">Holiday Planner</div>
+        <div class="ch-desc">Itineraries, maps &amp; more</div>
+      </div>
+      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
 
-  <div class="hol-pair">
-    <a class="hol-person-card" href="/holidays/2026-27.html">
+    <div class="hub-card">
+      <div class="card-label">Stats</div>
+      <div class="stats-strip">
+        <div class="ss-stat">
+          <div class="ss-val teal" id="hp-trips">—</div>
+          <div class="ss-lbl">trips</div>
+        </div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val" id="hp-upcoming">—</div>
+          <div class="ss-lbl">upcoming</div>
+        </div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val green" id="hp-completed">—</div>
+          <div class="ss-lbl">completed</div>
+        </div>
+      </div>
+    </div>
+
+    <a class="hub-card" href="/trips/" id="next-trip-card" style="display:none;">
+      <div class="card-label">Next trip</div>
+      <div class="event-name" id="nt-name"></div>
+      <div class="event-meta" id="nt-meta"></div>
+      <div class="cd-row">
+        <div class="cd-block">
+          <div class="cd-num" id="nt-days">—</div>
+          <div class="cd-unit">days to go</div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- ── COLUMN 2: HOLIDAY ALLOWANCE ── -->
+  <div class="col">
+    <a class="col-head" href="/holidays/">
+      <div class="tool-icon green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div>
+        <div class="ch-name">Holiday Allowance</div>
+        <div class="ch-desc">Days off &amp; lieu tracking</div>
+      </div>
+      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+
+    <a class="hub-card" href="/holidays/2026-27.html">
       <div class="hpc-top">
-        <div class="tool-icon green" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;">
+        <div class="tool-icon green" style="width:36px;height:36px;border-radius:10px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
         <div>
           <div class="hpc-name">Joel</div>
           <div class="hpc-period">2026/27 · Apr – Mar</div>
         </div>
-        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="hpc-stats">
-        <div class="hpc-stat">
-          <div class="hpc-val" id="joel-trips">6</div>
-          <div class="hpc-lbl">trips</div>
+      <div class="stats-strip">
+        <div class="ss-stat">
+          <div class="ss-val" id="joel-trips">6</div>
+          <div class="ss-lbl">trips</div>
         </div>
-        <div class="hpc-divider"></div>
-        <div class="hpc-stat">
-          <div class="hpc-val orange" id="joel-used">23</div>
-          <div class="hpc-lbl">days used</div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val orange" id="joel-used">23</div>
+          <div class="ss-lbl">days used</div>
         </div>
-        <div class="hpc-divider"></div>
-        <div class="hpc-stat">
-          <div class="hpc-val green" id="joel-rem">5</div>
-          <div class="hpc-lbl">remaining</div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val green" id="joel-rem">5</div>
+          <div class="ss-lbl">remaining</div>
         </div>
       </div>
     </a>
-    <a class="hol-person-card" href="/holidays/jonathan/2026.html">
+
+    <a class="hub-card" href="/holidays/jonathan/2026.html">
       <div class="hpc-top">
-        <div class="tool-icon green" style="width:36px;height:36px;border-radius:10px;flex-shrink:0;">
+        <div class="tool-icon green" style="width:36px;height:36px;border-radius:10px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
         <div>
           <div class="hpc-name">Jonathan</div>
           <div class="hpc-period">2026 · Jan – Dec</div>
         </div>
-        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="hpc-stats">
-        <div class="hpc-stat">
-          <div class="hpc-val" id="jon-trips">0</div>
-          <div class="hpc-lbl">trips</div>
+      <div class="stats-strip">
+        <div class="ss-stat">
+          <div class="ss-val" id="jon-trips">0</div>
+          <div class="ss-lbl">trips</div>
         </div>
-        <div class="hpc-divider"></div>
-        <div class="hpc-stat">
-          <div class="hpc-val orange" id="jon-used">0</div>
-          <div class="hpc-lbl">days used</div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val orange" id="jon-used">0</div>
+          <div class="ss-lbl">days used</div>
         </div>
-        <div class="hpc-divider"></div>
-        <div class="hpc-stat">
-          <div class="hpc-val green" id="jon-rem">28</div>
-          <div class="hpc-lbl">remaining</div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val green" id="jon-rem">28</div>
+          <div class="ss-lbl">remaining</div>
         </div>
       </div>
     </a>
   </div>
 
-  <a class="tool-card" href="/concerts/">
-    <div class="tool-icon amber">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-      </svg>
+  <!-- ── COLUMN 3: CONCERT LOG ── -->
+  <div class="col">
+    <a class="col-head" href="/concerts/">
+      <div class="tool-icon amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="ch-name">Concert Log</div>
+        <div class="ch-desc">Log your live music</div>
+      </div>
+      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+
+    <a class="hub-card photo-card" href="/concerts/" id="latest-card" style="display:none;">
+      <img id="lc-img" alt="" style="display:none;">
+      <div class="pc-body">
+        <div class="card-label">Latest concert</div>
+        <div class="event-name" id="lc-name"></div>
+        <div class="event-meta" id="lc-meta"></div>
+      </div>
+    </a>
+
+    <a class="hub-card" href="/concerts/" id="next-show-card" style="display:none;">
+      <div class="card-label">Next show</div>
+      <div class="event-name" id="ns-name"></div>
+      <div class="event-meta" id="ns-meta"></div>
+      <div class="cd-row">
+        <div class="cd-block amber">
+          <div class="cd-num amber" id="ns-days">—</div>
+          <div class="cd-unit">days to go</div>
+        </div>
+      </div>
+    </a>
+
+    <div class="hub-card">
+      <div class="card-label">Stats</div>
+      <div class="stats-strip">
+        <div class="ss-stat">
+          <div class="ss-val teal" id="cl-concerts">—</div>
+          <div class="ss-lbl">concerts</div>
+        </div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val" id="cl-festivals">—</div>
+          <div class="ss-lbl">festivals</div>
+        </div>
+        <div class="ss-divider"></div>
+        <div class="ss-stat">
+          <div class="ss-val orange" id="cl-artists">—</div>
+          <div class="ss-lbl">artists</div>
+        </div>
+      </div>
     </div>
-    <div class="tool-body">
-      <div class="tool-name">Concert Log</div>
-      <div class="tool-desc" id="concerts-desc">Log your live music</div>
-    </div>
-    <div class="tool-stat">
-      <div class="stat-num amber" id="concerts-stat">—</div>
-      <div class="stat-label">concerts</div>
-    </div>
-    <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-  </a>
+  </div>
+
 </div>
 
 <div class="hub-footer">
@@ -178,33 +291,79 @@
 <script src="/auth.js?v=2"></script>
 <script src="/db.js?v=2"></script>
 <script>
+function parseDMY(s) {
+  const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+}
+
 async function loadStats() {
+  // ── Holiday Planner column ──
   try {
     const registry = await window.dbLoad('registry');
     if (registry && registry.trips) {
       const trips = Object.values(registry.trips).filter(t => !t.deleted);
-      document.getElementById('trips-stat').textContent = trips.length;
-      const next = trips
-        .filter(t => t.startDate && new Date(t.startDate) > new Date())
-        .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0];
+      const now = new Date();
+      const upcoming = trips.filter(t => t.startDate && new Date(t.startDate) > now);
+      document.getElementById('hp-trips').textContent = trips.length;
+      document.getElementById('hp-upcoming').textContent = upcoming.length;
+      document.getElementById('hp-completed').textContent = trips.length - upcoming.length;
+
+      const next = upcoming.sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0];
       if (next) {
-        const days = Math.ceil((new Date(next.startDate) - new Date()) / 86400000);
-        document.getElementById('trips-desc').textContent = 'Next: ' + next.name + ' in ' + days + ' days';
-      } else {
-        document.getElementById('trips-desc').textContent = trips.length + ' trips planned & completed';
+        const days = Math.ceil((new Date(next.startDate) - now) / 86400000);
+        document.getElementById('next-trip-card').style.display = 'block';
+        document.getElementById('nt-name').textContent = next.name;
+        const start = new Date(next.startDate);
+        let meta = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        if (next.endDate) meta += ' – ' + new Date(next.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        document.getElementById('nt-meta').textContent = meta;
+        document.getElementById('nt-days').textContent = days;
       }
     }
   } catch(e) {}
 
+  // ── Concert Log column ──
   try {
     const concerts = await window.dbLoad('concerts');
-    if (concerts && concerts.list) {
-      const count = concerts.list.length;
-      document.getElementById('concerts-stat').textContent = count;
-      const latest = concerts.list[concerts.list.length - 1];
-      if (latest) document.getElementById('concerts-desc').textContent = 'Last: ' + (latest.artist || latest.name || '') + ' at ' + (latest.venue || latest.location || '');
-    } else {
-      document.getElementById('concerts-stat').textContent = '0';
+    const list = (concerts && Array.isArray(concerts.list)) ? concerts.list : [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dated = list.filter(c => parseDMY(c.date));
+    const upcoming = dated.filter(c => parseDMY(c.date) > today).sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
+    const seen = list.filter(c => { const d = parseDMY(c.date); return !d || d <= today; });
+
+    document.getElementById('cl-concerts').textContent  = seen.filter(c => c.type !== 'festival').length;
+    document.getElementById('cl-festivals').textContent = seen.filter(c => c.type === 'festival').length;
+    const artists = new Set();
+    const add = s => (s || '').split(',').forEach(a => { const k = a.trim().toLowerCase(); if (k) artists.add(k); });
+    seen.forEach(c => {
+      if (c.type === 'festival') (c.artistsSeen || []).forEach(a => { const k = a.trim().toLowerCase(); if (k) artists.add(k); });
+      else { add(c.artist); add(c.support); add(c.guests); }
+    });
+    document.getElementById('cl-artists').textContent = artists.size;
+
+    // Latest concert (with photo)
+    const latest = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date))[0];
+    if (latest) {
+      document.getElementById('latest-card').style.display = 'block';
+      document.getElementById('lc-name').textContent = latest.artist || latest.name || '';
+      document.getElementById('lc-meta').textContent =
+        [latest.venue || latest.location, latest.date].filter(Boolean).join(' · ');
+      if (latest.thumb) {
+        const img = document.getElementById('lc-img');
+        img.src = latest.thumb;
+        img.style.display = 'block';
+      }
+    }
+
+    // Next show countdown
+    const next = upcoming[0];
+    if (next) {
+      const days = Math.round((parseDMY(next.date) - today) / 86400000);
+      document.getElementById('next-show-card').style.display = 'block';
+      document.getElementById('ns-name').textContent = next.artist || next.name || '';
+      document.getElementById('ns-meta').textContent =
+        [next.venue || next.location, next.date].filter(Boolean).join(' · ');
+      document.getElementById('ns-days').textContent = days;
     }
   } catch(e) {}
 }
