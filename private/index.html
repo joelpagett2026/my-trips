@@ -224,11 +224,6 @@
     </div>
 
     <div class="f-group">
-      <label class="f-label">Body profile</label>
-      <textarea class="f-textarea" id="f-profile" placeholder="Notes…"></textarea>
-    </div>
-
-    <div class="f-group">
       <label class="f-label">Photo</label>
       <div class="photo-drop" id="photo-drop" onclick="document.getElementById('f-photo').click()">
         <span id="pd-hint">Tap to choose a photo</span>
@@ -449,7 +444,7 @@ function openDetail(id) {
     + fmtDate(c.start) + (c.end ? ' – ' + fmtDate(c.end) : ' – ongoing');
   html += '</div>';
 
-  if (c.profile) html += '<div class="detail-profile"><div class="detail-profile-title">Body profile</div>' + esc(c.profile) + '</div>';
+
 
   const hasBody = c.dicksize || c.dickRating || c.assRating;
   if (hasBody) {
@@ -514,7 +509,13 @@ async function openModal(id) {
   document.getElementById('f-start').value  = c ? (c.start || '') : '';
   document.getElementById('f-end').value    = c ? (c.end || '') : '';
   document.getElementById('f-number').value = c ? (c.number ?? '') : '';
-  document.getElementById('f-profile').value = c ? (c.profile || '') : '';
+  document.getElementById('f-dicksize').value   = c ? (c.dicksize || 0) : 0;
+  document.getElementById('f-dickrating').value = c ? (c.dickRating || 0) : 0;
+  document.getElementById('f-assrating').value  = c ? (c.assRating || 0) : 0;
+  document.getElementById('f-face').value = c ? (c.face || '') : '';
+  updateDickSize(); updateRating('dick'); updateRating('ass');
+  actState = c && c.acts ? Object.assign({}, c.acts) : {};
+  renderActs();
   setPhotoPreview(c && c.hasPhoto ? (c.thumb || null) : null);
   document.getElementById('overlay').classList.add('open');
   if (!c) document.getElementById('f-name').focus();
@@ -562,7 +563,11 @@ async function saveEntry() {
     start,
     end,
     number: numRaw === '' ? '' : Number(numRaw),
-    profile: document.getElementById('f-profile').value.trim(),
+    dicksize:   +document.getElementById('f-dicksize').value,
+    dickRating: +document.getElementById('f-dickrating').value,
+    assRating:  +document.getElementById('f-assrating').value,
+    face:       document.getElementById('f-face').value.trim(),
+    acts:       Object.assign({}, actState),
     thumb:    existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
   };
