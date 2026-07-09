@@ -102,6 +102,8 @@
   .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
+  .dash-stat-link { text-decoration: none; cursor: pointer; transition: background 0.15s; }
+  .dash-stat-link:hover { background: #dfe5e5; }
 
   .top-artist { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
   .top-artist:last-child { border-bottom: none; }
@@ -316,13 +318,13 @@
           <div class="dash-stat-lbl">Day festivals</div>
           <div class="dash-stat-val" id="s-festivals">0</div>
         </div>
-        <div class="dash-stat">
+        <a class="dash-stat dash-stat-link" href="/concerts/artists.html">
           <div class="dash-stat-icon">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </div>
           <div class="dash-stat-lbl">Artists seen</div>
           <div class="dash-stat-val" id="s-artists">0</div>
-        </div>
+        </a>
         <div class="dash-stat">
           <div class="dash-stat-icon">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
