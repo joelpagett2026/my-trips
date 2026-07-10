@@ -498,11 +498,11 @@ function renderAll() {
 
   document.getElementById('empty-state').style.display = entries.length ? 'none' : 'block';
 
-  const numOf = c => { const n = Number(c.number); return isNaN(n) ? -Infinity : n; };
-  const byNumberDesc = (a, b) => numOf(b) - numOf(a);
+  const endOf = c => { const d = parseDMY(c.end) || parseDMY(c.start); return d ? d.getTime() : -Infinity; };
+  const byEndDesc = (a, b) => endOf(b) - endOf(a);
 
-  const ongoing = entries.filter(c => !c.end).sort(byNumberDesc);
-  const finished = entries.filter(c => c.end).sort(byNumberDesc);
+  const ongoing = entries.filter(c => !c.end).sort(byEndDesc);
+  const finished = entries.filter(c => c.end).sort(byEndDesc);
 
   const split = document.createElement('div');
   sections.appendChild(split);
