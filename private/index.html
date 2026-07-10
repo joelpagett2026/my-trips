@@ -513,8 +513,8 @@ function entryCard(c, draggable) {
   html += '<div class="p-card-name">' + esc(c.name) + '</div>';
   const range = fmtDate(c.start) + (c.end ? ' – ' + fmtDate(c.end) : ' – ONGOING');
   html += '<div class="p-card-foot">';
-  if (c.number !== '' && c.number !== null && c.number !== undefined) html += '<span class="num-pill">No. ' + esc(String(c.number)) + '</span>';
   html += '<span class="p-card-dates">' + range.toUpperCase() + '</span>';
+  if (c.number !== '' && c.number !== null && c.number !== undefined) html += '<span class="num-pill">No. ' + esc(String(c.number)) + '</span>';
   html += '</div>';
   html += '</div>';
   el.innerHTML = html;
