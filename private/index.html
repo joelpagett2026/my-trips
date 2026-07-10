@@ -569,7 +569,13 @@ async function openModal(id) {
   document.getElementById('f-name').value   = c ? c.name : '';
   document.getElementById('f-start').value  = c ? (c.start || '') : '';
   document.getElementById('f-end').value    = c ? (c.end || '') : '';
-  document.getElementById('f-number').value = c ? (c.number ?? '') : '';
+  let nextNumber = '';
+  if (!c) {
+    const nums = entries.map(e => Number(e.number)).filter(n => !isNaN(n));
+    const highest = nums.length ? Math.max(...nums) : 0;
+    nextNumber = Math.max(34, highest) + 1;
+  }
+  document.getElementById('f-number').value = c ? (c.number ?? '') : nextNumber;
   document.getElementById('f-dicksize').value   = c ? (c.dicksize || 0) : 0;
   document.getElementById('f-dickrating').value = c && c.dickRating ? c.dickRating : '';
   document.getElementById('f-assrating').value  = c && c.assRating ? c.assRating : '';
