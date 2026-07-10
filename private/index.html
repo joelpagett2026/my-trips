@@ -171,6 +171,7 @@
   @media (max-width: 640px) { .modal { max-width: 440px; } }
   .modal-title { font-size: 17px; font-weight: 700; color: #e6edf3; margin-bottom: 16px; letter-spacing: -0.3px; }
   .modal-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
+  .f-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
   .modal-left { min-width: 0; }
   .modal-right { min-width: 0; display: flex; flex-direction: column; }
   .modal-right .f-textarea { flex: 1; min-height: 300px; resize: vertical; }
@@ -273,17 +274,29 @@
       <input type="file" id="f-photo" accept="image/*" style="display:none;">
     </div>
 
-    <div class="f-group">
-      <div class="slider-head"><label class="f-label" style="margin:0;">Dick Size</label><span class="slider-val" id="dicksize-val">Not set</span></div>
-      <input type="range" class="slider" id="f-dicksize" min="0" max="8" step="1" value="0" oninput="updateDickSize()">
-    </div>
-    <div class="f-group">
-      <div class="slider-head"><label class="f-label" style="margin:0;">Dick Rating</label><span class="slider-val" id="dickrating-val">Not set</span></div>
-      <input type="range" class="slider" id="f-dickrating" min="0" max="10" step="1" value="0" oninput="updateRating('dick')">
-    </div>
-    <div class="f-group">
-      <div class="slider-head"><label class="f-label" style="margin:0;">Ass Rating</label><span class="slider-val" id="assrating-val">Not set</span></div>
-      <input type="range" class="slider" id="f-assrating" min="0" max="10" step="1" value="0" oninput="updateRating('ass')">
+    <div class="f-row f-row-3">
+      <div class="f-group">
+        <label class="f-label">Dick Size</label>
+        <select class="f-input" id="f-dicksize">
+          <option value="0">—</option>
+          <option value="1">5"</option>
+          <option value="2">5.5"</option>
+          <option value="3">6"</option>
+          <option value="4">6.5"</option>
+          <option value="5">7"</option>
+          <option value="6">7.5"</option>
+          <option value="7">8"</option>
+          <option value="8">9"</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">Dick Rating</label>
+        <input class="f-input" id="f-dickrating" type="number" min="0" max="10" placeholder="/ 10">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Ass Rating</label>
+        <input class="f-input" id="f-assrating" type="number" min="0" max="10" placeholder="/ 10">
+      </div>
     </div>
 
     <div class="subhead">Acts</div>
@@ -313,14 +326,6 @@ let modalPhotoRemoved = false;
 // Dick size slider: index 0 = not set, 1..8 → 5, 5.5, 6, ... 9 inches
 const SIZE_STEPS = ['5', '5.5', '6', '6.5', '7', '7.5', '8', '9'];
 function sizeLabel(idx) { return (idx >= 1 && idx <= SIZE_STEPS.length) ? SIZE_STEPS[idx - 1] + ' inches' : ''; }
-function updateDickSize() {
-  const v = +document.getElementById('f-dicksize').value;
-  document.getElementById('dicksize-val').textContent = v === 0 ? 'Not set' : sizeLabel(v);
-}
-function updateRating(which) {
-  const v = +document.getElementById('f-' + which + 'rating').value;
-  document.getElementById(which + 'rating-val').textContent = v === 0 ? 'Not set' : v + ' / 10';
-}
 
 // Acts — original simple line icons (generic symbols, not from any external set)
 const ACTS = [
@@ -566,10 +571,9 @@ async function openModal(id) {
   document.getElementById('f-end').value    = c ? (c.end || '') : '';
   document.getElementById('f-number').value = c ? (c.number ?? '') : '';
   document.getElementById('f-dicksize').value   = c ? (c.dicksize || 0) : 0;
-  document.getElementById('f-dickrating').value = c ? (c.dickRating || 0) : 0;
-  document.getElementById('f-assrating').value  = c ? (c.assRating || 0) : 0;
+  document.getElementById('f-dickrating').value = c && c.dickRating ? c.dickRating : '';
+  document.getElementById('f-assrating').value  = c && c.assRating ? c.assRating : '';
   document.getElementById('f-details').value = c ? (c.details || '') : '';
-  updateDickSize(); updateRating('dick'); updateRating('ass');
   actState = c && c.acts ? Object.assign({}, c.acts) : {};
   renderActs();
   setPhotoPreview(c && c.hasPhoto ? (c.thumb || null) : null);
