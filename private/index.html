@@ -463,28 +463,28 @@ function renderAll() {
   const sections = document.getElementById('year-sections');
   sections.innerHTML = '';
 
-  const byYear = {};
-  entries.forEach(c => {
-    const d = parseDMY(c.start);
-    const y = d ? d.getFullYear() : 'Undated';
-    (byYear[y] = byYear[y] || []).push(c);
-  });
-  const years = Object.keys(byYear).sort((a, b) => b - a);
-
   document.getElementById('empty-state').style.display = entries.length ? 'none' : 'block';
 
-  years.forEach(y => {
+  const numOf = c => { const n = Number(c.number); return isNaN(n) ? -Infinity : n; };
+  const byNumberDesc = (a, b) => numOf(b) - numOf(a);
+
+  const ongoing = entries.filter(c => !c.end).sort(byNumberDesc);
+  const finished = entries.filter(c => c.end).sort(byNumberDesc);
+
+  function addSection(label, list) {
+    if (!list.length) return;
     const title = document.createElement('div');
     title.className = 'section-title';
-    title.innerHTML = '<span class="year">' + y + '</span>';
+    title.innerHTML = '<span class="year">' + label + '</span>';
     sections.appendChild(title);
     const grid = document.createElement('div');
     grid.className = 'p-grid';
-    byYear[y]
-      .sort((a, b) => (parseDMY(b.start) || 0) - (parseDMY(a.start) || 0))
-      .forEach(c => grid.appendChild(entryCard(c)));
+    list.forEach(c => grid.appendChild(entryCard(c)));
     sections.appendChild(grid);
-  });
+  }
+
+  addSection('Ongoing', ongoing);
+  addSection('All', finished);
 }
 
 // ── DETAIL LIGHTBOX ──
