@@ -512,18 +512,9 @@ function openDetail(id) {
   html += '<span class="dd-val">' + fmtDate(c.start) + '</span>';
   html += '<span class="dd-sep">→</span>';
   html += '<span class="dd-val">' + (c.end ? fmtDate(c.end) : 'Ongoing') + '</span>';
-  html += '</div></div>'; // close dates, head-text
+  html += '</div>'; // close dates
 
-  // Body Profile + Acts sit beside the name/date in the header
-  html += '<div class="detail-head-profile">';
-  const hasBody = c.dicksize || c.dickRating || c.assRating;
-  if (hasBody) {
-    html += '<div class="profile-block"><div class="profile-block-title">Body Profile</div><div class="profile-grid">';
-    if (c.dicksize)   html += '<div class="profile-item"><div class="pi-label">Dick Size</div><div class="pi-val">' + esc(sizeLabel(c.dicksize)) + '</div></div>';
-    if (c.dickRating) html += '<div class="profile-item"><div class="pi-label">Dick Rating</div><div class="pi-val">' + c.dickRating + ' / 10</div></div>';
-    if (c.assRating)  html += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + c.assRating + ' / 10</div></div>';
-    html += '</div></div>';
-  }
+  // Acts sit directly under the date
   const acts = c.acts || {};
   if (ACTS.some(a => acts[a.key])) {
     html += '<div class="profile-block"><div class="profile-block-title">Acts</div><div class="act-chips">';
@@ -532,7 +523,20 @@ function openDetail(id) {
     });
     html += '</div></div>';
   }
-  if (!hasBody && !ACTS.some(a => acts[a.key])) html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No body profile or acts set</div>';
+  html += '</div>'; // close head-text
+
+  // Body Profile sits beside the name/date in the header
+  html += '<div class="detail-head-profile">';
+  const hasBody = c.dicksize || c.dickRating || c.assRating;
+  if (hasBody) {
+    html += '<div class="profile-block"><div class="profile-block-title">Body Profile</div><div class="profile-grid">';
+    if (c.dicksize)   html += '<div class="profile-item"><div class="pi-label">Dick Size</div><div class="pi-val">' + esc(sizeLabel(c.dicksize)) + '</div></div>';
+    if (c.dickRating) html += '<div class="profile-item"><div class="pi-label">Dick Rating</div><div class="pi-val">' + c.dickRating + ' / 10</div></div>';
+    if (c.assRating)  html += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + c.assRating + ' / 10</div></div>';
+    html += '</div></div>';
+  } else {
+    html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No body profile set</div>';
+  }
   html += '</div>'; // close head-profile
   html += '</div>'; // close header
 
