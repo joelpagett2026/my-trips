@@ -114,12 +114,12 @@
   .p-card-dates { font-size: 11.5px; color: #0a6570; font-weight: 600; letter-spacing: 0.02em; }
 
   /* Lightbox */
-  .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 180; display: none; align-items: flex-start; justify-content: center; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 40px 24px; }
+  .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 180; display: none; align-items: flex-start; justify-content: center; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 40px 24px; }
   .detail-overlay.open { display: flex; }
-  .detail-card { background: #161b22; border: 1px solid #21262d; border-radius: 20px; overflow: hidden; width: 100%; max-width: 980px; position: relative; }
+  .detail-card { background: #ffffff; border: none; border-radius: 20px; overflow: hidden; width: 100%; max-width: 980px; box-shadow: 0 24px 80px rgba(0,0,0,0.35); position: relative; }
   .detail-header { display: flex; gap: 26px; padding: 28px 32px 0; align-items: flex-start; flex-wrap: nowrap; }
-  .detail-photo-thumb { width: 230px; height: 230px; border-radius: 16px; object-fit: cover; flex-shrink: 0; background: #0d1117; }
-  .detail-photo-thumb.placeholder { display: flex; align-items: center; justify-content: center; color: #21262d; border: 1px solid #21262d; }
+  .detail-photo-thumb { width: 230px; height: 230px; border-radius: 16px; object-fit: cover; flex-shrink: 0; background: #f0f0f0; }
+  .detail-photo-thumb.placeholder { display: flex; align-items: center; justify-content: center; color: #d5d5d5; border: 1px solid #ebebeb; }
   .detail-head-text { flex: 0 0 auto; min-width: 190px; padding-top: 6px; }
   .detail-head-profile { flex: 1; min-width: 0; padding-top: 6px; padding-right: 96px; }
   .detail-cols { display: block; padding: 20px 32px 32px; }
@@ -135,34 +135,34 @@
     .detail-card { border-radius: 0; max-width: none; min-height: 100vh; min-height: 100dvh; }
     .detail-cols { padding: 16px 18px 28px; }
     .detail-name { font-size: 20px; }
-  .d-btn.close-btn { background: #21262d; color: #e6edf3; }
-  .d-btn.close-btn:hover { background: #30363d; }
+  .d-btn.close-btn { background: #f0f0f0; color: #666666; }
+  .d-btn.close-btn:hover { background: #e2e2e2; }
     .comment-box { max-height: 240px; }
   }
   .detail-dates { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; background: rgba(14,122,135,0.12); border: 1px solid rgba(14,122,135,0.25); border-radius: 10px; padding: 8px 13px; }
-  .detail-dates svg { color: #0fbdcf; flex-shrink: 0; }
-  .detail-dates .dd-val { font-size: 15px; font-weight: 700; color: #e6edf3; }
-  .detail-dates .dd-sep { color: #3d444d; }
-  .detail-name { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; color: #e6edf3; line-height: 1.15; }
-  .detail-meta { font-size: 13px; color: #7d8590; font-weight: 500; margin-top: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .detail-meta svg { color: #3d444d; flex-shrink: 0; }
+  .detail-dates svg { color: #0e7a87; flex-shrink: 0; }
+  .detail-dates .dd-val { font-size: 15px; font-weight: 700; color: #444444; }
+  .detail-dates .dd-sep { color: #b8b8b8; }
+  .detail-name { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; color: #444444; line-height: 1.15; }
+  .detail-meta { font-size: 13px; color: #888888; font-weight: 500; margin-top: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .detail-meta svg { color: #b8b8b8; flex-shrink: 0; }
   .profile-block { margin-top: 22px; padding-top: 0; border-top: none; }
-  .profile-block-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #0fbdcf; margin-bottom: 12px; }
+  .profile-block-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999999; margin-bottom: 12px; }
   .profile-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
-  .profile-item { background: #0d1117; border: 1px solid #21262d; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .profile-item { background: #f7f7f7; border: none; border-radius: 12px; padding: 10px 13px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .profile-item.full { display: block; }
   .profile-item.full { grid-column: 1 / -1; }
-  .pi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7d8590; margin-bottom: 0; }
+  .pi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #999999; margin-bottom: 0; }
   .profile-item.full .pi-label { margin-bottom: 6px; }
-  .pi-val { font-size: 14px; font-weight: 700; color: #e6edf3; word-wrap: break-word; }
-  .pi-val.comment { font-weight: 500; color: #c9d1d9; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+  .pi-val { font-size: 14px; font-weight: 700; color: #444444; word-wrap: break-word; }
+  .pi-val.comment { font-weight: 500; color: #555555; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
   .detail-cols .profile-block { margin-top: 0; margin-bottom: 22px; }
   .comment-box { max-height: 320px; overflow-y: auto; padding-right: 6px; }
   .comment-box::-webkit-scrollbar { width: 8px; }
-  .comment-box::-webkit-scrollbar-track { background: #0d1117; border-radius: 8px; }
+  .comment-box::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 8px; }
   .comment-box::-webkit-scrollbar-thumb { background: #0e7a87; border-radius: 8px; }
   .comment-box::-webkit-scrollbar-thumb:hover { background: #0fbdcf; }
-  .comment-box { scrollbar-width: thin; scrollbar-color: #0e7a87 #0d1117; }
+  .comment-box { scrollbar-width: thin; scrollbar-color: #0e7a87 #f0f0f0; }
   .rating-stars { display: inline-flex; gap: 2px; }
   .rating-stars svg { color: #21262d; }
   .rating-stars svg.on { color: #0fbdcf; }
@@ -191,8 +191,8 @@
   /* lightbox act chips */
   .act-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .act-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
-  .act-chip.yes { background: rgba(14,122,135,0.15); color: #0fbdcf; border: 1px solid rgba(14,122,135,0.3); }
-  .act-chip.no  { background: #0d1117; color: #3d444d; border: 1px solid #21262d; }
+  .act-chip.yes { background: rgba(14,122,135,0.15); color: #0e7a87; border: 1px solid rgba(14,122,135,0.3); }
+  .act-chip.no  { background: #f0f0f0; color: #999999; border: 1px solid #e5e5e5; }
   .slider-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
   .slider-val { font-size: 14px; font-weight: 700; color: #0fbdcf; }
   input[type=range].slider {
@@ -213,7 +213,7 @@
   @media (max-width: 620px) { .detail-actions-bottom { padding: 0 18px 24px; } }
   .d-btn { font-family: Montserrat, sans-serif; font-size: 12.5px; font-weight: 700; border-radius: 10px; padding: 9px 18px; cursor: pointer; border: none; display: flex; align-items: center; gap: 7px; transition: all 0.15s; }
   .d-btn.edit { background: #0e7a87; color: #fff; }
-  .d-btn.edit:hover { background: #0fbdcf; }
+  .d-btn.edit:hover { background: #0a6570; }
   .d-btn.delete { background: none; color: #3d444d; margin-left: auto; padding: 9px 10px; }
   .d-btn.delete:hover { color: #f85149; background: rgba(248,81,73,0.1); }
 
@@ -659,7 +659,7 @@ function openDetail(id) {
     if (c.assRating)  html += '<div class="profile-item"><div class="pi-label">Ass Rating</div><div class="pi-val">' + c.assRating + ' / 10</div></div>';
     html += '</div></div>';
   } else {
-    html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No body profile set</div>';
+    html += '<div style="font-size:12px;color:#b8b8b8;font-weight:500;">No body profile set</div>';
   }
   html += '</div>'; // close head-profile
   html += '</div>'; // close header
@@ -670,7 +670,7 @@ function openDetail(id) {
     html += '<div class="profile-block"><div class="profile-block-title">Details</div>'
       + '<div class="profile-item full"><div class="pi-val comment comment-box">' + esc(c.details) + '</div></div></div>';
   } else {
-    html += '<div style="font-size:12px;color:#3d444d;font-weight:500;">No details</div>';
+    html += '<div style="font-size:12px;color:#b8b8b8;font-weight:500;">No details</div>';
   }
   html += '</div>'; // close cols
 
