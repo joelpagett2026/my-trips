@@ -109,7 +109,7 @@ function showPinOverlay() {
     <style>
       #pin-overlay{position:fixed;inset:0;z-index:9999;background:#e8e8e8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;touch-action:manipulation;}
       #pin-logo{width:64px;height:64px;background:linear-gradient(135deg,#0a6570,#0e7a87);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(10,124,110,0.3);}
-      #pin-title{font-size:22px;font-weight:700;color:#444444;letter-spacing:-0.4px;margin-bottom:6px;}
+      #pin-title{font-size:19px;font-weight:700;color:#444444;letter-spacing:-0.3px;margin-bottom:6px;text-align:center;max-width:300px;line-height:1.25;}
       #pin-sub{font-size:14px;color:#666666;opacity:0.5;font-weight:500;margin-bottom:36px;}
       #pin-dots{display:flex;gap:14px;margin-bottom:36px;}
       .pin-dot{width:14px;height:14px;border-radius:50%;background:#b8b8b8;transition:background 0.15s;}
@@ -124,7 +124,7 @@ function showPinOverlay() {
     <div id="pin-logo">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg>
     </div>
-    <div id="pin-title">My Trips</div>
+    <div id="pin-title">Joel Pagett's Tracker &amp; Tools</div>
     <div id="pin-sub">Enter your PIN to continue</div>
     <div id="pin-dots">
       <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
