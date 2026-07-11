@@ -261,6 +261,15 @@
     .concerts-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
     .c-card-img { height: 110px; }
     .detail-setlist ol { columns: 1; }
+
+    /* Lightbox actions: Edit becomes a compact pencil icon beside the bin */
+    .detail-actions .d-btn.album  { order: 1; }
+    .detail-actions .d-btn.edit   { order: 2; margin-left: auto; background: none; color: #b8b8b8; padding: 9px 8px; }
+    .detail-actions .d-btn.edit:hover,
+    .detail-actions .d-btn.edit:active { background: rgba(14,122,135,0.1); color: #0e7a87; }
+    .detail-actions .d-btn.edit svg { width: 14px; height: 14px; }
+    .detail-actions .d-btn.edit .d-lbl { display: none; }
+    .detail-actions .d-btn.delete { order: 3; margin-left: 0; padding: 9px 8px; }
   }
   @media (max-width: 430px) {
     .concerts-grid { grid-template-columns: 1fr; }
@@ -720,7 +729,7 @@ function openDetail(id) {
 
   html += '<div class="detail-actions">';
   html += '<button class="d-btn edit" onclick="editFromDetail(\'' + c.id + '\')">'
-    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>Edit</button>';
+    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg><span class="d-lbl">Edit</span></button>';
   if (c.album) {
     html += '<a class="d-btn album" href="' + esc(c.album) + '" target="_blank" rel="noopener">'
       + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Photos &amp; videos</a>';
