@@ -37,6 +37,30 @@
   }
 
   .col { display: flex; flex-direction: column; gap: 10px; }
+  .col-body { display: flex; flex-direction: column; gap: 10px; }
+  .col-open-link { display: none; }
+
+  /* ── MOBILE: collapsible tool sections ── */
+  @media (max-width: 640px) {
+    .hero { padding: 34px 24px 22px; }
+    .hero-avatar { width: 52px; height: 52px; border-radius: 15px; margin-bottom: 14px; }
+    .hero-title { font-size: 24px; }
+    .columns { gap: 8px; padding: 4px 16px 40px; }
+    .col { gap: 8px; }
+    .col-head { padding: 15px 16px; cursor: pointer; }
+    .col.collapsible .col-body { display: none; }
+    .col.collapsible.open .col-body { display: flex; padding-bottom: 4px; }
+    .col.collapsible .tool-arrow { transform: rotate(90deg); transition: transform 0.2s ease; }
+    .col.collapsible.open .tool-arrow { transform: rotate(-90deg); color: #0e7a87; }
+    .col.collapsible.open .col-head { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(14,122,135,0.35); }
+    .col.collapsible.open .tool-icon { background: #0e7a87; color: #ffffff; }
+    .col-open-link {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: #ffffff; border-radius: 14px; padding: 13px;
+      text-decoration: none; color: #0e7a87; font-size: 13px; font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+    }
+  }
 
   /* Column header — links to the tool */
   .col-head {
@@ -607,6 +631,53 @@ async function loadParks() {
 loadStats();
 loadShows();
 loadParks();
+
+// ── MOBILE: collapsible tool sections ──
+(function () {
+  const mq = window.matchMedia('(max-width: 640px)');
+  const OPEN_KEY = 'hub_open_cols';
+  let openSet;
+  try { openSet = new Set(JSON.parse(localStorage.getItem(OPEN_KEY) || '[]')); }
+  catch (e) { openSet = new Set(); }
+
+  document.querySelectorAll('.col').forEach((col, i) => {
+    const head = col.querySelector('.col-head');
+    if (!head) return;
+    const key = head.getAttribute('href') || String(i);
+
+    // Move every card below the header into a collapsible body
+    const body = document.createElement('div');
+    body.className = 'col-body';
+    while (head.nextElementSibling) body.appendChild(head.nextElementSibling);
+    col.appendChild(body);
+
+    // "Open <tool>" link — only shown on mobile, since the header taps to expand there
+    const name = (col.querySelector('.ch-name') || {}).textContent || 'tool';
+    const open = document.createElement('a');
+    open.className = 'col-open-link';
+    open.href = head.getAttribute('href');
+    open.innerHTML = 'Open ' + name +
+      ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    body.appendChild(open);
+
+    if (openSet.has(key)) col.classList.add('open');
+
+    head.addEventListener('click', e => {
+      if (!mq.matches) return;              // desktop: header stays a normal link
+      e.preventDefault();
+      const nowOpen = !col.classList.contains('open');
+      col.classList.toggle('open', nowOpen);
+      if (nowOpen) openSet.add(key); else openSet.delete(key);
+      try { localStorage.setItem(OPEN_KEY, JSON.stringify([...openSet])); } catch (e) {}
+    });
+  });
+
+  function sync() {
+    document.querySelectorAll('.col').forEach(col => col.classList.toggle('collapsible', mq.matches));
+  }
+  sync();
+  mq.addEventListener('change', sync);
+})();
 </script>
 </body>
 </html>
