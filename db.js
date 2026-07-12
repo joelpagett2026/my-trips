@@ -14,16 +14,33 @@ function getToken() {
     } catch { return ''; }
 }
 
+// Wait for a token to appear in localStorage before firing authenticated
+// requests. Prevents a race where a page's initial data load fires before
+// the login gate (auth.js, or a page's own extra password gate) has
+// finished storing the session token — which previously caused a silent
+// 401 and an empty page that never retried.
+async function waitForToken(maxMs = 8000) {
+    const start = Date.now();
+    let token = getToken();
+    while (!token && Date.now() - start < maxMs) {
+        await new Promise(r => setTimeout(r, 100));
+        token = getToken();
+    }
+    return token;
+}
+
 async function apiCall(action, params = {}, body = null, method = null) {
     const url = new URL(API, location.origin);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
+    const token = (action === 'auth') ? getToken() : await waitForToken();
+
     const options = {
         method: method || (body ? 'POST' : 'GET'),
         headers: {
             'Content-Type': 'application/json',
-            'X-Auth-Token': getToken(),
+            'X-Auth-Token': token,
         },
     };
     if (body) options.body = JSON.stringify(body);
