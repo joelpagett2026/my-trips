@@ -40,6 +40,7 @@ $subdirFiles = [
     'shows/index.html' => 'shows/index.html',
     'private/index.html' => 'private/index.html',
     'concerts/artists.html' => 'concerts/artists.html',
+    'parks/index.html' => 'parks/index.html',
 ];
 
 foreach ($subdirFiles as $src => $dest) {
@@ -83,7 +84,7 @@ $itineraries = [
 // One-time cleanup: retired concerts year-log page
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 
-foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'icons', 'private'] as $dir) {
+foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks', 'icons', 'private'] as $dir) {
     $dirPath = PUBLIC_HTML . '/' . $dir;
     if (!is_dir($dirPath)) {
         mkdir($dirPath, 0755, true);
@@ -176,6 +177,7 @@ $subdirFiles = [
     'shows/index.html' => 'shows/index.html',
     'private/index.html' => 'private/index.html',
     'concerts/artists.html' => 'concerts/artists.html',
+    'parks/index.html' => 'parks/index.html',
     'icons/favicon.ico' => 'icons/favicon.ico',
     'icons/icon-32.png' => 'icons/icon-32.png',
     'icons/icon-192.png' => 'icons/icon-192.png',

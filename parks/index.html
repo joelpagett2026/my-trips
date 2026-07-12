@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Joel Pagett's Theme Park Log</title>
+<script src="/auth.js?v=3"></script>
+<script src="/db.js?v=3"></script>
+<link rel="stylesheet" href="/holidays/holiday-style.css">
+<style>
+  /* ── DARK NAV ── */
+  .nav {
+    background: rgba(47,47,50,0.97);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav .nav-title { color: #ffffff; }
+  .nav .nav-back { color: #ffffff; }
+  .nav .nav-back:hover { opacity: 0.85; }
+
+  /* ── TWO COLUMN LAYOUT ── */
+  .page-layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; align-items: start; }
+  .main-col { min-width: 0; }
+  .dash-col {
+    border-left: 0.5px solid rgba(0,0,0,0.1); background: #ffffff;
+    position: sticky; top: 52px; height: calc(100vh - 52px);
+    overflow-y: auto; align-self: start; scrollbar-width: none;
+  }
+  .dash-col::-webkit-scrollbar { display: none; }
+
+  .section { padding: 0 20px 24px; }
+  .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: #444444; margin-bottom: 10px; }
+  .section-title .year { color: #0e7a87; }
+  .year-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 4px 20px 20px; }
+
+  /* ── PARK CARDS GRID ── */
+  .parks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .p-card {
+    background: #ffffff; border-radius: 18px; overflow: hidden;
+    color: inherit; display: block; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.05);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .p-card:hover { transform: scale(1.015); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .p-card:active { transform: scale(0.985); }
+  .p-card.upcoming { box-shadow: 0 0 0 2px #0e7a87, 0 2px 8px rgba(0,0,0,0.08); position: relative; }
+  .cd-pill {
+    position: absolute; top: 8px; right: 8px; z-index: 5;
+    font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.9); color: #fff; backdrop-filter: blur(8px);
+  }
+  .p-card-img { width: 100%; height: 140px; object-fit: cover; display: block; background: #f0f0f0; }
+  .p-card-img.placeholder { display: flex; align-items: center; justify-content: center; color: #d5d5d5; }
+  .p-card-body { padding: 12px 14px 14px; }
+  .p-card-name { font-size: 15px; font-weight: 700; color: #444444; line-height: 1.25; }
+  .p-card-meta { font-size: 11px; color: #555555; font-weight: 500; margin-top: 4px; }
+  .p-pill-row { margin-top: 6px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .p-badge {
+    display: inline-block;
+    font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.18); color: #0e7a87; border: 1px solid rgba(14,122,135,0.25);
+  }
+  .p-badge.muted { background: rgba(100,100,110,0.18); color: #666666; border: 1px solid rgba(100,100,110,0.2); }
+  .p-stars { display: flex; gap: 2px; margin-top: 7px; }
+  .p-stars svg { color: #d5d5d5; }
+  .p-stars svg.on { color: #0e7a87; }
+
+  .empty-state {
+    background: #fff; border: 2px dashed #ccc; border-radius: 16px;
+    padding: 40px 24px; text-align: center; color: #999;
+    font-size: 12px; font-weight: 600; margin: 0 20px;
+  }
+
+  /* ── DASHBOARD ── */
+  .dash-inner { padding: 0 0 32px; }
+  .dash-section { padding: 16px 16px 0; }
+  .dash-section-title { font-size: 11px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .dash-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 16px 16px 0; }
+
+  .dash-countdown {
+    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
+    border-radius: 14px; padding: 12px 16px; margin: 20px 16px 0;
+    position: relative; overflow: hidden; display: block; cursor: pointer;
+  }
+  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .dash-countdown-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; margin-bottom: 8px; }
+  .dash-cd-block { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 10px; text-align: center; display: inline-block; min-width: 90px; }
+  .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
+  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
+  .dash-hero {
+    border-radius: 14px; margin: 8px 16px 0; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
+    display: block; min-height: 122px; cursor: pointer;
+  }
+  .dash-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; }
+  .dash-hero-body { position: relative; padding: 12px 16px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 122px; background: linear-gradient(to top, rgba(10,20,22,0.75) 0%, rgba(10,20,22,0.1) 60%); }
+  .dash-hero-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .dash-hero-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
+  .dash-hero-meta { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 500; margin-top: 3px; }
+
+  .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
+  .dash-stat:last-child { margin-bottom: 0; }
+  .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
+  .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
+  .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
+
+  .top-park { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+  .top-park:last-child { border-bottom: none; }
+  .top-park-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 18px; opacity: 0.7; }
+  .top-park-name { flex: 1; font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-park-count { font-size: 11px; font-weight: 700; color: #888; }
+
+  /* ── DETAIL LIGHTBOX ── */
+  .detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 180;
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 32px 16px; overflow-y: auto;
+  }
+  .detail-overlay.open { display: flex; }
+  .detail-card {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    width: 100%; max-width: 620px; box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    position: relative;
+  }
+  .detail-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #f0f0f0; }
+  .detail-close {
+    position: absolute; top: 12px; right: 12px; z-index: 10;
+    width: 32px; height: 32px; border: none; border-radius: 10px; cursor: pointer;
+    background: rgba(0,0,0,0.45); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .detail-close:hover { background: rgba(0,0,0,0.65); }
+  .detail-close.no-photo { background: #f0f0f0; color: #888; }
+  .detail-body { padding: 18px 22px 20px; }
+  .detail-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: #444; padding-right: 24px; }
+  .detail-meta { font-size: 12px; color: #888; font-weight: 500; margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .detail-meta svg { flex-shrink: 0; color: #b8b8b8; }
+  .detail-stars { display: flex; gap: 3px; margin-top: 11px; }
+  .detail-stars svg { color: #d5d5d5; }
+  .detail-stars svg.on { color: #0e7a87; }
+  .detail-coasters { margin-top: 14px; padding: 12px 14px; background: #f7f7f7; border-radius: 12px; }
+  .detail-coasters-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; margin-bottom: 6px; }
+  .detail-coasters ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
+  .detail-coasters li { font-size: 12px; color: #555; font-weight: 500; padding: 2px 0; break-inside: avoid; }
+  .new-credit {
+    display: inline-block; margin-left: 5px; vertical-align: 1px;
+    font-size: 7.5px; font-weight: 700; padding: 1px 5px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.15); color: #0e7a87;
+  }
+  .detail-pill-row { margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .p-tag {
+    display: inline-block;
+    font-size: 9px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.18); color: #0e7a87; border: 1px solid rgba(14,122,135,0.25);
+  }
+  .p-tag.muted { background: rgba(100,100,110,0.18); color: #666666; border: 1px solid rgba(100,100,110,0.2); }
+  .p-tag.upcoming { background: #0e7a87; color: #fff; border: 1px solid #0e7a87; }
+  .detail-actions { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
+  .d-btn {
+    font-family: Montserrat, sans-serif; font-size: 12.5px; font-weight: 700;
+    border-radius: 10px; padding: 9px 18px; cursor: pointer; border: none;
+    display: flex; align-items: center; gap: 7px; transition: all 0.15s;
+  }
+  .d-btn.edit { background: #0e7a87; color: #fff; }
+  .d-btn.edit:hover { background: #0a6570; }
+  .d-btn.album { background: rgba(14,122,135,0.1); color: #0e7a87; text-decoration: none; }
+  .d-btn.album:hover { background: rgba(14,122,135,0.2); }
+  .d-btn.delete { background: none; color: #b8b8b8; margin-left: auto; padding: 9px 10px; }
+  .d-btn.delete:hover { color: #e53e3e; background: #fee; }
+
+  /* ── ADD/EDIT MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 24px 16px; overflow-y: auto;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 18px; padding: 22px;
+    width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: #444; margin-bottom: 16px; letter-spacing: -0.3px; }
+  .f-group { margin-bottom: 13px; }
+  .f-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #999; margin-bottom: 5px; display: block;
+  }
+  .f-input, .f-textarea {
+    width: 100%; border: 1px solid #e0e0e0; border-radius: 9px;
+    padding: 9px 11px; font-family: Montserrat, sans-serif;
+    font-size: 13px; color: #444; outline: none; background: #fff;
+    transition: border-color 0.15s;
+  }
+  .f-input:focus, .f-textarea:focus { border-color: #0e7a87; }
+  .f-input::placeholder, .f-textarea::placeholder { color: #b8b8b8; }
+  .f-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  .f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .star-picker { display: flex; gap: 4px; }
+  .star-picker button { background: none; border: none; cursor: pointer; padding: 2px; color: #d5d5d5; transition: color 0.1s, transform 0.1s; }
+  .star-picker button:hover { transform: scale(1.15); }
+  .star-picker button.on { color: #0e7a87; }
+
+  .photo-drop {
+    border: 2px dashed #d5d5d5; border-radius: 12px; padding: 18px;
+    text-align: center; cursor: pointer; color: #999; font-size: 11px;
+    font-weight: 600; transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .photo-drop:hover { border-color: #0e7a87; color: #0e7a87; background: #f4fafb; }
+  .photo-drop img { width: 100%; border-radius: 8px; display: block; }
+  .photo-drop .pd-remove {
+    position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+    background: rgba(0,0,0,0.5); color: #fff; border: none; border-radius: 7px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  .suggest-box {
+    position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 9px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 60;
+    display: none; overflow: hidden;
+  }
+  .suggest-item { padding: 8px 12px; font-size: 12.5px; font-weight: 600; color: #444; cursor: pointer; }
+  .suggest-item:hover { background: #e6f9f7; color: #0e7a87; }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .m-btn {
+    font-family: Montserrat, sans-serif; font-size: 13px; font-weight: 700;
+    border-radius: 9px; padding: 9px 20px; cursor: pointer; border: none;
+    transition: all 0.15s;
+  }
+  .m-btn.cancel { background: #f0f0f0; color: #666; }
+  .m-btn.cancel:hover { background: #e2e2e2; }
+  .m-btn.save { background: #0e7a87; color: #fff; }
+  .m-btn.save:hover { background: #0a6570; }
+  .m-btn.save:disabled { opacity: 0.5; cursor: default; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 700px) {
+    .nav-title { white-space: nowrap; }
+    .page-layout { display: flex; flex-direction: column; }
+    .main-col { width: 100%; }
+    .dash-col { position: static; height: auto; border-left: none; border-top: 0.5px solid rgba(0,0,0,0.1); width: 100%; }
+    .parks-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .p-card-img { height: 110px; }
+    .detail-coasters ol { columns: 1; }
+
+    .detail-actions .d-btn.album  { order: 1; }
+    .detail-actions .d-btn.edit   { order: 2; margin-left: auto; background: none; color: #b8b8b8; padding: 9px 6px; }
+    .detail-actions .d-btn.edit:hover,
+    .detail-actions .d-btn.edit:active { background: rgba(14,122,135,0.1); color: #0e7a87; }
+    .detail-actions .d-btn.edit svg { width: 14px; height: 14px; }
+    .detail-actions .d-btn.edit .d-lbl { display: none; }
+    .detail-actions .d-btn.delete { order: 3; margin-left: -8px; padding: 9px 6px; }
+  }
+  @media (max-width: 430px) {
+    .parks-grid { grid-template-columns: 1fr; }
+    .p-card-img { height: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <div class="nav-title">Theme Park Log</div>
+  <div class="nav-actions">
+    <button class="nav-btn" onclick="openModal()">+ Park visit</button>
+  </div>
+</nav>
+
+<div class="page-layout">
+
+  <!-- ── MAIN COLUMN ── -->
+  <div class="main-col">
+    <div id="year-sections" style="padding-top:16px;"></div>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="dash-col">
+    <div class="dash-inner">
+
+      <a class="dash-countdown" id="dash-countdown" style="display:none;">
+        <div class="dash-countdown-label">Next park visit</div>
+        <div class="dash-countdown-name" id="cd-name"></div>
+        <div class="dash-countdown-meta" id="cd-meta"></div>
+        <div class="dash-cd-block">
+          <div class="dash-cd-num" id="cd-days">—</div>
+          <div class="dash-cd-unit">days to go</div>
+        </div>
+      </a>
+
+      <a class="dash-hero" id="dash-hero" style="display:none;">
+        <img id="hero-img" alt="" style="display:none;">
+        <div class="dash-hero-body">
+          <div class="dash-hero-label">Latest park visit</div>
+          <div class="dash-hero-name" id="hero-name"></div>
+          <div class="dash-hero-meta" id="hero-meta"></div>
+        </div>
+      </a>
+
+      <div class="dash-section">
+        <div class="dash-section-title">Stats</div>
+        <div class="dash-stat">
+          <div class="dash-stat-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M4 12a8 8 0 0 1 16 0"/><path d="M12 4v8"/><circle cx="12" cy="20" r="2"/><path d="M4 12v8"/><path d="M20 12v8"/></svg>
+          </div>
+          <div class="dash-stat-lbl">Parks visited</div>
+          <div class="dash-stat-val" id="s-parks">0</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="dash-stat-lbl">Visits</div>
+          <div class="dash-stat-val" id="s-visits">0</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-11 9-11s6 4 9 4"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M8 19h7"/></svg>
+          </div>
+          <div class="dash-stat-lbl">Coaster credits</div>
+          <div class="dash-stat-val" id="s-credits">0</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="dash-stat-lbl">Rides logged</div>
+          <div class="dash-stat-val" id="s-rides">0</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="dash-stat-lbl">Countries</div>
+          <div class="dash-stat-val" id="s-countries">0</div>
+        </div>
+      </div>
+
+      <div class="dash-divider"></div>
+
+      <div class="dash-section">
+        <div class="dash-section-title">Most visited parks</div>
+        <div id="top-parks"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ── DETAIL LIGHTBOX ── -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-card" id="detail-card"></div>
+</div>
+
+<!-- ── ADD / EDIT MODAL ── -->
+<div class="modal-overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Add park visit</div>
+
+    <div class="f-group">
+      <label class="f-label">Park</label>
+      <input class="f-input" id="f-park" placeholder="e.g. Alton Towers">
+    </div>
+
+    <div class="f-row">
+      <div class="f-group">
+        <label class="f-label">Date</label>
+        <input class="f-input" id="f-date" placeholder="dd/mm/yyyy">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Location</label>
+        <input class="f-input" id="f-location" placeholder="e.g. Staffordshire">
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Country</label>
+      <input class="f-input" id="f-country" placeholder="e.g. England">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Photo album link</label>
+      <input class="f-input" id="f-album" placeholder="e.g. https://photos.app.goo.gl/…">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Lead photograph</label>
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('f-photo').click()">
+        <span id="pd-hint">Tap to choose a photo</span>
+      </div>
+      <input type="file" id="f-photo" accept="image/*" style="display:none;">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label" id="lbl-coasters">Coasters ridden — one per line</label>
+      <textarea class="f-textarea" id="f-coasters" placeholder="Nemesis&#10;Oblivion&#10;The Smiler"></textarea>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Rating</label>
+      <div class="star-picker" id="star-picker"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="m-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="m-btn save" id="save-btn" onclick="saveVisit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAR = '<svg width="__S__" height="__S__" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+const COASTER_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-11 9-11s6 4 9 4"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M8 19h7"/></svg>';
+
+let visits = [];
+let editingId = null;
+let modalPhoto = null;
+let modalPhotoRemoved = false;
+let modalRating = 0;
+
+// ── HELPERS ──────────────────────────────────────────────────────────
+function parseDMY(s) {
+  const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+}
+function yearOf(v) {
+  const m = (v.date || '').match(/(\d{4})/);
+  return m ? +m[1] : null;
+}
+function daysUntil(v) {
+  const d = parseDMY(v.date);
+  if (!d) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+function isUpcoming(v) {
+  const n = daysUntil(v);
+  return n !== null && n > 0;
+}
+function fmtDate(s) {
+  const d = parseDMY(s);
+  return d ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (s || '');
+}
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+function starsRow(rating, size, cls) {
+  let html = '<div class="' + cls + '">';
+  for (let i = 1; i <= 5; i++) html += STAR.replace(/__S__/g, size).replace('<svg', '<svg class="' + (i <= rating ? 'on' : '') + '"');
+  return html + '</div>';
+}
+function placeStr(v) {
+  return [v.location, v.country].map(s => (s || '').trim()).filter(Boolean).join(', ');
+}
+
+// First time each coaster was ridden → used to flag new credits
+function firstRideMap() {
+  const m = new Map();
+  visits
+    .filter(v => parseDMY(v.date))
+    .sort((a, b) => parseDMY(a.date) - parseDMY(b.date))
+    .forEach(v => {
+      (v.coasters || []).forEach(c => {
+        const k = (c || '').trim().toLowerCase();
+        if (k && !m.has(k)) m.set(k, v.id);
+      });
+    });
+  return m;
+}
+
+// ── IMAGE COMPRESSION ────────────────────────────────────────────────
+function drawScaled(source, w, h, maxW, quality) {
+  const scale = Math.min(1, maxW / w);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
+  canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+async function compress(file, maxW, quality) {
+  if (window.createImageBitmap) {
+    try {
+      const bmp = await createImageBitmap(file);
+      const out = drawScaled(bmp, bmp.width, bmp.height, maxW, quality);
+      bmp.close();
+      return out;
+    } catch (e) { /* fall through */ }
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try { resolve(drawScaled(img, img.width, img.height, maxW, quality)); }
+      catch (e) { reject(e); }
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('unsupported image format'));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// ── CARDS ────────────────────────────────────────────────────────────
+function visitCard(v, upcoming) {
+  const a = document.createElement('div');
+  a.className = 'p-card' + (upcoming ? ' upcoming' : '');
+  a.onclick = () => openDetail(v.id);
+  let html = '';
+  if (upcoming) {
+    const n = daysUntil(v);
+    html += '<div class="cd-pill">' + (n === 1 ? 'Tomorrow' : 'In ' + n + ' days') + '</div>';
+  }
+  if (v.thumb) html += '<img class="p-card-img" src="' + v.thumb + '" alt="">';
+  else html += '<div class="p-card-img placeholder">' + COASTER_ICON + '</div>';
+  html += '<div class="p-card-body">';
+  html += '<div class="p-card-name">' + esc(v.park) + '</div>';
+  const n = (v.coasters || []).length;
+  html += '<div class="p-pill-row">'
+    + (n ? '<span class="p-badge">' + n + ' coaster' + (n === 1 ? '' : 's') + '</span>'
+         : '<span class="p-badge muted">No coasters logged</span>')
+    + '</div>';
+  const d = parseDMY(v.date);
+  const dateStr = d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : (v.date || '');
+  html += '<div class="p-card-meta">' + esc(placeStr(v)) + ' · ' + dateStr + '</div>';
+  if (v.rating) html += starsRow(v.rating, 12, 'p-stars');
+  html += '</div>';
+  a.innerHTML = html;
+  return a;
+}
+
+function renderAll() {
+  const upcoming = visits.filter(isUpcoming).sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
+  const seen = visits.filter(v => !isUpcoming(v));
+
+  // ── Year sections ──
+  const sections = document.getElementById('year-sections');
+  sections.innerHTML = '';
+
+  if (upcoming.length) {
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = '<div class="section-title"><span class="year">Upcoming</span></div>';
+    const grid = document.createElement('div');
+    grid.className = 'parks-grid';
+    upcoming.forEach(v => grid.appendChild(visitCard(v, true)));
+    sec.appendChild(grid);
+    sections.appendChild(sec);
+    const div = document.createElement('div');
+    div.className = 'year-divider';
+    sections.appendChild(div);
+  }
+
+  const byYear = {};
+  seen.forEach(v => {
+    const y = yearOf(v);
+    if (y) (byYear[y] = byYear[y] || []).push(v);
+  });
+  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
+
+  if (!years.length && !upcoming.length) {
+    sections.innerHTML = '<div class="empty-state">No park visits logged yet — tap + Park visit to add your first</div>';
+  }
+
+  years.forEach((y, i) => {
+    if (i > 0) {
+      const div = document.createElement('div');
+      div.className = 'year-divider';
+      sections.appendChild(div);
+    }
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    const title = document.createElement('div');
+    title.className = 'section-title';
+    title.innerHTML = '<span class="year">' + y + '</span> Park visits';
+    sec.appendChild(title);
+    const grid = document.createElement('div');
+    grid.className = 'parks-grid';
+    byYear[y]
+      .sort((a, b) => (parseDMY(b.date) || 0) - (parseDMY(a.date) || 0))
+      .forEach(v => grid.appendChild(visitCard(v, false)));
+    sec.appendChild(grid);
+    sections.appendChild(sec);
+  });
+
+  // ── Stats ──
+  const parkCounts = new Map();
+  seen.forEach(v => {
+    const k = (v.park || '').trim();
+    if (!k) return;
+    const cur = parkCounts.get(k.toLowerCase()) || { name: k, count: 0 };
+    cur.count++;
+    parkCounts.set(k.toLowerCase(), cur);
+  });
+
+  const credits = new Set();
+  let rides = 0;
+  seen.forEach(v => (v.coasters || []).forEach(c => {
+    const k = (c || '').trim().toLowerCase();
+    if (!k) return;
+    credits.add(k);
+    rides++;
+  }));
+
+  document.getElementById('s-parks').textContent   = parkCounts.size;
+  document.getElementById('s-visits').textContent  = seen.length;
+  document.getElementById('s-credits').textContent = credits.size;
+  document.getElementById('s-rides').textContent   = rides;
+  document.getElementById('s-countries').textContent =
+    new Set(seen.map(v => (v.country || '').trim().toLowerCase()).filter(Boolean)).size;
+
+  // ── Most visited parks ──
+  const top = [...parkCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+  const topWrap = document.getElementById('top-parks');
+  topWrap.innerHTML = '';
+  if (!top.length) topWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Log some park visits first</div>';
+  top.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'top-park';
+    row.innerHTML = '<div class="top-park-rank">' + (i + 1) + '</div>'
+      + '<div class="top-park-name">' + esc(t.name) + '</div>'
+      + '<div class="top-park-count">' + t.count + '×</div>';
+    topWrap.appendChild(row);
+  });
+
+  // ── Next visit countdown ──
+  const next = upcoming[0];
+  const cd = document.getElementById('dash-countdown');
+  if (next) {
+    cd.style.display = 'block';
+    cd.onclick = () => openDetail(next.id);
+    document.getElementById('cd-name').textContent = next.park || '';
+    document.getElementById('cd-meta').textContent = [placeStr(next), next.date].filter(Boolean).join(' · ');
+    document.getElementById('cd-days').textContent = daysUntil(next);
+  } else cd.style.display = 'none';
+
+  // ── Latest visit hero ──
+  const dated = seen.filter(v => parseDMY(v.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
+  const latest = dated[0];
+  const hero = document.getElementById('dash-hero');
+  if (latest) {
+    hero.style.display = 'block';
+    hero.onclick = () => openDetail(latest.id);
+    document.getElementById('hero-name').textContent = latest.park || '';
+    document.getElementById('hero-meta').textContent = [placeStr(latest), latest.date].filter(Boolean).join(' · ');
+    const img = document.getElementById('hero-img');
+    if (latest.thumb) {
+      img.src = latest.thumb;
+      img.style.display = 'block';
+      if (latest.hasPhoto) {
+        dbLoad('park-photo-' + latest.id)
+          .then(rec => { if (rec && rec.photo) img.src = rec.photo; })
+          .catch(() => {});
+      }
+    } else img.style.display = 'none';
+  } else hero.style.display = 'none';
+}
+
+// ── DETAIL LIGHTBOX ──────────────────────────────────────────────────
+function openDetail(id) {
+  const v = visits.find(x => x.id === id);
+  if (!v) return;
+  const upcoming = isUpcoming(v);
+  const du = daysUntil(v);
+  const card = document.getElementById('detail-card');
+  const firsts = firstRideMap();
+
+  let html = '<button class="detail-close' + (v.hasPhoto ? '' : ' no-photo') + '" onclick="closeDetail()">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+
+  if (v.hasPhoto) {
+    html += '<img class="detail-photo" id="detail-photo"' + (v.thumb ? ' src="' + v.thumb + '"' : '') + ' alt="">';
+  }
+
+  const coasters = v.coasters || [];
+  html += '<div class="detail-body">';
+  html += '<div class="detail-name">' + esc(v.park) + '</div>';
+  html += '<div class="detail-pill-row">'
+    + (coasters.length ? '<span class="p-tag">' + coasters.length + ' coaster' + (coasters.length === 1 ? '' : 's') + '</span>'
+                       : '<span class="p-tag muted">No coasters logged</span>')
+    + (upcoming ? '<span class="p-tag upcoming">' + (du === 1 ? 'Tomorrow' : 'In ' + du + ' days') + '</span>' : '')
+    + '</div>';
+
+  html += '<div class="detail-meta">';
+  html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(placeStr(v));
+  html += '<span style="color:#d5d5d5;">·</span>';
+  html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(v.date);
+  html += '</div>';
+
+  if (v.rating) html += starsRow(v.rating, 16, 'detail-stars');
+
+  if (coasters.length) {
+    html += '<div class="detail-coasters"><div class="detail-coasters-title">'
+      + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ol>'
+      + coasters.map(c => {
+          const isNew = !upcoming && firsts.get((c || '').trim().toLowerCase()) === v.id;
+          return '<li>' + esc(c) + (isNew ? '<span class="new-credit">New</span>' : '') + '</li>';
+        }).join('')
+      + '</ol></div>';
+  }
+
+  html += '<div class="detail-actions">';
+  html += '<button class="d-btn edit" onclick="editFromDetail(\'' + v.id + '\')">'
+    + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg><span class="d-lbl">Edit</span></button>';
+  if (v.album) {
+    html += '<a class="d-btn album" href="' + esc(v.album) + '" target="_blank" rel="noopener">'
+      + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Photos &amp; videos</a>';
+  }
+  html += '<button class="d-btn delete" onclick="deleteVisit(\'' + v.id + '\')" title="Delete">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+  html += '</div></div>';
+
+  card.innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('open');
+
+  if (v.hasPhoto) {
+    dbLoad('park-photo-' + v.id)
+      .then(rec => {
+        if (rec && rec.photo) {
+          const img = document.getElementById('detail-photo');
+          if (img) img.src = rec.photo;
+        }
+      }).catch(() => {});
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+document.getElementById('detail-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDetail();
+});
+
+function editFromDetail(id) {
+  closeDetail();
+  openModal(id);
+}
+
+// ── ADD/EDIT MODAL ───────────────────────────────────────────────────
+function updateCoasterLabel() {
+  const d = parseDMY(document.getElementById('f-date').value.trim());
+  const today = new Date(); today.setHours(0,0,0,0);
+  document.getElementById('lbl-coasters').textContent =
+    (d && d > today) ? 'Coasters to ride — one per line' : 'Coasters ridden — one per line';
+}
+
+function buildStarPicker() {
+  const wrap = document.getElementById('star-picker');
+  wrap.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = STAR.replace(/__S__/g, '22');
+    b.className = i <= modalRating ? 'on' : '';
+    b.onclick = () => { modalRating = (modalRating === i) ? 0 : i; buildStarPicker(); };
+    wrap.appendChild(b);
+  }
+}
+
+function setPhotoPreview(src) {
+  const drop = document.getElementById('photo-drop');
+  if (src) {
+    drop.innerHTML = '<img src="' + src + '"><button class="pd-remove" onclick="removePhoto(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  } else {
+    drop.innerHTML = '<span id="pd-hint">Tap to choose a photo</span>';
+  }
+}
+
+function removePhoto(e) {
+  e.stopPropagation();
+  modalPhoto = null;
+  modalPhotoRemoved = true;
+  document.getElementById('f-photo').value = '';
+  setPhotoPreview(null);
+}
+
+async function openModal(id) {
+  editingId = id || null;
+  modalPhoto = null;
+  modalPhotoRemoved = false;
+  const v = id ? visits.find(x => x.id === id) : null;
+
+  document.getElementById('modal-title').textContent = (v ? 'Edit ' : 'Add ') + 'park visit';
+  document.getElementById('f-park').value     = v ? (v.park || '')     : '';
+  document.getElementById('f-date').value     = v ? (v.date || '')     : '';
+  document.getElementById('f-location').value = v ? (v.location || '') : '';
+  document.getElementById('f-country').value  = v ? (v.country || '')  : '';
+  document.getElementById('f-album').value    = v ? (v.album || '')    : '';
+  document.getElementById('f-coasters').value = v ? (v.coasters || []).join('\n') : '';
+  updateCoasterLabel();
+  modalRating = v ? (v.rating || 0) : 0;
+  buildStarPicker();
+  setPhotoPreview(v && v.hasPhoto ? (v.thumb || null) : null);
+
+  document.getElementById('overlay').classList.add('open');
+  if (!v) document.getElementById('f-park').focus();
+
+  if (v && v.hasPhoto) {
+    try {
+      const rec = await dbLoad('park-photo-' + v.id);
+      if (rec && rec.photo && !modalPhoto && !modalPhotoRemoved) setPhotoPreview(rec.photo);
+    } catch (e) {}
+  }
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// Note: clicking outside the edit modal intentionally does NOT close it,
+// so typed-in details can't be lost by an accidental click.
+
+// ── PARK / COASTER AUTOCOMPLETE ──────────────────────────────────────
+function uniqueOf(fn) {
+  const seen = new Map();
+  const push = a => { const k = (a || '').trim(); if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k); };
+  visits.forEach(v => fn(v, push));
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+const knownParks     = () => uniqueOf((v, push) => push(v.park));
+const knownLocations = () => uniqueOf((v, push) => push(v.location));
+const knownCountries = () => uniqueOf((v, push) => push(v.country));
+const knownCoasters  = () => uniqueOf((v, push) => (v.coasters || []).forEach(push));
+
+function attachSuggest(el, mode, source) {
+  const box = document.createElement('div');
+  box.className = 'suggest-box';
+  el.parentElement.style.position = 'relative';
+  el.parentElement.appendChild(box);
+
+  function token() {
+    if (mode === 'whole') return { text: el.value, start: 0, end: el.value.length };
+    const pos = el.selectionStart;
+    const before = el.value.slice(0, pos);
+    const start = before.lastIndexOf('\n') + 1;
+    return { text: before.slice(start), start, end: pos };
+  }
+
+  function update() {
+    const t = token();
+    const q = t.text.trim().toLowerCase();
+    if (!q) { box.style.display = 'none'; return; }
+    const matches = source().filter(a => {
+      const l = a.toLowerCase();
+      return l.includes(q) && l !== q;
+    }).slice(0, 6);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '';
+    matches.forEach(m => {
+      const d = document.createElement('div');
+      d.className = 'suggest-item';
+      d.textContent = m;
+      d.addEventListener('mousedown', ev => {
+        ev.preventDefault();
+        const t2 = token();
+        const prefix = el.value.slice(0, t2.start);
+        el.value = prefix + m + el.value.slice(t2.end);
+        const np = (prefix + m).length;
+        el.setSelectionRange(np, np);
+        box.style.display = 'none';
+        el.focus();
+      });
+      box.appendChild(d);
+    });
+    box.style.display = 'block';
+  }
+
+  el.addEventListener('input', update);
+  el.addEventListener('blur', () => setTimeout(() => { box.style.display = 'none'; }, 150));
+}
+
+attachSuggest(document.getElementById('f-park'),     'whole', knownParks);
+attachSuggest(document.getElementById('f-location'), 'whole', knownLocations);
+attachSuggest(document.getElementById('f-country'),  'whole', knownCountries);
+attachSuggest(document.getElementById('f-coasters'), 'line',  knownCoasters);
+
+document.getElementById('f-date').addEventListener('input', updateCoasterLabel);
+
+document.getElementById('f-photo').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const drop = document.getElementById('photo-drop');
+  drop.innerHTML = '<span>Processing photo…</span>';
+  try {
+    const full  = await compress(file, 1000, 0.72);
+    const thumb = await compress(file, 640, 0.7);
+    modalPhoto = { full, thumb };
+    modalPhotoRemoved = false;
+    setPhotoPreview(full);
+  } catch (err) {
+    setPhotoPreview(modalPhoto ? modalPhoto.full : null);
+    alert("Couldn't read that photo (" + (err.message || err) + "). If it's a HEIC image, try converting it to JPEG or picking a different photo.");
+  }
+  e.target.value = '';
+});
+
+// ── SAVE / DELETE ────────────────────────────────────────────────────
+async function loadFresh() {
+  try {
+    const rec = await dbLoad('parks');
+    visits = (rec && Array.isArray(rec.list)) ? rec.list : [];
+  } catch (e) { visits = []; }
+}
+
+async function saveVisit() {
+  const park = document.getElementById('f-park').value.trim();
+  const date = document.getElementById('f-date').value.trim();
+  if (!park || !date) { alert('Park and date are required'); return; }
+  if (!parseDMY(date)) { alert('Date must be dd/mm/yyyy'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+
+  await loadFresh(); // always load fresh before saving
+
+  const id = editingId || ('p' + Date.now());
+  const existing = visits.find(x => x.id === id);
+  const lines = document.getElementById('f-coasters').value.split('\n').map(s => s.trim()).filter(Boolean);
+
+  const entry = {
+    id,
+    park,
+    date,
+    location: document.getElementById('f-location').value.trim(),
+    country:  document.getElementById('f-country').value.trim(),
+    album:    document.getElementById('f-album').value.trim(),
+    coasters: lines,
+    rating:   modalRating,
+    thumb:    existing ? existing.thumb : null,
+    hasPhoto: existing ? !!existing.hasPhoto : false,
+  };
+
+  if (modalPhoto) {
+    entry.thumb = modalPhoto.thumb;
+    entry.hasPhoto = true;
+  } else if (modalPhotoRemoved) {
+    entry.thumb = null;
+    entry.hasPhoto = false;
+  }
+
+  const idx = visits.findIndex(x => x.id === id);
+  if (idx >= 0) visits[idx] = entry; else visits.push(entry);
+
+  try {
+    if (modalPhoto) await dbSave('park-photo-' + id, { photo: modalPhoto.full });
+    else if (modalPhotoRemoved) { try { await dbDelete('park-photo-' + id); } catch (e) {} }
+    await dbSave('parks', { list: visits });
+  } catch (e) {
+    alert('Save failed: ' + e.message);
+    btn.disabled = false;
+    return;
+  }
+
+  btn.disabled = false;
+  closeModal();
+  renderAll();
+}
+
+async function deleteVisit(id) {
+  const v = visits.find(x => x.id === id);
+  if (!confirm('Delete ' + (v ? (v.park || 'this visit') : 'this visit') + '?')) return;
+  closeDetail();
+  await loadFresh();
+  visits = visits.filter(x => x.id !== id);
+  try {
+    await dbSave('parks', { list: visits });
+    try { await dbDelete('park-photo-' + id); } catch (e) {}
+  } catch (e) { alert('Delete failed: ' + e.message); return; }
+  renderAll();
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+(async () => {
+  await loadFresh();
+  renderAll();
+  if (new URLSearchParams(location.search).get('add') === '1') openModal();
+})();
+</script>
+</body>
+</html>
