@@ -186,10 +186,10 @@
   }
   .bold-btn:hover { border-color: #0e7a87; color: #0fbdcf; }
   .bold-btn.active { background: #0e7a87; border-color: #0e7a87; color: #fff; }
-  .acts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .acts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .act-toggle {
-    display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;
-    background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 9px 11px;
+    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+    background: #0d1117; border: 1px solid #21262d; border-radius: 10px; padding: 7px 10px;
     transition: border-color 0.15s;
   }
   .act-toggle:hover { border-color: #30363d; }
@@ -245,7 +245,7 @@
   .modal-right .f-textarea { flex: 1; min-height: 300px; resize: vertical; }
   @media (max-width: 640px) {
     .modal-panels { grid-template-columns: 1fr; gap: 0; }
-    .modal-right .f-textarea { min-height: 90px; }
+    .modal-right .f-textarea { min-height: 70px; }
   }
   .f-group { margin-bottom: 10px; }
   .f-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #7d8590; margin-bottom: 5px; display: block; }
@@ -260,7 +260,7 @@
   .detail-profile-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #7d8590; margin-bottom: 5px; }
   .photo-drop { border: 2px dashed #30363d; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; color: #7d8590; font-size: 11px; font-weight: 600; transition: all 0.15s; position: relative; overflow: hidden; }
   .photo-drop:hover { border-color: #0e7a87; color: #0fbdcf; }
-  .photo-drop img { width: 100%; border-radius: 8px; display: block; }
+  .photo-drop img { width: 100%; max-height: 130px; object-fit: cover; border-radius: 8px; display: block; }
   .photo-drop .pd-remove { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
   .m-btn { font-family: Montserrat, sans-serif; font-size: 13px; font-weight: 700; border-radius: 9px; padding: 9px 20px; cursor: pointer; border: none; transition: all 0.15s; }
