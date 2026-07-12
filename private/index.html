@@ -177,6 +177,15 @@
   .f-textarea:focus { border-color: #0e7a87; }
   .f-textarea::placeholder { color: #3d444d; }
   .subhead { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #0fbdcf; margin: 18px 0 10px; }
+  .details-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .bold-btn {
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid #30363d;
+    background: #0d1117; color: #e6edf3; font-family: Montserrat, sans-serif;
+    font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .bold-btn:hover { border-color: #0e7a87; color: #0fbdcf; }
+  .bold-btn.active { background: #0e7a87; border-color: #0e7a87; color: #fff; }
   .acts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .act-toggle {
     display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;
@@ -369,7 +378,10 @@
     </div><!-- /modal-left -->
 
     <div class="modal-right">
-      <div class="subhead" style="margin-top:0;">Details</div>
+      <div class="details-head">
+        <div class="subhead" style="margin:0;">Details</div>
+        <button type="button" class="bold-btn" id="bold-btn" title="Bold selected text (Ctrl/Cmd+B)"><b>B</b></button>
+      </div>
       <textarea class="f-textarea" id="f-details" placeholder="Free text…"></textarea>
     </div><!-- /modal-right -->
     </div><!-- /modal-panels -->
@@ -432,6 +444,14 @@ function esc(str) {
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
+}
+
+// Escapes the string first (so no raw HTML can be injected), then turns
+// **word** markers into real bold text. Safe because the transform runs
+// on already-escaped text — a user typing <b> in Details still shows as
+// literal text, only the ** ** convention produces actual bold.
+function renderBold(str) {
+  return esc(str).replace(/\*\*([^\n*][\s\S]*?)\*\*/g, '<strong>$1</strong>');
 }
 
 // ── IMAGE COMPRESSION ──
@@ -671,7 +691,7 @@ function openDetail(id) {
   html += '<div class="detail-cols">';
   if (c.details) {
     html += '<div class="profile-block"><div class="profile-block-title">Details</div>'
-      + '<div class="profile-item full"><div class="pi-val comment comment-box">' + esc(c.details) + '</div></div></div>';
+      + '<div class="profile-item full"><div class="pi-val comment comment-box">' + renderBold(c.details) + '</div></div></div>';
   } else {
     html += '<div style="font-size:12px;color:#b8b8b8;font-weight:500;">No details</div>';
   }
@@ -835,6 +855,39 @@ async function deleteEntry(id) {
   } catch (e) { alert('Delete failed: ' + e.message); return; }
   renderAll();
 }
+
+// ── BOLD TOGGLE (Details field) ─────────────────────────────────────
+function toggleBoldInField(textarea) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = textarea.value;
+  const selected = val.slice(start, end);
+
+  // If the selection is already wrapped in ** **, unwrap it; otherwise wrap it.
+  const before2 = val.slice(Math.max(0, start - 2), start);
+  const after2 = val.slice(end, end + 2);
+  if (before2 === '**' && after2 === '**') {
+    textarea.value = val.slice(0, start - 2) + selected + val.slice(end + 2);
+    textarea.setSelectionRange(start - 2, end - 2);
+  } else if (selected) {
+    textarea.value = val.slice(0, start) + '**' + selected + '**' + val.slice(end);
+    textarea.setSelectionRange(start + 2, end + 2);
+  } else {
+    textarea.value = val.slice(0, start) + '****' + val.slice(end);
+    textarea.setSelectionRange(start + 2, start + 2);
+  }
+  textarea.focus();
+}
+
+document.getElementById('bold-btn').addEventListener('click', () => {
+  toggleBoldInField(document.getElementById('f-details'));
+});
+document.getElementById('f-details').addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+    e.preventDefault();
+    toggleBoldInField(e.target);
+  }
+});
 
 // ── INIT ──
 (async () => {
