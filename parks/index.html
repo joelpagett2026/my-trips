@@ -146,8 +146,9 @@
   .detail-stars svg.on { color: #0e7a87; }
   .detail-coasters { margin-top: 14px; padding: 12px 14px; background: #f7f7f7; border-radius: 12px; }
   .detail-coasters-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; margin-bottom: 6px; }
-  .detail-coasters ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
-  .detail-coasters li { font-size: 12px; color: #555; font-weight: 500; padding: 2px 0; break-inside: avoid; }
+  .detail-coasters ul { margin: 0; padding: 0; list-style: none; }
+  .detail-coasters li { font-size: 12.5px; color: #555; font-weight: 500; padding: 5px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+  .detail-coasters li:last-child { border-bottom: none; }
   .new-credit {
     display: inline-block; margin-left: 5px; vertical-align: 1px;
     font-size: 7.5px; font-weight: 700; padding: 1px 5px; border-radius: 20px;
@@ -251,7 +252,6 @@
     .dash-col { position: static; height: auto; border-left: none; border-top: 0.5px solid rgba(0,0,0,0.1); width: 100%; }
     .parks-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
     .p-card-img { height: 110px; }
-    .detail-coasters ol { columns: 1; }
 
     .detail-actions .d-btn.album  { order: 1; }
     .detail-actions .d-btn.edit   { order: 2; margin-left: auto; background: none; color: #b8b8b8; padding: 9px 6px; }
@@ -718,12 +718,12 @@ function openDetail(id) {
 
   if (coasters.length) {
     html += '<div class="detail-coasters"><div class="detail-coasters-title">'
-      + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ol>'
+      + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ul>'
       + coasters.map(c => {
           const isNew = !upcoming && firsts.get(creditKey(v.park, c)) === v.id;
           return '<li>' + esc(c) + (isNew ? '<span class="new-credit">New</span>' : '') + '</li>';
         }).join('')
-      + '</ol></div>';
+      + '</ul></div>';
   }
 
   html += '<div class="detail-actions">';
