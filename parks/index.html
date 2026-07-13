@@ -385,7 +385,7 @@
     <div class="f-row">
       <div class="f-group">
         <label class="f-label">Date</label>
-        <input class="f-input" id="f-date" placeholder="dd/mm/yyyy">
+        <input class="f-input" id="f-date" placeholder="dd/mm/yyyy, mm/yyyy or yyyy">
       </div>
       <div class="f-group">
         <label class="f-label">Location</label>
@@ -439,9 +439,22 @@ let modalPhotoRemoved = false;
 let modalRating = 0;
 
 // ── HELPERS ──────────────────────────────────────────────────────────
+function parseParts(s) {
+  s = (s || '').trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return { d: new Date(+m[3], +m[2] - 1, +m[1]), prec: 'day' };
+  m = s.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) return { d: new Date(+m[2], +m[1] - 1, 1), prec: 'month' };
+  m = s.match(/^(\d{4})$/);
+  if (m) return { d: new Date(+m[1], 0, 1), prec: 'year' };
+  return null;
+}
 function parseDMY(s) {
-  const m = (s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+  const p = parseParts(s);
+  return p ? p.d : null;
+}
+function creditKey(park, coaster) {
+  return (park || '').trim().toLowerCase() + '|' + (coaster || '').trim().toLowerCase();
 }
 function yearOf(v) {
   const m = (v.date || '').match(/(\d{4})/);
@@ -458,8 +471,18 @@ function isUpcoming(v) {
   return n !== null && n > 0;
 }
 function fmtDate(s) {
-  const d = parseDMY(s);
-  return d ? d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : (s || '');
+  const p = parseParts(s);
+  if (!p) return s || '';
+  if (p.prec === 'year')  return String(p.d.getFullYear());
+  if (p.prec === 'month') return p.d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  return p.d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+function shortDate(s) {
+  const p = parseParts(s);
+  if (!p) return s || '';
+  if (p.prec === 'year')  return String(p.d.getFullYear());
+  if (p.prec === 'month') return p.d.toLocaleDateString('en-GB', { month: 'short' });
+  return p.d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 function esc(s) {
   const d = document.createElement('div');
@@ -483,8 +506,9 @@ function firstRideMap() {
     .sort((a, b) => parseDMY(a.date) - parseDMY(b.date))
     .forEach(v => {
       (v.coasters || []).forEach(c => {
-        const k = (c || '').trim().toLowerCase();
-        if (k && !m.has(k)) m.set(k, v.id);
+        if (!(c || '').trim()) return;
+        const k = creditKey(v.park, c);
+        if (!m.has(k)) m.set(k, v.id);
       });
     });
   return m;
@@ -543,9 +567,7 @@ function visitCard(v, upcoming) {
     + (n ? '<span class="p-badge">' + n + ' coaster' + (n === 1 ? '' : 's') + '</span>'
          : '<span class="p-badge muted">No coasters logged</span>')
     + '</div>';
-  const d = parseDMY(v.date);
-  const dateStr = d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : (v.date || '');
-  html += '<div class="p-card-meta">' + esc(placeStr(v)) + ' · ' + dateStr + '</div>';
+  html += '<div class="p-card-meta">' + [placeStr(v), shortDate(v.date)].filter(Boolean).map(esc).join(' · ') + '</div>';
   if (v.rating) html += starsRow(v.rating, 12, 'p-stars');
   html += '</div>';
   a.innerHTML = html;
@@ -619,9 +641,8 @@ function renderAll() {
   const credits = new Set();
   let rides = 0;
   seen.forEach(v => (v.coasters || []).forEach(c => {
-    const k = (c || '').trim().toLowerCase();
-    if (!k) return;
-    credits.add(k);
+    if (!(c || '').trim()) return;
+    credits.add(creditKey(v.park, c));
     rides++;
   }));
 
@@ -716,7 +737,7 @@ function openDetail(id) {
     html += '<div class="detail-coasters"><div class="detail-coasters-title">'
       + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ol>'
       + coasters.map(c => {
-          const isNew = !upcoming && firsts.get((c || '').trim().toLowerCase()) === v.id;
+          const isNew = !upcoming && firsts.get(creditKey(v.park, c)) === v.id;
           return '<li>' + esc(c) + (isNew ? '<span class="new-credit">New</span>' : '') + '</li>';
         }).join('')
       + '</ol></div>';
@@ -929,7 +950,7 @@ async function saveVisit() {
   const park = document.getElementById('f-park').value.trim();
   const date = document.getElementById('f-date').value.trim();
   if (!park || !date) { alert('Park and date are required'); return; }
-  if (!parseDMY(date)) { alert('Date must be dd/mm/yyyy'); return; }
+  if (!parseParts(date)) { alert('Date must be dd/mm/yyyy, mm/yyyy or yyyy'); return; }
 
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
