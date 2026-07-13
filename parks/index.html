@@ -115,6 +115,20 @@
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
+  .top-coaster { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+  .top-coaster:last-child { border-bottom: none; }
+  .tc-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 16px; opacity: 0.7; }
+  .tc-body { flex: 1; min-width: 0; }
+  .tc-name { font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tc-name.is-defunct { color: #999; }
+  .tc-park { font-size: 10px; font-weight: 500; color: #b8b8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tc-rate {
+    flex-shrink: 0; min-width: 24px; text-align: center;
+    font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
+    background: rgba(14,122,135,0.12); color: #0e7a87;
+  }
+  .tc-rate.top { background: #0e7a87; color: #fff; }
+
   /* ── DETAIL LIGHTBOX ── */
   .detail-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 180;
@@ -375,6 +389,13 @@
           <div class="dash-stat-lbl">Countries</div>
           <div class="dash-stat-val" id="s-countries">0</div>
         </div>
+      </div>
+
+      <div class="dash-divider"></div>
+
+      <div class="dash-section">
+        <div class="dash-section-title">Top rated coasters</div>
+        <div id="top-coasters"></div>
       </div>
 
     </div>
@@ -673,6 +694,33 @@ function renderAll() {
   document.getElementById('s-rides').textContent   = rides;
   document.getElementById('s-countries').textContent =
     new Set(seen.map(v => (v.country || '').trim().toLowerCase()).filter(Boolean)).size;
+
+  // ── Top rated coasters ──
+  const best = new Map();
+  seen.forEach(v => coastersOf(v).forEach(c => {
+    if (!c.rating) return;
+    const k = creditKey(v.park, c.name);
+    const cur = best.get(k);
+    if (!cur || c.rating > cur.rating) best.set(k, { name: c.name, park: v.park, rating: c.rating, defunct: c.defunct });
+  }));
+
+  const ranked = [...best.values()].sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name)).slice(0, 10);
+  const tcWrap = document.getElementById('top-coasters');
+  tcWrap.innerHTML = '';
+  if (!ranked.length) {
+    tcWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Rate some coasters to build your ranking</div>';
+  }
+  ranked.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'top-coaster';
+    row.innerHTML = '<div class="tc-rank">' + (i + 1) + '</div>'
+      + '<div class="tc-body">'
+      +   '<div class="tc-name' + (c.defunct ? ' is-defunct' : '') + '">' + esc(c.name) + '</div>'
+      +   '<div class="tc-park">' + esc(c.park) + '</div>'
+      + '</div>'
+      + '<div class="tc-rate' + (c.rating === 10 ? ' top' : '') + '">' + c.rating + '</div>';
+    tcWrap.appendChild(row);
+  });
 
   // ── Next visit countdown ──
   const next = upcoming[0];
