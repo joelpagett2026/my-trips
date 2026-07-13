@@ -149,12 +149,13 @@
   .detail-coasters ul { margin: 0; padding: 0; list-style: none; }
   .detail-coasters li { font-size: 12.5px; color: #555; font-weight: 500; padding: 5px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
   .detail-coasters li:last-child { border-bottom: none; }
-  .new-credit {
-    display: inline-block; margin-left: 5px; vertical-align: 1px;
-    font-size: 7.5px; font-weight: 700; padding: 1px 5px; border-radius: 20px;
+  .defunct-tag {
+    display: inline-block; margin-left: 6px; vertical-align: 1px;
+    font-size: 7.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
     letter-spacing: 0.05em; text-transform: uppercase;
-    background: rgba(14,122,135,0.15); color: #0e7a87;
+    background: rgba(229,62,62,0.12); color: #e53e3e; border: 1px solid rgba(229,62,62,0.22);
   }
+  .detail-coasters li.is-defunct { color: #999; }
   .detail-pill-row { margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; }
   .p-tag {
     display: inline-block;
@@ -384,8 +385,8 @@
     </div>
 
     <div class="f-group">
-      <label class="f-label" id="lbl-coasters">Coasters ridden — one per line</label>
-      <textarea class="f-textarea" id="f-coasters" placeholder="Nemesis&#10;Oblivion&#10;The Smiler"></textarea>
+      <label class="f-label" id="lbl-coasters">Coasters ridden — one per line, add * to mark defunct</label>
+      <textarea class="f-textarea" id="f-coasters" placeholder="Nemesis&#10;Oblivion&#10;Corkscrew *"></textarea>
     </div>
 
     <div class="f-group">
@@ -425,8 +426,15 @@ function parseDMY(s) {
   const p = parseParts(s);
   return p ? p.d : null;
 }
+// A trailing * on a coaster line marks it as defunct/closed
+function coasterName(c) {
+  return (c || '').replace(/\s*\*\s*$/, '').trim();
+}
+function isDefunct(c) {
+  return /\*\s*$/.test(c || '');
+}
 function creditKey(park, coaster) {
-  return (park || '').trim().toLowerCase() + '|' + (coaster || '').trim().toLowerCase();
+  return (park || '').trim().toLowerCase() + '|' + coasterName(coaster).toLowerCase();
 }
 function yearOf(v) {
   const m = (v.date || '').match(/(\d{4})/);
@@ -468,22 +476,6 @@ function starsRow(rating, size, cls) {
 }
 function placeStr(v) {
   return [v.location, v.country].map(s => (s || '').trim()).filter(Boolean).join(', ');
-}
-
-// First time each coaster was ridden → used to flag new credits
-function firstRideMap() {
-  const m = new Map();
-  visits
-    .filter(v => parseDMY(v.date))
-    .sort((a, b) => parseDMY(a.date) - parseDMY(b.date))
-    .forEach(v => {
-      (v.coasters || []).forEach(c => {
-        if (!(c || '').trim()) return;
-        const k = creditKey(v.park, c);
-        if (!m.has(k)) m.set(k, v.id);
-      });
-    });
-  return m;
 }
 
 // ── IMAGE COMPRESSION ────────────────────────────────────────────────
@@ -623,7 +615,7 @@ function renderAll() {
   const credits = new Set();
   let rides = 0;
   seen.forEach(v => (v.coasters || []).forEach(c => {
-    if (!(c || '').trim()) return;
+    if (!coasterName(c)) return;
     credits.add(creditKey(v.park, c));
     rides++;
   }));
@@ -675,7 +667,6 @@ function openDetail(id) {
   const upcoming = isUpcoming(v);
   const du = daysUntil(v);
   const card = document.getElementById('detail-card');
-  const firsts = firstRideMap();
 
   let html = '<button class="detail-close' + (v.hasPhoto ? '' : ' no-photo') + '" onclick="closeDetail()">'
     + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
@@ -705,8 +696,9 @@ function openDetail(id) {
     html += '<div class="detail-coasters"><div class="detail-coasters-title">'
       + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ul>'
       + coasters.map(c => {
-          const isNew = !upcoming && firsts.get(creditKey(v.park, c)) === v.id;
-          return '<li>' + esc(c) + (isNew ? '<span class="new-credit">New</span>' : '') + '</li>';
+          const dead = isDefunct(c);
+          return '<li' + (dead ? ' class="is-defunct"' : '') + '>' + esc(coasterName(c))
+            + (dead ? '<span class="defunct-tag">Defunct</span>' : '') + '</li>';
         }).join('')
       + '</ul></div>';
   }
@@ -749,7 +741,8 @@ function updateCoasterLabel() {
   const d = parseDMY(document.getElementById('f-date').value.trim());
   const today = new Date(); today.setHours(0,0,0,0);
   document.getElementById('lbl-coasters').textContent =
-    (d && d > today) ? 'Coasters to ride — one per line' : 'Coasters ridden — one per line';
+    (d && d > today) ? 'Coasters to ride — one per line, add * to mark defunct'
+                     : 'Coasters ridden — one per line, add * to mark defunct';
 }
 
 function buildStarPicker() {
@@ -827,7 +820,7 @@ function uniqueOf(fn) {
 const knownParks     = () => uniqueOf((v, push) => push(v.park));
 const knownLocations = () => uniqueOf((v, push) => push(v.location));
 const knownCountries = () => uniqueOf((v, push) => push(v.country));
-const knownCoasters  = () => uniqueOf((v, push) => (v.coasters || []).forEach(push));
+const knownCoasters  = () => uniqueOf((v, push) => (v.coasters || []).forEach(c => push(coasterName(c))));
 
 function attachSuggest(el, mode, source) {
   const box = document.createElement('div');
