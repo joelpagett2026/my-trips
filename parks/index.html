@@ -115,12 +115,6 @@
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
-  .top-park { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
-  .top-park:last-child { border-bottom: none; }
-  .top-park-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 18px; opacity: 0.7; }
-  .top-park-name { flex: 1; font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .top-park-count { font-size: 11px; font-weight: 700; color: #888; }
-
   /* ── DETAIL LIGHTBOX ── */
   .detail-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 180;
@@ -353,13 +347,6 @@
           <div class="dash-stat-lbl">Countries</div>
           <div class="dash-stat-val" id="s-countries">0</div>
         </div>
-      </div>
-
-      <div class="dash-divider"></div>
-
-      <div class="dash-section">
-        <div class="dash-section-title">Most visited parks</div>
-        <div id="top-parks"></div>
       </div>
 
     </div>
@@ -596,18 +583,24 @@ function renderAll() {
     sections.appendChild(div);
   }
 
-  const byYear = {};
+  const byLetter = {};
   seen.forEach(v => {
-    const y = yearOf(v);
-    if (y) (byYear[y] = byYear[y] || []).push(v);
+    const name = (v.park || '').trim();
+    const first = name.charAt(0).toUpperCase();
+    const key = /[A-Z]/.test(first) ? first : '#';
+    (byLetter[key] = byLetter[key] || []).push(v);
   });
-  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a);
+  const letters = Object.keys(byLetter).sort((a, b) => {
+    if (a === '#') return 1;
+    if (b === '#') return -1;
+    return a.localeCompare(b);
+  });
 
-  if (!years.length && !upcoming.length) {
+  if (!letters.length && !upcoming.length) {
     sections.innerHTML = '<div class="empty-state">No park visits logged yet — tap + Park visit to add your first</div>';
   }
 
-  years.forEach((y, i) => {
+  letters.forEach((L, i) => {
     if (i > 0) {
       const div = document.createElement('div');
       div.className = 'year-divider';
@@ -617,12 +610,16 @@ function renderAll() {
     sec.className = 'section';
     const title = document.createElement('div');
     title.className = 'section-title';
-    title.innerHTML = '<span class="year">' + y + '</span> Park visits';
+    title.innerHTML = '<span class="year">' + L + '</span>';
     sec.appendChild(title);
     const grid = document.createElement('div');
     grid.className = 'parks-grid';
-    byYear[y]
-      .sort((a, b) => (parseDMY(b.date) || 0) - (parseDMY(a.date) || 0))
+    byLetter[L]
+      .sort((a, b) => {
+        const n = (a.park || '').localeCompare(b.park || '', 'en', { sensitivity: 'base' });
+        if (n !== 0) return n;
+        return (parseDMY(b.date) || 0) - (parseDMY(a.date) || 0);
+      })
       .forEach(v => grid.appendChild(visitCard(v, false)));
     sec.appendChild(grid);
     sections.appendChild(sec);
@@ -652,20 +649,6 @@ function renderAll() {
   document.getElementById('s-rides').textContent   = rides;
   document.getElementById('s-countries').textContent =
     new Set(seen.map(v => (v.country || '').trim().toLowerCase()).filter(Boolean)).size;
-
-  // ── Most visited parks ──
-  const top = [...parkCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5);
-  const topWrap = document.getElementById('top-parks');
-  topWrap.innerHTML = '';
-  if (!top.length) topWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Log some park visits first</div>';
-  top.forEach((t, i) => {
-    const row = document.createElement('div');
-    row.className = 'top-park';
-    row.innerHTML = '<div class="top-park-rank">' + (i + 1) + '</div>'
-      + '<div class="top-park-name">' + esc(t.name) + '</div>'
-      + '<div class="top-park-count">' + t.count + '×</div>';
-    topWrap.appendChild(row);
-  });
 
   // ── Next visit countdown ──
   const next = upcoming[0];
