@@ -149,6 +149,43 @@
   .detail-coasters ul { margin: 0; padding: 0; list-style: none; }
   .detail-coasters li { font-size: 12.5px; color: #555; font-weight: 500; padding: 5px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
   .detail-coasters li:last-child { border-bottom: none; }
+  .detail-coasters li { display: flex; align-items: center; gap: 6px; }
+  .cl-name { flex: 1; }
+  .cl-rate {
+    flex-shrink: 0; min-width: 26px; text-align: center;
+    font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
+    background: rgba(14,122,135,0.12); color: #0e7a87;
+  }
+  .cl-rate.top { background: #0e7a87; color: #fff; }
+
+  /* coaster row editor */
+  .coaster-list { display: flex; flex-direction: column; gap: 6px; }
+  .coaster-row { display: grid; grid-template-columns: 1fr 58px 34px 30px; gap: 6px; align-items: center; }
+  .c-name-wrap { position: relative; min-width: 0; }
+  .c-rate {
+    width: 100%; border: 1px solid #e0e0e0; border-radius: 9px; padding: 9px 4px;
+    font-family: Montserrat, sans-serif; font-size: 13px; font-weight: 700;
+    color: #0e7a87; background: #fff; outline: none; text-align: center; cursor: pointer;
+  }
+  .c-rate:focus { border-color: #0e7a87; }
+  .c-rate.empty { color: #b8b8b8; font-weight: 600; }
+  .row-btn {
+    width: 100%; height: 34px; border: 1px solid #e0e0e0; border-radius: 9px;
+    background: #fff; color: #b8b8b8; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+  }
+  .row-btn:hover { color: #666; border-color: #ccc; }
+  .row-btn.dead-toggle.on { background: rgba(229,62,62,0.1); border-color: rgba(229,62,62,0.35); color: #e53e3e; }
+  .row-btn.remove { border: none; }
+  .row-btn.remove:hover { background: #fee; color: #e53e3e; }
+  .add-coaster {
+    margin-top: 7px; width: 100%; border: 1.5px dashed #d5d5d5; border-radius: 9px;
+    background: none; padding: 8px; cursor: pointer; color: #999;
+    font-family: Montserrat, sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; transition: all 0.15s;
+  }
+  .add-coaster:hover { border-color: #0e7a87; color: #0e7a87; background: #f4fafb; }
+
   .defunct-tag {
     display: inline-block; margin-left: 6px; vertical-align: 1px;
     font-size: 7.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
@@ -385,8 +422,9 @@
     </div>
 
     <div class="f-group">
-      <label class="f-label" id="lbl-coasters">Coasters ridden — one per line, add * to mark defunct</label>
-      <textarea class="f-textarea" id="f-coasters" placeholder="Nemesis&#10;Oblivion&#10;Corkscrew *"></textarea>
+      <label class="f-label" id="lbl-coasters">Coasters ridden</label>
+      <div class="coaster-list" id="coaster-list"></div>
+      <button class="add-coaster" onclick="addCoasterRow()">+ ADD COASTER</button>
     </div>
 
     <div class="f-group">
@@ -426,15 +464,25 @@ function parseDMY(s) {
   const p = parseParts(s);
   return p ? p.d : null;
 }
-// A trailing * on a coaster line marks it as defunct/closed
-function coasterName(c) {
-  return (c || '').replace(/\s*\*\s*$/, '').trim();
+// Coasters are { name, rating (0-10), defunct }. Legacy entries were plain
+// strings, with a trailing * meaning defunct — normalise both shapes.
+function normCoaster(c) {
+  if (typeof c === 'string') {
+    return { name: c.replace(/\s*\*\s*$/, '').trim(), rating: 0, defunct: /\*\s*$/.test(c) };
+  }
+  c = c || {};
+  const r = parseInt(c.rating, 10);
+  return {
+    name: (c.name || '').trim(),
+    rating: (r >= 1 && r <= 10) ? r : 0,
+    defunct: !!c.defunct,
+  };
 }
-function isDefunct(c) {
-  return /\*\s*$/.test(c || '');
+function coastersOf(v) {
+  return (v.coasters || []).map(normCoaster).filter(c => c.name);
 }
-function creditKey(park, coaster) {
-  return (park || '').trim().toLowerCase() + '|' + coasterName(coaster).toLowerCase();
+function creditKey(park, name) {
+  return (park || '').trim().toLowerCase() + '|' + (name || '').trim().toLowerCase();
 }
 function yearOf(v) {
   const m = (v.date || '').match(/(\d{4})/);
@@ -526,7 +574,7 @@ function visitCard(v, upcoming) {
   else html += '<div class="p-card-img placeholder">' + COASTER_ICON + '</div>';
   html += '<div class="p-card-body">';
   html += '<div class="p-card-name">' + esc(v.park) + '</div>';
-  const n = (v.coasters || []).length;
+  const n = coastersOf(v).length;
   html += '<div class="p-pill-row">'
     + (n ? '<span class="p-badge">' + n + ' coaster' + (n === 1 ? '' : 's') + '</span>'
          : '<span class="p-badge muted">No coasters logged</span>')
@@ -614,9 +662,8 @@ function renderAll() {
 
   const credits = new Set();
   let rides = 0;
-  seen.forEach(v => (v.coasters || []).forEach(c => {
-    if (!coasterName(c)) return;
-    credits.add(creditKey(v.park, c));
+  seen.forEach(v => coastersOf(v).forEach(c => {
+    credits.add(creditKey(v.park, c.name));
     rides++;
   }));
 
@@ -675,7 +722,7 @@ function openDetail(id) {
     html += '<img class="detail-photo" id="detail-photo"' + (v.thumb ? ' src="' + v.thumb + '"' : '') + ' alt="">';
   }
 
-  const coasters = v.coasters || [];
+  const coasters = coastersOf(v);
   html += '<div class="detail-body">';
   html += '<div class="detail-name">' + esc(v.park) + '</div>';
   html += '<div class="detail-pill-row">'
@@ -696,9 +743,11 @@ function openDetail(id) {
     html += '<div class="detail-coasters"><div class="detail-coasters-title">'
       + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ul>'
       + coasters.map(c => {
-          const dead = isDefunct(c);
-          return '<li' + (dead ? ' class="is-defunct"' : '') + '>' + esc(coasterName(c))
-            + (dead ? '<span class="defunct-tag">Defunct</span>' : '') + '</li>';
+          return '<li' + (c.defunct ? ' class="is-defunct"' : '') + '>'
+            + '<span class="cl-name">' + esc(c.name) + '</span>'
+            + (c.defunct ? '<span class="defunct-tag">Defunct</span>' : '')
+            + (c.rating ? '<span class="cl-rate' + (c.rating === 10 ? ' top' : '') + '">' + c.rating + '</span>' : '')
+            + '</li>';
         }).join('')
       + '</ul></div>';
   }
@@ -741,8 +790,60 @@ function updateCoasterLabel() {
   const d = parseDMY(document.getElementById('f-date').value.trim());
   const today = new Date(); today.setHours(0,0,0,0);
   document.getElementById('lbl-coasters').textContent =
-    (d && d > today) ? 'Coasters to ride — one per line, add * to mark defunct'
-                     : 'Coasters ridden — one per line, add * to mark defunct';
+    (d && d > today) ? 'Coasters to ride' : 'Coasters ridden';
+}
+
+function addCoasterRow(data) {
+  const c = normCoaster(data || {});
+  const row = document.createElement('div');
+  row.className = 'coaster-row';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'c-name-wrap';
+  const name = document.createElement('input');
+  name.className = 'f-input c-name';
+  name.placeholder = 'Coaster name';
+  name.value = c.name;
+  wrap.appendChild(name);
+
+  const rate = document.createElement('select');
+  rate.className = 'c-rate' + (c.rating ? '' : ' empty');
+  rate.innerHTML = '<option value="">–</option>'
+    + Array.from({ length: 10 }, (_, i) => '<option value="' + (i + 1) + '">' + (i + 1) + '</option>').join('');
+  rate.value = c.rating ? String(c.rating) : '';
+  rate.onchange = () => rate.classList.toggle('empty', !rate.value);
+
+  const dead = document.createElement('button');
+  dead.type = 'button';
+  dead.className = 'row-btn dead-toggle' + (c.defunct ? ' on' : '');
+  dead.title = 'Mark as defunct';
+  dead.dataset.defunct = c.defunct ? '1' : '';
+  dead.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>';
+  dead.onclick = () => {
+    const on = !dead.dataset.defunct;
+    dead.dataset.defunct = on ? '1' : '';
+    dead.classList.toggle('on', on);
+  };
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'row-btn remove';
+  del.title = 'Remove coaster';
+  del.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  del.onclick = () => row.remove();
+
+  row.append(wrap, rate, dead, del);
+  document.getElementById('coaster-list').appendChild(row);
+  attachSuggest(name, 'whole', knownCoasters);
+  if (!data) name.focus();
+}
+
+function readCoasterRows() {
+  return [...document.querySelectorAll('#coaster-list .coaster-row')].map(row => ({
+    name:    row.querySelector('.c-name').value.trim(),
+    rating:  parseInt(row.querySelector('.c-rate').value, 10) || 0,
+    defunct: !!row.querySelector('.dead-toggle').dataset.defunct,
+  })).filter(c => c.name);
 }
 
 function buildStarPicker() {
@@ -786,7 +887,9 @@ async function openModal(id) {
   document.getElementById('f-date').value     = v ? (v.date || '')     : '';
   document.getElementById('f-location').value = v ? (v.location || '') : '';
   document.getElementById('f-country').value  = v ? (v.country || '')  : '';
-  document.getElementById('f-coasters').value = v ? (v.coasters || []).join('\n') : '';
+  const list = document.getElementById('coaster-list');
+  list.innerHTML = '';
+  if (v) coastersOf(v).forEach(c => addCoasterRow(c));
   updateCoasterLabel();
   modalRating = v ? (v.rating || 0) : 0;
   buildStarPicker();
@@ -820,7 +923,7 @@ function uniqueOf(fn) {
 const knownParks     = () => uniqueOf((v, push) => push(v.park));
 const knownLocations = () => uniqueOf((v, push) => push(v.location));
 const knownCountries = () => uniqueOf((v, push) => push(v.country));
-const knownCoasters  = () => uniqueOf((v, push) => (v.coasters || []).forEach(c => push(coasterName(c))));
+const knownCoasters  = () => uniqueOf((v, push) => coastersOf(v).forEach(c => push(c.name)));
 
 function attachSuggest(el, mode, source) {
   const box = document.createElement('div');
@@ -872,7 +975,6 @@ function attachSuggest(el, mode, source) {
 attachSuggest(document.getElementById('f-park'),     'whole', knownParks);
 attachSuggest(document.getElementById('f-location'), 'whole', knownLocations);
 attachSuggest(document.getElementById('f-country'),  'whole', knownCountries);
-attachSuggest(document.getElementById('f-coasters'), 'line',  knownCoasters);
 
 document.getElementById('f-date').addEventListener('input', updateCoasterLabel);
 
@@ -915,7 +1017,6 @@ async function saveVisit() {
 
   const id = editingId || ('p' + Date.now());
   const existing = visits.find(x => x.id === id);
-  const lines = document.getElementById('f-coasters').value.split('\n').map(s => s.trim()).filter(Boolean);
 
   const entry = {
     id,
@@ -923,7 +1024,7 @@ async function saveVisit() {
     date,
     location: document.getElementById('f-location').value.trim(),
     country:  document.getElementById('f-country').value.trim(),
-    coasters: lines,
+    coasters: readCoasterRows(),
     rating:   modalRating,
     thumb:    existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
