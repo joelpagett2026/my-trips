@@ -742,7 +742,7 @@ function openDetail(id) {
   if (coasters.length) {
     html += '<div class="detail-coasters"><div class="detail-coasters-title">'
       + (upcoming ? 'Coasters to ride' : 'Coasters ridden') + ' · ' + coasters.length + '</div><ul>'
-      + coasters.map(c => {
+      + coasters.slice().sort((a, b) => (a.defunct ? 1 : 0) - (b.defunct ? 1 : 0)).map(c => {
           return '<li' + (c.defunct ? ' class="is-defunct"' : '') + '>'
             + '<span class="cl-name">' + esc(c.name) + '</span>'
             + (c.defunct ? '<span class="defunct-tag">Defunct</span>' : '')
