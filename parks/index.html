@@ -81,14 +81,14 @@
   }
 
   /* ── DASHBOARD ── */
-  .dash-inner { padding: 0 0 32px; }
-  .dash-section { padding: 16px 16px 0; }
-  .dash-section-title { font-size: 11px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .dash-inner { padding: 0 0 20px; }
+  .dash-section { padding: 12px 16px 0; }
+  .dash-section-title { font-size: 10px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
   .dash-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 16px 16px 0; }
 
   .dash-countdown {
     background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    border-radius: 14px; padding: 12px 16px; margin: 20px 16px 0;
+    border-radius: 14px; padding: 10px 14px; margin: 14px 16px 0;
     position: relative; overflow: hidden; display: block; cursor: pointer;
   }
   .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
@@ -98,14 +98,14 @@
   .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
   .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 
-  .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
-  .dash-stat:last-child { margin-bottom: 0; }
-  .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
-  .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
-  .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
+  .dash-strip { display: flex; align-items: center; background: #e8e8e8; border-radius: 12px; padding: 9px 6px; }
+  .ds-item { flex: 1; text-align: center; min-width: 0; }
+  .ds-val { font-size: 17px; font-weight: 700; color: #0e7a87; line-height: 1; }
+  .ds-lbl { font-size: 8px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+  .ds-div { width: 1px; height: 26px; background: rgba(0,0,0,0.09); flex-shrink: 0; }
 
   .top-coaster {
-    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    display: flex; align-items: center; gap: 7px; padding: 3px 0;
     border-bottom: 0.5px solid rgba(0,0,0,0.06); background: #fff;
   }
   .top-coaster:last-child { border-bottom: none; }
@@ -114,19 +114,19 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.16); padding-left: 6px; padding-right: 6px;
   }
   .tc-grip {
-    flex-shrink: 0; width: 16px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; width: 13px; display: flex; align-items: center; justify-content: center;
     color: #d5d5d5; cursor: grab; touch-action: none;
   }
   .tc-grip:active { cursor: grabbing; }
   .top-coaster:hover .tc-grip { color: #999; }
-  .tc-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 15px; opacity: 0.7; }
+  .tc-rank { font-size: 9.5px; font-weight: 700; color: #0e7a87; min-width: 14px; opacity: 0.7; }
   .tc-body { flex: 1; min-width: 0; }
-  .tc-name { font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tc-name { font-size: 11.5px; line-height: 1.25; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tc-name.is-defunct { color: #999; }
-  .tc-park { font-size: 10px; font-weight: 500; color: #b8b8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tc-park { font-size: 9px; line-height: 1.25; font-weight: 500; color: #b8b8b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tc-rate {
-    flex-shrink: 0; min-width: 24px; text-align: center;
-    font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
+    flex-shrink: 0; min-width: 22px; text-align: center;
+    font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 6px;
     background: rgba(14,122,135,0.12); color: #0e7a87;
   }
   .tc-rate.top { background: #0e7a87; color: #fff; }
@@ -346,31 +346,23 @@
       </a>
 
       <div class="dash-section">
-        <div class="dash-section-title">Stats</div>
-        <div class="dash-stat">
-          <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M4 12a8 8 0 0 1 16 0"/><path d="M12 4v8"/><circle cx="12" cy="20" r="2"/><path d="M4 12v8"/><path d="M20 12v8"/></svg>
+        <div class="dash-strip">
+          <div class="ds-item">
+            <div class="ds-val" id="s-parks">0</div>
+            <div class="ds-lbl">Parks</div>
           </div>
-          <div class="dash-stat-lbl">Parks visited</div>
-          <div class="dash-stat-val" id="s-parks">0</div>
-        </div>
-        <div class="dash-stat">
-          <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-11 9-11s6 4 9 4"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M8 19h7"/></svg>
+          <div class="ds-div"></div>
+          <div class="ds-item">
+            <div class="ds-val" id="s-credits">0</div>
+            <div class="ds-lbl">Credits</div>
           </div>
-          <div class="dash-stat-lbl">Coaster credits</div>
-          <div class="dash-stat-val" id="s-credits">0</div>
-        </div>
-        <div class="dash-stat">
-          <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <div class="ds-div"></div>
+          <div class="ds-item">
+            <div class="ds-val" id="s-countries">0</div>
+            <div class="ds-lbl">Countries</div>
           </div>
-          <div class="dash-stat-lbl">Countries</div>
-          <div class="dash-stat-val" id="s-countries">0</div>
         </div>
       </div>
-
-      <div class="dash-divider"></div>
 
       <div class="dash-section">
         <div class="dash-section-title">My top 20</div>
