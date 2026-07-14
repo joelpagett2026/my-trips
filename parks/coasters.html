@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Top Rated Coasters</title>
+<script src="/auth.js?v=3"></script>
+<script src="/db.js?v=3"></script>
+<link rel="stylesheet" href="/holidays/holiday-style.css">
+<style>
+  .nav {
+    background: rgba(47,47,50,0.97);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav .nav-title, .nav .nav-back { color: #ffffff; }
+  .nav .nav-back:hover { opacity: 0.85; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 20px 48px; }
+
+  .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .sec-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: #444; }
+  .sec-title .accent { color: #0e7a87; }
+  .sec-hint { font-size: 11px; font-weight: 500; color: #999; }
+
+  /* ── TOP 20 GRID ── */
+  .top-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+    gap: 14px; margin-top: 14px;
+  }
+  .tc-card {
+    background: #fff; border-radius: 16px; overflow: hidden; position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.05);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  .tc-card.dragging {
+    pointer-events: none; opacity: 0.92; transform: scale(1.03);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+  }
+  .tc-card.gold   { box-shadow: 0 0 0 2px #0e7a87, 0 4px 14px rgba(14,122,135,0.2); }
+
+  .tc-photo {
+    position: relative; width: 100%; height: 132px; display: block;
+    background: #f0f0f0; cursor: pointer; overflow: hidden;
+  }
+  .tc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tc-photo .ph-empty {
+    width: 100%; height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    color: #c8c8c8; background: repeating-linear-gradient(45deg, #f4f4f4, #f4f4f4 10px, #efefef 10px, #efefef 20px);
+  }
+  .tc-photo .ph-hint { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .tc-photo:hover .ph-empty { color: #0e7a87; }
+  .tc-photo .ph-busy {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.85); font-size: 10px; font-weight: 700;
+    color: #0e7a87; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  .rank-badge {
+    position: absolute; top: 8px; left: 8px; z-index: 4;
+    min-width: 24px; height: 24px; padding: 0 7px; border-radius: 8px;
+    background: rgba(20,20,22,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tc-card.gold .rank-badge { background: #0e7a87; }
+
+  .grip {
+    position: absolute; top: 8px; right: 8px; z-index: 4;
+    width: 26px; height: 24px; border-radius: 8px; border: none;
+    background: rgba(20,20,22,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    color: rgba(255,255,255,0.85); cursor: grab; touch-action: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .grip:active { cursor: grabbing; }
+  .grip:hover { background: rgba(20,20,22,0.75); }
+
+  .ph-remove {
+    position: absolute; bottom: 8px; right: 8px; z-index: 4;
+    width: 24px; height: 24px; border-radius: 7px; border: none;
+    background: rgba(20,20,22,0.55); color: #fff; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  .tc-card.has-photo .ph-remove { display: flex; }
+  .ph-remove:hover { background: #e53e3e; }
+
+  .tc-body { padding: 11px 13px 13px; display: flex; align-items: flex-start; gap: 8px; }
+  .tc-text { flex: 1; min-width: 0; }
+  .tc-name { font-size: 14px; font-weight: 700; color: #444; line-height: 1.25; letter-spacing: -0.2px; }
+  .tc-name.is-defunct { color: #999; }
+  .tc-park { font-size: 10.5px; font-weight: 500; color: #999; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tc-score {
+    flex-shrink: 0; min-width: 28px; text-align: center;
+    font-size: 13px; font-weight: 700; padding: 4px 7px; border-radius: 8px;
+    background: rgba(14,122,135,0.12); color: #0e7a87;
+  }
+  .tc-score.ten { background: #0e7a87; color: #fff; }
+
+  .defunct-tag {
+    display: inline-block; margin-left: 5px; vertical-align: 1px;
+    font-size: 7.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(229,62,62,0.12); color: #e53e3e; border: 1px solid rgba(229,62,62,0.22);
+  }
+
+  .empty-state {
+    background: #fff; border: 2px dashed #ccc; border-radius: 16px;
+    padding: 40px 24px; text-align: center; color: #999;
+    font-size: 12px; font-weight: 600; margin-top: 14px;
+  }
+
+  .saving {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: rgba(20,20,22,0.88); color: #fff; padding: 8px 18px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    z-index: 300; display: none;
+  }
+  .saving.on { display: block; }
+
+  @media (max-width: 700px) {
+    .top-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tc-photo { height: 108px; }
+    .tc-name { font-size: 12.5px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/parks/">
+    <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
+    Coasters
+  </a>
+  <div class="nav-title">Top Rated</div>
+  <div class="nav-actions"></div>
+</nav>
+
+<div class="wrap">
+
+  <div class="sec-head">
+    <div class="sec-title">My <span class="accent">Top 20</span></div>
+    <div class="sec-hint">drag the handle to reorder · tap a card to add a photo</div>
+  </div>
+
+  <div class="top-grid" id="top-grid"></div>
+
+</div>
+
+<input type="file" id="file-input" accept="image/*" style="display:none;">
+<div class="saving" id="saving">Saving…</div>
+
+<script>
+const TOP_N = 20;
+
+let visits = [];
+let topOrder = [];
+let photos = {};        // slug -> dataURL
+let pendingSlug = null;
+
+// ── HELPERS ──────────────────────────────────────────────────────────
+function normCoaster(c) {
+  if (typeof c === 'string') {
+    return { name: c.replace(/\s*\*\s*$/, '').trim(), rating: 0, defunct: /\*\s*$/.test(c) };
+  }
+  c = c || {};
+  const r = parseInt(c.rating, 10);
+  return {
+    name: (c.name || '').trim(),
+    rating: (r >= 1 && r <= 10) ? r : 0,
+    defunct: !!c.defunct,
+  };
+}
+function coastersOf(v) {
+  return (v.coasters || []).map(normCoaster).filter(c => c.name);
+}
+function creditKey(park, name) {
+  return (park || '').trim().toLowerCase() + '|' + (name || '').trim().toLowerCase();
+}
+function slugOf(key) {
+  return 'c-' + key.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+function busy(on) {
+  document.getElementById('saving').classList.toggle('on', on);
+}
+
+// ── IMAGE COMPRESSION ────────────────────────────────────────────────
+function drawScaled(source, w, h, maxW, quality) {
+  const scale = Math.min(1, maxW / w);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
+  canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+async function compress(file, maxW, quality) {
+  if (window.createImageBitmap) {
+    try {
+      const bmp = await createImageBitmap(file);
+      const out = drawScaled(bmp, bmp.width, bmp.height, maxW, quality);
+      bmp.close();
+      return out;
+    } catch (e) { /* fall through */ }
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try { resolve(drawScaled(img, img.width, img.height, maxW, quality)); }
+      catch (e) { reject(e); }
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('unsupported image format'));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// ── DATA ─────────────────────────────────────────────────────────────
+async function loadAll() {
+  const [p, t, ph] = await Promise.all([
+    dbLoad('parks').catch(() => null),
+    dbLoad('parks-top').catch(() => null),
+    dbLoad('coaster-photos').catch(() => null),
+  ]);
+  visits   = (p && Array.isArray(p.list)) ? p.list : [];
+  topOrder = (t && Array.isArray(t.order)) ? t.order : [];
+  photos   = (ph && ph.map) ? ph.map : {};
+}
+
+// Best rating per park+coaster, ordered by the saved manual list,
+// with anything newly rated slotting in behind by score.
+function rankedTop() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const best = new Map();
+
+  visits.forEach(v => coastersOf(v).forEach(c => {
+    if (!c.rating) return;
+    const k = creditKey(v.park, c.name);
+    const cur = best.get(k);
+    if (!cur || c.rating > cur.rating) {
+      best.set(k, { key: k, name: c.name, park: v.park, rating: c.rating, defunct: c.defunct });
+    }
+  }));
+
+  const pool = new Map(best);
+  const out = [];
+  topOrder.forEach(k => {
+    if (pool.has(k)) { out.push(pool.get(k)); pool.delete(k); }
+  });
+  [...pool.values()]
+    .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name))
+    .forEach(c => out.push(c));
+
+  return out.slice(0, TOP_N);
+}
+
+async function saveOrder() {
+  const grid = document.getElementById('top-grid');
+  const keys = [...grid.querySelectorAll('.tc-card')].map(c => c.dataset.key);
+  // Preserve any ranked-but-not-shown keys beyond the top 20
+  const extra = topOrder.filter(k => !keys.includes(k));
+  topOrder = [...keys, ...extra];
+  busy(true);
+  try { await dbSave('parks-top', { order: topOrder }); } catch (e) {}
+  busy(false);
+}
+
+async function savePhotos() {
+  busy(true);
+  try { await dbSave('coaster-photos', { map: photos }); }
+  catch (e) { alert('Photo save failed: ' + e.message); }
+  busy(false);
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────
+function render() {
+  const list = rankedTop();
+  const grid = document.getElementById('top-grid');
+  grid.innerHTML = '';
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Rate some coasters in the Coaster Log to build your top 20</div>';
+    return;
+  }
+
+  list.forEach(c => {
+    const slug = slugOf(c.key);
+    const src = photos[slug];
+
+    const card = document.createElement('div');
+    card.className = 'tc-card' + (src ? ' has-photo' : '');
+    card.dataset.key = c.key;
+    card.dataset.slug = slug;
+
+    card.innerHTML =
+      '<div class="rank-badge"></div>'
+      + '<button class="grip" title="Drag to reorder"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg></button>'
+      + '<div class="tc-photo">'
+      +   (src
+            ? '<img src="' + src + '" alt="">'
+            : '<div class="ph-empty">'
+              + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+              + '<span class="ph-hint">Add photo</span></div>')
+      + '</div>'
+      + '<button class="ph-remove" title="Remove photo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      + '<div class="tc-body">'
+      +   '<div class="tc-text">'
+      +     '<div class="tc-name' + (c.defunct ? ' is-defunct' : '') + '">' + esc(c.name)
+      +       (c.defunct ? '<span class="defunct-tag">Defunct</span>' : '') + '</div>'
+      +     '<div class="tc-park">' + esc(c.park) + '</div>'
+      +   '</div>'
+      +   '<div class="tc-score' + (c.rating === 10 ? ' ten' : '') + '">' + c.rating + '</div>'
+      + '</div>';
+
+    card.querySelector('.tc-photo').onclick = () => {
+      pendingSlug = slug;
+      document.getElementById('file-input').click();
+    };
+    card.querySelector('.ph-remove').onclick = async e => {
+      e.stopPropagation();
+      if (!confirm('Remove the photo for ' + c.name + '?')) return;
+      delete photos[slug];
+      await savePhotos();
+      render();
+    };
+    card.querySelector('.grip').addEventListener('pointerdown', e => beginDrag(e, card, grid));
+
+    grid.appendChild(card);
+  });
+
+  renumber();
+}
+
+function renumber() {
+  [...document.querySelectorAll('#top-grid .tc-card')].forEach((c, i) => {
+    c.querySelector('.rank-badge').textContent = i + 1;
+    c.classList.toggle('gold', i < 3);
+  });
+}
+
+// ── DRAG TO REORDER ──────────────────────────────────────────────────
+function beginDrag(e, card, grid) {
+  e.preventDefault();
+  e.stopPropagation();
+  const grip = e.currentTarget;
+  grip.setPointerCapture(e.pointerId);
+  card.classList.add('dragging');
+
+  const move = ev => {
+    // .dragging has pointer-events:none, so this never returns the dragged card
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const target = el && el.closest ? el.closest('.tc-card') : null;
+    if (!target || target === card || target.parentElement !== grid) return;
+    const b = target.getBoundingClientRect();
+    const after = ev.clientX > b.left + b.width / 2;
+    grid.insertBefore(card, after ? target.nextSibling : target);
+    renumber();
+  };
+
+  const end = () => {
+    grip.removeEventListener('pointermove', move);
+    grip.removeEventListener('pointerup', end);
+    grip.removeEventListener('pointercancel', end);
+    card.classList.remove('dragging');
+    renumber();
+    saveOrder();
+  };
+
+  grip.addEventListener('pointermove', move);
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
+}
+
+// ── PHOTO UPLOAD ─────────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file || !pendingSlug) return;
+
+  const slug = pendingSlug;
+  pendingSlug = null;
+
+  const photoEl = document.querySelector('.tc-card[data-slug="' + slug + '"] .tc-photo');
+  if (photoEl) {
+    const b = document.createElement('div');
+    b.className = 'ph-busy';
+    b.textContent = 'Processing…';
+    photoEl.appendChild(b);
+  }
+
+  try {
+    photos[slug] = await compress(file, 800, 0.7);
+    await savePhotos();
+  } catch (err) {
+    alert("Couldn't read that photo (" + (err.message || err) + "). If it's a HEIC image, try converting it to JPEG first.");
+  }
+  render();
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────
+(async () => {
+  await loadAll();
+  render();
+})();
+</script>
+</body>
+</html>
