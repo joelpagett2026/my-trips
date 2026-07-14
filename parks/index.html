@@ -98,26 +98,28 @@
   .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
   .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 
-  .dash-hero {
-    border-radius: 14px; margin: 8px 16px 0; position: relative; overflow: hidden;
-    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    display: block; min-height: 122px; cursor: pointer;
-  }
-  .dash-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; }
-  .dash-hero-body { position: relative; padding: 12px 16px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 122px; background: linear-gradient(to top, rgba(10,20,22,0.75) 0%, rgba(10,20,22,0.1) 60%); }
-  .dash-hero-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-  .dash-hero-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
-  .dash-hero-meta { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 500; margin-top: 3px; }
-
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
   .dash-stat:last-child { margin-bottom: 0; }
   .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
-  .top-coaster { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+  .top-coaster {
+    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    border-bottom: 0.5px solid rgba(0,0,0,0.06); background: #fff;
+  }
   .top-coaster:last-child { border-bottom: none; }
-  .tc-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 16px; opacity: 0.7; }
+  .top-coaster.dragging {
+    opacity: 0.9; border-radius: 8px; border-bottom-color: transparent;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.16); padding-left: 6px; padding-right: 6px;
+  }
+  .tc-grip {
+    flex-shrink: 0; width: 16px; display: flex; align-items: center; justify-content: center;
+    color: #d5d5d5; cursor: grab; touch-action: none;
+  }
+  .tc-grip:active { cursor: grabbing; }
+  .top-coaster:hover .tc-grip { color: #999; }
+  .tc-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 15px; opacity: 0.7; }
   .tc-body { flex: 1; min-width: 0; }
   .tc-name { font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tc-name.is-defunct { color: #999; }
@@ -343,15 +345,6 @@
         </div>
       </a>
 
-      <a class="dash-hero" id="dash-hero" style="display:none;">
-        <img id="hero-img" alt="" style="display:none;">
-        <div class="dash-hero-body">
-          <div class="dash-hero-label">Latest park visit</div>
-          <div class="dash-hero-name" id="hero-name"></div>
-          <div class="dash-hero-meta" id="hero-meta"></div>
-        </div>
-      </a>
-
       <div class="dash-section">
         <div class="dash-section-title">Stats</div>
         <div class="dash-stat">
@@ -380,7 +373,7 @@
       <div class="dash-divider"></div>
 
       <div class="dash-section">
-        <div class="dash-section-title">Top rated coasters</div>
+        <div class="dash-section-title">My top 20</div>
         <div id="top-coasters"></div>
       </div>
 
@@ -451,6 +444,8 @@ const STAR = '<svg width="__S__" height="__S__" viewBox="0 0 24 24" fill="curren
 const COASTER_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-11 9-11s6 4 9 4"/><circle cx="6" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M8 19h7"/></svg>';
 
 let visits = [];
+let topOrder = [];
+const TOP_N = 20;
 let editingId = null;
 let modalPhoto = null;
 let modalPhotoRemoved = false;
@@ -683,26 +678,40 @@ function renderAll() {
     if (!c.rating) return;
     const k = creditKey(v.park, c.name);
     const cur = best.get(k);
-    if (!cur || c.rating > cur.rating) best.set(k, { name: c.name, park: v.park, rating: c.rating, defunct: c.defunct });
+    if (!cur || c.rating > cur.rating) best.set(k, { key: k, name: c.name, park: v.park, rating: c.rating, defunct: c.defunct });
   }));
 
-  const ranked = [...best.values()].sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name)).slice(0, 10);
+  // Saved manual order wins; anything newly rated falls in behind it by score.
+  const pool = new Map([...best.entries()]);
+  const ordered = [];
+  topOrder.forEach(k => {
+    if (pool.has(k)) { ordered.push(pool.get(k)); pool.delete(k); }
+  });
+  [...pool.values()]
+    .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name))
+    .forEach(c => ordered.push(c));
+
+  const ranked = ordered.slice(0, TOP_N);
   const tcWrap = document.getElementById('top-coasters');
   tcWrap.innerHTML = '';
   if (!ranked.length) {
     tcWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Rate some coasters to build your ranking</div>';
   }
-  ranked.forEach((c, i) => {
+  ranked.forEach(c => {
     const row = document.createElement('div');
     row.className = 'top-coaster';
-    row.innerHTML = '<div class="tc-rank">' + (i + 1) + '</div>'
+    row.dataset.key = c.key;
+    row.innerHTML = '<div class="tc-grip"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg></div>'
+      + '<div class="tc-rank"></div>'
       + '<div class="tc-body">'
       +   '<div class="tc-name' + (c.defunct ? ' is-defunct' : '') + '">' + esc(c.name) + '</div>'
       +   '<div class="tc-park">' + esc(c.park) + '</div>'
       + '</div>'
       + '<div class="tc-rate' + (c.rating === 10 ? ' top' : '') + '">' + c.rating + '</div>';
+    row.querySelector('.tc-grip').addEventListener('pointerdown', e => beginDrag(e, row, tcWrap));
     tcWrap.appendChild(row);
   });
+  renumberTop();
 
   // ── Next visit countdown ──
   const next = upcoming[0];
@@ -715,26 +724,43 @@ function renderAll() {
     document.getElementById('cd-days').textContent = daysUntil(next);
   } else cd.style.display = 'none';
 
-  // ── Latest visit hero ──
-  const dated = seen.filter(v => parseDMY(v.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
-  const latest = dated[0];
-  const hero = document.getElementById('dash-hero');
-  if (latest) {
-    hero.style.display = 'block';
-    hero.onclick = () => openDetail(latest.id);
-    document.getElementById('hero-name').textContent = latest.park || '';
-    document.getElementById('hero-meta').textContent = [placeStr(latest), latest.date].filter(Boolean).join(' · ');
-    const img = document.getElementById('hero-img');
-    if (latest.thumb) {
-      img.src = latest.thumb;
-      img.style.display = 'block';
-      if (latest.hasPhoto) {
-        dbLoad('park-photo-' + latest.id)
-          .then(rec => { if (rec && rec.photo) img.src = rec.photo; })
-          .catch(() => {});
-      }
-    } else img.style.display = 'none';
-  } else hero.style.display = 'none';
+}
+
+function renumberTop() {
+  [...document.querySelectorAll('#top-coasters .top-coaster')]
+    .forEach((r, i) => { r.querySelector('.tc-rank').textContent = i + 1; });
+}
+
+function beginDrag(e, row, wrap) {
+  e.preventDefault();
+  const grip = e.currentTarget;
+  grip.setPointerCapture(e.pointerId);
+  row.classList.add('dragging');
+
+  const move = ev => {
+    const y = ev.clientY;
+    const others = [...wrap.querySelectorAll('.top-coaster:not(.dragging)')];
+    const before = others.find(r => {
+      const b = r.getBoundingClientRect();
+      return y < b.top + b.height / 2;
+    });
+    if (before) wrap.insertBefore(row, before);
+    else wrap.appendChild(row);
+    renumberTop();
+  };
+
+  const end = () => {
+    grip.removeEventListener('pointermove', move);
+    grip.removeEventListener('pointerup', end);
+    grip.removeEventListener('pointercancel', end);
+    row.classList.remove('dragging');
+    renumberTop();
+    saveTop();
+  };
+
+  grip.addEventListener('pointermove', move);
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
 }
 
 // ── DETAIL LIGHTBOX ──────────────────────────────────────────────────
@@ -1027,6 +1053,18 @@ document.getElementById('f-photo').addEventListener('change', async e => {
 });
 
 // ── SAVE / DELETE ────────────────────────────────────────────────────
+async function loadTop() {
+  try {
+    const rec = await dbLoad('parks-top');
+    topOrder = (rec && Array.isArray(rec.order)) ? rec.order : [];
+  } catch (e) { topOrder = []; }
+}
+
+async function saveTop() {
+  topOrder = [...document.querySelectorAll('#top-coasters .top-coaster')].map(r => r.dataset.key);
+  try { await dbSave('parks-top', { order: topOrder }); } catch (e) {}
+}
+
 async function loadFresh() {
   try {
     const rec = await dbLoad('parks');
@@ -1101,7 +1139,7 @@ async function deleteVisit(id) {
 
 // ── INIT ─────────────────────────────────────────────────────────────
 (async () => {
-  await loadFresh();
+  await Promise.all([loadFresh(), loadTop()]);
   renderAll();
   if (new URLSearchParams(location.search).get('add') === '1') openModal();
 })();
