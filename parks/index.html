@@ -1106,6 +1106,74 @@ document.getElementById('f-photo').addEventListener('change', async e => {
   e.target.value = '';
 });
 
+// ── AUTO-GEOCODING ───────────────────────────────────────────────────
+// The Maps key isn't authorised for Google's Geocoding API, so new parks
+// are placed via Photon (OpenStreetMap) and cached in the database.
+const COUNTRY_ALIASES = {
+  'united states': ['united states','usa','united states of america'],
+  'united kingdom': ['united kingdom','uk','great britain','england','scotland','wales','northern ireland'],
+  'south korea': ['south korea','korea','republic of korea'],
+  'uae': ['united arab emirates','uae'],
+  'united arab emirates': ['united arab emirates','uae'],
+};
+function countryMatches(expected, got) {
+  const e = (expected || '').trim().toLowerCase();
+  const g = (got || '').trim().toLowerCase();
+  if (!e || !g) return false;
+  if (e === g) return true;
+  const list = COUNTRY_ALIASES[e] || [e];
+  return list.includes(g) || (COUNTRY_ALIASES[g] || [g]).includes(e);
+}
+
+async function photonLookup(query) {
+  const url = 'https://photon.komoot.io/api?limit=1&lang=en&q=' + encodeURIComponent(query);
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const f = data.features && data.features[0];
+  if (!f) return null;
+  return {
+    lat: Math.round(f.geometry.coordinates[1] * 100000) / 100000,
+    lng: Math.round(f.geometry.coordinates[0] * 100000) / 100000,
+    country: (f.properties && f.properties.country) || '',
+  };
+}
+
+// Tries most-specific first and prefers a hit in the expected country
+async function geocodePark(park, location, country) {
+  const queries = [
+    [park, location, country].filter(Boolean).join(', '),
+    [park, country].filter(Boolean).join(', '),
+    park,
+  ].filter((q, i, a) => q && a.indexOf(q) === i);
+
+  let fallback = null;
+  for (const q of queries) {
+    let hit = null;
+    try { hit = await photonLookup(q); } catch (e) { /* offline or blocked */ }
+    if (!hit) continue;
+    if (!country || countryMatches(country, hit.country)) return { lat: hit.lat, lng: hit.lng };
+    if (!fallback) fallback = { lat: hit.lat, lng: hit.lng };
+  }
+  return fallback;
+}
+
+// Adds coordinates for a park if we don't already have them
+async function ensureParkCoords(park, location, country) {
+  const name = (park || '').trim();
+  if (!name) return null;
+  let rec = null;
+  try { rec = await dbLoad('park-coords'); } catch (e) {}
+  const map = (rec && rec.map) ? rec.map : {};
+  if (map[name]) return map[name];
+
+  const pos = await geocodePark(name, location, country);
+  if (!pos) return null;
+  map[name] = pos;
+  try { await dbSave('park-coords', { map }); } catch (e) { return null; }
+  return pos;
+}
+
 // ── SAVE / DELETE ────────────────────────────────────────────────────
 async function loadTop() {
   try {
@@ -1176,6 +1244,9 @@ async function saveVisit() {
   btn.disabled = false;
   closeModal();
   renderAll();
+
+  // Put the park on the world map without blocking the save
+  ensureParkCoords(entry.park, entry.location, entry.country);
 }
 
 async function deleteVisit(id) {
