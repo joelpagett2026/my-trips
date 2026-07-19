@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Parks Around the World</title>
+<script src="/auth.js?v=3"></script>
+<script src="/db.js?v=3"></script>
+<link rel="stylesheet" href="/holidays/holiday-style.css">
+<style>
+  html, body { height: 100%; }
+  .nav {
+    background: rgba(47,47,50,0.97);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav .nav-title, .nav .nav-back { color: #ffffff; }
+  .nav .nav-back:hover { opacity: 0.85; }
+
+  .map-shell { position: relative; height: calc(100vh - 52px); }
+  #map { width: 100%; height: 100%; background: #e8e8e8; }
+
+  .legend {
+    position: absolute; top: 14px; left: 14px; z-index: 5;
+    background: rgba(255,255,255,0.96); border-radius: 14px;
+    padding: 12px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.16);
+    display: flex; gap: 18px; align-items: center;
+  }
+  .lg-item { text-align: center; }
+  .lg-val { font-size: 19px; font-weight: 700; color: #0e7a87; line-height: 1; }
+  .lg-lbl { font-size: 8.5px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+  .lg-div { width: 1px; height: 28px; background: rgba(0,0,0,0.1); }
+
+  .loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #999; letter-spacing: 0.05em; text-transform: uppercase;
+    background: #e8e8e8; z-index: 6;
+  }
+  .loading.hidden { display: none; }
+
+  .iw { font-family: Montserrat, sans-serif; padding: 2px 4px 4px; min-width: 150px; }
+  .iw-name { font-size: 14px; font-weight: 700; color: #444; letter-spacing: -0.2px; }
+  .iw-place { font-size: 11px; color: #888; font-weight: 500; margin-top: 2px; }
+  .iw-row { margin-top: 7px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .iw-pill {
+    font-size: 8.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.15); color: #0e7a87;
+  }
+  .iw-pill.grey { background: rgba(100,100,110,0.15); color: #666; }
+
+  @media (max-width: 700px) {
+    .legend { top: 10px; left: 10px; right: 10px; padding: 10px 12px; gap: 10px; justify-content: space-around; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/parks/">
+    <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
+    Tracker
+  </a>
+  <div class="nav-title">Parks Around the World</div>
+  <div class="nav-actions"></div>
+</nav>
+
+<div class="map-shell">
+  <div class="legend">
+    <div class="lg-item"><div class="lg-val" id="lg-parks">—</div><div class="lg-lbl">Parks</div></div>
+    <div class="lg-div"></div>
+    <div class="lg-item"><div class="lg-val" id="lg-countries">—</div><div class="lg-lbl">Countries</div></div>
+    <div class="lg-div"></div>
+    <div class="lg-item"><div class="lg-val" id="lg-credits">—</div><div class="lg-lbl">Credits</div></div>
+  </div>
+  <div class="loading" id="loading">Loading map…</div>
+  <div id="map"></div>
+</div>
+
+<script>
+let visits = [], coords = {};
+
+function normCoaster(c) {
+  if (typeof c === 'string') {
+    return { name: c.replace(/\s*\*\s*$/, '').trim(), rating: 0, defunct: /\*\s*$/.test(c) };
+  }
+  c = c || {};
+  const r = parseInt(c.rating, 10);
+  return { name: (c.name || '').trim(), rating: (r >= 1 && r <= 10) ? r : 0, defunct: !!c.defunct };
+}
+function coastersOf(v) { return (v.coasters || []).map(normCoaster).filter(c => c.name); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// Roll the visit list up into one entry per park
+function parkIndex() {
+  const m = new Map();
+  visits.forEach(v => {
+    const name = (v.park || '').trim();
+    if (!name) return;
+    const k = name.toLowerCase();
+    const cur = m.get(k) || {
+      name, location: v.location || '', country: v.country || '',
+      visits: 0, credits: new Set(), years: [],
+    };
+    cur.visits++;
+    coastersOf(v).forEach(c => cur.credits.add(c.name.toLowerCase()));
+    const y = (v.date || '').match(/(\d{4})/);
+    if (y) cur.years.push(+y[1]);
+    if (!cur.location && v.location) cur.location = v.location;
+    if (!cur.country && v.country) cur.country = v.country;
+    m.set(k, cur);
+  });
+  return [...m.values()];
+}
+
+async function init() {
+  const [p, c] = await Promise.all([
+    dbLoad('parks').catch(() => null),
+    dbLoad('park-coords').catch(() => null),
+  ]);
+  visits = (p && Array.isArray(p.list)) ? p.list : [];
+  coords = (c && c.map) ? c.map : {};
+
+  const parks = parkIndex();
+  const placed = parks.filter(p => coords[p.name]);
+
+  document.getElementById('lg-parks').textContent = parks.length;
+  document.getElementById('lg-countries').textContent =
+    new Set(parks.map(p => (p.country || '').trim().toLowerCase()).filter(Boolean)).size;
+  document.getElementById('lg-credits').textContent =
+    parks.reduce((n, p) => n + p.credits.size, 0);
+
+  const map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 30, lng: 10 },
+    zoom: 2,
+    minZoom: 2,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    styles: [
+      { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+      { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+      { featureType: 'water', stylers: [{ color: '#cfe3e6' }] },
+      { featureType: 'landscape', stylers: [{ color: '#f2f2f0' }] },
+    ],
+  });
+
+  const info = new google.maps.InfoWindow();
+  const bounds = new google.maps.LatLngBounds();
+
+  placed.forEach(p => {
+    const pos = coords[p.name];
+    bounds.extend(pos);
+    const marker = new google.maps.Marker({
+      position: pos,
+      map,
+      title: p.name,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 7,
+        fillColor: '#0e7a87',
+        fillOpacity: 0.9,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      },
+    });
+
+    const years = [...new Set(p.years)].sort();
+    const span = years.length
+      ? (years[0] === years[years.length - 1] ? years[0] : years[0] + '–' + years[years.length - 1])
+      : '';
+
+    marker.addListener('click', () => {
+      info.setContent(
+        '<div class="iw">'
+        + '<div class="iw-name">' + esc(p.name) + '</div>'
+        + '<div class="iw-place">' + esc([p.location, p.country].filter(Boolean).join(', ')) + '</div>'
+        + '<div class="iw-row">'
+        +   (p.credits.size ? '<span class="iw-pill">' + p.credits.size + ' coaster' + (p.credits.size === 1 ? '' : 's') + '</span>' : '')
+        +   (p.visits > 1 ? '<span class="iw-pill grey">' + p.visits + ' visits</span>' : '')
+        +   (span ? '<span class="iw-pill grey">' + span + '</span>' : '')
+        + '</div></div>'
+      );
+      info.open(map, marker);
+    });
+  });
+
+  if (placed.length) {
+    map.fitBounds(bounds, 60);
+    google.maps.event.addListenerOnce(map, 'idle', () => {
+      if (map.getZoom() > 6) map.setZoom(6);
+    });
+  }
+
+  document.getElementById('loading').classList.add('hidden');
+}
+
+window.gmReady = init;
+</script>
+<script async
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8&callback=gmReady">
+</script>
+</body>
+</html>
