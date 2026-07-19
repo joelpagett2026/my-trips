@@ -41,7 +41,9 @@
     background: #fff; border-radius: 16px; overflow: hidden; position: relative;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.05);
     transition: box-shadow 0.18s ease, transform 0.18s ease;
+    cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none;
   }
+  .tc-card.dragging { cursor: grabbing; }
   .tc-card.dragging {
     opacity: 0.92; transform: scale(1.03);
     box-shadow: 0 14px 40px rgba(0,0,0,0.22);
@@ -74,25 +76,6 @@
     display: flex; align-items: center; justify-content: center;
   }
   .tc-card.elite .rank-badge { background: rgba(14,122,135,0.72); }
-
-  .grip {
-    position: absolute; top: 8px; right: 8px; z-index: 4;
-    width: 26px; height: 24px; border-radius: 8px; border: none;
-    background: rgba(20,20,22,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-    color: rgba(255,255,255,0.85); cursor: grab; touch-action: none;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .grip:active { cursor: grabbing; }
-  .grip:hover { background: rgba(20,20,22,0.75); }
-
-  .ph-remove {
-    position: absolute; top: 8px; right: 38px; z-index: 4;
-    width: 24px; height: 24px; border-radius: 8px; border: none;
-    background: rgba(20,20,22,0.55); color: #fff; cursor: pointer;
-    display: none; align-items: center; justify-content: center;
-  }
-  .tc-card.has-photo .ph-remove { display: flex; }
-  .ph-remove:hover { background: #e53e3e; }
 
   .tc-body { padding: 11px 13px 13px; display: flex; align-items: flex-start; gap: 8px; }
   .tc-text { flex: 1; min-width: 0; }
@@ -313,7 +296,6 @@ function render() {
 
     card.innerHTML =
       '<div class="rank-badge"></div>'
-      + '<button class="grip" title="Drag to reorder"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg></button>'
       + '<div class="tc-photo">'
       +   (src
             ? '<img src="' + src + '" alt="">'
@@ -321,7 +303,6 @@ function render() {
               + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
               + '<span class="ph-hint">Add photo</span></div>')
       + '</div>'
-      + '<button class="ph-remove" title="Remove photo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
       + '<div class="tc-body">'
       +   '<div class="tc-text">'
       +     '<div class="tc-name' + (c.defunct ? ' is-defunct' : '') + '">' + esc(c.name)
@@ -331,18 +312,7 @@ function render() {
       +   '<div class="tc-score' + (c.rating === 10 ? ' ten' : '') + '">' + c.rating + '</div>'
       + '</div>';
 
-    card.querySelector('.tc-photo').onclick = () => {
-      pendingSlug = slug;
-      document.getElementById('file-input').click();
-    };
-    card.querySelector('.ph-remove').onclick = async e => {
-      e.stopPropagation();
-      if (!confirm('Remove the photo for ' + c.name + '?')) return;
-      delete photos[slug];
-      await savePhotos();
-      render();
-    };
-    card.querySelector('.grip').addEventListener('pointerdown', e => beginDrag(e, card, grid));
+    card.addEventListener('pointerdown', e => beginDrag(e, card, grid));
 
     grid.appendChild(card);
   });
@@ -359,14 +329,22 @@ function renumber() {
 
 // ── DRAG TO REORDER ──────────────────────────────────────────────────
 function beginDrag(e, card, grid) {
-  e.preventDefault();
-  e.stopPropagation();
-  card.classList.add('dragging');
+  if (e.button !== undefined && e.button !== 0) return;
+
+  const startX = e.clientX, startY = e.clientY;
+  const onPhoto = !!(e.target.closest && e.target.closest('.tc-photo'));
+  let dragging = false;
 
   // Listen on window, NOT via setPointerCapture: moving the node with
   // insertBefore silently releases capture, which killed the drag after
   // the first reorder.
   const move = ev => {
+    if (!dragging) {
+      // Below the threshold this is still a tap, not a drag
+      if (Math.abs(ev.clientX - startX) < 6 && Math.abs(ev.clientY - startY) < 6) return;
+      dragging = true;
+      card.classList.add('dragging');
+    }
     ev.preventDefault();
     const others = [...grid.querySelectorAll('.tc-card')].filter(c => c !== card);
     for (const target of others) {
@@ -381,18 +359,29 @@ function beginDrag(e, card, grid) {
     }
   };
 
-  const end = () => {
+  const cleanup = () => {
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', end);
-    window.removeEventListener('pointercancel', end);
+    window.removeEventListener('pointercancel', cleanup);
     card.classList.remove('dragging');
-    renumber();
-    saveOrder();
+  };
+
+  const end = () => {
+    const moved = dragging;
+    cleanup();
+    if (moved) {
+      renumber();
+      saveOrder();
+    } else if (onPhoto) {
+      // A clean tap on the artwork: choose or replace the photo
+      pendingSlug = card.dataset.slug;
+      document.getElementById('file-input').click();
+    }
   };
 
   window.addEventListener('pointermove', move, { passive: false });
   window.addEventListener('pointerup', end);
-  window.addEventListener('pointercancel', end);
+  window.addEventListener('pointercancel', cleanup);
 }
 
 // ── PHOTO UPLOAD ─────────────────────────────────────────────────────
