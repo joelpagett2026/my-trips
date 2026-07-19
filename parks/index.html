@@ -374,8 +374,12 @@
       <div class="dash-divider"></div>
 
       <div class="dash-section">
-        <div class="dash-section-title">My top 20</div>
+        <div class="dash-section-title">My top 10</div>
         <div id="top-coasters"></div>
+        <a href="/parks/coasters.html" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;padding:10px;border-radius:12px;background:#e8e8e8;text-decoration:none;font-size:12px;font-weight:700;color:#0e7a87;">
+          Top rated coasters
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
       </div>
 
     </div>
@@ -446,7 +450,7 @@ const COASTER_ICON = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none
 
 let visits = [];
 let topOrder = [];
-const TOP_N = 20;
+const TOP_N = 10;
 let editingId = null;
 let modalPhoto = null;
 let modalPhotoRemoved = false;
