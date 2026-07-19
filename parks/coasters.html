@@ -23,7 +23,7 @@
   .nav .nav-title, .nav .nav-back { color: #ffffff; }
   .nav .nav-back:hover { opacity: 0.85; }
 
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 20px 48px; }
+  .wrap { max-width: 1800px; margin: 0 auto; padding: 20px 28px 48px; }
 
   .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
   .sec-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: #444; }
@@ -32,8 +32,8 @@
 
   /* ── TOP 20 GRID ── */
   .top-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
-    gap: 14px; margin-top: 14px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 24px; margin-top: 16px;
   }
   .tc-card {
     background: #fff; border-radius: 16px; overflow: hidden; position: relative;
@@ -126,7 +126,7 @@
   .saving.on { display: block; }
 
   @media (max-width: 700px) {
-    .top-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .top-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
     .tc-photo { height: 108px; }
     .tc-name { font-size: 12.5px; }
   }
@@ -299,8 +299,7 @@ function render() {
   }
 
   document.getElementById('sec-count').textContent =
-    list.length + ' coaster' + (list.length === 1 ? '' : 's') + ' · drag to reorder · top '
-    + ELITE_N + ' outlined in teal';
+    list.length + ' coaster' + (list.length === 1 ? '' : 's');
 
   list.forEach(c => {
     const slug = slugOf(c.key);
