@@ -41,7 +41,7 @@
     transition: box-shadow 0.18s ease, transform 0.18s ease;
   }
   .tc-card.dragging {
-    pointer-events: none; opacity: 0.92; transform: scale(1.03);
+    opacity: 0.92; transform: scale(1.03);
     box-shadow: 0 14px 40px rgba(0,0,0,0.22);
   }
   .tc-card.gold   { box-shadow: 0 0 0 2px #0e7a87, 0 4px 14px rgba(14,122,135,0.2); }
@@ -137,7 +137,7 @@
 <nav class="nav">
   <a class="nav-back" href="/parks/">
     <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
-    Coasters
+    Tracker
   </a>
   <div class="nav-title">Top Rated</div>
   <div class="nav-actions"></div>
@@ -356,33 +356,38 @@ function renumber() {
 function beginDrag(e, card, grid) {
   e.preventDefault();
   e.stopPropagation();
-  const grip = e.currentTarget;
-  grip.setPointerCapture(e.pointerId);
   card.classList.add('dragging');
 
+  // Listen on window, NOT via setPointerCapture: moving the node with
+  // insertBefore silently releases capture, which killed the drag after
+  // the first reorder.
   const move = ev => {
-    // .dragging has pointer-events:none, so this never returns the dragged card
-    const el = document.elementFromPoint(ev.clientX, ev.clientY);
-    const target = el && el.closest ? el.closest('.tc-card') : null;
-    if (!target || target === card || target.parentElement !== grid) return;
-    const b = target.getBoundingClientRect();
-    const after = ev.clientX > b.left + b.width / 2;
-    grid.insertBefore(card, after ? target.nextSibling : target);
-    renumber();
+    ev.preventDefault();
+    const others = [...grid.querySelectorAll('.tc-card')].filter(c => c !== card);
+    for (const target of others) {
+      const b = target.getBoundingClientRect();
+      if (ev.clientX >= b.left && ev.clientX <= b.right &&
+          ev.clientY >= b.top  && ev.clientY <= b.bottom) {
+        const after = ev.clientX > b.left + b.width / 2;
+        grid.insertBefore(card, after ? target.nextSibling : target);
+        renumber();
+        break;
+      }
+    }
   };
 
   const end = () => {
-    grip.removeEventListener('pointermove', move);
-    grip.removeEventListener('pointerup', end);
-    grip.removeEventListener('pointercancel', end);
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', end);
+    window.removeEventListener('pointercancel', end);
     card.classList.remove('dragging');
     renumber();
     saveOrder();
   };
 
-  grip.addEventListener('pointermove', move);
-  grip.addEventListener('pointerup', end);
-  grip.addEventListener('pointercancel', end);
+  window.addEventListener('pointermove', move, { passive: false });
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
 }
 
 // ── PHOTO UPLOAD ─────────────────────────────────────────────────────
