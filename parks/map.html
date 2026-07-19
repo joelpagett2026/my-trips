@@ -56,8 +56,70 @@
   }
   .iw-pill.grey { background: rgba(100,100,110,0.15); color: #666; }
 
+  /* ── DETAIL LIGHTBOX (matches the tracker page) ── */
+  .detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 180;
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 32px 16px; overflow-y: auto;
+  }
+  .detail-overlay.open { display: flex; }
+  .detail-card {
+    background: #fff; border-radius: 20px; overflow: hidden;
+    width: 100%; max-width: 620px; box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    position: relative;
+  }
+  .detail-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #f0f0f0; }
+  .detail-close {
+    position: absolute; top: 12px; right: 12px; z-index: 10;
+    width: 32px; height: 32px; border: none; border-radius: 10px; cursor: pointer;
+    background: rgba(0,0,0,0.45); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .detail-close:hover { background: rgba(0,0,0,0.65); }
+  .detail-close.no-photo { background: #f0f0f0; color: #888; }
+  .detail-body { padding: 18px 22px 20px; }
+  .detail-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: #444; padding-right: 24px; }
+  .detail-meta { font-size: 12px; color: #888; font-weight: 500; margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .detail-meta svg { flex-shrink: 0; color: #b8b8b8; }
+  .detail-stars { display: flex; gap: 3px; margin-top: 11px; }
+  .detail-stars svg { color: #d5d5d5; }
+  .detail-stars svg.on { color: #0e7a87; }
+  .detail-coasters { margin-top: 14px; padding: 12px 14px; background: #f7f7f7; border-radius: 12px; }
+  .detail-coasters-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; margin-bottom: 6px; }
+  .detail-coasters ul { margin: 0; padding: 0; list-style: none; }
+  .detail-coasters li {
+    font-size: 12.5px; color: #555; font-weight: 500; padding: 5px 0;
+    border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-coasters li:last-child { border-bottom: none; }
+  .detail-coasters li.is-defunct { color: #999; }
+  .cl-name { flex: 1; }
+  .cl-rate {
+    flex-shrink: 0; min-width: 26px; text-align: center;
+    font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
+    background: rgba(14,122,135,0.12); color: #0e7a87;
+  }
+  .cl-rate.top { background: #0e7a87; color: #fff; }
+  .defunct-tag {
+    display: inline-block; margin-left: 6px; vertical-align: 1px;
+    font-size: 7.5px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(229,62,62,0.12); color: #e53e3e; border: 1px solid rgba(229,62,62,0.22);
+  }
+  .detail-pill-row { margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .p-tag {
+    display: inline-block;
+    font-size: 9px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(14,122,135,0.18); color: #0e7a87; border: 1px solid rgba(14,122,135,0.25);
+  }
+  .p-tag.muted { background: rgba(100,100,110,0.18); color: #666666; border: 1px solid rgba(100,100,110,0.2); }
+
   @media (max-width: 700px) {
     .legend { top: 10px; left: 10px; right: 10px; padding: 10px 12px; gap: 10px; justify-content: space-around; }
+    .detail-overlay { padding: 16px 12px; }
   }
 </style>
 </head>
@@ -84,7 +146,12 @@
   <div id="map"></div>
 </div>
 
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-card" id="detail-card"></div>
+</div>
+
 <script>
+const STAR = '<svg width="__S__" height="__S__" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 let visits = [], coords = {};
 
 function normCoaster(c) {
@@ -97,6 +164,108 @@ function normCoaster(c) {
 }
 function coastersOf(v) { return (v.coasters || []).map(normCoaster).filter(c => c.name); }
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function parseParts(s) {
+  s = (s || '').trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return { d: new Date(+m[3], +m[2] - 1, +m[1]), prec: 'day' };
+  m = s.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) return { d: new Date(+m[2], +m[1] - 1, 1), prec: 'month' };
+  m = s.match(/^(\d{4})$/);
+  if (m) return { d: new Date(+m[1], 0, 1), prec: 'year' };
+  return null;
+}
+function fmtDate(s) {
+  const p = parseParts(s);
+  if (!p) return s || '';
+  if (p.prec === 'year')  return String(p.d.getFullYear());
+  if (p.prec === 'month') return p.d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  return p.d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+function starsRow(rating, size, cls) {
+  let html = '<div class="' + cls + '">';
+  for (let i = 1; i <= 5; i++) html += STAR.replace(/__S__/g, size).replace('<svg', '<svg class="' + (i <= rating ? 'on' : '') + '"');
+  return html + '</div>';
+}
+
+// One pin can cover several visits to the same park — show them pooled
+function openParkDetail(parkKey) {
+  const mine = visits.filter(v => (v.park || '').trim().toLowerCase() === parkKey)
+    .sort((a, b) => (parseParts(b.date) ? parseParts(b.date).d : 0) - (parseParts(a.date) ? parseParts(a.date).d : 0));
+  if (!mine.length) return;
+
+  const lead = mine.find(v => v.hasPhoto) || mine[0];
+  const rated = mine.filter(v => v.rating);
+  const rating = rated.length ? Math.round(rated.reduce((n, v) => n + v.rating, 0) / rated.length) : 0;
+
+  // Pool coasters across visits, keeping the best rating for each
+  const pooled = new Map();
+  mine.forEach(v => coastersOf(v).forEach(c => {
+    const k = c.name.toLowerCase();
+    const cur = pooled.get(k);
+    if (!cur || c.rating > cur.rating) pooled.set(k, c);
+  }));
+  const coasters = [...pooled.values()].sort((a, b) => (a.defunct ? 1 : 0) - (b.defunct ? 1 : 0));
+
+  const years = [...new Set(mine.map(v => (v.date || '').match(/(\d{4})/)).filter(Boolean).map(m => +m[1]))].sort();
+  const span = years.length ? (years[0] === years[years.length - 1] ? String(years[0]) : years[0] + '–' + years[years.length - 1]) : '';
+  const place = [lead.location, lead.country].map(s => (s || '').trim()).filter(Boolean).join(', ');
+
+  let html = '<button class="detail-close' + (lead.hasPhoto ? '' : ' no-photo') + '" onclick="closeDetail()">'
+    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+
+  if (lead.hasPhoto) html += '<img class="detail-photo" id="detail-photo"' + (lead.thumb ? ' src="' + lead.thumb + '"' : '') + ' alt="">';
+
+  html += '<div class="detail-body">';
+  html += '<div class="detail-name">' + esc(lead.park) + '</div>';
+  html += '<div class="detail-pill-row">'
+    + (coasters.length ? '<span class="p-tag">' + coasters.length + ' coaster' + (coasters.length === 1 ? '' : 's') + '</span>'
+                       : '<span class="p-tag muted">No coasters logged</span>')
+    + (mine.length > 1 ? '<span class="p-tag muted">' + mine.length + ' visits</span>' : '')
+    + '</div>';
+
+  html += '<div class="detail-meta">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(place)
+    + '<span style="color:#d5d5d5;">·</span>'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+    + (mine.length > 1 ? esc(span) : esc(fmtDate(lead.date)))
+    + '</div>';
+
+  if (rating) html += starsRow(rating, 16, 'detail-stars');
+
+  if (coasters.length) {
+    html += '<div class="detail-coasters"><div class="detail-coasters-title">Coasters ridden · ' + coasters.length + '</div><ul>'
+      + coasters.map(c =>
+          '<li' + (c.defunct ? ' class="is-defunct"' : '') + '>'
+          + '<span class="cl-name">' + esc(c.name) + '</span>'
+          + (c.defunct ? '<span class="defunct-tag">Defunct</span>' : '')
+          + (c.rating ? '<span class="cl-rate' + (c.rating === 10 ? ' top' : '') + '">' + c.rating + '</span>' : '')
+          + '</li>').join('')
+      + '</ul></div>';
+  }
+
+  html += '</div>';
+
+  document.getElementById('detail-card').innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('open');
+
+  if (lead.hasPhoto) {
+    dbLoad('park-photo-' + lead.id).then(rec => {
+      if (rec && rec.photo) {
+        const img = document.getElementById('detail-photo');
+        if (img) img.src = rec.photo;
+      }
+    }).catch(() => {});
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+document.getElementById('detail-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDetail();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 
 // Roll the visit list up into one entry per park
 function parkIndex() {
@@ -153,7 +322,6 @@ async function init() {
     ],
   });
 
-  const info = new google.maps.InfoWindow();
   const bounds = new google.maps.LatLngBounds();
 
   placed.forEach(p => {
@@ -173,24 +341,7 @@ async function init() {
       },
     });
 
-    const years = [...new Set(p.years)].sort();
-    const span = years.length
-      ? (years[0] === years[years.length - 1] ? years[0] : years[0] + '–' + years[years.length - 1])
-      : '';
-
-    marker.addListener('click', () => {
-      info.setContent(
-        '<div class="iw">'
-        + '<div class="iw-name">' + esc(p.name) + '</div>'
-        + '<div class="iw-place">' + esc([p.location, p.country].filter(Boolean).join(', ')) + '</div>'
-        + '<div class="iw-row">'
-        +   (p.credits.size ? '<span class="iw-pill">' + p.credits.size + ' coaster' + (p.credits.size === 1 ? '' : 's') + '</span>' : '')
-        +   (p.visits > 1 ? '<span class="iw-pill grey">' + p.visits + ' visits</span>' : '')
-        +   (span ? '<span class="iw-pill grey">' + span + '</span>' : '')
-        + '</div></div>'
-      );
-      info.open(map, marker);
-    });
+    marker.addListener('click', () => openParkDetail(p.name.toLowerCase()));
   });
 
   if (placed.length) {
