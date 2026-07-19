@@ -44,7 +44,7 @@
     opacity: 0.92; transform: scale(1.03);
     box-shadow: 0 14px 40px rgba(0,0,0,0.22);
   }
-  .tc-card.gold   { box-shadow: 0 0 0 2px #0e7a87, 0 4px 14px rgba(14,122,135,0.2); }
+  .tc-card.elite  { box-shadow: 0 0 0 2px #0e7a87, 0 4px 14px rgba(14,122,135,0.2); }
 
   .tc-photo {
     position: relative; width: 100%; height: 132px; display: block;
@@ -71,7 +71,7 @@
     color: #fff; font-size: 12px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
   }
-  .tc-card.gold .rank-badge { background: #0e7a87; }
+  .tc-card.elite .rank-badge { background: #0e7a87; }
 
   .grip {
     position: absolute; top: 8px; right: 8px; z-index: 4;
@@ -146,8 +146,8 @@
 <div class="wrap">
 
   <div class="sec-head">
-    <div class="sec-title">My <span class="accent">Top 20</span></div>
-    <div class="sec-hint">drag the handle to reorder · tap a card to add a photo</div>
+    <div class="sec-title">Rated <span class="accent">9 &amp; 10</span></div>
+    <div class="sec-hint" id="sec-count"></div>
   </div>
 
   <div class="top-grid" id="top-grid"></div>
@@ -158,7 +158,8 @@
 <div class="saving" id="saving">Saving…</div>
 
 <script>
-const TOP_N = 20;
+const ELITE_N = 10;   // first N get the teal border
+const MIN_RATING = 9; // only 9s and 10s appear in this section
 
 let visits = [];
 let topOrder = [];
@@ -241,14 +242,13 @@ async function loadAll() {
   photos   = (ph && ph.map) ? ph.map : {};
 }
 
-// Best rating per park+coaster, ordered by the saved manual list,
+// Every coaster rated 9 or 10, ordered by the saved manual list,
 // with anything newly rated slotting in behind by score.
 function rankedTop() {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
   const best = new Map();
 
   visits.forEach(v => coastersOf(v).forEach(c => {
-    if (!c.rating) return;
+    if (c.rating < MIN_RATING) return;
     const k = creditKey(v.park, c.name);
     const cur = best.get(k);
     if (!cur || c.rating > cur.rating) {
@@ -265,13 +265,13 @@ function rankedTop() {
     .sort((a, b) => b.rating - a.rating || a.name.localeCompare(b.name))
     .forEach(c => out.push(c));
 
-  return out.slice(0, TOP_N);
+  return out;
 }
 
 async function saveOrder() {
   const grid = document.getElementById('top-grid');
   const keys = [...grid.querySelectorAll('.tc-card')].map(c => c.dataset.key);
-  // Preserve any ranked-but-not-shown keys beyond the top 20
+  // Preserve saved positions for anything not currently on screen
   const extra = topOrder.filter(k => !keys.includes(k));
   topOrder = [...keys, ...extra];
   busy(true);
@@ -293,9 +293,14 @@ function render() {
   grid.innerHTML = '';
 
   if (!list.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Rate some coasters in the Coaster Log to build your top 20</div>';
+    document.getElementById('sec-count').textContent = '';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Rate some coasters 9 or 10 in the Theme Park Tracker to fill this section</div>';
     return;
   }
+
+  document.getElementById('sec-count').textContent =
+    list.length + ' coaster' + (list.length === 1 ? '' : 's') + ' · drag to reorder · top '
+    + ELITE_N + ' outlined in teal';
 
   list.forEach(c => {
     const slug = slugOf(c.key);
@@ -348,7 +353,7 @@ function render() {
 function renumber() {
   [...document.querySelectorAll('#top-grid .tc-card')].forEach((c, i) => {
     c.querySelector('.rank-badge').textContent = i + 1;
-    c.classList.toggle('gold', i < 3);
+    c.classList.toggle('elite', i < ELITE_N);
   });
 }
 
