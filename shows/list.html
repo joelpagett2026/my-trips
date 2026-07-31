@@ -149,7 +149,10 @@ const KIND_LABEL = { comedy: 'Comedy', musical: 'Musical', show: 'Show' };
 
 let shows = [];
 let sortMode = 'name';
-let kindFilter = 'all';
+let kindFilter = (() => {
+  const k = new URLSearchParams(location.search).get('kind');
+  return ['musical', 'show', 'comedy'].includes(k) ? k : 'all';
+})();
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function placeOf(c) { return [c.theatre, c.location].filter(Boolean).join(', '); }
@@ -259,12 +262,20 @@ document.querySelectorAll('.chip').forEach(btn => {
     document.querySelectorAll('.chip').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     kindFilter = btn.dataset.kind;
+    const TITLE = { musical: 'Musicals', show: 'Shows', comedy: 'Comedy' };
+    document.querySelector('.nav-title').textContent = TITLE[kindFilter] || 'Theatre Shows';
     render();
   };
 });
 document.getElementById('search').addEventListener('input', render);
 
 (async () => {
+  // Sync chip highlight + heading to any ?kind= from the URL
+  document.querySelectorAll('.chip').forEach(b =>
+    b.classList.toggle('on', b.dataset.kind === kindFilter));
+  const TITLE = { musical: 'Musicals', show: 'Shows', comedy: 'Comedy' };
+  if (TITLE[kindFilter]) document.querySelector('.nav-title').textContent = TITLE[kindFilter];
+
   try {
     const rec = await dbLoad('shows');
     shows = (rec && Array.isArray(rec.list)) ? rec.list : [];
