@@ -44,6 +44,9 @@ $subdirFiles = [
     'parks/coasters.html' => 'parks/coasters.html',
     'parks/map.html' => 'parks/map.html',
     'parks/credits.html' => 'parks/credits.html',
+    'icons/park-theme-park.svg' => 'icons/park-theme-park.svg',
+    'icons/park-roller-coaster.svg' => 'icons/park-roller-coaster.svg',
+    'icons/park-worldwide.svg' => 'icons/park-worldwide.svg',
 ];
 
 foreach ($subdirFiles as $src => $dest) {
@@ -185,6 +188,9 @@ $subdirFiles = [
     'parks/map.html' => 'parks/map.html',
     'parks/credits.html' => 'parks/credits.html',
     'icons/favicon.ico' => 'icons/favicon.ico',
+    'icons/park-theme-park.svg' => 'icons/park-theme-park.svg',
+    'icons/park-roller-coaster.svg' => 'icons/park-roller-coaster.svg',
+    'icons/park-worldwide.svg' => 'icons/park-worldwide.svg',
     'icons/icon-32.png' => 'icons/icon-32.png',
     'icons/icon-192.png' => 'icons/icon-192.png',
     'icons/icon-512.png' => 'icons/icon-512.png',

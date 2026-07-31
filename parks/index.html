@@ -125,6 +125,12 @@
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
   .dash-stat:last-child { margin-bottom: 0; }
   .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
+  .stat-ico {
+    width: 20px; height: 20px; background: currentColor; display: inline-block;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: center; mask-position: center;
+    -webkit-mask-size: contain; mask-size: contain;
+  }
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
@@ -382,21 +388,21 @@
         <div class="dash-section-title">Stats</div>
         <a class="dash-stat" href="/parks/map.html" style="text-decoration:none;">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6.8"/><circle cx="12" cy="9" r="1.3"/><path d="M12 2.2v13.6M5.2 9h13.6M7.2 4.2l9.6 9.6M16.8 4.2l-9.6 9.6"/><path d="M12 10.3 7.8 20.5M12 10.3 16.2 20.5M6.5 20.5h11"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/park-theme-park.svg);mask-image:url(/icons/park-theme-park.svg);"></span>
           </div>
           <div class="dash-stat-lbl">Parks visited</div>
           <div class="dash-stat-val" id="s-parks">0</div>
         </a>
         <a class="dash-stat" href="/parks/credits.html" style="text-decoration:none;">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h4.5a4.5 4.5 0 1 1 4.5-4.5A4.5 4.5 0 0 1 15.5 20H22"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/park-roller-coaster.svg);mask-image:url(/icons/park-roller-coaster.svg);"></span>
           </div>
           <div class="dash-stat-lbl">Coaster credits</div>
           <div class="dash-stat-val" id="s-credits">0</div>
         </a>
         <a class="dash-stat" href="/parks/map.html" style="text-decoration:none;">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/park-worldwide.svg);mask-image:url(/icons/park-worldwide.svg);"></span>
           </div>
           <div class="dash-stat-lbl">Countries</div>
           <div class="dash-stat-val" id="s-countries">0</div>
