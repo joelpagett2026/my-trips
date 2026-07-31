@@ -96,25 +96,23 @@
   .ts-stars svg.on { color: #0e7a87; }
 
   .dash-countdown {
+    border-radius: 14px; margin: 20px 16px 0;
+    position: relative; overflow: hidden; display: block; cursor: pointer;
     background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    border-radius: 14px; padding: 12px 16px; margin: 20px 16px 0;
-    display: block; cursor: pointer;
+    min-height: 150px;
   }
-  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-  .dash-countdown-name { font-size: 14px; font-weight: 700; color: #fff; }
-  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; margin-bottom: 8px; }
-  .dash-cd-block { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 10px; text-align: center; display: inline-block; min-width: 90px; }
+  .dash-countdown img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .dash-cd-overlay {
+    position: relative; padding: 12px 16px 14px;
+    display: flex; flex-direction: column; justify-content: flex-end; min-height: 150px;
+    background: linear-gradient(to top, rgba(8,16,18,0.9) 0%, rgba(8,16,18,0.5) 45%, rgba(8,16,18,0.1) 100%);
+  }
+  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .dash-countdown-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
+  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.72); font-weight: 500; margin-top: 2px; margin-bottom: 8px; }
+  .dash-cd-block { background: rgba(255,255,255,0.16); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); border-radius: 8px; padding: 6px 10px; text-align: center; display: inline-block; min-width: 90px; align-self: flex-start; }
   .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
-  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
-
-  .dash-latest {
-    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    border-radius: 14px; margin: 8px 16px 0; position: relative; overflow: hidden;
-    display: block; cursor: pointer; min-height: 122px;
-  }
-  .dash-latest img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; }
-  .dash-latest-body { position: relative; padding: 12px 16px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 122px; background: linear-gradient(to top, rgba(10,20,22,0.75) 0%, rgba(10,20,22,0.1) 60%); }
-  .dash-latest .dash-countdown-meta { margin-bottom: 0; }
+  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
   .dash-stat:last-child { margin-bottom: 0; }
@@ -281,21 +279,15 @@
     <div class="dash-inner">
 
       <a class="dash-countdown" id="dash-countdown" style="display:none;">
-        <div class="dash-countdown-label">Next show</div>
-        <div class="dash-countdown-name" id="cd-name"></div>
-        <div class="dash-countdown-meta" id="cd-meta"></div>
-        <div class="dash-cd-block">
-          <div class="dash-cd-num" id="cd-days">—</div>
-          <div class="dash-cd-unit">days to go</div>
-        </div>
-      </a>
-
-      <a class="dash-latest" id="dash-latest" style="display:none;">
-        <img id="lt-img" alt="" style="display:none;">
-        <div class="dash-latest-body">
-          <div class="dash-countdown-label">Latest show</div>
-          <div class="dash-countdown-name" id="lt-name"></div>
-          <div class="dash-countdown-meta" id="lt-meta"></div>
+        <img id="cd-img" alt="" style="display:none;">
+        <div class="dash-cd-overlay">
+          <div class="dash-countdown-label">Next show</div>
+          <div class="dash-countdown-name" id="cd-name"></div>
+          <div class="dash-countdown-meta" id="cd-meta"></div>
+          <div class="dash-cd-block">
+            <div class="dash-cd-num" id="cd-days">—</div>
+            <div class="dash-cd-unit">days to go</div>
+          </div>
         </div>
       </a>
 
@@ -723,29 +715,20 @@ function renderAll() {
       document.getElementById('cd-days').textContent = n;
       document.querySelector('#dash-countdown .dash-cd-unit').textContent = n === 1 ? 'month to go' : 'months to go';
     }
-  } else cd.style.display = 'none';
-
-  // ── Latest show ──
-  const dated = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
-  const latest = dated[0];
-  const lt = document.getElementById('dash-latest');
-  if (latest) {
-    lt.style.display = 'block';
-    lt.onclick = () => openDetail(latest.id);
-    document.getElementById('lt-name').textContent = latest.name;
-    document.getElementById('lt-meta').textContent =
-      [placeOf(latest), fmtMonthShort(latest.date)].filter(Boolean).join(' · ');
-    const img = document.getElementById('lt-img');
-    if (latest.thumb) {
-      img.src = latest.thumb;
+    const img = document.getElementById('cd-img');
+    if (next.thumb) {
+      img.src = next.thumb;
       img.style.display = 'block';
-      if (latest.hasPhoto) {
-        dbLoad('show-photo-' + latest.id)
+      if (next.hasPhoto) {
+        dbLoad('show-photo-' + next.id)
           .then(rec => { if (rec && rec.photo) img.src = rec.photo; })
           .catch(() => {});
       }
-    } else img.style.display = 'none';
-  } else lt.style.display = 'none';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+    }
+  } else cd.style.display = 'none';
 }
 
 // ── DETAIL LIGHTBOX ──────────────────────────────────────────────────
