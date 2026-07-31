@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Theatre Shows</title>
+<script src="/auth.js?v=3"></script>
+<script src="/db.js?v=3"></script>
+<link rel="stylesheet" href="/holidays/holiday-style.css">
+<style>
+  .nav {
+    background: rgba(47,47,50,0.97);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav .nav-title, .nav .nav-back { color: #ffffff; }
+  .nav .nav-back:hover { opacity: 0.85; }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 18px 20px 48px; }
+
+  .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #b8b8b8; }
+  .search {
+    width: 100%; border: 1px solid #e0e0e0; border-radius: 10px;
+    padding: 10px 12px 10px 34px; font-family: Montserrat, sans-serif;
+    font-size: 13px; color: #444; outline: none; background: #fff;
+  }
+  .search:focus { border-color: #0e7a87; }
+  .search::placeholder { color: #b8b8b8; }
+
+  .segmented { display: flex; background: #dedede; border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg {
+    border: none; background: none; cursor: pointer;
+    font-family: Montserrat, sans-serif; font-size: 11.5px; font-weight: 700;
+    color: #777; padding: 7px 13px; border-radius: 8px; transition: all 0.12s;
+  }
+  .seg:hover { color: #444; }
+  .seg.on { background: #fff; color: #0e7a87; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* kind filter chips */
+  .chips { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chip {
+    border: 1px solid #e0e0e0; background: #fff; cursor: pointer;
+    font-family: Montserrat, sans-serif; font-size: 11px; font-weight: 700;
+    color: #888; padding: 6px 13px; border-radius: 20px; transition: all 0.12s;
+  }
+  .chip:hover { border-color: #0e7a87; color: #0e7a87; }
+  .chip.on { background: #0e7a87; border-color: #0e7a87; color: #fff; }
+
+  .count-line { font-size: 11px; font-weight: 600; color: #999; margin-bottom: 14px; }
+
+  .group { margin-bottom: 18px; }
+  .group-head {
+    font-size: 15px; font-weight: 700; color: #0e7a87;
+    letter-spacing: -0.2px; margin-bottom: 7px; display: flex;
+    align-items: baseline; gap: 8px;
+  }
+  .group-head .gh-count { font-size: 10px; font-weight: 600; color: #b8b8b8; letter-spacing: 0; }
+
+  .group-body {
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.05);
+  }
+
+  .s-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 15px; border-bottom: 0.5px solid rgba(0,0,0,0.06);
+  }
+  .s-row:last-child { border-bottom: none; }
+  .s-row:hover { background: #fafafa; }
+  .s-text { flex: 1; min-width: 0; }
+  .s-name { font-size: 13px; font-weight: 600; color: #444; line-height: 1.3; }
+  .s-sub { font-size: 10.5px; font-weight: 500; color: #b8b8b8; margin-top: 2px; }
+  .s-rate {
+    flex-shrink: 0; min-width: 26px; text-align: center;
+    font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 7px;
+    background: rgba(14,122,135,0.12); color: #0e7a87;
+  }
+  .s-rate.none { background: #f0f0f0; color: #c8c8c8; }
+
+  .kind-pill {
+    flex-shrink: 0; font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .kind-pill.musical { background: rgba(14,122,135,0.18); color: #0e7a87; border: 1px solid rgba(14,122,135,0.25); }
+  .kind-pill.comedy  { background: rgba(255,149,0,0.18); color: #c07000; border: 1px solid rgba(255,149,0,0.25); }
+  .kind-pill.show    { background: rgba(100,100,110,0.18); color: #666666; border: 1px solid rgba(100,100,110,0.2); }
+
+  .empty-state {
+    background: #fff; border: 2px dashed #ccc; border-radius: 14px;
+    padding: 36px 24px; text-align: center; color: #999;
+    font-size: 12px; font-weight: 600;
+  }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 14px 14px 40px; }
+    .segmented { width: 100%; }
+    .seg { flex: 1; padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-back" href="/shows/">
+    <svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 1 1 8.5 9 16"/></svg>
+    Shows
+  </a>
+  <div class="nav-title">Theatre Shows</div>
+  <div class="nav-actions"></div>
+</nav>
+
+<div class="wrap">
+
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search" id="search" placeholder="Search show or theatre…">
+    </div>
+    <div class="segmented">
+      <button class="seg on" data-sort="name">A–Z</button>
+      <button class="seg"    data-sort="score">Score</button>
+      <button class="seg"    data-sort="theatre">Theatre</button>
+    </div>
+  </div>
+
+  <div class="chips" id="chips">
+    <button class="chip on" data-kind="all">All</button>
+    <button class="chip"    data-kind="musical">Musicals</button>
+    <button class="chip"    data-kind="show">Shows</button>
+    <button class="chip"    data-kind="comedy">Comedy</button>
+  </div>
+
+  <div class="count-line" id="count-line"></div>
+  <div id="list"></div>
+
+</div>
+
+<script>
+const KIND_LABEL = { comedy: 'Comedy', musical: 'Musical', show: 'Show' };
+
+let shows = [];
+let sortMode = 'name';
+let kindFilter = 'all';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function placeOf(c) { return [c.theatre, c.location].filter(Boolean).join(', '); }
+function yearOf(c) { const m = (c.date || '').match(/(\d{4})/); return m ? +m[1] : null; }
+
+function render() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let list = shows.slice();
+  const totalAll = list.length;
+
+  if (kindFilter !== 'all') list = list.filter(c => (c.kind || 'show') === kindFilter);
+  const total = list.length;
+
+  if (q) {
+    list = list.filter(c =>
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.theatre || '').toLowerCase().includes(q) ||
+      (c.comedian || '').toLowerCase().includes(q));
+  }
+
+  const byName = (a, b) => (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' });
+  let groups = [];
+
+  if (sortMode === 'name') {
+    list.sort(byName);
+    const m = new Map();
+    list.forEach(c => {
+      const ch = (c.name || '').charAt(0).toUpperCase();
+      const key = /[A-Z]/.test(ch) ? ch : '#';
+      (m.get(key) || m.set(key, []).get(key)).push(c);
+    });
+    groups = [...m.entries()].sort((a, b) => {
+      if (a[0] === '#') return 1;
+      if (b[0] === '#') return -1;
+      return a[0].localeCompare(b[0]);
+    });
+  } else if (sortMode === 'score') {
+    list.sort((a, b) => (b.rating || 0) - (a.rating || 0) || byName(a, b));
+    const m = new Map();
+    list.forEach(c => {
+      const key = c.rating ? String(c.rating) + ' star' + (c.rating === 1 ? '' : 's') : 'Unrated';
+      (m.get(key) || m.set(key, []).get(key)).push(c);
+    });
+    groups = [...m.entries()].sort((a, b) => {
+      if (a[0] === 'Unrated') return 1;
+      if (b[0] === 'Unrated') return -1;
+      return parseInt(b[0]) - parseInt(a[0]);
+    });
+  } else {
+    list.sort((a, b) => (a.theatre || '').localeCompare(b.theatre || '', 'en', { sensitivity: 'base' }) || byName(a, b));
+    const m = new Map();
+    list.forEach(c => {
+      const key = c.theatre || 'No theatre';
+      (m.get(key) || m.set(key, []).get(key)).push(c);
+    });
+    groups = [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }));
+  }
+
+  document.getElementById('count-line').textContent =
+    q ? list.length + ' of ' + total + ' shows' : total + (kindFilter === 'all' ? ' shows' : ' ' + (KIND_LABEL[kindFilter] || '') + 's');
+
+  const wrap = document.getElementById('list');
+  wrap.innerHTML = '';
+
+  if (!list.length) {
+    wrap.innerHTML = '<div class="empty-state">' + (totalAll ? 'Nothing matches' : 'No shows logged yet') + '</div>';
+    return;
+  }
+
+  groups.forEach(([label, rows]) => {
+    const g = document.createElement('div');
+    g.className = 'group';
+    g.innerHTML = '<div class="group-head">' + esc(label)
+      + '<span class="gh-count">' + rows.length + '</span></div>';
+    const body = document.createElement('div');
+    body.className = 'group-body';
+    rows.forEach(c => {
+      const kind = c.kind || 'show';
+      const sub = kind === 'comedy' && c.comedian ? c.comedian : placeOf(c);
+      const row = document.createElement('div');
+      row.className = 's-row';
+      row.innerHTML =
+        '<div class="s-text">'
+        + '<div class="s-name">' + esc(c.name || '') + '</div>'
+        + (sub ? '<div class="s-sub">' + esc(sub) + '</div>' : '')
+        + '</div>'
+        + (sortMode === 'name' || sortMode === 'score'
+            ? '<span class="kind-pill ' + kind + '">' + (KIND_LABEL[kind] || 'Show') + '</span>' : '')
+        + '<div class="s-rate' + (c.rating ? '' : ' none') + '">' + (c.rating || '–') + '</div>';
+      body.appendChild(row);
+    });
+    g.appendChild(body);
+    wrap.appendChild(g);
+  });
+}
+
+document.querySelectorAll('.seg').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.seg').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    sortMode = btn.dataset.sort;
+    render();
+  };
+});
+document.querySelectorAll('.chip').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.chip').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    kindFilter = btn.dataset.kind;
+    render();
+  };
+});
+document.getElementById('search').addEventListener('input', render);
+
+(async () => {
+  try {
+    const rec = await dbLoad('shows');
+    shows = (rec && Array.isArray(rec.list)) ? rec.list : [];
+  } catch (e) { shows = []; }
+  render();
+})();
+</script>
+</body>
+</html>
