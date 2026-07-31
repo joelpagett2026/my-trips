@@ -335,7 +335,7 @@
 
     <div class="f-group">
       <label class="f-label">Month seen</label>
-      <input class="f-input" id="f-date" placeholder="mm/yyyy">
+      <input class="f-input" id="f-date" placeholder="dd/mm/yyyy or mm/yyyy">
     </div>
 
     <div class="f-row">
@@ -422,13 +422,17 @@ function starsRow(rating, size, cls) {
   return html + '</div>';
 }
 
-function parseDMY(s) {
+function parseParts(s) {
   s = (s || '').trim();
-  let m = s.match(/^(\d{1,2})\/(\d{4})$/);                 // mm/yyyy
-  if (m) return new Date(+m[2], +m[1] - 1, 1);
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);          // legacy dd/mm/yyyy
-  if (m) return new Date(+m[3], +m[2] - 1, 1);
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);      // dd/mm/yyyy
+  if (m) return { d: new Date(+m[3], +m[2] - 1, +m[1]), prec: 'day' };
+  m = s.match(/^(\d{1,2})\/(\d{4})$/);                     // mm/yyyy
+  if (m) return { d: new Date(+m[2], +m[1] - 1, 1), prec: 'month' };
   return null;
+}
+function parseDMY(s) {
+  const p = parseParts(s);
+  return p ? p.d : null;
 }
 function yearOf(c) {
   const m = (c.date || '').match(/(\d{4})/);
@@ -440,20 +444,38 @@ function monthsUntil(c) {
   const now = new Date();
   return (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
 }
-function daysUntil(c) { return monthsUntil(c); } // month-precision alias
+function daysUntil(c) {
+  const p = parseParts(c.date);
+  if (!p || p.prec !== 'day') return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((p.d - today) / 86400000);
+}
 function isUpcoming(c) {
-  const n = monthsUntil(c);
+  const days = daysUntil(c);
+  if (days !== null) return days > 0;      // day-precision shows
+  const n = monthsUntil(c);                 // month-only shows
   return n !== null && n > 0;
 }
 function fmtDate(s) {
-  const d = parseDMY(s);
-  return d ? d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) : (s || '');
+  const p = parseParts(s);
+  if (!p) return s || '';
+  return p.prec === 'day'
+    ? p.d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    : p.d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 function fmtMonthShort(s) {
-  const d = parseDMY(s);
-  return d ? d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : (s || '');
+  const p = parseParts(s);
+  if (!p) return s || '';
+  return p.prec === 'day'
+    ? p.d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : p.d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
 }
 function upcomingLabel(c) {
+  const days = daysUntil(c);
+  if (days !== null) {
+    if (days === 1) return 'Tomorrow';
+    if (days <= 30) return 'In ' + days + ' days';
+  }
   const n = monthsUntil(c);
   return n === 1 ? 'Next month' : 'In ' + n + ' months';
 }
@@ -629,9 +651,15 @@ function renderAll() {
     document.getElementById('cd-name').textContent = next.name;
     document.getElementById('cd-meta').textContent =
       [placeOf(next), fmtMonthShort(next.date)].filter(Boolean).join(' · ');
-    const n = monthsUntil(next);
-    document.getElementById('cd-days').textContent = n;
-    document.querySelector('#dash-countdown .dash-cd-unit').textContent = n === 1 ? 'month to go' : 'months to go';
+    const days = daysUntil(next);
+    if (days !== null) {
+      document.getElementById('cd-days').textContent = days;
+      document.querySelector('#dash-countdown .dash-cd-unit').textContent = days === 1 ? 'day to go' : 'days to go';
+    } else {
+      const n = monthsUntil(next);
+      document.getElementById('cd-days').textContent = n;
+      document.querySelector('#dash-countdown .dash-cd-unit').textContent = n === 1 ? 'month to go' : 'months to go';
+    }
   } else cd.style.display = 'none';
 
   // ── Latest show ──
@@ -819,7 +847,7 @@ async function saveShow() {
   const name = document.getElementById('f-name').value.trim();
   const date = document.getElementById('f-date').value.trim();
   if (!name || !date) { alert('Show name and date are required'); return; }
-  if (!parseDMY(date)) { alert('Date must be mm/yyyy'); return; }
+  if (!parseParts(date)) { alert('Date must be dd/mm/yyyy or mm/yyyy'); return; }
 
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
