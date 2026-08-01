@@ -162,9 +162,31 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 function placeOf(c) { return [c.theatre, c.location].filter(Boolean).join(', '); }
 function yearOf(c) { const m = (c.date || '').match(/(\d{4})/); return m ? +m[1] : null; }
 
+function parseParts(str) {
+  str = (str || '').trim();
+  let m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return { d: new Date(+m[3], +m[2] - 1, +m[1]), prec: 'day' };
+  m = str.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) return { d: new Date(+m[2], +m[1] - 1, 1), prec: 'month' };
+  return null;
+}
+// A show counts as seen unless its date is still in the future
+function isSeen(c) {
+  const p = parseParts(c.date);
+  if (!p) return true;                 // undated -> treat as seen
+  const now = new Date();
+  if (p.prec === 'day') {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return p.d <= today;
+  }
+  // month precision: upcoming only if a later month/year
+  return (p.d.getFullYear() < now.getFullYear())
+    || (p.d.getFullYear() === now.getFullYear() && p.d.getMonth() <= now.getMonth());
+}
+
 function render() {
   const q = document.getElementById('search').value.trim().toLowerCase();
-  let list = shows.slice();
+  let list = shows.filter(isSeen);
   const totalAll = list.length;
 
   if (kindFilter !== 'all') list = list.filter(c => (c.kind || 'show') === kindFilter);
