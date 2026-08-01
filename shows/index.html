@@ -508,8 +508,9 @@ function upcomingLabel(c) {
   const days = daysUntil(c);
   if (days !== null) {
     if (days === 1) return 'Tomorrow';
-    if (days <= 30) return 'In ' + days + ' days';
+    return 'In ' + days + ' days';
   }
+  // Month-only dates can't give an exact day count
   const n = monthsUntil(c);
   return n === 1 ? 'Next month' : 'In ' + n + ' months';
 }
