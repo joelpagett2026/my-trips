@@ -36,7 +36,6 @@
     border-left: 0.5px solid rgba(0,0,0,0.1); background: #ffffff;
     position: sticky; top: 52px; height: calc(100vh - 52px);
     overflow-y: auto; align-self: start; scrollbar-width: none;
-    display: flex; flex-direction: column; justify-content: center;
   }
   .dash-col::-webkit-scrollbar { display: none; }
 
@@ -90,7 +89,7 @@
   }
 
   /* ── DASHBOARD ── */
-  .dash-inner { padding: 20px 0; width: 100%; flex-shrink: 0; }
+  .dash-inner { padding: 0 0 32px; }
   .dash-section { padding: 16px 16px 0; }
   .dash-section-title { font-size: 11px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
   .dash-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 16px 16px 0; }
@@ -106,7 +105,7 @@
   .ts-stars svg.on { color: #0e7a87; }
 
   .dash-countdown {
-    border-radius: 14px; margin: 0 16px;
+    border-radius: 14px; margin: 20px 16px 0;
     position: relative; overflow: hidden; display: block; cursor: pointer;
     background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
     min-height: 126px;
