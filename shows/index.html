@@ -117,6 +117,12 @@
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: 8px; }
   .dash-stat:last-child { margin-bottom: 0; }
   .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
+  .stat-ico {
+    width: 20px; height: 20px; background: currentColor; display: inline-block;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: center; mask-position: center;
+    -webkit-mask-size: contain; mask-size: contain;
+  }
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
@@ -295,21 +301,21 @@
         <div class="dash-section-title">Stats</div>
         <a class="dash-stat" href="/shows/list.html?kind=musical" style="text-decoration:none;">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/show-musicals.svg);mask-image:url(/icons/show-musicals.svg);"></span>
           </div>
           <div class="dash-stat-lbl">Musicals</div>
           <div class="dash-stat-val" id="s-musicals">0</div>
         </a>
         <a class="dash-stat" href="/shows/list.html?kind=show" style="text-decoration:none;">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/show-shows.svg);mask-image:url(/icons/show-shows.svg);"></span>
           </div>
           <div class="dash-stat-lbl">Shows</div>
           <div class="dash-stat-val" id="s-shows">0</div>
         </a>
         <a class="dash-stat" href="/shows/list.html?kind=comedy" style="text-decoration:none;">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/show-comedians.svg);mask-image:url(/icons/show-comedians.svg);"></span>
           </div>
           <div class="dash-stat-lbl">Comedians seen</div>
           <div class="dash-stat-val" id="s-comedians">0</div>
