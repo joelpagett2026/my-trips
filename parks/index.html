@@ -135,20 +135,10 @@
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
 
   .top-coaster {
-    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    display: flex; align-items: center; gap: 8px; padding: 6px 2px;
     border-bottom: 0.5px solid rgba(0,0,0,0.06); background: #fff;
   }
   .top-coaster:last-child { border-bottom: none; }
-  .top-coaster.dragging {
-    opacity: 0.9; border-radius: 8px; border-bottom-color: transparent;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.16); padding-left: 6px; padding-right: 6px;
-  }
-  .tc-grip {
-    flex-shrink: 0; width: 16px; display: flex; align-items: center; justify-content: center;
-    color: #d5d5d5; cursor: grab; touch-action: none;
-  }
-  .tc-grip:active { cursor: grabbing; }
-  .top-coaster:hover .tc-grip { color: #999; }
   .tc-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 15px; opacity: 0.7; }
   .tc-body { flex: 1; min-width: 0; }
   .tc-name { font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -771,14 +761,12 @@ function renderAll() {
     const row = document.createElement('div');
     row.className = 'top-coaster';
     row.dataset.key = c.key;
-    row.innerHTML = '<div class="tc-grip"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="2" cy="2" r="1.3"/><circle cx="8" cy="2" r="1.3"/><circle cx="2" cy="7" r="1.3"/><circle cx="8" cy="7" r="1.3"/><circle cx="2" cy="12" r="1.3"/><circle cx="8" cy="12" r="1.3"/></svg></div>'
-      + '<div class="tc-rank"></div>'
+    row.innerHTML = '<div class="tc-rank"></div>'
       + '<div class="tc-body">'
       +   '<div class="tc-name' + (c.defunct ? ' is-defunct' : '') + '">' + esc(c.name) + '</div>'
       +   '<div class="tc-park">' + esc(c.park) + '</div>'
       + '</div>'
       + '<div class="tc-rate' + (c.rating === 10 ? ' top' : '') + '">' + c.rating + '</div>';
-    row.querySelector('.tc-grip').addEventListener('pointerdown', e => beginDrag(e, row, tcWrap));
     tcWrap.appendChild(row);
   });
   renumberTop();
@@ -799,39 +787,6 @@ function renderAll() {
 function renumberTop() {
   [...document.querySelectorAll('#top-coasters .top-coaster')]
     .forEach((r, i) => { r.querySelector('.tc-rank').textContent = i + 1; });
-}
-
-function beginDrag(e, row, wrap) {
-  e.preventDefault();
-  row.classList.add('dragging');
-
-  // Window-level listeners: setPointerCapture is silently released when
-  // insertBefore moves the node, which stopped the drag after one swap.
-  const move = ev => {
-    ev.preventDefault();
-    const y = ev.clientY;
-    const others = [...wrap.querySelectorAll('.top-coaster:not(.dragging)')];
-    const before = others.find(r => {
-      const b = r.getBoundingClientRect();
-      return y < b.top + b.height / 2;
-    });
-    if (before) wrap.insertBefore(row, before);
-    else wrap.appendChild(row);
-    renumberTop();
-  };
-
-  const end = () => {
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', end);
-    window.removeEventListener('pointercancel', end);
-    row.classList.remove('dragging');
-    renumberTop();
-    saveTop();
-  };
-
-  window.addEventListener('pointermove', move, { passive: false });
-  window.addEventListener('pointerup', end);
-  window.addEventListener('pointercancel', end);
 }
 
 // ── DETAIL LIGHTBOX ──────────────────────────────────────────────────
