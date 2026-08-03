@@ -114,11 +114,39 @@
     </span>
     <span style="display:flex;align-items:center;gap:8px;">
       <span id="map-panel-synced"></span>
+      <button id="map-panel-sync" onclick="openPinSync()" title="Sync pins from your Google Maps list" style="display:none;background:rgba(14,122,135,0.1);border:none;border-radius:7px;height:24px;padding:0 9px;align-items:center;gap:5px;cursor:pointer;color:#0e7a87;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Sync
+      </button>
       <button id="map-panel-mobile-close" onclick="closeMobileMapPanel()" style="display:none;background:rgba(0,0,0,0.06);border:none;border-radius:8px;width:26px;height:26px;align-items:center;justify-content:center;cursor:pointer;color:#666;flex-shrink:0;">✕</button>
     </span>
   </div>
   <div id="map-panel-leaflet"></div>
   <div id="map-panel-list"></div>
+</div>
+
+<div id="pin-sync-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.35);">
+    <div style="padding:20px 22px 0;">
+      <div style="font-size:17px;font-weight:700;color:#444;letter-spacing:-0.3px;">Sync map pins</div>
+      <div style="font-size:12.5px;color:#888;font-weight:500;margin-top:6px;line-height:1.5;">
+        Open your Google Maps list, select all the place names and paste them below — one per line. Each is located automatically and the pins are rebuilt.
+      </div>
+      <a id="pin-sync-openlist" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:#0e7a87;text-decoration:none;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open Google Maps list
+      </a>
+    </div>
+    <div style="padding:14px 22px 0;">
+      <textarea id="pin-sync-text" placeholder="Livraria Lello&#10;Clérigos Tower&#10;Cais da Ribeira&#10;…" style="width:100%;height:200px;border:1px solid #e0e0e0;border-radius:12px;padding:12px 14px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;resize:vertical;outline:none;line-height:1.5;"></textarea>
+      <div style="font-size:11px;color:#aaa;font-weight:500;margin-top:6px;">Tip: add a city after a comma to place it precisely, e.g. <em>Livraria Lello, Porto</em></div>
+    </div>
+    <div id="pin-sync-progress" style="display:none;padding:8px 22px 0;font-size:12px;font-weight:600;color:#0e7a87;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding:16px 22px 20px;">
+      <button onclick="closePinSync()" style="background:#f0f0f0;border:none;border-radius:10px;padding:10px 18px;font-family:Montserrat,sans-serif;font-size:12.5px;font-weight:700;color:#666;cursor:pointer;">Cancel</button>
+      <button id="pin-sync-go" onclick="runPinSync()" style="background:linear-gradient(135deg,#0e7a87 0%,#12a0af 100%);border:none;border-radius:10px;padding:10px 20px;font-family:Montserrat,sans-serif;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(14,122,135,0.25);">Sync pins</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1898,6 +1926,85 @@ function loadGoogleMapsAssets() {
   });
 }
 
+// ── PIN SYNC ─────────────────────────────────────────────────────────
+function openPinSync() {
+  const overlay = document.getElementById('pin-sync-overlay');
+  const link = document.getElementById('pin-sync-openlist');
+  const listUrl = window._loadedMapListUrl || window._loadedMapsUrl || '';
+  if (link) { if (listUrl) { link.href = listUrl; link.style.display = 'inline-flex'; } else link.style.display = 'none'; }
+  const current = (window._loadedMapPins || []).map(p => p.city ? p.name + ', ' + p.city : p.name).join('\n');
+  document.getElementById('pin-sync-text').value = current;
+  document.getElementById('pin-sync-progress').style.display = 'none';
+  overlay.style.display = 'flex';
+}
+function closePinSync() {
+  document.getElementById('pin-sync-overlay').style.display = 'none';
+}
+
+async function photonPin(query) {
+  const url = 'https://photon.komoot.io/api?limit=1&lang=en&q=' + encodeURIComponent(query);
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const f = data.features && data.features[0];
+  if (!f) return null;
+  const pr = f.properties || {};
+  return {
+    lat: Math.round(f.geometry.coordinates[1] * 1e6) / 1e6,
+    lng: Math.round(f.geometry.coordinates[0] * 1e6) / 1e6,
+    city: pr.city || pr.county || pr.state || '',
+    category: pr.osm_value ? pr.osm_value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '',
+  };
+}
+
+async function runPinSync() {
+  const raw = document.getElementById('pin-sync-text').value;
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const goBtn = document.getElementById('pin-sync-go');
+  const prog = document.getElementById('pin-sync-progress');
+  if (!lines.length) { prog.style.display = 'block'; prog.textContent = 'Paste at least one place name first.'; return; }
+
+  goBtn.disabled = true; goBtn.style.opacity = '0.6';
+  prog.style.display = 'block';
+
+  const pins = [];
+  const failed = [];
+  for (let i = 0; i < lines.length; i++) {
+    prog.textContent = `Locating ${i + 1} of ${lines.length}…`;
+    const parts = lines[i].split(',').map(s => s.trim());
+    const name = parts[0];
+    const givenCity = parts.slice(1).join(', ');
+    let hit = null;
+    try { hit = await photonPin(lines[i]); } catch (e) {}
+    if (hit) {
+      pins.push({ name, lat: hit.lat, lng: hit.lng, city: givenCity || hit.city || '', category: hit.category || '' });
+    } else {
+      failed.push(name);
+    }
+    await new Promise(r => setTimeout(r, 250));
+  }
+
+  if (!pins.length) {
+    prog.textContent = 'Could not locate any of those places. Check the spelling or add a city after a comma.';
+    goBtn.disabled = false; goBtn.style.opacity = '1';
+    return;
+  }
+
+  window._loadedMapPins = pins;
+  window._loadedPinsSyncedAt = new Date().toISOString();
+  scheduleSave();
+
+  prog.textContent = `Synced ${pins.length} pin${pins.length === 1 ? '' : 's'}${failed.length ? ` · ${failed.length} not found: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}` : ''}.`;
+
+  try {
+    document.getElementById('map-panel').classList.remove('active');
+    await initMapPanel({ mapPins: pins, pinsSyncedAt: window._loadedPinsSyncedAt, header: collectState().header });
+  } catch (e) {}
+
+  goBtn.disabled = false; goBtn.style.opacity = '1';
+  setTimeout(closePinSync, failed.length ? 2600 : 1100);
+}
+
 async function initMapPanel(state) {
   if (!MAP_PIN_TRIPS.includes(RECORD_ID)) return;
   const pins = state.mapPins;
@@ -1918,6 +2025,9 @@ async function initMapPanel(state) {
   document.getElementById('map-panel').classList.add('active');
   const syncedEl = document.getElementById('map-panel-synced');
   if (syncedEl) syncedEl.textContent = timeAgo(state.pinsSyncedAt);
+  // Reveal the Sync button (only in editable view, not read-only shares)
+  const syncBtn = document.getElementById('map-panel-sync');
+  if (syncBtn && !SHARE_TOKEN) syncBtn.style.display = 'flex';
 
   // Wait a tick for the browser to actually lay out the now-visible container —
   // Google Maps (unlike Leaflet) reads its container's size once at construction
