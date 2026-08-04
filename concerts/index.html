@@ -629,7 +629,7 @@ function renderAll() {
   if (!rated.length) topWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Rate some concerts to build your ranking</div>';
   rated.forEach((c, i) => {
     const dObj = parseDMY(c.date);
-    const dStr = dObj ? dObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (c.date || '');
+    const dStr = dObj ? String(dObj.getFullYear()) : (c.date || '');
     const sub = [c.tour, dStr].filter(Boolean).join(' · ');
     const row = document.createElement('div');
     row.className = 'top-artist';
