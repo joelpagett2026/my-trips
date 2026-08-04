@@ -86,18 +86,6 @@
   .dash-section-title { font-size: 11px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: clamp(6px, 1vh, 12px); }
   .dash-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 16px 16px 0; }
 
-  .dash-countdown {
-    background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
-    border-radius: 14px; padding: 11px 16px; margin: 0 16px;
-    position: relative; overflow: hidden; display: block; cursor: pointer; flex-shrink: 0;
-  }
-  .dash-countdown-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-  .dash-countdown-name { font-size: 14px; font-weight: 700; color: #fff; }
-  .dash-countdown-meta { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; margin-bottom: 8px; }
-  .dash-cd-block { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 10px; text-align: center; display: inline-block; min-width: 90px; }
-  .dash-cd-num { font-size: 24px; font-weight: 700; color: #fff; line-height: 1; }
-  .dash-cd-unit { font-size: 9px; color: rgba(255,255,255,0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
-
   .dash-hero {
     border-radius: 14px; margin: clamp(6px,1vh,10px) 16px 0; position: relative; overflow: hidden;
     background: linear-gradient(135deg, #1a2a2a 0%, #0e3a3f 100%);
@@ -309,16 +297,6 @@
   <div class="dash-col">
     <div class="dash-inner">
 
-      <a class="dash-countdown" id="dash-countdown" style="display:none;">
-        <div class="dash-countdown-label">Next concert</div>
-        <div class="dash-countdown-name" id="cd-name"></div>
-        <div class="dash-countdown-meta" id="cd-meta"></div>
-        <div class="dash-cd-block">
-          <div class="dash-cd-num" id="cd-days">—</div>
-          <div class="dash-cd-unit">days to go</div>
-        </div>
-      </a>
-
       <a class="dash-hero" id="dash-hero" style="display:none;">
         <img id="hero-img" alt="" style="display:none;">
         <div class="dash-hero-body">
@@ -351,20 +329,6 @@
           <div class="dash-stat-lbl">Artists seen</div>
           <div class="dash-stat-val" id="s-artists">0</div>
         </a>
-        <div class="dash-stat">
-          <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </div>
-          <div class="dash-stat-lbl">Venues</div>
-          <div class="dash-stat-val" id="s-venues">0</div>
-        </div>
-        <div class="dash-stat">
-          <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <div class="dash-stat-lbl">Total</div>
-          <div class="dash-stat-val" id="s-total">0</div>
-        </div>
       </div>
 
       <div class="dash-section" style="flex:1; display:flex; flex-direction:column; min-height:0;">
@@ -620,7 +584,6 @@ function renderAll() {
   // ── Stats ──
   document.getElementById('s-concerts').textContent  = seen.filter(c => c.type !== 'festival').length;
   document.getElementById('s-festivals').textContent = seen.filter(c => c.type === 'festival').length;
-  document.getElementById('s-total').textContent = seen.length;
 
   const artistCounts = new Map();
   const bump = a => {
@@ -640,8 +603,6 @@ function renderAll() {
     }
   });
   document.getElementById('s-artists').textContent = artistCounts.size;
-  document.getElementById('s-venues').textContent =
-    new Set(seen.map(c => ((c.venue || c.location || '')).trim().toLowerCase()).filter(Boolean)).size;
 
   // ── Top artists ──
   const top = [...artistCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5);
@@ -656,18 +617,6 @@ function renderAll() {
       + '<div class="top-artist-count">' + t.count + '×</div>';
     topWrap.appendChild(row);
   });
-
-  // ── Next concert countdown ──
-  const next = upcoming[0];
-  const cd = document.getElementById('dash-countdown');
-  if (next) {
-    cd.style.display = 'block';
-    cd.onclick = () => openDetail(next.id);
-    document.getElementById('cd-name').textContent = next.artist || next.name || '';
-    document.getElementById('cd-meta').textContent =
-      [next.venue || next.location, next.date].filter(Boolean).join(' · ');
-    document.getElementById('cd-days').textContent = daysUntil(next);
-  } else cd.style.display = 'none';
 
   // ── Latest concert hero ──
   const dated = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date));
