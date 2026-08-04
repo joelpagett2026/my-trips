@@ -630,7 +630,7 @@ function renderAll() {
   rated.forEach((c, i) => {
     const dObj = parseDMY(c.date);
     const dStr = dObj ? dObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (c.date || '');
-    const sub = [c.venue, dStr].filter(Boolean).join(' · ');
+    const sub = [c.tour, dStr].filter(Boolean).join(' · ');
     const row = document.createElement('div');
     row.className = 'top-artist';
     row.style.cursor = 'pointer';
