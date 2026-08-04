@@ -119,6 +119,8 @@
   .top-artist-rank { font-size: 10px; font-weight: 700; color: #0e7a87; min-width: 18px; opacity: 0.7; }
   .top-artist-name { flex: 1; font-size: 12.5px; font-weight: 600; color: #444; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top-artist-count { font-size: 11px; font-weight: 700; color: #888; }
+  .top-concert-rate { display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #0e7a87; flex-shrink: 0; }
+  .top-concert-rate svg { color: #0e7a87; }
 
   /* ── DETAIL LIGHTBOX ── */
   .detail-overlay {
@@ -341,7 +343,7 @@
       </div>
 
       <div class="dash-section" style="flex:1; display:flex; flex-direction:column; min-height:0;">
-        <div class="dash-section-title">Most seen artists</div>
+        <div class="dash-section-title">My top rated concerts</div>
         <div id="top-artists" style="flex:1; display:flex; flex-direction:column; justify-content:space-around; min-height:0;"></div>
         <a href="/concerts/artists.html" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:11px;border-radius:12px;background:linear-gradient(135deg,#0e7a87 0%,#12a0af 100%);text-decoration:none;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#ffffff;box-shadow:0 2px 8px rgba(14,122,135,0.25);">
           View all artists
@@ -613,17 +615,23 @@ function renderAll() {
   });
   document.getElementById('s-artists').textContent = artistCounts.size;
 
-  // ── Top artists ──
-  const top = [...artistCounts.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+  // ── Top rated concerts ──
+  const rated = seen.filter(c => (c.rating || 0) > 0)
+    .sort((a, b) => (b.rating - a.rating)
+      || ((parseDMY(b.date) || 0) - (parseDMY(a.date) || 0))
+      || (a.artist || a.name || '').localeCompare(b.artist || b.name || ''))
+    .slice(0, 10);
   const topWrap = document.getElementById('top-artists');
   topWrap.innerHTML = '';
-  if (!top.length) topWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Log some concerts first</div>';
-  top.forEach((t, i) => {
+  if (!rated.length) topWrap.innerHTML = '<div style="font-size:11px;color:#b8b8b8;font-weight:500;">Rate some concerts to build your ranking</div>';
+  rated.forEach((c, i) => {
     const row = document.createElement('div');
     row.className = 'top-artist';
+    row.style.cursor = 'pointer';
+    row.onclick = () => openDetail(c.id);
     row.innerHTML = '<div class="top-artist-rank">' + (i + 1) + '</div>'
-      + '<div class="top-artist-name">' + esc(t.name) + '</div>'
-      + '<div class="top-artist-count">' + t.count + '×</div>';
+      + '<div class="top-artist-name">' + esc(c.artist || c.name || '') + '</div>'
+      + '<div class="top-concert-rate">' + STAR.replace(/__S__/g, '11') + '<span>' + c.rating + '</span></div>';
     topWrap.appendChild(row);
   });
 
