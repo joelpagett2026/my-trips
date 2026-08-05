@@ -706,11 +706,41 @@ function makeTransRow(data, container) {
   wrap.appendChild(row);
   container.appendChild(wrap);
 }
+function parseItinDate(el) {
+  if (!el) return null;
+  const raw = (el.value || '').trim();
+  if (!raw) return null;
+  const p = raw.replace(/[^0-9/]/g, '').split('/');
+  if (p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
+  let yy = p[2];
+  if (yy.length === 2) yy = (parseInt(yy, 10) < 50 ? '20' : '19') + yy;
+  const dt = new Date(parseInt(yy, 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10));
+  return isNaN(dt) ? null : dt;
+}
+// A hotel's breakfast is included on every morning AFTER a night's stay — the
+// days following check-in, up to and INCLUDING the check-out day
+// (check-in < day <= check-out). It is NOT included on the check-in day itself,
+// so a hotel checking in on a given day never claims that day's breakfast
+// (which may belong to the hotel being checked out of, or be a manual meal).
 function isHotelBreakfastActive(row) {
   const card = row.closest('.day-card');
   if (!card) return false;
-  const bf = card.querySelector('.s-acc [data-key="breakfast"]');
-  return !!bf && bf.value === 'Yes';
+  const cardDate = parseItinDate(card.querySelector('.s-date [data-key="date"]'));
+  if (!cardDate) {
+    // No usable day date — fall back to the legacy same-card check.
+    const bf = card.querySelector('.s-acc [data-key="breakfast"]');
+    return !!bf && bf.value === 'Yes';
+  }
+  const accs = document.querySelectorAll('.s-acc');
+  for (const acc of accs) {
+    const bf = acc.querySelector('[data-key="breakfast"]');
+    if (!bf || bf.value !== 'Yes') continue;
+    const ci = parseItinDate(acc.querySelector('[data-key="checkin"]'));
+    const co = parseItinDate(acc.querySelector('[data-key="checkout"]'));
+    if (!ci || !co) continue;
+    if (cardDate > ci && cardDate <= co) return true;
+  }
+  return false;
 }
 // Shows/hides the Booked? and Time Booked cells on a food row —
 // hidden for Inflight/Airport Lounge meals, and for a Breakfast row
@@ -1131,6 +1161,22 @@ function addDay(d) {
             });
             if (bfRow) bfRow.remove();
           }
+        }
+      }
+    }
+    // Check-out day: the final morning still includes the hotel's breakfast
+    // (check-in < day <= check-out), but it is not a night stayed, so it gets a
+    // breakfast row only — no accommodation section. Add-only: never auto-remove
+    // here, since the next hotel may check in this day or the user may have added
+    // their own breakfast, which must not be clobbered.
+    if (bfVal === 'Yes') {
+      const checkoutCard = allCards[idx + nights];
+      if (checkoutCard) {
+        const coFoodSec = checkoutCard.querySelector('.s-food');
+        const coFoodRows = coFoodSec && coFoodSec.querySelector('.food-rows');
+        if (coFoodRows) {
+          const hasBf = Array.from(coFoodRows.querySelectorAll('[data-key="meal"]')).find(e => e.value === 'Breakfast');
+          if (!hasBf) makeFoodRow({ meal: 'Breakfast', place: hotel }, coFoodRows, true);
         }
       }
     }
