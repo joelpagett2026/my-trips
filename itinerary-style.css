@@ -246,10 +246,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
    so they sit side-by-side. Pure CSS — no DOM changes, so the hotel/transport
    propagation logic is untouched. Reverts cleanly by deleting this block. */
 @media screen and (min-width: 1000px) {
-  /* Stop day cards stretching edge-to-edge on wide monitors */
-  .days { max-width: 1480px; margin-left: auto; margin-right: auto; }
-
-  /* Flow each day's sections into two columns */
+  /* Flow each day's sections into two columns — full width to stretch them out */
   .day-card {
     column-count: 2;
     column-gap: 20px;
