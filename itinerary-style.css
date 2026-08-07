@@ -240,6 +240,45 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .itin-tab-bar { display: none !important; }
 }
 
+/* ── DESKTOP COLUMN LAYOUT ──
+   With the maps gone the day cards were one very wide stack. On desktop we flow
+   each day's sections (Travel / Hotel / Restaurants / Itinerary) into two columns
+   so they sit side-by-side. Pure CSS — no DOM changes, so the hotel/transport
+   propagation logic is untouched. Reverts cleanly by deleting this block. */
+@media screen and (min-width: 1000px) {
+  /* Stop day cards stretching edge-to-edge on wide monitors */
+  .days { max-width: 1480px; margin-left: auto; margin-right: auto; }
+
+  /* Flow each day's sections into two columns */
+  .day-card {
+    column-count: 2;
+    column-gap: 20px;
+    padding: 0 16px 4px;
+  }
+
+  /* Day header spans full width across the top, above the columns */
+  .day-card > .day-top {
+    column-span: all;
+    -webkit-column-span: all;
+    break-inside: avoid;
+    margin: 0 -16px 6px;
+  }
+
+  /* Keep each section whole within its column, as a tidy boxed card */
+  .day-card > .s-trans,
+  .day-card > .s-acc,
+  .day-card > .s-food,
+  .day-card > .s-itin,
+  .day-card > .s-tickets {
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin: 0 0 14px;
+    border: 1px solid rgba(0,0,0,0.07);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}
+
 /* ── MOBILE RESPONSIVE (itinerary pages) ── */
 @media (max-width: 700px) {
   /* Hide entire nav on mobile — bottom bar replaces it */
