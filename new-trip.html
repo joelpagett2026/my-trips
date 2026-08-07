@@ -12,7 +12,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
 <title>New Trip</title>
-<link rel="stylesheet" href="/itinerary-style.css?v=116">
+<link rel="stylesheet" href="/itinerary-style.css?v=117">
 <script src="/auth.js?v=3"></script>
 <script src="/db.js?v=3"></script>
 </head>
@@ -106,49 +106,6 @@
       </button>
     </div><span id="maps-nav-wrap" style="display:none;align-items:center;gap:4px;"><a id="maps-link-btn" href="#" target="_blank" class="nav-btn maps-btn has-url" title="Open Google Maps"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></a><button id="maps-edit-btn" onclick="openMapsPopover()" title="Edit Maps link" style="background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,0.45);padding:4px;border-radius:6px;display:flex;align-items:center;transition:color 0.15s;" onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></span><button id="maps-add-btn" onclick="openMapsPopover()" class="nav-btn maps-btn" title="Add Google Maps link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="nav-btn-text">Maps</span></button><input type="hidden" id="maps-url-val"><button id="share-btn" onclick="openSharePopover()" class="nav-btn" title="Share a read-only link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg><span class="nav-btn-text">Share</span></button><div id="share-popover" style="display:none;position:fixed;bottom:60px;right:12px;z-index:200;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);padding:14px 16px;width:320px;"><div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Share this itinerary</div><div style="font-size:11px;color:#999;margin-bottom:10px;line-height:1.4;">Anyone with the link can view and print — no PIN needed. They can't edit anything, and booking references are hidden.</div><div id="share-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div><div style="display:flex;justify-content:space-between;align-items:center;"><button onclick="closeSharePopover()" style="background:none;border:none;color:#bbb;font-family:Montserrat,sans-serif;font-size:12px;cursor:pointer;padding:0;">Close</button><button onclick="createShareLink()" style="background:#0e7a87;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ New link</button></div></div><button class="nav-btn" id="nav-save-btn" onclick="manualSave()" title="Save"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span class="nav-btn-text">Save</span></button><button class="nav-btn" onclick="window.print()" title="Print"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="nav-btn-text">Print</span></button><button class="nav-btn" id="undo-btn" onclick="undoState()" title="Undo" style="pointer-events:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span class="nav-btn-text">Undo</span></button><button class="nav-btn" onclick="pushUndo(); addDay();" title="Add Day"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="nav-btn-text">Day</span></button><button class="nav-btn danger" onclick="deleteTrip()" title="Delete Trip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span class="nav-btn-text">Delete</span></button></div>
 </div>
-<div id="map-panel">
-  <div id="map-panel-head">
-    <span id="map-panel-city">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0e7a87" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <span id="map-panel-city-text">Pins</span>
-    </span>
-    <span style="display:flex;align-items:center;gap:8px;">
-      <span id="map-panel-synced"></span>
-      <button id="map-panel-sync" onclick="openPinSync()" title="Sync pins from your Google Maps list" style="display:none;background:rgba(14,122,135,0.1);border:none;border-radius:7px;height:24px;padding:0 9px;align-items:center;gap:5px;cursor:pointer;color:#0e7a87;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        Sync
-      </button>
-      <button id="map-panel-mobile-close" onclick="closeMobileMapPanel()" style="display:none;background:rgba(0,0,0,0.06);border:none;border-radius:8px;width:26px;height:26px;align-items:center;justify-content:center;cursor:pointer;color:#666;flex-shrink:0;">✕</button>
-    </span>
-  </div>
-  <div id="map-panel-leaflet"></div>
-  <div id="map-panel-list"></div>
-</div>
-
-<div id="pin-sync-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.35);">
-    <div style="padding:20px 22px 0;">
-      <div style="font-size:17px;font-weight:700;color:#444;letter-spacing:-0.3px;">Sync map pins</div>
-      <div style="font-size:12.5px;color:#888;font-weight:500;margin-top:6px;line-height:1.5;">
-        Open your Google Maps list, select all the place names and paste them below — one per line. Each is located automatically and the pins are rebuilt.
-      </div>
-      <a id="pin-sync-openlist" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:#0e7a87;text-decoration:none;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Open Google Maps list
-      </a>
-    </div>
-    <div style="padding:14px 22px 0;">
-      <textarea id="pin-sync-text" placeholder="Livraria Lello&#10;Clérigos Tower&#10;Cais da Ribeira&#10;…" style="width:100%;height:200px;border:1px solid #e0e0e0;border-radius:12px;padding:12px 14px;font-family:Montserrat,sans-serif;font-size:13px;color:#444;resize:vertical;outline:none;line-height:1.5;"></textarea>
-      <div style="font-size:11px;color:#aaa;font-weight:500;margin-top:6px;">Tip: add a city after a comma to place it precisely, e.g. <em>Livraria Lello, Porto</em></div>
-    </div>
-    <div id="pin-sync-progress" style="display:none;padding:8px 22px 0;font-size:12px;font-weight:600;color:#0e7a87;"></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;padding:16px 22px 20px;">
-      <button onclick="closePinSync()" style="background:#f0f0f0;border:none;border-radius:10px;padding:10px 18px;font-family:Montserrat,sans-serif;font-size:12.5px;font-weight:700;color:#666;cursor:pointer;">Cancel</button>
-      <button id="pin-sync-go" onclick="runPinSync()" style="background:linear-gradient(135deg,#0e7a87 0%,#12a0af 100%);border:none;border-radius:10px;padding:10px 20px;font-family:Montserrat,sans-serif;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(14,122,135,0.25);">Sync pins</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // Read URL params
 const params = new URLSearchParams(window.location.search);
@@ -365,14 +322,7 @@ function collectState() {
     obj._periods = Array.from(card.querySelectorAll('[data-period]')).map(b => b.dataset.period);
     return obj;
   });
-  // Preserve map-panel pin data across saves — it's set via sync, not through
-  // any on-page field, so it must be explicitly carried forward here or every
-  // autosave would silently wipe it.
-  const extra = {};
-  if (window._loadedMapPins) extra.mapPins = window._loadedMapPins;
-  if (window._loadedPinsSyncedAt) extra.pinsSyncedAt = window._loadedPinsSyncedAt;
-  if (window._loadedMapListUrl) extra.mapListUrl = window._loadedMapListUrl;
-  return { header, days, mapsUrl, ...extra };
+  return { header, days, mapsUrl };
 }
 function inp(val, key, cls, ph) {
   const i = document.createElement('input'); i.type = 'text'; i.value = val || '';
@@ -1906,275 +1856,6 @@ function generateDaysFromDates() {
   }
 }
 
-// ── Trip Map Panel (pins from a Google list) ──────────────────────────
-// Test rollout: Porto only. Add a slug here to enable it on another trip.
-const MAP_PIN_TRIPS = ['porto-2026', 'hamburg', 'gothenburg-2026', 'cyprus-2026'];
-let mapPanelLeaflet = null;
-let mapPanelMarkersLayer = null;
-let mapPanelCurrentCity = null;
-let mapPanelPinsByCity = {};
-let mapPanelObserver = null;
-
-function parseUKDate(str) {
-  if (!str) return null;
-  const parts = str.split('/');
-  if (parts.length !== 3) return null;
-  const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10), y = parseInt(parts[2], 10);
-  if (!d || !m || !y) return null;
-  return new Date(y, m - 1, d, 23, 59, 59);
-}
-
-function cityForDayLocation(loc, availableCities) {
-  const cities = availableCities || Object.keys(mapPanelPinsByCity || {});
-  if (!cities.length) return '';
-  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const l = norm(loc);
-  if (l) {
-    const match = cities.find(c => { const cn = norm(c); return l.includes(cn) || cn.includes(l); });
-    if (match) return match;
-  }
-  return cities[0];
-}
-
-function timeAgo(iso) {
-  if (!iso) return '';
-  const then = new Date(iso);
-  const mins = Math.floor((Date.now() - then.getTime()) / 60000);
-  if (mins < 1) return 'Synced just now';
-  if (mins < 60) return `Synced ${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `Synced ${hrs}h ago`;
-  return `Synced ${Math.floor(hrs / 24)}d ago`;
-}
-
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8';
-// Minimal, label-light map style so the panel matches the site's clean aesthetic
-const GOOGLE_MAPS_STYLE = [
-  { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative', stylers: [{ visibility: 'off' }] },
-  { featureType: 'landscape', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dce5ea' }] },
-  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f6f5f1' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5ecdf' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
-];
-
-function loadGoogleMapsAssets() {
-  return new Promise((resolve) => {
-    if (window.google && window.google.maps) { resolve(); return; }
-    window._gmapsReady = resolve;
-    const script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&loading=async&callback=_gmapsReady';
-    document.head.appendChild(script);
-  });
-}
-
-// ── PIN SYNC ─────────────────────────────────────────────────────────
-function openPinSync() {
-  const overlay = document.getElementById('pin-sync-overlay');
-  const link = document.getElementById('pin-sync-openlist');
-  const listUrl = window._loadedMapListUrl || window._loadedMapsUrl || '';
-  if (link) { if (listUrl) { link.href = listUrl; link.style.display = 'inline-flex'; } else link.style.display = 'none'; }
-  const current = (window._loadedMapPins || []).map(p => p.city ? p.name + ', ' + p.city : p.name).join('\n');
-  document.getElementById('pin-sync-text').value = current;
-  document.getElementById('pin-sync-progress').style.display = 'none';
-  overlay.style.display = 'flex';
-}
-function closePinSync() {
-  document.getElementById('pin-sync-overlay').style.display = 'none';
-}
-
-async function photonPin(query) {
-  const url = 'https://photon.komoot.io/api?limit=1&lang=en&q=' + encodeURIComponent(query);
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  const f = data.features && data.features[0];
-  if (!f) return null;
-  const pr = f.properties || {};
-  return {
-    lat: Math.round(f.geometry.coordinates[1] * 1e6) / 1e6,
-    lng: Math.round(f.geometry.coordinates[0] * 1e6) / 1e6,
-    city: pr.city || pr.county || pr.state || '',
-    category: pr.osm_value ? pr.osm_value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '',
-  };
-}
-
-async function runPinSync() {
-  const raw = document.getElementById('pin-sync-text').value;
-  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  const goBtn = document.getElementById('pin-sync-go');
-  const prog = document.getElementById('pin-sync-progress');
-  if (!lines.length) { prog.style.display = 'block'; prog.textContent = 'Paste at least one place name first.'; return; }
-
-  goBtn.disabled = true; goBtn.style.opacity = '0.6';
-  prog.style.display = 'block';
-
-  const pins = [];
-  const failed = [];
-  for (let i = 0; i < lines.length; i++) {
-    prog.textContent = `Locating ${i + 1} of ${lines.length}…`;
-    const parts = lines[i].split(',').map(s => s.trim());
-    const name = parts[0];
-    const givenCity = parts.slice(1).join(', ');
-    let hit = null;
-    try { hit = await photonPin(lines[i]); } catch (e) {}
-    if (hit) {
-      pins.push({ name, lat: hit.lat, lng: hit.lng, city: givenCity || hit.city || '', category: hit.category || '' });
-    } else {
-      failed.push(name);
-    }
-    await new Promise(r => setTimeout(r, 250));
-  }
-
-  if (!pins.length) {
-    prog.textContent = 'Could not locate any of those places. Check the spelling or add a city after a comma.';
-    goBtn.disabled = false; goBtn.style.opacity = '1';
-    return;
-  }
-
-  window._loadedMapPins = pins;
-  window._loadedPinsSyncedAt = new Date().toISOString();
-  scheduleSave();
-
-  prog.textContent = `Synced ${pins.length} pin${pins.length === 1 ? '' : 's'}${failed.length ? ` · ${failed.length} not found: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}` : ''}.`;
-
-  try {
-    document.getElementById('map-panel').classList.remove('active');
-    await initMapPanel({ mapPins: pins, pinsSyncedAt: window._loadedPinsSyncedAt, header: collectState().header });
-  } catch (e) {}
-
-  goBtn.disabled = false; goBtn.style.opacity = '1';
-  setTimeout(closePinSync, failed.length ? 2600 : 1100);
-}
-
-async function initMapPanel(state) {
-  if (!MAP_PIN_TRIPS.includes(RECORD_ID)) return;
-  const pins = state.mapPins;
-  if (!pins || !pins.length) return;
-  // Once the trip's return date has passed, the panel goes away entirely
-  const retDate = parseUKDate(state.header && state.header.ret);
-  if (retDate && new Date() > retDate) return;
-
-  mapPanelPinsByCity = {};
-  pins.forEach(p => {
-    if (!mapPanelPinsByCity[p.city]) mapPanelPinsByCity[p.city] = [];
-    mapPanelPinsByCity[p.city].push(p);
-  });
-
-  await loadGoogleMapsAssets();
-
-  document.body.classList.add('has-map-panel');
-  document.getElementById('map-panel').classList.add('active');
-  const syncedEl = document.getElementById('map-panel-synced');
-  if (syncedEl) syncedEl.textContent = timeAgo(state.pinsSyncedAt);
-  // Reveal the Sync button (only in editable view, not read-only shares)
-  const syncBtn = document.getElementById('map-panel-sync');
-  if (syncBtn && !SHARE_TOKEN) syncBtn.style.display = 'flex';
-
-  // Wait a tick for the browser to actually lay out the now-visible container —
-  // Google Maps (unlike Leaflet) reads its container's size once at construction
-  // time and won't self-correct if that happens before layout settles.
-  await new Promise(r => setTimeout(r, 50));
-
-  mapPanelLeaflet = new google.maps.Map(document.getElementById('map-panel-leaflet'), {
-    center: { lat: 41.15, lng: -8.6 },
-    zoom: 12,
-    disableDefaultUI: true,
-    styles: GOOGLE_MAPS_STYLE,
-    clickableIcons: false,
-  });
-  mapPanelMarkersLayer = [];
-
-  // Switch city based on which day card is currently in view
-  const dayCards = Array.from(document.querySelectorAll('.day-card'));
-  if (dayCards.length && 'IntersectionObserver' in window) {
-    const visibleMap = new Map();
-    mapPanelObserver = new IntersectionObserver((entries) => {
-      entries.forEach(e => visibleMap.set(e.target, e.intersectionRatio));
-      let best = null, bestRatio = 0;
-      visibleMap.forEach((ratio, el) => { if (ratio > bestRatio) { bestRatio = ratio; best = el; } });
-      if (best) {
-        const locInput = best.querySelector('[data-key="to"]');
-        const city = cityForDayLocation(locInput ? locInput.value : '');
-        if (city !== mapPanelCurrentCity) renderMapPanelCity(city);
-      }
-    }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
-    dayCards.forEach(c => mapPanelObserver.observe(c));
-  }
-
-  const firstLoc = dayCards[0] ? (dayCards[0].querySelector('[data-key="to"]')?.value || '') : '';
-  renderMapPanelCity(cityForDayLocation(firstLoc));
-  // Safety net: if the container's size still wasn't settled at construction
-  // time, force Google Maps to re-measure and re-fit once more shortly after.
-  setTimeout(() => {
-    if (mapPanelLeaflet) {
-      google.maps.event.trigger(mapPanelLeaflet, 'resize');
-      if (mapPanelCurrentCity) renderMapPanelCity(mapPanelCurrentCity);
-    }
-  }, 300);
-}
-
-function renderMapPanelCity(city) {
-  mapPanelCurrentCity = city;
-  const pins = mapPanelPinsByCity[city] || [];
-  const cityTextEl = document.getElementById('map-panel-city-text');
-  if (cityTextEl) cityTextEl.textContent = city + (pins.length ? ` · ${pins.length} pin${pins.length === 1 ? '' : 's'}` : '');
-
-  mapPanelMarkersLayer.forEach(m => m.setMap(null));
-  mapPanelMarkersLayer = [];
-  const listEl = document.getElementById('map-panel-list');
-  listEl.innerHTML = '';
-
-  if (!pins.length) {
-    listEl.innerHTML = '<div class="map-pin-empty">No pins for ' + city + ' yet</div>';
-    mapPanelLeaflet.setCenter({ lat: 41.15, lng: -8.6 });
-    mapPanelLeaflet.setZoom(12);
-    return;
-  }
-
-  const bounds = new google.maps.LatLngBounds();
-  pins.forEach(p => {
-    const marker = new google.maps.Marker({
-      position: { lat: p.lat, lng: p.lng },
-      map: mapPanelLeaflet,
-      title: p.name,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 6,
-        fillColor: '#0e7a87',
-        fillOpacity: 0.75,
-        strokeColor: '#0e7a87',
-        strokeWeight: 2,
-      },
-    });
-    mapPanelMarkersLayer.push(marker);
-    bounds.extend({ lat: p.lat, lng: p.lng });
-
-    const row = document.createElement('div');
-    row.className = 'map-pin-row';
-    row.innerHTML = '<div>' + p.name + '</div>' + (p.category ? '<div class="map-pin-cat">' + p.category + '</div>' : '');
-    row.addEventListener('click', () => {
-      mapPanelLeaflet.setCenter({ lat: p.lat, lng: p.lng });
-      mapPanelLeaflet.setZoom(16);
-    });
-    listEl.appendChild(row);
-  });
-
-  if (pins.length === 1) {
-    mapPanelLeaflet.setCenter({ lat: pins[0].lat, lng: pins[0].lng });
-    mapPanelLeaflet.setZoom(15);
-  } else {
-    mapPanelLeaflet.fitBounds(bounds, 32);
-    const listener = google.maps.event.addListenerOnce(mapPanelLeaflet, 'bounds_changed', () => {
-      if (mapPanelLeaflet.getZoom() > 16) mapPanelLeaflet.setZoom(16);
-    });
-  }
-}
-
 async function init() {
   try {
     const trips = await window.dbLoadRegistry();
@@ -2184,12 +1865,8 @@ async function init() {
   let state = null;
   try { state = await loadData(); } catch { /* silent */ }
   if (state && state.days && state.days.length) {
-    if (state.mapPins) window._loadedMapPins = state.mapPins;
-    if (state.pinsSyncedAt) window._loadedPinsSyncedAt = state.pinsSyncedAt;
-    if (state.mapListUrl) window._loadedMapListUrl = state.mapListUrl;
     restoreState(state);
     setStatus('saved', 'All saved');
-    initMapPanel(state).catch(e => console.error('initMapPanel failed:', e));
   } else {
     generateDaysFromDates();
     setStatus('saving', 'Not yet saved');
@@ -2297,38 +1974,15 @@ async function deleteTrip() {
 </div>
 
 <script>
-// Mobile "Map" tab button: if this trip has a live pin panel (same one used
-// on desktop as a fixed sidebar), open it as a full-screen overlay — same
-// map, same pins, same city-switching, just presented full-screen on mobile
-// instead of requiring a scroll to the bottom of the page.
-// If this trip has no pin panel, fall back to the same saved Google Maps
-// link / add-link popover that desktop's nav "Maps" button uses.
+// Mobile "Map" tab button — opens the trip's saved Google Maps link in a new
+// tab (same as the desktop nav "Maps" button), or the add-link popover if none.
 function openMobileMaps() {
-  const panel = document.getElementById('map-panel');
-  if (panel && panel.classList.contains('active')) {
-    panel.classList.add('mobile-open');
-    // The map was originally fitted to its bounds while the panel was
-    // display:none (zero-size container), so the zoom/center is wrong.
-    // Now that it's actually visible, resize the tiles and re-fit bounds.
-    setTimeout(() => {
-      if (typeof mapPanelLeaflet !== 'undefined' && mapPanelLeaflet) {
-        google.maps.event.trigger(mapPanelLeaflet, 'resize');
-        if (typeof renderMapPanelCity === 'function' && mapPanelCurrentCity) {
-          renderMapPanelCity(mapPanelCurrentCity);
-        }
-      }
-    }, 60);
-    return;
-  }
   const url = document.getElementById('maps-url-val')?.value || '';
   if (url) {
     window.open(url, '_blank');
   } else if (typeof openMapsPopover === 'function') {
     openMapsPopover();
   }
-}
-function closeMobileMapPanel() {
-  document.getElementById('map-panel')?.classList.remove('mobile-open');
 }
 </script>
 
