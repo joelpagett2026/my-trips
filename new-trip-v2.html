@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=5">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=6">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -496,9 +496,9 @@ function inferPeriod(item) {
 }
 
 const PERIODS = [
-  { key:'morning',   label:'Morning',   icon:'🌅' },
-  { key:'afternoon', label:'Afternoon', icon:'☀️'  },
-  { key:'evening',   label:'Evening',   icon:'🌙' },
+  { key:'morning',   label:'Morning'   },
+  { key:'afternoon', label:'Afternoon' },
+  { key:'evening',   label:'Evening'   },
 ];
 
 function renderTimeline() {
@@ -527,7 +527,7 @@ function renderTimeline() {
     buckets[p].push({ item, globalIdx });
   });
 
-  PERIODS.forEach(({ key, label, icon }) => {
+  PERIODS.forEach(({ key, label }) => {
     const section = document.createElement('div');
     section.className = 'tl-section';
     section.dataset.period = key;
@@ -536,7 +536,7 @@ function renderTimeline() {
     const hdr = document.createElement('div');
     hdr.className = 'tl-section-hdr';
     hdr.innerHTML =
-      '<span class="tl-section-icon">' + icon + '</span>' +
+      '<div class="tl-section-accent ' + key + '"></div>' +
       '<span class="tl-section-label">' + label + '</span>' +
       '<span class="tl-section-count" id="tl-count-' + key + '">' +
         buckets[key].length + ' item' + (buckets[key].length !== 1 ? 's' : '') +
