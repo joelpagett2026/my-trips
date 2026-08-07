@@ -368,3 +368,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tt-btn:hover { border-color: var(--teal); color: var(--teal); }
 .tt-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
 #fields-standard, #fields-transport { display: flex; flex-direction: column; gap: 13px; }
+
+/* ── HIDDEN PERIOD RESTORE ── */
+.tl-restore-strip {
+  display: flex; gap: 8px; padding: 4px 0; flex-wrap: wrap;
+}
+.tl-restore-btn {
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  color: var(--text3); background: none;
+  border: 1.5px dashed rgba(0,0,0,0.12);
+  padding: 6px 14px; border-radius: 20px; cursor: pointer;
+  transition: all 0.13s;
+}
+.tl-restore-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-xdim); }

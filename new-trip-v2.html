@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=10">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=11">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -579,7 +579,9 @@ function renderTimeline() {
     buckets[p].push({ item, globalIdx });
   });
 
+  const hiddenPeriods = d._hiddenPeriods || [];
   PERIODS.forEach(({ key, label }) => {
+    if (hiddenPeriods.includes(key)) return;
     const section = document.createElement('div');
     section.className = 'tl-section';
     section.dataset.period = key;
@@ -620,6 +622,21 @@ function renderTimeline() {
     col.appendChild(section);
     initDrag(tl);
   });
+
+  // Restore strip for any hidden periods
+  if (hiddenPeriods.length) {
+    const strip = document.createElement('div');
+    strip.className = 'tl-restore-strip';
+    hiddenPeriods.forEach(key => {
+      const label = PERIODS.find(p => p.key === key)?.label || key;
+      const btn = document.createElement('button');
+      btn.className = 'tl-restore-btn';
+      btn.textContent = '+ ' + label;
+      btn.onclick = () => unhidePeriod(key);
+      strip.appendChild(btn);
+    });
+    col.appendChild(strip);
+  }
 }
 
 function makeConnectorNode(item) {
@@ -949,6 +966,14 @@ function openAddItem(period) {
   openModal();
 }
 
+function unhidePeriod(periodKey) {
+  const day = STATE.days[activeDay];
+  if (!day._hiddenPeriods) return;
+  day._hiddenPeriods = day._hiddenPeriods.filter(p => p !== periodKey);
+  scheduleSave();
+  renderTimeline();
+}
+
 function openAddDay() {
   const n = STATE.days.length + 1;
   STATE.days.push({ date:'', loc: dest, title:`Day ${n}`, items:[] });
@@ -1118,6 +1143,12 @@ function saveItem() {
     if (pos === -1) items.push(item); else items.splice(pos, 0, item);
   }
 
+  // Unhide the period if it was hidden
+  const day = STATE.days[activeDay];
+  if (day._hiddenPeriods && day._hiddenPeriods.includes(period)) {
+    day._hiddenPeriods = day._hiddenPeriods.filter(p => p !== period);
+  }
+
   closeModal();
   scheduleSave();
   render();
@@ -1196,17 +1227,27 @@ function saveBulkItems() {
 }
 
 function clearPeriod(periodKey) {
-  const items = STATE.days[activeDay].items || [];
+  const day   = STATE.days[activeDay];
+  const items = day.items || [];
   const count = items.filter(it => it && (it.period || inferPeriod(it)) === periodKey).length;
-  if (!count) return;
-  if (!confirm('Remove all ' + count + ' ' + periodKey + ' item' + (count !== 1 ? 's' : '') + ' from this day?')) return;
-  takeSnapshot();
-  STATE.days[activeDay].items = items.filter(it => !it || (it.period || inferPeriod(it)) !== periodKey);
+
+  if (count > 0) {
+    if (!confirm('Remove all ' + count + ' ' + periodKey + ' item' + (count !== 1 ? 's' : '') + ' from this day?')) return;
+    takeSnapshot();
+    day.items = items.filter(it => !it || (it.period || inferPeriod(it)) !== periodKey);
+  }
+
+  // Hide the section
+  if (!day._hiddenPeriods) day._hiddenPeriods = [];
+  if (!day._hiddenPeriods.includes(periodKey)) day._hiddenPeriods.push(periodKey);
+
   scheduleSave();
   renderTimeline();
   renderRightPanel();
-  showSnapshotBar(true);
-  setTimeout(() => showSnapshotBar(false), 6000);
+  if (count > 0) {
+    showSnapshotBar(true);
+    setTimeout(() => showSnapshotBar(false), 6000);
+  }
 }
 
 window.addEventListener('load', () => { init(); });
