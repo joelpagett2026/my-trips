@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=3">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=4">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -285,7 +285,7 @@ const RECORD_ID = slug;
 let STATE = { days: [], meta: { dest, dep, ret, trav, status, hotel: null, budget: null } };
 let activeDay = 0;
 let currentMode = 'plan';
-let drawerItem = null;  // { dayIdx, itemIdx }
+let drawerItem = null;  // { dayIdx, item } — object ref
 let editItem   = null;  // same, or null for new
 let snapshotData = null;
 let saveTimer = null;
@@ -836,9 +836,10 @@ function openAddDay() {
 }
 
 function openEditItem(dayIdx, itemIdx) {
-  editItem = { dayIdx, itemIdx };
-  drawerItem = { dayIdx, itemIdx };
-  const item = STATE.days[dayIdx]?.items?.[itemIdx];
+  const refItem = STATE.days[dayIdx]?.items?.[itemIdx];
+  editItem   = { dayIdx, itemIdx, item: refItem };
+  drawerItem = { dayIdx, itemIdx, item: refItem };
+  const item = refItem;
   if (!item) return;
   document.getElementById('modal-title').textContent = 'Edit activity';
   document.getElementById('modal-delete-btn').style.display = 'block';
@@ -919,7 +920,8 @@ function saveItem() {
 
   const items = STATE.days[activeDay].items;
   if (editItem && editItem.dayIdx === activeDay) {
-    items[editItem.itemIdx] = item;
+    const ri = editItem.item ? items.indexOf(editItem.item) : -1;
+    items[ri !== -1 ? ri : editItem.itemIdx] = item;
   } else {
     // Insert sorted by time
     const toMins = t => { const [h,m]=(t||'').split(':').map(Number); return isNaN(h)?9999:h*60+(m||0); };
