@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=1">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=2">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -444,52 +444,204 @@ function renderTimeline() {
   const col = document.getElementById('tl-col');
   if (!d) { col.innerHTML = ''; return; }
 
-  // Staying pill — find the active hotel from this day's items
+  col.innerHTML = '';
+
+  // Staying pill
   const hotelItem = (d.items||[]).find(it => it && it.type==='hotel' && it.staying);
-  let html = hotelItem
-    ? `<div class="staying-pill">${ICO.home.replace('<svg','<svg width="12" height="12"')} Staying at <span>${hotelItem.staying}</span></div>`
-    : '';
+  if (hotelItem) {
+    const pill = document.createElement('div');
+    pill.className = 'staying-pill';
+    pill.innerHTML = ICO.home.replace('<svg','<svg width="12" height="12"') + ' Staying at <span>' + hotelItem.staying + '</span>';
+    col.appendChild(pill);
+  }
 
   const items = d.items || [];
   if (!items.length) {
-    html += `<div class="tl-empty">${ICO.circle}<p>No activities yet for this day.</p><button onclick="openAddItem()">+ Add activity</button></div>`;
-    col.innerHTML = html;
+    const empty = document.createElement('div');
+    empty.className = 'tl-empty';
+    empty.innerHTML = ICO.circle + '<p>No activities yet for this day.</p><button onclick="openAddItem()">+ Add activity</button>';
+    col.appendChild(empty);
     return;
   }
 
-  html += '<div class="timeline">';
+  const tl = document.createElement('div');
+  tl.className = 'timeline';
+  tl.id = 'tl-list';
+  col.appendChild(tl);
+
   items.forEach((item, idx) => {
     if (!item) return;
-
-    // Connector row
-    if (item.conn) {
-      html += `<div class="tl-connector"><div class="tl-conn-line"></div><div class="tl-conn-inner ${item.connWarn?'warn':''}">${ICO.down.replace('<svg','<svg width="11" height="11"')}${item.conn}</div></div>`;
-      return;
-    }
-
-    const ico = icoForType(item.type, item.title);
-    const price = item.booking ? `<span class="tl-price">${item.booking.price||''}</span>` : '';
-    const meta  = [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
-
-    html += `
-      <div class="tl-item" onclick="openDrawerItem(${activeDay},${idx})">
-        <div class="tl-time">${item.time||''}</div>
-        <div class="tl-body-wrap">
-          <div class="tl-dot ${item.type==='meal'?'meal':(item.type==='move'?'move':'')}"></div>
-          <div class="tl-ico ${ico.cls}">${ico.html}</div>
-          <div class="tl-text">
-            <div class="tl-title">${item.title||''}</div>
-            ${item.sub?`<div class="tl-sub">${item.sub}</div>`:''}
-            ${meta?`<div class="tl-meta">${meta}</div>`:''}
-          </div>
-          <button class="tl-more-btn" onclick="event.stopPropagation();openEditItem(${activeDay},${idx})">···</button>
-        </div>
-      </div>`;
+    tl.appendChild(item.conn !== undefined ? makeConnectorNode(item) : makeItemNode(item, idx));
   });
 
-  html += '</div>';
-  html += `<button class="tl-add-btn" onclick="openAddItem()">${ICO.plus.replace('<svg','<svg width="14" height="14"')} Add activity</button>`;
-  col.innerHTML = html;
+  const addBtn = document.createElement('button');
+  addBtn.className = 'tl-add-btn';
+  addBtn.innerHTML = ICO.plus.replace('<svg','<svg width="14" height="14"') + ' Add activity';
+  addBtn.onclick = openAddItem;
+  col.appendChild(addBtn);
+
+  initDrag(tl);
+}
+
+function makeConnectorNode(item) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tl-connector';
+  wrap.innerHTML = '<div class="tl-conn-line"></div><div class="tl-conn-inner ' + (item.connWarn?'warn':'') + '">' + ICO.down.replace('<svg','<svg width="11" height="11"') + (item.conn||'') + '</div>';
+  return wrap;
+}
+
+function makeItemNode(item, idx) {
+  const ico   = icoForType(item.type, item.title);
+  const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
+  const meta  = [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
+  const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : '');
+
+  const row = document.createElement('div');
+  row.className = 'tl-item';
+  row.dataset.idx = idx;
+  row.innerHTML =
+    '<div class="tl-grip" title="Drag to reorder">' +
+      '<svg width="10" height="14" viewBox="0 0 10 14" fill="none">' +
+        '<circle cx="2.5" cy="2.5" r="1.5" fill="currentColor"/>' +
+        '<circle cx="7.5" cy="2.5" r="1.5" fill="currentColor"/>' +
+        '<circle cx="2.5" cy="7" r="1.5" fill="currentColor"/>' +
+        '<circle cx="7.5" cy="7" r="1.5" fill="currentColor"/>' +
+        '<circle cx="2.5" cy="11.5" r="1.5" fill="currentColor"/>' +
+        '<circle cx="7.5" cy="11.5" r="1.5" fill="currentColor"/>' +
+      '</svg></div>' +
+    '<div class="tl-time">' + (item.time||'') + '</div>' +
+    '<div class="tl-body-wrap">' +
+      '<div class="tl-dot ' + dotCls + '"></div>' +
+      '<div class="tl-ico ' + ico.cls + '">' + ico.html + '</div>' +
+      '<div class="tl-text">' +
+        '<div class="tl-title">' + (item.title||'') + '</div>' +
+        (item.sub ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
+        (meta     ? '<div class="tl-meta">' + meta + '</div>' : '') +
+      '</div>' +
+      '<button class="tl-more-btn">···</button>' +
+    '</div>';
+
+  row.querySelector('.tl-body-wrap').addEventListener('click', () => {
+    if (!dragMoved) openDrawerItem(activeDay, idx);
+  });
+  row.querySelector('.tl-more-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    if (!dragMoved) openEditItem(activeDay, idx);
+  });
+  return row;
+}
+
+// ── DRAG-TO-REORDER ──────────────────────────────────────────────────
+// Window-level listeners avoid the setPointerCapture + insertBefore bug.
+// 6px threshold distinguishes tap (opens drawer) from drag (reorders).
+let dragEl = null, dragGhost = null, dragOver = null;
+let dragStartX = 0, dragStartY = 0, dragMoved = false;
+
+function initDrag(tl) {
+  tl.addEventListener('pointerdown', onDragStart);
+}
+
+function onDragStart(e) {
+  const grip = e.target.closest('.tl-grip, .tl-time');
+  if (!grip) return;
+  const item = e.target.closest('.tl-item');
+  if (!item) return;
+  dragEl = item;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  dragMoved  = false;
+  window.addEventListener('pointermove',   onDragMove);
+  window.addEventListener('pointerup',     onDragEnd);
+  window.addEventListener('pointercancel', onDragEnd);
+}
+
+function onDragMove(e) {
+  const dx = e.clientX - dragStartX;
+  const dy = e.clientY - dragStartY;
+  if (!dragMoved) {
+    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+    dragMoved = true;
+    startDragVisual();
+  }
+  dragGhost.style.top  = (dragGhost._baseTop  + dy) + 'px';
+  dragGhost.style.left = (dragGhost._baseLeft + dx) + 'px';
+  updateDropTarget(e.clientY);
+}
+
+function startDragVisual() {
+  const rect = dragEl.getBoundingClientRect();
+  dragGhost = dragEl.cloneNode(true);
+  Object.assign(dragGhost.style, {
+    position:'fixed', width:rect.width+'px', top:rect.top+'px', left:rect.left+'px',
+    opacity:'0.72', pointerEvents:'none', zIndex:'200',
+    boxShadow:'0 8px 24px rgba(0,0,0,0.18)', borderRadius:'9px',
+    background:'#fff', transition:'none'
+  });
+  dragGhost._baseTop  = rect.top;
+  dragGhost._baseLeft = rect.left;
+  document.body.appendChild(dragGhost);
+
+  dragOver = document.createElement('div');
+  dragOver.className = 'tl-drop-placeholder';
+  Object.assign(dragOver.style, {
+    height: rect.height+'px', borderRadius:'9px',
+    background:'rgba(14,122,135,0.07)',
+    border:'2px dashed rgba(14,122,135,0.28)',
+    margin:'2px 0', boxSizing:'border-box'
+  });
+  dragEl.parentNode.insertBefore(dragOver, dragEl);
+  Object.assign(dragEl.style, { opacity:'0', pointerEvents:'none', height:'0', overflow:'hidden', margin:'0', padding:'0' });
+}
+
+function updateDropTarget(clientY) {
+  const tl = document.getElementById('tl-list');
+  if (!tl || !dragOver) return;
+  const siblings = [...tl.querySelectorAll('.tl-item')].filter(el => el !== dragEl && el.style.height !== '0px');
+  let before = null;
+  for (const sib of siblings) {
+    const r = sib.getBoundingClientRect();
+    if (clientY < r.top + r.height / 2) { before = sib; break; }
+  }
+  const target = before || null;
+  if (target ? dragOver.nextSibling !== target : tl.lastChild !== dragOver) {
+    tl.insertBefore(dragOver, target);
+  }
+}
+
+function onDragEnd() {
+  window.removeEventListener('pointermove',   onDragMove);
+  window.removeEventListener('pointerup',     onDragEnd);
+  window.removeEventListener('pointercancel', onDragEnd);
+  if (!dragMoved || !dragEl) { dragCleanup(); return; }
+
+  const tl = document.getElementById('tl-list');
+  if (tl && dragOver) tl.insertBefore(dragEl, dragOver);
+  if (dragOver) { dragOver.remove(); dragOver = null; }
+  ['opacity','pointerEvents','height','overflow','margin','padding'].forEach(p => dragEl.style[p] = '');
+
+  // Rebuild items array from new DOM order
+  if (tl) {
+    const newItems = [...tl.querySelectorAll('.tl-item')].map(el => {
+      const i = parseInt(el.dataset.idx);
+      return STATE.days[activeDay].items[i];
+    }).filter(Boolean);
+    STATE.days[activeDay].items = newItems;
+  }
+
+  dragCleanup();
+  scheduleSave();
+  renderTimeline();
+  renderRightPanel();
+}
+
+function dragCleanup() {
+  if (dragGhost) { dragGhost.remove(); dragGhost = null; }
+  if (dragOver)  { dragOver.remove();  dragOver  = null; }
+  if (dragEl) {
+    ['opacity','pointerEvents','height','overflow','margin','padding'].forEach(p => dragEl.style[p] = '');
+    dragEl = null;
+  }
+  dragMoved = false;
 }
 
 function renderRightPanel() {

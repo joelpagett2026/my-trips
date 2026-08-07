@@ -253,3 +253,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 @media (max-width:1100px){:root{--rp-w:240px;}}
 @media (max-width:900px){.v2-sidebar,.rp-col{display:none;}}
 @media print{.v2-sidebar,.rp-col,.v2-topbar,.day-selector,.day-summary,.tl-more-btn,.tl-add-btn{display:none!important;}body{overflow:visible;}.tl-col{overflow:visible;padding:0;}}
+
+/* ── DRAG HANDLE ── */
+.tl-grip {
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; flex-shrink: 0; color: var(--text3);
+  opacity: 0; transition: opacity 0.12s; cursor: grab;
+  padding-left: 4px; margin-right: -4px; align-self: stretch;
+}
+.tl-item:hover .tl-grip { opacity: 1; }
+.tl-item { grid-template-columns: 20px 50px 1fr; }
+.tl-grip:active { cursor: grabbing; }
+
+/* Adjust time column to account for grip */
+.tl-time { padding-right: 11px; }
