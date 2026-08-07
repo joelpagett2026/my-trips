@@ -87,6 +87,7 @@ $itineraries = [
     ['slug' => 'gothenburg-2026', 'filename' => 'gothenburg-2026.html',   'dest' => 'Gothenburg',         'dep' => '09/10/2026', 'ret' => '12/10/2026', 'trav' => '2', 'status' => 'planning'],
     ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
     ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
+    ['slug' => 'porto-2026-v2',     'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
     ['slug' => 'graz-ljubljana-lake-bled-2027', 'filename' => 'graz-ljubljana-lake-bled-2027.html', 'dest' => 'Graz, Ljubljana & Lake Bled', 'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'],
 ];
 
@@ -102,12 +103,12 @@ foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks'
 }
 
 // ── REGENERATE ALL ITINERARY PAGES FROM TEMPLATE ─────────────────────
-$template = file_get_contents(REPO_PATH . '/new-trip.html');
+$templateV1  = file_get_contents(REPO_PATH . '/new-trip.html');
+$templateV2  = file_get_contents(REPO_PATH . '/new-trip-v2.html');
 $regenerated = [];
 $regen_failed = [];
 
-if ($template) {
-    $placeholder = "// Read URL params
+$placeholderV1 = "// Read URL params
 const params = new URLSearchParams(window.location.search);
 const dest   = params.get('dest') || 'New Trip';
 const dep    = params.get('dep')  || '';
@@ -119,7 +120,13 @@ const slug   = params.get('slug') || 'new-trip';
 // Use slug as the database record ID
 const RECORD_ID = slug;";
 
+if ($templateV1) {
     foreach ($itineraries as $trip) {
+        // Pick template: v2 if specified, else v1
+        $useTemplate  = (!empty($trip['template']) && $trip['template'] === 'new-trip-v2.html' && $templateV2)
+                        ? $templateV2 : $templateV1;
+        $placeholder  = $placeholderV1; // same placeholder in both templates
+
         $baked = "// Baked-in trip data\n"
             . "const dest   = " . json_encode($trip['dest'])   . ";\n"
             . "const dep    = " . json_encode($trip['dep'])    . ";\n"
@@ -130,7 +137,7 @@ const RECORD_ID = slug;";
             . "// Use slug as the database record ID\n"
             . "const RECORD_ID = slug;";
 
-        $page = str_replace($placeholder, $baked, $template);
+        $page = str_replace($placeholder, $baked, $useTemplate);
         $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($trip['dest']) . ' · Itinerary</title>', $page);
 
         $outPath     = PUBLIC_HTML . '/trips/' . $trip['filename'];
@@ -148,8 +155,8 @@ const RECORD_ID = slug;";
 // ── COPY CORE + NON-ITINERARY FILES FROM REPO ────────────────────────
 $coreFiles = [
     'api.php', 'auth.js', 'db.js', 'datepicker.js',
-    'itinerary-style.css', 'deploy-webhook.php',
-    'index.html', 'new-trip.html', 'settings.html',
+    'itinerary-style.css', 'itinerary-v2-style.css', 'deploy-webhook.php',
+    'index.html', 'new-trip.html', 'new-trip-v2.html', 'settings.html',
     'robots.txt', '.htaccess', 'favicon.ico',
 ];
 

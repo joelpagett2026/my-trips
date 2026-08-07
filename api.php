@@ -234,6 +234,10 @@ const RECORD_ID = slug;",
         $stmt = db()->query("SELECT id, updated_at FROM itinerary ORDER BY updated_at DESC");
         ok($stmt->fetchAll());
 
+    // ── SNAPSHOT COMMENT ──────────────────────────────────────────────
+    // Snapshots use the regular save/load actions with id=RECORD_ID+'-snapshots'.
+    // No extra API actions needed — the JS manages the list client-side.
+
     // ── SETTINGS GET / SET ───────────────────────────────────────────
     case 'get_setting':
         $key = $_GET['key'] ?? '';

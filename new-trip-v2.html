@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="/icons/trips-favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/trips-icon-32.png">
+<link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<title>New Trip</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=1">
+<script src="/auth.js?v=3"></script>
+<script src="/db.js?v=3"></script>
+</head>
+<body>
+
+<!-- ── SIDEBAR ─────────────────────────────────────── -->
+<aside class="v2-sidebar">
+  <div class="sb-trip-block">
+    <div class="sb-flag" id="sb-flag">🌍</div>
+    <div class="sb-dest" id="sb-dest">Trip</div>
+    <div class="sb-meta" id="sb-meta"></div>
+  </div>
+  <nav class="sb-nav">
+    <button class="sb-nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Itinerary
+    </button>
+    <div class="sb-divider"></div>
+    <div class="sb-section-label">Days</div>
+    <div id="sb-days"></div>
+    <div class="sb-divider"></div>
+    <button class="sb-nav-item" onclick="addDay()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Day
+    </button>
+  </nav>
+  <div class="sb-bottom">
+    <button class="sb-nav-item" onclick="window.location='/'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+  </div>
+</aside>
+
+<!-- ── MAIN ───────────────────────────────────────── -->
+<div class="v2-main">
+
+  <!-- Header -->
+  <div class="v2-header">
+    <div class="v2-header-left">
+      <div class="v2-header-kicker" id="hdr-kicker">Day 1 of 1</div>
+      <div class="v2-header-title" id="hdr-title">Loading…</div>
+    </div>
+    <div class="v2-header-right">
+      <span class="v2-save-status" id="save-status"></span>
+      <div class="v2-mode-toggle">
+        <button class="v2-mode-btn active" onclick="setMode('plan')">Plan</button>
+        <button class="v2-mode-btn" onclick="setMode('today')">Today</button>
+      </div>
+      <button class="v2-hdr-btn v2-save-btn" onclick="manualSave()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+      <button class="v2-hdr-btn" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
+      </button>
+    </div>
+  </div>
+
+  <!-- Day selector -->
+  <div class="v2-day-bar" id="day-bar"></div>
+
+  <!-- Summary bar -->
+  <div class="v2-summary-bar" id="summary-bar"></div>
+
+  <!-- Content -->
+  <div class="v2-content">
+
+    <!-- Timeline -->
+    <div class="v2-timeline-col" id="timeline-col"></div>
+
+    <!-- Right panel -->
+    <div class="v2-right" id="right-panel"></div>
+
+  </div>
+</div>
+
+<!-- ── ACTIVITY DRAWER ─────────────────────────────── -->
+<div class="v2-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="v2-drawer" id="drawer">
+  <div class="v2-dr-hdr">
+    <div style="flex:1">
+      <div class="v2-dr-kicker" id="dr-kicker"></div>
+      <div class="v2-dr-title" id="dr-title"></div>
+      <div class="v2-dr-sub" id="dr-sub"></div>
+    </div>
+    <button class="v2-dr-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="v2-dr-body">
+    <div id="dr-status-wrap" style="margin-bottom:12px;"></div>
+    <div class="v2-dr-actions">
+      <button class="v2-dr-action" onclick="editCurrentItem()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      <button class="v2-dr-action" onclick="deleteCurrentItem()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        Delete
+      </button>
+    </div>
+    <div id="dr-booking-wrap"></div>
+    <button class="v2-dr-open" id="dr-open-btn" style="display:none">Open booking →</button>
+  </div>
+</div>
+
+<!-- ── ADD/EDIT MODAL ─────────────────────────────── -->
+<div class="v2-modal-overlay" id="modal-overlay">
+  <div class="v2-modal">
+    <div class="v2-modal-hdr">
+      <div class="v2-modal-title" id="modal-title">Add Item</div>
+      <button class="v2-dr-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="v2-modal-body">
+      <div class="v2-field-row">
+        <div class="v2-field">
+          <label class="v2-label">Time</label>
+          <input class="v2-input" id="f-time" type="text" placeholder="09:00">
+        </div>
+        <div class="v2-field">
+          <label class="v2-label">Category</label>
+          <select class="v2-select" id="f-type">
+            <option value="act">Activity / Sightseeing</option>
+            <option value="meal">Meal / Food & Drink</option>
+            <option value="transport">Transport / Travel</option>
+            <option value="move">Walk / Transfer</option>
+          </select>
+        </div>
+      </div>
+      <div class="v2-field">
+        <label class="v2-label">Title</label>
+        <input class="v2-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
+      </div>
+      <div class="v2-field">
+        <label class="v2-label">Subtitle / Location</label>
+        <input class="v2-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car, Vila Nova de Gaia">
+      </div>
+      <div class="v2-field">
+        <label class="v2-label">Travel time from previous</label>
+        <input class="v2-input" id="f-conn" type="text" placeholder="e.g. 8 min walk, 15 min taxi">
+      </div>
+      <div class="v2-field-row">
+        <div class="v2-field">
+          <label class="v2-label">Booking status</label>
+          <select class="v2-select" id="f-status">
+            <option value="">— none —</option>
+            <option value="booked">✓ Booked</option>
+            <option value="confirmed">✓ Confirmed</option>
+            <option value="walkin">Walk in only</option>
+            <option value="attention">⚠ Needs attention</option>
+            <option value="optional">Optional</option>
+          </select>
+        </div>
+        <div class="v2-field">
+          <label class="v2-label">Price</label>
+          <input class="v2-input" id="f-price" type="text" placeholder="e.g. £6 / ticket">
+        </div>
+      </div>
+      <div class="v2-field">
+        <label class="v2-label">Booking reference</label>
+        <input class="v2-input" id="f-ref" type="text" placeholder="e.g. ABC123">
+      </div>
+      <div class="v2-field">
+        <label class="v2-label">Booking URL</label>
+        <input class="v2-input" id="f-url" type="text" placeholder="https://…">
+      </div>
+      <div class="v2-field">
+        <label class="v2-label">Notes</label>
+        <textarea class="v2-textarea" id="f-notes" placeholder="Any useful notes…"></textarea>
+      </div>
+    </div>
+    <div class="v2-modal-ftr">
+      <button class="v2-btn danger" id="modal-del-btn" onclick="deleteFromModal()" style="margin-right:auto;display:none">Delete</button>
+      <button class="v2-btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="v2-btn primary" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── BAKED TRIP DATA (replaced by deploy webhook) ──────────────────────
+// Read URL params
+const params = new URLSearchParams(window.location.search);
+const dest   = params.get('dest') || 'New Trip';
+const dep    = params.get('dep')  || '';
+const ret    = params.get('ret')  || '';
+const trav   = params.get('trav') || '2';
+const status = params.get('status') || 'upcoming';
+const slug   = params.get('slug') || 'new-trip';
+
+// Use slug as the database record ID
+const RECORD_ID = slug;
+
+// ── DATA MODEL ────────────────────────────────────────────────────────
+// days: Array of day objects:
+// {
+//   id: string,          — unique id
+//   date: string,        — display date e.g. "Sat 29 Aug"
+//   dateShort: string,   — for day tab e.g. "29 Aug"
+//   loc: string,         — location / theme
+//   staying: string|null,— hotel name if unchanged from prev day
+//   items: Array of item objects:
+//     {
+//       id: string,
+//       time: string,     — "09:00" or "" 
+//       type: string,     — "act"|"meal"|"transport"|"move"
+//       title: string,
+//       sub: string,
+//       conn: string,     — travel time label from previous item
+//       status: string,   — ""|"booked"|"confirmed"|"walkin"|"attention"|"optional"
+//       statusLabel: string, — override label for walkin/attention
+//       price: string,
+//       ref: string,
+//       url: string,
+//       notes: string
+//     }
+// }
+
+let tripData = { days: [] };
+let activeDay = 0;
+let currentMode = 'plan';
+let saveTimer = null;
+let currentDrawerItem = null; // { dayIdx, itemIdx }
+let currentModalItem  = null; // { dayIdx, itemIdx } or null for new
+let modalDayIdx = null;
+
+// ── SVG ICONS ─────────────────────────────────────────────────────────
+const ICO = {
+  act: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  meal:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+  transport:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+  move:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  warn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  circ:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`,
+  down:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`
+};
+
+function icoForType(type) { return ICO[type] || ICO.act; }
+function dotClass(type) {
+  if (type === 'meal') return 'meal';
+  if (type === 'move' || type === 'transport') return 'move';
+  return '';
+}
+function icoClass(type) {
+  if (type === 'meal') return 'meal';
+  if (type === 'move' || type === 'transport') return 'move';
+  return '';
+}
+function kicLabel(type) {
+  return { act:'Activity', meal:'Meal', transport:'Transport', move:'Transfer' }[type] || 'Activity';
+}
+
+// ── STATUS BADGE ──────────────────────────────────────────────────────
+function badge(status, label) {
+  if (!status) return '';
+  const labels = { booked:'Booked', confirmed:'Confirmed', walkin:'Walk in only', attention:'Needs attention', optional:'Optional' };
+  const txt = label || labels[status] || status;
+  let icon = '';
+  if (status==='booked'||status==='confirmed') icon = ICO.check;
+  if (status==='attention') icon = ICO.warn;
+  return `<span class="v2-badge ${status}">${icon}${txt}</span>`;
+}
+
+// ── UNIQUE ID ─────────────────────────────────────────────────────────
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+// ── EMPTY DAY ─────────────────────────────────────────────────────────
+function emptyDay(n) {
+  return { id: uid(), date: `Day ${n}`, dateShort: `Day ${n}`, loc: '', staying: null, items: [] };
+}
+
+// ── FLAG EMOJI ────────────────────────────────────────────────────────
+const FLAGS = { Porto:'🇵🇹', China:'🇨🇳', Dubai:'🇦🇪', 'Costa Rica':'🇨🇷',
+  Canada:'🇨🇦', 'Hong Kong':'🇭🇰', Taiwan:'🇹🇼', Hamburg:'🇩🇪',
+  Gothenburg:'🇸🇪', Cyprus:'🇨🇾', Graz:'🇦🇹', Ljubljana:'🇸🇮' };
+function flagFor(d) {
+  for (const [k,v] of Object.entries(FLAGS)) { if (d.includes(k)) return v; }
+  return '🌍';
+}
+
+// ── RENDER SIDEBAR ────────────────────────────────────────────────────
+function renderSidebar() {
+  document.getElementById('sb-flag').textContent = flagFor(dest);
+  document.getElementById('sb-dest').textContent = dest;
+  document.getElementById('sb-meta').innerHTML = `${dep} → ${ret}<br>${trav} traveller${trav!=='1'?'s':''}`;
+
+  const sbDays = document.getElementById('sb-days');
+  sbDays.innerHTML = tripData.days.map((d,i) => {
+    const warns = d.items.filter(it=>it.status==='attention').length;
+    const empty = !d.items.length;
+    const dotCls = empty ? 'empty' : warns ? 'warn' : '';
+    return `<button class="sb-day-btn ${i===activeDay?'active':''}" onclick="setDay(${i})">
+      <span>Day ${i+1} · ${d.dateShort||d.date}</span>
+      <div class="sb-day-dot ${dotCls}"></div>
+    </button>`;
+  }).join('');
+}
+
+// ── RENDER DAY BAR ────────────────────────────────────────────────────
+function renderDayBar() {
+  const bar = document.getElementById('day-bar');
+  bar.innerHTML = tripData.days.map((d,i) => `
+    <button class="v2-day-tab ${i===activeDay?'active':''}" onclick="setDay(${i})">
+      <span class="dt-n">Day ${i+1}</span>
+      <span class="dt-d">${d.dateShort||d.date}</span>
+      <span class="dt-l">${d.loc||'—'}</span>
+    </button>`).join('');
+}
+
+// ── RENDER SUMMARY BAR ────────────────────────────────────────────────
+function renderSummary() {
+  const d = tripData.days[activeDay];
+  if (!d) { document.getElementById('summary-bar').innerHTML = ''; return; }
+  const items = d.items || [];
+  const meals = items.filter(i=>i.type==='meal').length;
+  const acts  = items.filter(i=>i.type==='act').length;
+  const tkt   = items.filter(i=>i.status==='booked'||i.status==='confirmed').length;
+  const warns = items.filter(i=>i.status==='attention').length;
+  const spend = items.filter(i=>i.price).map(i=>parseFloat(i.price.replace(/[^0-9.]/g,''))||0).reduce((a,b)=>a+b,0);
+  const warnHtml = warns ? `<div class="v2-sum-div"></div><div class="v2-sum-warn">${ICO.warn} ${warns} needs attention</div>` : '';
+  document.getElementById('summary-bar').innerHTML = `
+    <div class="v2-sum-stat">${ICO.circ} ${acts} activit${acts!==1?'ies':'y'}</div>
+    <div class="v2-sum-div"></div>
+    <div class="v2-sum-stat">${ICO.meal} ${meals} meal${meals!==1?'s':''}</div>
+    ${tkt ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">✓ ${tkt} booked</div>` : ''}
+    ${spend ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">£${spend.toFixed(0)} est.</div>` : ''}
+    ${warnHtml}
+  `.replace(/<svg[^>]*>.*?<\/svg>/gs, m => m.replace(/class="[^"]*"/g,'').replace(/style="[^"]*"/g,''));
+  document.getElementById('summary-bar').innerHTML = `
+    <div class="v2-sum-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${acts} activit${acts!==1?'ies':'y'}</div>
+    <div class="v2-sum-div"></div>
+    <div class="v2-sum-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg> ${meals} meal${meals!==1?'s':''}</div>
+    ${tkt ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">✓ ${tkt} booked</div>` : ''}
+    ${spend ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">~£${Math.round(spend)} est.</div>` : ''}
+    ${warns ? `<div class="v2-sum-div"></div><div class="v2-sum-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${warns} needs attention</div>` : ''}
+  `;
+  document.getElementById('hdr-kicker').textContent = `Day ${activeDay+1} of ${tripData.days.length} · ${d.date}`;
+  document.getElementById('hdr-title').textContent  = d.loc || dest;
+}
+
+// ── RENDER TIMELINE ───────────────────────────────────────────────────
+function renderTimeline() {
+  const d = tripData.days[activeDay];
+  const col = document.getElementById('timeline-col');
+  if (!d) { col.innerHTML = ''; return; }
+
+  let html = '';
+
+  if (d.staying) {
+    html += `<button class="v2-staying" onclick="editDayMeta(${activeDay})">${ICO.home} Staying at <span>${d.staying}</span></button>`;
+  }
+
+  const items = d.items || [];
+  if (!items.length) {
+    html += `<div class="v2-empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>No activities yet</p>
+    </div>`;
+  } else {
+    html += '<div class="v2-tl">';
+    items.forEach((item, idx) => {
+      if (item.conn) {
+        html += `<div class="v2-conn"><div></div><div class="v2-conn-inner">${ICO.down}${item.conn}</div></div>`;
+      }
+      const meta = [badge(item.status, item.statusLabel), item.price ? `<span class="v2-price">${item.price}</span>` : ''].filter(Boolean).join('');
+      html += `
+        <div class="v2-tl-item" onclick="openDrawer(${activeDay},${idx})">
+          <div class="v2-tl-time">${item.time||''}</div>
+          <div class="v2-tl-right">
+            <div class="v2-tl-dot ${dotClass(item.type)}"></div>
+            <div class="v2-tl-ico ${icoClass(item.type)}">${icoForType(item.type)}</div>
+            <div class="v2-tl-body">
+              <div class="v2-tl-kicker">${kicLabel(item.type)}</div>
+              <div class="v2-tl-title">${item.title||'Untitled'}</div>
+              ${item.sub ? `<div class="v2-tl-sub">${item.sub}</div>` : ''}
+              ${meta ? `<div class="v2-tl-meta">${meta}</div>` : ''}
+            </div>
+            <button class="v2-tl-more" onclick="event.stopPropagation();openDrawer(${activeDay},${idx})">···</button>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  html += `<button class="v2-add-item" onclick="openAddModal(${activeDay})">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add activity, meal or transport
+  </button>`;
+
+  col.innerHTML = html;
+}
+
+// ── RENDER RIGHT PANEL ────────────────────────────────────────────────
+function renderRightPanel() {
+  const d = tripData.days[activeDay];
+  const panel = document.getElementById('right-panel');
+
+  // Accommodation section — show if we have staying info on any day
+  const stayDay = tripData.days.slice(0, activeDay+1).reverse().find(dd => dd.hotel);
+  const hotel = (d && d.hotel) || (stayDay && stayDay.hotel) || null;
+
+  let html = '';
+
+  // Hotel
+  if (hotel) {
+    html += `<div class="v2-rp-section">
+      <div class="v2-rp-h">Accommodation</div>
+      <div class="v2-hotel-card">
+        <div class="v2-hotel-img"><div class="v2-hotel-img-lbl">${hotel.name||'Hotel'}</div></div>
+        <div class="v2-hotel-body">
+          <div class="v2-hotel-name">${hotel.name||''}</div>
+          <div class="v2-hotel-dates">${hotel.checkin||''} → ${hotel.checkout||''}${hotel.nights ? ` · ${hotel.nights} nights` : ''}${hotel.price ? ` · ${hotel.price}` : ''}</div>
+          ${hotel.status ? `<div style="margin-top:6px">${badge(hotel.status)}</div>` : ''}
+          <div class="v2-hotel-btns">
+            ${hotel.ref ? `<button onclick="navigator.clipboard.writeText('${hotel.ref}')">Copy ref</button>` : ''}
+            <button>Map</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Day actions
+  html += `<div class="v2-rp-section">
+    <div class="v2-rp-h">Day ${activeDay+1}</div>
+    <button class="v2-budget-btn" onclick="editDayMeta(${activeDay})">Edit day details</button>
+    <button class="v2-budget-btn" style="margin-top:6px;color:var(--red);border-color:rgba(192,57,43,0.2)" onclick="deleteDay(${activeDay})">Delete this day</button>
+  </div>`;
+
+  // Snapshots
+  html += `<div class="v2-rp-section" id="snapshot-section">
+    <div class="v2-rp-h">Version History</div>
+    <div id="snapshot-list"><div style="font-size:11px;color:var(--text3)">Loading…</div></div>
+  </div>`;
+
+  panel.innerHTML = html;
+  loadSnapshots();
+}
+
+// ── SNAPSHOTS ─────────────────────────────────────────────────────────
+async function loadSnapshots() {
+  const el = document.getElementById('snapshot-list');
+  if (!el) return;
+  try {
+    const snaps = await window.dbLoad(RECORD_ID + '-snapshots');
+    if (!snaps || !snaps.list || !snaps.list.length) {
+      el.innerHTML = '<div style="font-size:11px;color:var(--text3)">No saved versions yet</div>';
+      return;
+    }
+    el.innerHTML = snaps.list.slice(0,6).map((s,i) => `
+      <div class="v2-snapshot-item">
+        <span>${new Date(s.ts).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+        <button class="v2-snapshot-restore" onclick="restoreSnapshot(${i})">Restore</button>
+      </div>`).join('');
+    window._snapshots = snaps.list;
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3)">—</div>';
+  }
+}
+
+async function saveSnapshot() {
+  try {
+    const existing = await window.dbLoad(RECORD_ID + '-snapshots');
+    const list = (existing && existing.list) ? existing.list : [];
+    list.unshift({ ts: Date.now(), data: JSON.parse(JSON.stringify(tripData)) });
+    if (list.length > 10) list.length = 10;
+    await window.dbSave(RECORD_ID + '-snapshots', { list });
+  } catch(e) { /* non-critical */ }
+}
+
+async function restoreSnapshot(idx) {
+  const snaps = window._snapshots;
+  if (!snaps || !snaps[idx]) return;
+  if (!confirm('Restore this version? Your current data will be saved as a new snapshot first.')) return;
+  await saveSnapshot();
+  tripData = JSON.parse(JSON.stringify(snaps[idx].data));
+  activeDay = Math.min(activeDay, tripData.days.length - 1);
+  renderAll();
+  await persistSave();
+  showSaveStatus('Restored ✓', 'saved');
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────
+function renderAll() {
+  renderSidebar();
+  renderDayBar();
+  renderSummary();
+  renderTimeline();
+  renderRightPanel();
+}
+
+// ── DAY SWITCH ────────────────────────────────────────────────────────
+function setDay(i) {
+  activeDay = Math.max(0, Math.min(i, tripData.days.length - 1));
+  closeDrawer();
+  renderAll();
+}
+
+// ── ADD DAY ───────────────────────────────────────────────────────────
+function addDay() {
+  tripData.days.push(emptyDay(tripData.days.length + 1));
+  activeDay = tripData.days.length - 1;
+  renderAll();
+  editDayMeta(activeDay);
+  scheduleSave();
+}
+
+// ── DELETE DAY ────────────────────────────────────────────────────────
+function deleteDay(i) {
+  if (tripData.days.length <= 1) { alert('A trip needs at least one day.'); return; }
+  if (!confirm(`Delete Day ${i+1}? This cannot be undone.`)) return;
+  tripData.days.splice(i, 1);
+  activeDay = Math.min(activeDay, tripData.days.length - 1);
+  renderAll();
+  scheduleSave();
+}
+
+// ── EDIT DAY META (simple prompt-based for now) ───────────────────────
+function editDayMeta(i) {
+  const d = tripData.days[i];
+  const date = prompt('Date (e.g. Sat 29 Aug):', d.date || '');
+  if (date === null) return;
+  d.date = date || d.date;
+  const dateShort = date.replace(/^[A-Za-z]+ /,'');
+  d.dateShort = dateShort || d.dateShort;
+  const loc = prompt('Location / theme (e.g. Porto → Foz):', d.loc || '');
+  if (loc !== null) d.loc = loc;
+  const staying = prompt('Staying at (hotel name, or blank if travel day):', d.staying || '');
+  if (staying !== null) d.staying = staying || null;
+  renderAll();
+  scheduleSave();
+}
+
+// ── DRAWER ────────────────────────────────────────────────────────────
+function openDrawer(dayIdx, itemIdx) {
+  const item = tripData.days[dayIdx]?.items?.[itemIdx];
+  if (!item) return;
+  currentDrawerItem = { dayIdx, itemIdx };
+
+  document.getElementById('dr-kicker').textContent = kicLabel(item.type);
+  document.getElementById('dr-title').textContent  = item.title || 'Untitled';
+  document.getElementById('dr-sub').textContent    = item.sub || '';
+  document.getElementById('dr-status-wrap').innerHTML = badge(item.status, item.statusLabel);
+
+  let bkHtml = '';
+  if (item.ref || item.price || item.url || item.notes) {
+    bkHtml += '<div class="v2-dr-section-h">Details</div>';
+    if (item.time)  bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Time</div><div class="v2-dr-row-v">${item.time}</div></div>`;
+    if (item.price) bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Price</div><div class="v2-dr-row-v">${item.price}</div></div>`;
+    if (item.ref)   bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Booking reference</div><div class="v2-dr-row-v mono">${item.ref}</div></div>`;
+    if (item.url)   bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Link</div><div class="v2-dr-row-v link" onclick="window.open('${item.url}','_blank')">${item.url}</div></div>`;
+    if (item.notes) bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Notes</div><div class="v2-dr-row-v" style="font-weight:500;color:var(--text2)">${item.notes}</div></div>`;
+  }
+  document.getElementById('dr-booking-wrap').innerHTML = bkHtml;
+  document.getElementById('dr-open-btn').style.display = item.url ? 'block' : 'none';
+  document.getElementById('dr-open-btn').onclick = () => window.open(item.url, '_blank');
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  currentDrawerItem = null;
+}
+
+function editCurrentItem() {
+  if (!currentDrawerItem) return;
+  closeDrawer();
+  openEditModal(currentDrawerItem.dayIdx, currentDrawerItem.itemIdx);
+}
+
+function deleteCurrentItem() {
+  if (!currentDrawerItem) return;
+  if (!confirm('Delete this item?')) return;
+  const { dayIdx, itemIdx } = currentDrawerItem;
+  tripData.days[dayIdx].items.splice(itemIdx, 1);
+  closeDrawer();
+  renderAll();
+  scheduleSave();
+}
+
+// ── ADD/EDIT MODAL ────────────────────────────────────────────────────
+function openAddModal(dayIdx) {
+  modalDayIdx = dayIdx;
+  currentModalItem = null;
+  document.getElementById('modal-title').textContent = 'Add Item';
+  document.getElementById('modal-del-btn').style.display = 'none';
+  clearModal();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-time').focus(), 100);
+}
+
+function openEditModal(dayIdx, itemIdx) {
+  const item = tripData.days[dayIdx]?.items?.[itemIdx];
+  if (!item) return;
+  modalDayIdx = dayIdx;
+  currentModalItem = { dayIdx, itemIdx };
+  document.getElementById('modal-title').textContent = 'Edit Item';
+  document.getElementById('modal-del-btn').style.display = 'block';
+  document.getElementById('f-time').value   = item.time   || '';
+  document.getElementById('f-type').value   = item.type   || 'act';
+  document.getElementById('f-title').value  = item.title  || '';
+  document.getElementById('f-sub').value    = item.sub    || '';
+  document.getElementById('f-conn').value   = item.conn   || '';
+  document.getElementById('f-status').value = item.status || '';
+  document.getElementById('f-price').value  = item.price  || '';
+  document.getElementById('f-ref').value    = item.ref    || '';
+  document.getElementById('f-url').value    = item.url    || '';
+  document.getElementById('f-notes').value  = item.notes  || '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function clearModal() {
+  ['f-time','f-title','f-sub','f-conn','f-price','f-ref','f-url','f-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-type').value   = 'act';
+  document.getElementById('f-status').value = '';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentModalItem = null;
+  modalDayIdx = null;
+}
+
+function saveModal() {
+  const item = {
+    id:          currentModalItem ? tripData.days[currentModalItem.dayIdx].items[currentModalItem.itemIdx].id : uid(),
+    time:        document.getElementById('f-time').value.trim(),
+    type:        document.getElementById('f-type').value,
+    title:       document.getElementById('f-title').value.trim(),
+    sub:         document.getElementById('f-sub').value.trim(),
+    conn:        document.getElementById('f-conn').value.trim(),
+    status:      document.getElementById('f-status').value,
+    price:       document.getElementById('f-price').value.trim(),
+    ref:         document.getElementById('f-ref').value.trim(),
+    url:         document.getElementById('f-url').value.trim(),
+    notes:       document.getElementById('f-notes').value.trim(),
+  };
+  if (!item.title) { alert('Please enter a title.'); return; }
+
+  if (currentModalItem) {
+    tripData.days[currentModalItem.dayIdx].items[currentModalItem.itemIdx] = item;
+  } else {
+    if (modalDayIdx === null) return;
+    tripData.days[modalDayIdx].items.push(item);
+  }
+  closeModal();
+  renderAll();
+  scheduleSave();
+}
+
+function deleteFromModal() {
+  if (!currentModalItem) return;
+  if (!confirm('Delete this item?')) return;
+  const { dayIdx, itemIdx } = currentModalItem;
+  tripData.days[dayIdx].items.splice(itemIdx, 1);
+  closeModal();
+  renderAll();
+  scheduleSave();
+}
+
+// ── MODE TOGGLE ───────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.v2-mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.v2-mode-btn').forEach(b => {
+    if (b.textContent.toLowerCase() === mode) b.classList.add('active');
+  });
+}
+
+// ── SAVE / LOAD ───────────────────────────────────────────────────────
+function showSaveStatus(msg, cls) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'v2-save-status ' + cls;
+  if (cls !== 'saving') setTimeout(() => { el.className = 'v2-save-status'; }, 2500);
+}
+
+async function persistSave() {
+  try {
+    await window.dbSave(RECORD_ID, tripData);
+    showSaveStatus('Saved ✓', 'saved');
+  } catch(e) {
+    showSaveStatus('Save failed', 'error');
+    console.error(e);
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  showSaveStatus('Saving…', 'saving');
+  saveTimer = setTimeout(persistSave, 1200);
+}
+
+async function manualSave() {
+  clearTimeout(saveTimer);
+  showSaveStatus('Saving…', 'saving');
+  await saveSnapshot();
+  await persistSave();
+  loadSnapshots();
+}
+
+async function loadData() {
+  try {
+    const data = await window.dbLoad(RECORD_ID);
+    if (data && data.days && data.days.length) {
+      tripData = data;
+    } else {
+      // Fresh trip — start with one empty day
+      tripData = { days: [emptyDay(1)] };
+    }
+  } catch(e) {
+    tripData = { days: [emptyDay(1)] };
+  }
+  activeDay = 0;
+  renderAll();
+}
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDrawer(); closeModal(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); manualSave(); }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────
+document.addEventListener('mytrips:authed', loadData);
+if (window._mytripsAuthed) loadData();
+</script>
+</body>
+</html>
