@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=4">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=5">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -199,6 +199,14 @@
             <option value="hotel">Accommodation</option>
           </select>
         </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Part of day</label>
+        <select class="field-select" id="f-period">
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+        </select>
       </div>
       <div class="field-group">
         <label class="field-label">Title</label>
@@ -469,6 +477,30 @@ function renderDaySummary() {
   document.getElementById('tb-title').textContent = d.loc || d.title || dest;
 }
 
+// Infer a period from an item that has no explicit period set
+function inferPeriod(item) {
+  const k = (item.kicker||'').toLowerCase();
+  const t = item.time || '';
+  if (k==='morning' || k==='breakfast') return 'morning';
+  if (k==='afternoon') return 'afternoon';
+  if (k==='evening' || k==='dinner') return 'evening';
+  if (t) {
+    const h = parseInt(t.split(':')[0]);
+    if (!isNaN(h)) {
+      if (h < 12) return 'morning';
+      if (h < 17) return 'afternoon';
+      return 'evening';
+    }
+  }
+  return 'morning';
+}
+
+const PERIODS = [
+  { key:'morning',   label:'Morning',   icon:'🌅' },
+  { key:'afternoon', label:'Afternoon', icon:'☀️'  },
+  { key:'evening',   label:'Evening',   icon:'🌙' },
+];
+
 function renderTimeline() {
   const d = STATE.days[activeDay];
   const col = document.getElementById('tl-col');
@@ -485,32 +517,54 @@ function renderTimeline() {
     col.appendChild(pill);
   }
 
-  const items = d.items || [];
-  if (!items.length) {
-    const empty = document.createElement('div');
-    empty.className = 'tl-empty';
-    empty.innerHTML = ICO.circle + '<p>No activities yet for this day.</p><button onclick="openAddItem()">+ Add activity</button>';
-    col.appendChild(empty);
-    return;
-  }
+  const allItems = d.items || [];
 
-  const tl = document.createElement('div');
-  tl.className = 'timeline';
-  tl.id = 'tl-list';
-  col.appendChild(tl);
-
-  items.forEach((item, idx) => {
+  // Bucket items into periods (fall back to inferPeriod for legacy items)
+  const buckets = { morning:[], afternoon:[], evening:[] };
+  allItems.forEach((item, globalIdx) => {
     if (!item) return;
-    tl.appendChild(item.conn !== undefined ? makeConnectorNode(item) : makeItemNode(item, idx));
+    const p = item.period || inferPeriod(item);
+    buckets[p].push({ item, globalIdx });
   });
 
-  const addBtn = document.createElement('button');
-  addBtn.className = 'tl-add-btn';
-  addBtn.innerHTML = ICO.plus.replace('<svg','<svg width="14" height="14"') + ' Add activity';
-  addBtn.onclick = openAddItem;
-  col.appendChild(addBtn);
+  PERIODS.forEach(({ key, label, icon }) => {
+    const section = document.createElement('div');
+    section.className = 'tl-section';
+    section.dataset.period = key;
 
-  initDrag(tl);
+    // Section header
+    const hdr = document.createElement('div');
+    hdr.className = 'tl-section-hdr';
+    hdr.innerHTML =
+      '<span class="tl-section-icon">' + icon + '</span>' +
+      '<span class="tl-section-label">' + label + '</span>' +
+      '<span class="tl-section-count" id="tl-count-' + key + '">' +
+        buckets[key].length + ' item' + (buckets[key].length !== 1 ? 's' : '') +
+      '</span>';
+    section.appendChild(hdr);
+
+    // Timeline list for this period
+    const tl = document.createElement('div');
+    tl.className = 'timeline';
+    tl.id = 'tl-' + key;
+    tl.dataset.period = key;
+
+    buckets[key].forEach(({ item, globalIdx }) => {
+      tl.appendChild(makeItemNode(item, globalIdx));
+    });
+
+    section.appendChild(tl);
+
+    // Per-section add button
+    const addBtn = document.createElement('button');
+    addBtn.className = 'tl-add-btn';
+    addBtn.innerHTML = ICO.plus.replace('<svg','<svg width="14" height="14"') + ' Add to ' + label.toLowerCase();
+    addBtn.onclick = () => openAddItem(key);
+    section.appendChild(addBtn);
+
+    col.appendChild(section);
+    initDrag(tl);
+  });
 }
 
 function makeConnectorNode(item) {
@@ -624,18 +678,26 @@ function startDragVisual() {
 }
 
 function updateDropTarget(clientY) {
-  const tl = document.getElementById('tl-list');
-  if (!tl || !dragOver) return;
+  if (!dragOver) return;
+  // Find which section the pointer is over
+  let targetSection = null;
+  document.querySelectorAll('.tl-section').forEach(sec => {
+    const r = sec.getBoundingClientRect();
+    if (clientY >= r.top && clientY <= r.bottom) targetSection = sec;
+  });
+  const tl = targetSection ? targetSection.querySelector('.timeline') : dragEl.closest('.timeline');
+  if (!tl) return;
+
+  // Move placeholder into this list if needed
+  if (dragOver.parentNode !== tl) tl.appendChild(dragOver);
+
   const siblings = [...tl.querySelectorAll('.tl-item')].filter(el => el !== dragEl && el.style.height !== '0px');
   let before = null;
   for (const sib of siblings) {
     const r = sib.getBoundingClientRect();
     if (clientY < r.top + r.height / 2) { before = sib; break; }
   }
-  const target = before || null;
-  if (target ? dragOver.nextSibling !== target : tl.lastChild !== dragOver) {
-    tl.insertBefore(dragOver, target);
-  }
+  tl.insertBefore(dragOver, before || null);
 }
 
 function onDragEnd() {
@@ -644,19 +706,23 @@ function onDragEnd() {
   window.removeEventListener('pointercancel', onDragEnd);
   if (!dragMoved || !dragEl) { dragCleanup(); return; }
 
-  const tl = document.getElementById('tl-list');
+  const tl = dragOver ? dragOver.parentNode : document.querySelector('.tl-section .timeline');
   if (tl && dragOver) tl.insertBefore(dragEl, dragOver);
   if (dragOver) { dragOver.remove(); dragOver = null; }
   ['opacity','pointerEvents','height','overflow','margin','padding'].forEach(p => dragEl.style[p] = '');
 
-  // Rebuild items array from new DOM order
-  if (tl) {
-    const newItems = [...tl.querySelectorAll('.tl-item')].map(el => {
+  // Rebuild items array from new DOM order across all period sections
+  const allItems = STATE.days[activeDay].items;
+  const newItems = [];
+  document.querySelectorAll('.tl-section').forEach(section => {
+    const periodKey = section.dataset.period;
+    section.querySelectorAll('.tl-item').forEach(el => {
       const i = parseInt(el.dataset.idx);
-      return STATE.days[activeDay].items[i];
-    }).filter(Boolean);
-    STATE.days[activeDay].items = newItems;
-  }
+      const it = allItems[i];
+      if (it) { it.period = periodKey; newItems.push(it); }
+    });
+  });
+  if (newItems.length) STATE.days[activeDay].items = newItems;
 
   dragCleanup();
   scheduleSave();
@@ -819,11 +885,12 @@ function deleteCurrentItem() {
 // ── ADD / EDIT MODAL ──────────────────────────────────────────────────
 let bookingVisible = false;
 
-function openAddItem() {
+function openAddItem(period) {
   editItem = null;
   document.getElementById('modal-title').textContent = 'Add activity';
   document.getElementById('modal-delete-btn').style.display = 'none';
   clearForm();
+  if (period) document.getElementById('f-period').value = period;
   openModal();
 }
 
@@ -847,6 +914,7 @@ function openEditItem(dayIdx, itemIdx) {
   clearForm();
   document.getElementById('f-time').value   = item.time || '';
   document.getElementById('f-type').value   = item.type || 'act';
+  document.getElementById('f-period').value  = item.period || inferPeriod(item) || 'morning';
   document.getElementById('f-title').value  = item.title || '';
   document.getElementById('f-sub').value    = item.sub || '';
   document.getElementById('f-status').value = item.status || '';
@@ -867,6 +935,7 @@ function clearForm() {
     document.getElementById(id).value = '';
   });
   document.getElementById('f-type').value   = 'act';
+  document.getElementById('f-period').value  = 'morning';
   document.getElementById('f-status').value = '';
   showBookingFields(false);
 }
@@ -900,10 +969,11 @@ function saveItem() {
   const title   = document.getElementById('f-title').value.trim();
   const sub     = document.getElementById('f-sub').value.trim();
   const statusV = document.getElementById('f-status').value;
+  const period  = document.getElementById('f-period').value || 'morning';
   const conn    = document.getElementById('f-conn').value.trim();
   if (!title) { document.getElementById('f-title').focus(); return; }
 
-  const item = { time, type, title, sub, status: statusV || null };
+  const item = { time, type, period, title, sub, status: statusV || null };
   if (conn) item.conn = conn;
 
   if (bookingVisible) {
@@ -995,7 +1065,7 @@ function saveBulkItems() {
   const icoMap = { meal:'utensils', move:'move', act:'pin' };
   lines.forEach(line => {
     STATE.days[activeDay].items.push({
-      type, kicker, title: line,
+      type, period, kicker, title: line,
       icoType: icoMap[type] || 'pin',
       sub: '', status: null, booking: null,
     });
