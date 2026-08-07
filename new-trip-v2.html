@@ -1,199 +1,243 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/x-icon" href="/icons/trips-favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/icons/trips-icon-32.png">
+<title>Trip · Itinerary</title>
+<link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
-<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-<title>New Trip</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/itinerary-v2-style.css?v=1">
-<script src="/auth.js?v=3"></script>
-<script src="/db.js?v=3"></script>
+<script src="/auth.js" defer></script>
+<script src="/db.js" defer></script>
 </head>
 <body>
 
-<!-- ── SIDEBAR ─────────────────────────────────────── -->
+<!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
-  <div class="sb-trip-block">
+  <div class="sb-trip">
     <div class="sb-flag" id="sb-flag">🌍</div>
-    <div class="sb-dest" id="sb-dest">Trip</div>
+    <div class="sb-name" id="sb-name">Loading…</div>
     <div class="sb-meta" id="sb-meta"></div>
   </div>
   <nav class="sb-nav">
-    <button class="sb-nav-item active">
+    <button class="sb-btn active">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       Itinerary
     </button>
-    <div class="sb-divider"></div>
     <div class="sb-section-label">Days</div>
     <div id="sb-days"></div>
     <div class="sb-divider"></div>
-    <button class="sb-nav-item" onclick="addDay()">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Day
+    <button class="sb-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      Bookings
+    </button>
+    <button class="sb-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+      Map
+    </button>
+    <button class="sb-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Budget
     </button>
   </nav>
   <div class="sb-bottom">
-    <button class="sb-nav-item" onclick="window.location='/'">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Home
+    <button class="sb-btn" onclick="location.href='/settings.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Settings
+    </button>
+    <button class="sb-btn" onclick="location.href='/trips/'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      All trips
     </button>
   </div>
 </aside>
 
-<!-- ── MAIN ───────────────────────────────────────── -->
+<!-- ══ MAIN ══════════════════════════════════════════════════════ -->
 <div class="v2-main">
 
-  <!-- Header -->
-  <div class="v2-header">
-    <div class="v2-header-left">
-      <div class="v2-header-kicker" id="hdr-kicker">Day 1 of 1</div>
-      <div class="v2-header-title" id="hdr-title">Loading…</div>
+  <!-- TOP BAR -->
+  <div class="v2-topbar">
+    <div class="tb-left">
+      <div class="tb-kicker" id="tb-kicker">Loading…</div>
+      <div class="tb-title" id="tb-title"></div>
     </div>
-    <div class="v2-header-right">
-      <span class="v2-save-status" id="save-status"></span>
-      <div class="v2-mode-toggle">
-        <button class="v2-mode-btn active" onclick="setMode('plan')">Plan</button>
-        <button class="v2-mode-btn" onclick="setMode('today')">Today</button>
+    <div class="tb-right">
+      <span class="tb-status" id="tb-status"></span>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="mode-plan" onclick="setMode('plan')">Plan</button>
+        <button class="mode-btn" id="mode-today" onclick="setMode('today')">Today</button>
       </div>
-      <button class="v2-hdr-btn v2-save-btn" onclick="manualSave()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        Save
+      <button class="tb-btn" onclick="openAddDay()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add day
       </button>
-      <button class="v2-hdr-btn" onclick="window.print()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Print
+      <button class="tb-btn" onclick="triggerShare()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>
+        Share
       </button>
     </div>
   </div>
 
-  <!-- Day selector -->
-  <div class="v2-day-bar" id="day-bar"></div>
+  <!-- DAY SELECTOR -->
+  <div class="day-selector" id="day-selector"></div>
 
-  <!-- Summary bar -->
-  <div class="v2-summary-bar" id="summary-bar"></div>
+  <!-- DAY SUMMARY -->
+  <div class="day-summary" id="day-summary"></div>
 
-  <!-- Content -->
+  <!-- CONTENT -->
   <div class="v2-content">
+    <!-- TIMELINE -->
+    <div class="tl-col" id="tl-col"></div>
 
-    <!-- Timeline -->
-    <div class="v2-timeline-col" id="timeline-col"></div>
-
-    <!-- Right panel -->
-    <div class="v2-right" id="right-panel"></div>
-
+    <!-- RIGHT PANEL -->
+    <div class="rp-col">
+      <div class="rp-section">
+        <div class="rp-h">Accommodation</div>
+        <div id="rp-hotel">—</div>
+      </div>
+      <div class="rp-section">
+        <div class="rp-h">Trip Readiness</div>
+        <div id="rp-readiness"></div>
+      </div>
+      <div class="rp-section">
+        <div class="rp-h">Estimated Spend</div>
+        <div id="rp-budget"></div>
+      </div>
+      <div class="rp-section">
+        <div class="rp-h">Key Bookings</div>
+        <div id="rp-bookings"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ── ACTIVITY DRAWER ─────────────────────────────── -->
-<div class="v2-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-<div class="v2-drawer" id="drawer">
-  <div class="v2-dr-hdr">
-    <div style="flex:1">
-      <div class="v2-dr-kicker" id="dr-kicker"></div>
-      <div class="v2-dr-title" id="dr-title"></div>
-      <div class="v2-dr-sub" id="dr-sub"></div>
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dr-head">
+    <div class="dr-head-text">
+      <div class="dr-kicker" id="dr-kicker"></div>
+      <div class="dr-title" id="dr-title"></div>
+      <div class="dr-sub" id="dr-sub"></div>
     </div>
-    <button class="v2-dr-close" onclick="closeDrawer()">×</button>
+    <button class="dr-close" onclick="closeDrawer()">×</button>
   </div>
-  <div class="v2-dr-body">
-    <div id="dr-status-wrap" style="margin-bottom:12px;"></div>
-    <div class="v2-dr-actions">
-      <button class="v2-dr-action" onclick="editCurrentItem()">
+  <div class="dr-body">
+    <div id="dr-status-row" style="margin-bottom:12px;"></div>
+    <div class="dr-actions">
+      <button class="dr-act-btn" onclick="editCurrentItem()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Edit
       </button>
-      <button class="v2-dr-action" onclick="deleteCurrentItem()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      <button class="dr-act-btn" onclick="deleteCurrentItem()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
         Delete
       </button>
+      <button class="dr-act-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Directions
+      </button>
+      <button class="dr-act-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        More
+      </button>
     </div>
-    <div id="dr-booking-wrap"></div>
-    <button class="v2-dr-open" id="dr-open-btn" style="display:none">Open booking →</button>
+    <div id="dr-booking-body"></div>
+    <button class="dr-primary-btn" id="dr-open-btn" style="display:none">Open booking →</button>
   </div>
 </div>
 
-<!-- ── ADD/EDIT MODAL ─────────────────────────────── -->
-<div class="v2-modal-overlay" id="modal-overlay">
-  <div class="v2-modal">
-    <div class="v2-modal-hdr">
-      <div class="v2-modal-title" id="modal-title">Add Item</div>
-      <button class="v2-dr-close" onclick="closeModal()">×</button>
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Add activity</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-    <div class="v2-modal-body">
-      <div class="v2-field-row">
-        <div class="v2-field">
-          <label class="v2-label">Time</label>
-          <input class="v2-input" id="f-time" type="text" placeholder="09:00">
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Time</label>
+          <input class="field-input" id="f-time" type="time" placeholder="09:00">
         </div>
-        <div class="v2-field">
-          <label class="v2-label">Category</label>
-          <select class="v2-select" id="f-type">
-            <option value="act">Activity / Sightseeing</option>
-            <option value="meal">Meal / Food & Drink</option>
-            <option value="transport">Transport / Travel</option>
-            <option value="move">Walk / Transfer</option>
+        <div class="field-group">
+          <label class="field-label">Category</label>
+          <select class="field-select" id="f-type">
+            <option value="act">Activity / Place</option>
+            <option value="meal">Meal</option>
+            <option value="move">Transport / Walk</option>
+            <option value="hotel">Accommodation</option>
           </select>
         </div>
       </div>
-      <div class="v2-field">
-        <label class="v2-label">Title</label>
-        <input class="v2-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
+      <div class="field-group">
+        <label class="field-label">Title</label>
+        <input class="field-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
       </div>
-      <div class="v2-field">
-        <label class="v2-label">Subtitle / Location</label>
-        <input class="v2-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car, Vila Nova de Gaia">
+      <div class="field-group">
+        <label class="field-label">Subtitle / location</label>
+        <input class="field-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car">
       </div>
-      <div class="v2-field">
-        <label class="v2-label">Travel time from previous</label>
-        <input class="v2-input" id="f-conn" type="text" placeholder="e.g. 8 min walk, 15 min taxi">
+      <div class="field-group">
+        <label class="field-label">Status</label>
+        <select class="field-select" id="f-status">
+          <option value="">—</option>
+          <option value="booked">✓ Booked</option>
+          <option value="confirmed">✓ Confirmed</option>
+          <option value="walkin">Walk in only</option>
+          <option value="attention">Needs attention</option>
+        </select>
       </div>
-      <div class="v2-field-row">
-        <div class="v2-field">
-          <label class="v2-label">Booking status</label>
-          <select class="v2-select" id="f-status">
-            <option value="">— none —</option>
-            <option value="booked">✓ Booked</option>
-            <option value="confirmed">✓ Confirmed</option>
-            <option value="walkin">Walk in only</option>
-            <option value="attention">⚠ Needs attention</option>
-            <option value="optional">Optional</option>
-          </select>
+      <div class="field-group">
+        <label class="field-label">Travel time from previous (optional)</label>
+        <input class="field-input" id="f-conn" type="text" placeholder="e.g. 10 min walk">
+      </div>
+
+      <!-- Booking details toggle -->
+      <button class="booking-toggle" id="booking-toggle-btn" onclick="toggleBooking()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
+        Add booking details
+      </button>
+      <div class="booking-fields" id="booking-fields" style="display:none;">
+        <div class="field-group">
+          <label class="field-label">Booking reference</label>
+          <input class="field-input" id="f-ref" type="text" placeholder="e.g. ZTQNBT">
         </div>
-        <div class="v2-field">
-          <label class="v2-label">Price</label>
-          <input class="v2-input" id="f-price" type="text" placeholder="e.g. £6 / ticket">
+        <div class="field-group">
+          <label class="field-label">Price</label>
+          <input class="field-input" id="f-price" type="text" placeholder="e.g. £40 pp">
         </div>
-      </div>
-      <div class="v2-field">
-        <label class="v2-label">Booking reference</label>
-        <input class="v2-input" id="f-ref" type="text" placeholder="e.g. ABC123">
-      </div>
-      <div class="v2-field">
-        <label class="v2-label">Booking URL</label>
-        <input class="v2-input" id="f-url" type="text" placeholder="https://…">
-      </div>
-      <div class="v2-field">
-        <label class="v2-label">Notes</label>
-        <textarea class="v2-textarea" id="f-notes" placeholder="Any useful notes…"></textarea>
+        <div class="field-group">
+          <label class="field-label">Tickets / quantity</label>
+          <input class="field-input" id="f-tickets" type="text" placeholder="e.g. 2 tickets">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Booking URL</label>
+          <input class="field-input" id="f-url" type="url" placeholder="https://…">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-note" placeholder="Any extra details…"></textarea>
+        </div>
       </div>
     </div>
-    <div class="v2-modal-ftr">
-      <button class="v2-btn danger" id="modal-del-btn" onclick="deleteFromModal()" style="margin-right:auto;display:none">Delete</button>
-      <button class="v2-btn secondary" onclick="closeModal()">Cancel</button>
-      <button class="v2-btn primary" onclick="saveModal()">Save</button>
+    <div class="modal-foot">
+      <button class="modal-btn danger" id="modal-delete-btn" style="display:none" onclick="deleteCurrentItem()">Delete</button>
+      <button class="modal-btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveItem()">Save</button>
     </div>
   </div>
+</div>
+
+<!-- SNAPSHOT BAR -->
+<div class="snapshot-bar" id="snapshot-bar">
+  <span id="snapshot-msg">Snapshot saved</span>
+  <button onclick="restoreSnapshot()">Undo</button>
 </div>
 
 <script>
-// ── BAKED TRIP DATA (replaced by deploy webhook) ──────────────────────
+// ── BAKE POINT (deploy webhook replaces this block) ──────────────────
 // Read URL params
 const params = new URLSearchParams(window.location.search);
 const dest   = params.get('dest') || 'New Trip';
@@ -205,373 +249,361 @@ const slug   = params.get('slug') || 'new-trip';
 
 // Use slug as the database record ID
 const RECORD_ID = slug;
+// ────────────────────────────────────────────────────────────────────
 
-// ── DATA MODEL ────────────────────────────────────────────────────────
-// days: Array of day objects:
-// {
-//   id: string,          — unique id
-//   date: string,        — display date e.g. "Sat 29 Aug"
-//   dateShort: string,   — for day tab e.g. "29 Aug"
-//   loc: string,         — location / theme
-//   staying: string|null,— hotel name if unchanged from prev day
-//   items: Array of item objects:
-//     {
-//       id: string,
-//       time: string,     — "09:00" or "" 
-//       type: string,     — "act"|"meal"|"transport"|"move"
-//       title: string,
-//       sub: string,
-//       conn: string,     — travel time label from previous item
-//       status: string,   — ""|"booked"|"confirmed"|"walkin"|"attention"|"optional"
-//       statusLabel: string, — override label for walkin/attention
-//       price: string,
-//       ref: string,
-//       url: string,
-//       notes: string
-//     }
-// }
-
-let tripData = { days: [] };
+// ── STATE ────────────────────────────────────────────────────────────
+let STATE = { days: [], meta: { dest, dep, ret, trav, status, hotel: null, budget: null } };
 let activeDay = 0;
 let currentMode = 'plan';
+let drawerItem = null;  // { dayIdx, itemIdx }
+let editItem   = null;  // same, or null for new
+let snapshotData = null;
 let saveTimer = null;
-let currentDrawerItem = null; // { dayIdx, itemIdx }
-let currentModalItem  = null; // { dayIdx, itemIdx } or null for new
-let modalDayIdx = null;
 
-// ── SVG ICONS ─────────────────────────────────────────────────────────
+// ── ICONS ────────────────────────────────────────────────────────────
 const ICO = {
-  act: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-  meal:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
-  transport:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
-  move:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+  coffee:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+  utensils:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="11" x2="21" y2="11"/><path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9z"/><path d="M11 21v-4M13 21v-4"/></svg>`,
+  dinner:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="11"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
+  pin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  ticket:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>`,
+  walk:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M10.7 13.7L9 21h2l1-4 2 2v4h2v-5l-2-3 1-4"/><path d="M7 21l1.8-7L11 16l1-5-3.7-2.7C7.7 7.7 7 8.8 7 10v3"/></svg>`,
+  plane:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
   home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   warn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
-  circ:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`,
-  down:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`
+  circle:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`,
+  down:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
 };
 
-function icoForType(type) { return ICO[type] || ICO.act; }
-function dotClass(type) {
-  if (type === 'meal') return 'meal';
-  if (type === 'move' || type === 'transport') return 'move';
-  return '';
-}
-function icoClass(type) {
-  if (type === 'meal') return 'meal';
-  if (type === 'move' || type === 'transport') return 'move';
-  return '';
-}
-function kicLabel(type) {
-  return { act:'Activity', meal:'Meal', transport:'Transport', move:'Transfer' }[type] || 'Activity';
+function icoForType(t, sub) {
+  if (t==='meal') {
+    const s = (sub||'').toLowerCase();
+    if (s.includes('breakfast')||s.includes('coffee')||s.includes('café')) return {html:ICO.coffee, cls:'meal'};
+    if (s.includes('dinner')) return {html:ICO.dinner, cls:'meal'};
+    return {html:ICO.utensils, cls:'meal'};
+  }
+  if (t==='move') return {html:ICO.plane, cls:'move'};
+  if (t==='hotel') return {html:ICO.home, cls:''};
+  return {html:ICO.pin, cls:''};
 }
 
-// ── STATUS BADGE ──────────────────────────────────────────────────────
-function badge(status, label) {
+function badgeHtml(status, label) {
   if (!status) return '';
-  const labels = { booked:'Booked', confirmed:'Confirmed', walkin:'Walk in only', attention:'Needs attention', optional:'Optional' };
-  const txt = label || labels[status] || status;
-  let icon = '';
-  if (status==='booked'||status==='confirmed') icon = ICO.check;
-  if (status==='attention') icon = ICO.warn;
-  return `<span class="v2-badge ${status}">${icon}${txt}</span>`;
+  const icons = { booked: ICO.check, confirmed: ICO.check, attention: ICO.warn };
+  const ic = icons[status] ? `<span style="display:inline-flex;width:9px;height:9px;align-items:center;">${icons[status]}</span>` : '';
+  const txt = label || { booked:'Booked', confirmed:'Confirmed', walkin:'Walk in only', attention:'Needs attention' }[status] || status;
+  return `<span class="badge ${status}">${ic}${txt}</span>`;
 }
 
-// ── UNIQUE ID ─────────────────────────────────────────────────────────
-function uid() { return Math.random().toString(36).slice(2,9); }
-
-// ── EMPTY DAY ─────────────────────────────────────────────────────────
-function emptyDay(n) {
-  return { id: uid(), date: `Day ${n}`, dateShort: `Day ${n}`, loc: '', staying: null, items: [] };
-}
-
-// ── FLAG EMOJI ────────────────────────────────────────────────────────
-const FLAGS = { Porto:'🇵🇹', China:'🇨🇳', Dubai:'🇦🇪', 'Costa Rica':'🇨🇷',
-  Canada:'🇨🇦', 'Hong Kong':'🇭🇰', Taiwan:'🇹🇼', Hamburg:'🇩🇪',
-  Gothenburg:'🇸🇪', Cyprus:'🇨🇾', Graz:'🇦🇹', Ljubljana:'🇸🇮' };
+// ── FLAG HELPER ───────────────────────────────────────────────────────
 function flagFor(d) {
-  for (const [k,v] of Object.entries(FLAGS)) { if (d.includes(k)) return v; }
+  const map = { 'Porto':'🇵🇹','Porto 2026':'🇵🇹','Hamburg':'🇩🇪','Gothenburg':'🇸🇪','Cyprus':'🇨🇾','China':'🇨🇳','Dubai':'🇦🇪','Costa Rica':'🇨🇷','Canada':'🇨🇦','Hong Kong':'🇭🇰','Taiwan':'🇹🇼' };
+  for (const [k,v] of Object.entries(map)) { if (d.toLowerCase().includes(k.toLowerCase())) return v; }
   return '🌍';
 }
 
-// ── RENDER SIDEBAR ────────────────────────────────────────────────────
-function renderSidebar() {
-  document.getElementById('sb-flag').textContent = flagFor(dest);
-  document.getElementById('sb-dest').textContent = dest;
-  document.getElementById('sb-meta').innerHTML = `${dep} → ${ret}<br>${trav} traveller${trav!=='1'?'s':''}`;
-
-  const sbDays = document.getElementById('sb-days');
-  sbDays.innerHTML = tripData.days.map((d,i) => {
-    const warns = d.items.filter(it=>it.status==='attention').length;
-    const empty = !d.items.length;
-    const dotCls = empty ? 'empty' : warns ? 'warn' : '';
-    return `<button class="sb-day-btn ${i===activeDay?'active':''}" onclick="setDay(${i})">
-      <span>Day ${i+1} · ${d.dateShort||d.date}</span>
-      <div class="sb-day-dot ${dotCls}"></div>
-    </button>`;
-  }).join('');
-}
-
-// ── RENDER DAY BAR ────────────────────────────────────────────────────
-function renderDayBar() {
-  const bar = document.getElementById('day-bar');
-  bar.innerHTML = tripData.days.map((d,i) => `
-    <button class="v2-day-tab ${i===activeDay?'active':''}" onclick="setDay(${i})">
-      <span class="dt-n">Day ${i+1}</span>
-      <span class="dt-d">${d.dateShort||d.date}</span>
-      <span class="dt-l">${d.loc||'—'}</span>
-    </button>`).join('');
-}
-
-// ── RENDER SUMMARY BAR ────────────────────────────────────────────────
-function renderSummary() {
-  const d = tripData.days[activeDay];
-  if (!d) { document.getElementById('summary-bar').innerHTML = ''; return; }
-  const items = d.items || [];
-  const meals = items.filter(i=>i.type==='meal').length;
-  const acts  = items.filter(i=>i.type==='act').length;
-  const tkt   = items.filter(i=>i.status==='booked'||i.status==='confirmed').length;
-  const warns = items.filter(i=>i.status==='attention').length;
-  const spend = items.filter(i=>i.price).map(i=>parseFloat(i.price.replace(/[^0-9.]/g,''))||0).reduce((a,b)=>a+b,0);
-  const warnHtml = warns ? `<div class="v2-sum-div"></div><div class="v2-sum-warn">${ICO.warn} ${warns} needs attention</div>` : '';
-  document.getElementById('summary-bar').innerHTML = `
-    <div class="v2-sum-stat">${ICO.circ} ${acts} activit${acts!==1?'ies':'y'}</div>
-    <div class="v2-sum-div"></div>
-    <div class="v2-sum-stat">${ICO.meal} ${meals} meal${meals!==1?'s':''}</div>
-    ${tkt ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">✓ ${tkt} booked</div>` : ''}
-    ${spend ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">£${spend.toFixed(0)} est.</div>` : ''}
-    ${warnHtml}
-  `.replace(/<svg[^>]*>.*?<\/svg>/gs, m => m.replace(/class="[^"]*"/g,'').replace(/style="[^"]*"/g,''));
-  document.getElementById('summary-bar').innerHTML = `
-    <div class="v2-sum-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${acts} activit${acts!==1?'ies':'y'}</div>
-    <div class="v2-sum-div"></div>
-    <div class="v2-sum-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg> ${meals} meal${meals!==1?'s':''}</div>
-    ${tkt ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">✓ ${tkt} booked</div>` : ''}
-    ${spend ? `<div class="v2-sum-div"></div><div class="v2-sum-stat">~£${Math.round(spend)} est.</div>` : ''}
-    ${warns ? `<div class="v2-sum-div"></div><div class="v2-sum-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${warns} needs attention</div>` : ''}
-  `;
-  document.getElementById('hdr-kicker').textContent = `Day ${activeDay+1} of ${tripData.days.length} · ${d.date}`;
-  document.getElementById('hdr-title').textContent  = d.loc || dest;
-}
-
-// ── RENDER TIMELINE ───────────────────────────────────────────────────
-function renderTimeline() {
-  const d = tripData.days[activeDay];
-  const col = document.getElementById('timeline-col');
-  if (!d) { col.innerHTML = ''; return; }
-
-  let html = '';
-
-  if (d.staying) {
-    html += `<button class="v2-staying" onclick="editDayMeta(${activeDay})">${ICO.home} Staying at <span>${d.staying}</span></button>`;
+// ── LOAD / SAVE ───────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const saved = await dbLoad(RECORD_ID);
+    if (saved && saved.days) {
+      STATE = saved;
+      STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
+    } else {
+      // New trip — seed with one empty day
+      STATE.days = [{ date: dep, loc: dest, title: 'Day 1', items: [] }];
+      STATE.meta = { dest, dep, ret, trav, status, hotel:null, budget:null };
+    }
+  } catch(e) {
+    console.error('Load failed', e);
   }
-
-  const items = d.items || [];
-  if (!items.length) {
-    html += `<div class="v2-empty">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <p>No activities yet</p>
-    </div>`;
-  } else {
-    html += '<div class="v2-tl">';
-    items.forEach((item, idx) => {
-      if (item.conn) {
-        html += `<div class="v2-conn"><div></div><div class="v2-conn-inner">${ICO.down}${item.conn}</div></div>`;
-      }
-      const meta = [badge(item.status, item.statusLabel), item.price ? `<span class="v2-price">${item.price}</span>` : ''].filter(Boolean).join('');
-      html += `
-        <div class="v2-tl-item" onclick="openDrawer(${activeDay},${idx})">
-          <div class="v2-tl-time">${item.time||''}</div>
-          <div class="v2-tl-right">
-            <div class="v2-tl-dot ${dotClass(item.type)}"></div>
-            <div class="v2-tl-ico ${icoClass(item.type)}">${icoForType(item.type)}</div>
-            <div class="v2-tl-body">
-              <div class="v2-tl-kicker">${kicLabel(item.type)}</div>
-              <div class="v2-tl-title">${item.title||'Untitled'}</div>
-              ${item.sub ? `<div class="v2-tl-sub">${item.sub}</div>` : ''}
-              ${meta ? `<div class="v2-tl-meta">${meta}</div>` : ''}
-            </div>
-            <button class="v2-tl-more" onclick="event.stopPropagation();openDrawer(${activeDay},${idx})">···</button>
-          </div>
-        </div>`;
-    });
-    html += '</div>';
-  }
-
-  html += `<button class="v2-add-item" onclick="openAddModal(${activeDay})">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Add activity, meal or transport
-  </button>`;
-
-  col.innerHTML = html;
+  render();
 }
 
-// ── RENDER RIGHT PANEL ────────────────────────────────────────────────
-function renderRightPanel() {
-  const d = tripData.days[activeDay];
-  const panel = document.getElementById('right-panel');
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveData, 1800);
+  setStatus('saving', '●  Saving…');
+}
 
-  // Accommodation section — show if we have staying info on any day
-  const stayDay = tripData.days.slice(0, activeDay+1).reverse().find(dd => dd.hotel);
-  const hotel = (d && d.hotel) || (stayDay && stayDay.hotel) || null;
-
-  let html = '';
-
-  // Hotel
-  if (hotel) {
-    html += `<div class="v2-rp-section">
-      <div class="v2-rp-h">Accommodation</div>
-      <div class="v2-hotel-card">
-        <div class="v2-hotel-img"><div class="v2-hotel-img-lbl">${hotel.name||'Hotel'}</div></div>
-        <div class="v2-hotel-body">
-          <div class="v2-hotel-name">${hotel.name||''}</div>
-          <div class="v2-hotel-dates">${hotel.checkin||''} → ${hotel.checkout||''}${hotel.nights ? ` · ${hotel.nights} nights` : ''}${hotel.price ? ` · ${hotel.price}` : ''}</div>
-          ${hotel.status ? `<div style="margin-top:6px">${badge(hotel.status)}</div>` : ''}
-          <div class="v2-hotel-btns">
-            ${hotel.ref ? `<button onclick="navigator.clipboard.writeText('${hotel.ref}')">Copy ref</button>` : ''}
-            <button>Map</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
+async function saveData() {
+  // Take a snapshot before every save
+  takeSnapshot();
+  try {
+    await dbSave(RECORD_ID, STATE);
+    setStatus('saved', '');
+  } catch(e) {
+    setStatus('error', '✕ Save failed');
   }
+}
 
-  // Day actions
-  html += `<div class="v2-rp-section">
-    <div class="v2-rp-h">Day ${activeDay+1}</div>
-    <button class="v2-budget-btn" onclick="editDayMeta(${activeDay})">Edit day details</button>
-    <button class="v2-budget-btn" style="margin-top:6px;color:var(--red);border-color:rgba(192,57,43,0.2)" onclick="deleteDay(${activeDay})">Delete this day</button>
-  </div>`;
-
-  // Snapshots
-  html += `<div class="v2-rp-section" id="snapshot-section">
-    <div class="v2-rp-h">Version History</div>
-    <div id="snapshot-list"><div style="font-size:11px;color:var(--text3)">Loading…</div></div>
-  </div>`;
-
-  panel.innerHTML = html;
-  loadSnapshots();
+function setStatus(cls, txt) {
+  const el = document.getElementById('tb-status');
+  el.textContent = txt;
+  el.className = 'tb-status ' + (cls||'');
 }
 
 // ── SNAPSHOTS ─────────────────────────────────────────────────────────
+// Keeps the last 10 saves as a separate DB record (id = RECORD_ID + '-snaps')
+// so a delete or accidental wipe is recoverable after a refresh.
+const SNAPS_ID = RECORD_ID + '-snaps';
+let snapshotList = [];
+
 async function loadSnapshots() {
-  const el = document.getElementById('snapshot-list');
-  if (!el) return;
   try {
-    const snaps = await window.dbLoad(RECORD_ID + '-snapshots');
-    if (!snaps || !snaps.list || !snaps.list.length) {
-      el.innerHTML = '<div style="font-size:11px;color:var(--text3)">No saved versions yet</div>';
-      return;
-    }
-    el.innerHTML = snaps.list.slice(0,6).map((s,i) => `
-      <div class="v2-snapshot-item">
-        <span>${new Date(s.ts).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
-        <button class="v2-snapshot-restore" onclick="restoreSnapshot(${i})">Restore</button>
-      </div>`).join('');
-    window._snapshots = snaps.list;
-  } catch(e) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text3)">—</div>';
-  }
+    const d = await dbLoad(SNAPS_ID);
+    snapshotList = (d && d.snaps) ? d.snaps : [];
+  } catch {}
 }
 
-async function saveSnapshot() {
-  try {
-    const existing = await window.dbLoad(RECORD_ID + '-snapshots');
-    const list = (existing && existing.list) ? existing.list : [];
-    list.unshift({ ts: Date.now(), data: JSON.parse(JSON.stringify(tripData)) });
-    if (list.length > 10) list.length = 10;
-    await window.dbSave(RECORD_ID + '-snapshots', { list });
-  } catch(e) { /* non-critical */ }
+function takeSnapshot() {
+  const entry = { ts: Date.now(), data: JSON.parse(JSON.stringify(STATE)) };
+  snapshotList.unshift(entry);
+  if (snapshotList.length > 10) snapshotList.length = 10;
+  dbSave(SNAPS_ID, { snaps: snapshotList }).catch(() => {});
 }
 
-async function restoreSnapshot(idx) {
-  const snaps = window._snapshots;
-  if (!snaps || !snaps[idx]) return;
-  if (!confirm('Restore this version? Your current data will be saved as a new snapshot first.')) return;
-  await saveSnapshot();
-  tripData = JSON.parse(JSON.stringify(snaps[idx].data));
-  activeDay = Math.min(activeDay, tripData.days.length - 1);
-  renderAll();
-  await persistSave();
-  showSaveStatus('Restored ✓', 'saved');
+async function restoreSnapshot() {
+  if (!snapshotList.length) return;
+  const prev = snapshotList[0];
+  if (!prev) return;
+  STATE = prev.data;
+  render();
+  scheduleSave();
+  showSnapshotBar(false);
 }
 
-// ── RENDER ALL ────────────────────────────────────────────────────────
-function renderAll() {
+function showSnapshotBar(show) {
+  document.getElementById('snapshot-bar').classList.toggle('show', show);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function render() {
   renderSidebar();
-  renderDayBar();
-  renderSummary();
+  renderDaySelector();
+  renderDaySummary();
   renderTimeline();
   renderRightPanel();
 }
 
-// ── DAY SWITCH ────────────────────────────────────────────────────────
-function setDay(i) {
-  activeDay = Math.max(0, Math.min(i, tripData.days.length - 1));
-  closeDrawer();
-  renderAll();
+function renderSidebar() {
+  const m = STATE.meta;
+  document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
+  document.getElementById('sb-name').textContent = m.dest || dest;
+  const depFmt = m.dep || dep;
+  const retFmt = m.ret || ret;
+  document.getElementById('sb-meta').textContent = (depFmt && retFmt ? depFmt + ' → ' + retFmt + '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
+
+  const d = STATE.days[activeDay];
+  document.getElementById('sb-days').innerHTML = STATE.days.map((dy,i) => {
+    const warns = (dy.items||[]).filter(it => it && it.status==='attention').length;
+    const allBooked = (dy.items||[]).filter(it => it && it.status).every(it => it.status==='booked'||it.status==='confirmed'||it.status==='walkin');
+    const dotCls = warns ? 'warn' : (dy.items&&dy.items.length ? '' : 'none');
+    return `<button class="sb-day-item ${i===activeDay?'active':''}" onclick="setDay(${i})">
+      <span>Day ${i+1} · ${dy.date||'—'}</span>
+      <span class="sb-day-dot ${dotCls}"></span>
+    </button>`;
+  }).join('');
 }
 
-// ── ADD DAY ───────────────────────────────────────────────────────────
-function addDay() {
-  tripData.days.push(emptyDay(tripData.days.length + 1));
-  activeDay = tripData.days.length - 1;
-  renderAll();
-  editDayMeta(activeDay);
-  scheduleSave();
+function renderDaySelector() {
+  document.getElementById('day-selector').innerHTML = STATE.days.map((d,i) =>
+    `<div class="day-tab ${i===activeDay?'active':''}" onclick="setDay(${i})">
+      <div class="dt-n">Day ${i+1}</div>
+      <div class="dt-date">${d.date||'—'}</div>
+      <div class="dt-loc">${d.title||d.loc||'—'}</div>
+    </div>`
+  ).join('');
 }
 
-// ── DELETE DAY ────────────────────────────────────────────────────────
-function deleteDay(i) {
-  if (tripData.days.length <= 1) { alert('A trip needs at least one day.'); return; }
-  if (!confirm(`Delete Day ${i+1}? This cannot be undone.`)) return;
-  tripData.days.splice(i, 1);
-  activeDay = Math.min(activeDay, tripData.days.length - 1);
-  renderAll();
-  scheduleSave();
+function renderDaySummary() {
+  const d = STATE.days[activeDay];
+  if (!d) return;
+  const items = d.items || [];
+  const meals = items.filter(it => it && it.type==='meal').length;
+  const acts  = items.filter(it => it && it.type==='act').length;
+  const tix   = items.filter(it => it && it.booking && it.booking.tickets).length;
+  const warns = items.filter(it => it && it.status==='attention').length;
+  const warnHtml = warns ? `<div class="ds-sep"></div><div class="ds-warn">${ICO.warn} ${warns} needs attention</div>` : '';
+  document.getElementById('day-summary').innerHTML = `
+    <div class="ds-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${acts} activit${acts===1?'y':'ies'}</div>
+    <div class="ds-sep"></div>
+    <div class="ds-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>${meals} meal${meals===1?'':'s'}</div>
+    ${tix ? `<div class="ds-sep"></div><div class="ds-pill">${ICO.ticket.replace('<svg','<svg width="11" height="11"')} ${tix} ticket${tix===1?'':'s'}</div>` : ''}
+    ${warnHtml}`;
+
+  // Topbar kicker + title
+  document.getElementById('tb-kicker').textContent = `Day ${activeDay+1} of ${STATE.days.length} · ${d.date||''}`;
+  document.getElementById('tb-title').textContent = d.loc || d.title || dest;
 }
 
-// ── EDIT DAY META (simple prompt-based for now) ───────────────────────
-function editDayMeta(i) {
-  const d = tripData.days[i];
-  const date = prompt('Date (e.g. Sat 29 Aug):', d.date || '');
-  if (date === null) return;
-  d.date = date || d.date;
-  const dateShort = date.replace(/^[A-Za-z]+ /,'');
-  d.dateShort = dateShort || d.dateShort;
-  const loc = prompt('Location / theme (e.g. Porto → Foz):', d.loc || '');
-  if (loc !== null) d.loc = loc;
-  const staying = prompt('Staying at (hotel name, or blank if travel day):', d.staying || '');
-  if (staying !== null) d.staying = staying || null;
-  renderAll();
-  scheduleSave();
+function renderTimeline() {
+  const d = STATE.days[activeDay];
+  const col = document.getElementById('tl-col');
+  if (!d) { col.innerHTML = ''; return; }
+
+  // Staying pill — find the active hotel from this day's items
+  const hotelItem = (d.items||[]).find(it => it && it.type==='hotel' && it.staying);
+  let html = hotelItem
+    ? `<div class="staying-pill">${ICO.home.replace('<svg','<svg width="12" height="12"')} Staying at <span>${hotelItem.staying}</span></div>`
+    : '';
+
+  const items = d.items || [];
+  if (!items.length) {
+    html += `<div class="tl-empty">${ICO.circle}<p>No activities yet for this day.</p><button onclick="openAddItem()">+ Add activity</button></div>`;
+    col.innerHTML = html;
+    return;
+  }
+
+  html += '<div class="timeline">';
+  items.forEach((item, idx) => {
+    if (!item) return;
+
+    // Connector row
+    if (item.conn) {
+      html += `<div class="tl-connector"><div class="tl-conn-line"></div><div class="tl-conn-inner ${item.connWarn?'warn':''}">${ICO.down.replace('<svg','<svg width="11" height="11"')}${item.conn}</div></div>`;
+      return;
+    }
+
+    const ico = icoForType(item.type, item.title);
+    const price = item.booking ? `<span class="tl-price">${item.booking.price||''}</span>` : '';
+    const meta  = [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
+
+    html += `
+      <div class="tl-item" onclick="openDrawerItem(${activeDay},${idx})">
+        <div class="tl-time">${item.time||''}</div>
+        <div class="tl-body-wrap">
+          <div class="tl-dot ${item.type==='meal'?'meal':(item.type==='move'?'move':'')}"></div>
+          <div class="tl-ico ${ico.cls}">${ico.html}</div>
+          <div class="tl-text">
+            <div class="tl-title">${item.title||''}</div>
+            ${item.sub?`<div class="tl-sub">${item.sub}</div>`:''}
+            ${meta?`<div class="tl-meta">${meta}</div>`:''}
+          </div>
+          <button class="tl-more-btn" onclick="event.stopPropagation();openEditItem(${activeDay},${idx})">···</button>
+        </div>
+      </div>`;
+  });
+
+  html += '</div>';
+  html += `<button class="tl-add-btn" onclick="openAddItem()">${ICO.plus.replace('<svg','<svg width="14" height="14"')} Add activity</button>`;
+  col.innerHTML = html;
+}
+
+function renderRightPanel() {
+  renderHotelPanel();
+  renderReadiness();
+  renderBudget();
+  renderKeyBookings();
+}
+
+function renderHotelPanel() {
+  const h = STATE.meta.hotel;
+  const el = document.getElementById('rp-hotel');
+  if (!h) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No accommodation added yet.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="hotel-card">
+      <div class="hotel-img"><div class="hotel-img-lbl">${h.name||'Hotel'}</div></div>
+      <div class="hotel-body">
+        <div class="hotel-name">${h.name||''}</div>
+        <div class="hotel-dates">${h.checkin||''} → ${h.checkout||''} · ${h.nights||''} nights · ${h.nightly||''}/night</div>
+        <div style="margin-top:6px;">${badgeHtml(h.status||'confirmed')}</div>
+        <div class="hotel-btns"><button>View booking</button><button>Map</button></div>
+      </div>
+    </div>`;
+}
+
+function renderReadiness() {
+  const items = STATE.days.flatMap(d => d.items||[]).filter(Boolean);
+  const booked = items.filter(it => it.status==='booked'||it.status==='confirmed').length;
+  const total  = items.filter(it => it.status).length;
+  const pct    = total ? Math.round((booked/total)*100) : 100;
+  const warns  = items.filter(it => it.status==='attention').length;
+  const hasHotel = !!STATE.meta.hotel;
+  const circumference = 2 * Math.PI * 22;
+  const offset = circumference * (1 - pct/100);
+
+  document.getElementById('rp-readiness').innerHTML = `
+    <div class="readiness-ring">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(14,122,135,0.15)" stroke-width="5"/>
+        <circle cx="26" cy="26" r="22" fill="none" stroke="#0e7a87" stroke-width="5"
+          stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
+          stroke-linecap="round" transform="rotate(-90 26 26)"/>
+      </svg>
+      <div><div class="ring-pct">${pct}%</div><div class="ring-label">${pct>=100?'All set!':pct>=80?'Almost there!':'In progress'}</div></div>
+    </div>
+    <div class="r-list">
+      <div class="r-row ${hasHotel?'ok':'tbc'}">${hasHotel?ICO.check:ICO.circle} ${hasHotel?'Hotel confirmed':'No hotel added yet'}</div>
+      <div class="r-row ${booked>0?'ok':'tbc'}">${booked>0?ICO.check:ICO.circle} ${booked} item${booked===1?'':'s'} booked</div>
+      ${warns ? `<div class="r-row warn">${ICO.warn} ${warns} need${warns===1?'s':''} attention</div>` : ''}
+    </div>`;
+}
+
+function renderBudget() {
+  const b = STATE.meta.budget;
+  if (!b) {
+    document.getElementById('rp-budget').innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No budget set.</div>`;
+    return;
+  }
+  const total = (b.stay||0)+(b.food||0)+(b.act||0)+(b.trans||0);
+  const pct = (n) => total ? Math.round((n/total)*100) : 0;
+  document.getElementById('rp-budget').innerHTML = `
+    <div class="budget-total">£${total}</div>
+    <div class="budget-sub">for ${STATE.meta.trav||trav} travellers</div>
+    <div class="budget-bars">
+      <div class="bb-row"><div class="bb-lbl">Stay</div><div class="bb-track"><div class="bb-fill" style="width:${pct(b.stay)}%"></div></div><div class="bb-val">£${b.stay||0}</div></div>
+      <div class="bb-row"><div class="bb-lbl">Food</div><div class="bb-track"><div class="bb-fill food" style="width:${pct(b.food)}%"></div></div><div class="bb-val">£${b.food||0}</div></div>
+      <div class="bb-row"><div class="bb-lbl">Activities</div><div class="bb-track"><div class="bb-fill act" style="width:${pct(b.act)}%"></div></div><div class="bb-val">£${b.act||0}</div></div>
+      <div class="bb-row"><div class="bb-lbl">Transport</div><div class="bb-track"><div class="bb-fill trans" style="width:${pct(b.trans)}%"></div></div><div class="bb-val">£${b.trans||0}</div></div>
+    </div>
+    <button class="rp-link-btn">View full budget →</button>`;
+}
+
+function renderKeyBookings() {
+  const items = STATE.days.flatMap(d => (d.items||[]).map(it => it && it.booking ? {day:d.date, ...it} : null)).filter(Boolean);
+  const el = document.getElementById('rp-bookings');
+  if (!items.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No bookings yet.</div>`;
+    return;
+  }
+  el.innerHTML = items.slice(0,4).map(it => {
+    const ico = icoForType(it.type, it.title);
+    return `<div class="bk-item"><div class="bk-ico" style="background:var(--teal-xdim)">${ico.html}</div>
+      <div class="bk-body"><div class="bk-name">${it.title}</div>
+      <div class="bk-meta">${it.day||''} ${it.time?'· '+it.time:''} · ${badgeHtml(it.status)}</div></div></div>`;
+  }).join('');
 }
 
 // ── DRAWER ────────────────────────────────────────────────────────────
-function openDrawer(dayIdx, itemIdx) {
-  const item = tripData.days[dayIdx]?.items?.[itemIdx];
-  if (!item) return;
-  currentDrawerItem = { dayIdx, itemIdx };
-
-  document.getElementById('dr-kicker').textContent = kicLabel(item.type);
-  document.getElementById('dr-title').textContent  = item.title || 'Untitled';
+function openDrawerItem(dayIdx, itemIdx) {
+  const item = STATE.days[dayIdx]?.items?.[itemIdx];
+  if (!item || item.conn !== undefined) return;
+  drawerItem = { dayIdx, itemIdx };
+  document.getElementById('dr-kicker').textContent = item.kicker || item.type || 'Activity';
+  document.getElementById('dr-title').textContent  = item.title || '';
   document.getElementById('dr-sub').textContent    = item.sub || '';
-  document.getElementById('dr-status-wrap').innerHTML = badge(item.status, item.statusLabel);
-
-  let bkHtml = '';
-  if (item.ref || item.price || item.url || item.notes) {
-    bkHtml += '<div class="v2-dr-section-h">Details</div>';
-    if (item.time)  bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Time</div><div class="v2-dr-row-v">${item.time}</div></div>`;
-    if (item.price) bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Price</div><div class="v2-dr-row-v">${item.price}</div></div>`;
-    if (item.ref)   bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Booking reference</div><div class="v2-dr-row-v mono">${item.ref}</div></div>`;
-    if (item.url)   bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Link</div><div class="v2-dr-row-v link" onclick="window.open('${item.url}','_blank')">${item.url}</div></div>`;
-    if (item.notes) bkHtml += `<div class="v2-dr-row"><div class="v2-dr-row-k">Notes</div><div class="v2-dr-row-v" style="font-weight:500;color:var(--text2)">${item.notes}</div></div>`;
+  document.getElementById('dr-status-row').innerHTML = badgeHtml(item.status, item.statusLabel);
+  const b = item.booking;
+  let bHtml = '';
+  if (b) {
+    bHtml = `<div class="dr-section-h">Booking details</div>`;
+    if (b.ref)     bHtml += `<div class="dr-field"><div class="dr-field-k">Reference</div><div class="dr-field-v ref">${b.ref}</div></div>`;
+    if (b.price)   bHtml += `<div class="dr-field"><div class="dr-field-k">Price</div><div class="dr-field-v">${b.price}</div></div>`;
+    if (b.tickets) bHtml += `<div class="dr-field"><div class="dr-field-k">Tickets</div><div class="dr-field-v">${b.tickets}</div></div>`;
+    if (b.url)     bHtml += `<div class="dr-field"><div class="dr-field-k">Link</div><div class="dr-field-v link" onclick="window.open('${b.url}','_blank')">${b.url}</div></div>`;
+    if (b.note)    bHtml += `<div class="dr-field"><div class="dr-field-k">Notes</div><div class="dr-field-v" style="font-weight:500;color:var(--text2)">${b.note}</div></div>`;
+    document.getElementById('dr-open-btn').style.display = b.url ? 'block' : 'none';
+    document.getElementById('dr-open-btn').onclick = () => window.open(b.url,'_blank');
+  } else {
+    document.getElementById('dr-open-btn').style.display = 'none';
   }
-  document.getElementById('dr-booking-wrap').innerHTML = bkHtml;
-  document.getElementById('dr-open-btn').style.display = item.url ? 'block' : 'none';
-  document.getElementById('dr-open-btn').onclick = () => window.open(item.url, '_blank');
-
+  document.getElementById('dr-booking-body').innerHTML = bHtml;
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
 }
@@ -579,173 +611,176 @@ function openDrawer(dayIdx, itemIdx) {
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawer-overlay').classList.remove('open');
-  currentDrawerItem = null;
 }
 
 function editCurrentItem() {
-  if (!currentDrawerItem) return;
+  if (!drawerItem) return;
   closeDrawer();
-  openEditModal(currentDrawerItem.dayIdx, currentDrawerItem.itemIdx);
+  openEditItem(drawerItem.dayIdx, drawerItem.itemIdx);
 }
 
 function deleteCurrentItem() {
-  if (!currentDrawerItem) return;
-  if (!confirm('Delete this item?')) return;
-  const { dayIdx, itemIdx } = currentDrawerItem;
-  tripData.days[dayIdx].items.splice(itemIdx, 1);
+  if (!drawerItem) return;
+  if (!confirm('Delete this activity?')) return;
+  const items = STATE.days[drawerItem.dayIdx].items;
+  // snapshot first so it's recoverable
+  takeSnapshot();
+  items.splice(drawerItem.itemIdx, 1);
   closeDrawer();
-  renderAll();
+  closeModal();
   scheduleSave();
+  render();
+  showSnapshotBar(true);
+  setTimeout(() => showSnapshotBar(false), 6000);
 }
 
-// ── ADD/EDIT MODAL ────────────────────────────────────────────────────
-function openAddModal(dayIdx) {
-  modalDayIdx = dayIdx;
-  currentModalItem = null;
-  document.getElementById('modal-title').textContent = 'Add Item';
-  document.getElementById('modal-del-btn').style.display = 'none';
-  clearModal();
-  document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('f-time').focus(), 100);
+// ── ADD / EDIT MODAL ──────────────────────────────────────────────────
+let bookingVisible = false;
+
+function openAddItem() {
+  editItem = null;
+  document.getElementById('modal-title').textContent = 'Add activity';
+  document.getElementById('modal-delete-btn').style.display = 'none';
+  clearForm();
+  openModal();
 }
 
-function openEditModal(dayIdx, itemIdx) {
-  const item = tripData.days[dayIdx]?.items?.[itemIdx];
+function openAddDay() {
+  const n = STATE.days.length + 1;
+  STATE.days.push({ date:'', loc: dest, title:`Day ${n}`, items:[] });
+  activeDay = STATE.days.length - 1;
+  scheduleSave();
+  render();
+}
+
+function openEditItem(dayIdx, itemIdx) {
+  editItem = { dayIdx, itemIdx };
+  drawerItem = { dayIdx, itemIdx };
+  const item = STATE.days[dayIdx]?.items?.[itemIdx];
   if (!item) return;
-  modalDayIdx = dayIdx;
-  currentModalItem = { dayIdx, itemIdx };
-  document.getElementById('modal-title').textContent = 'Edit Item';
-  document.getElementById('modal-del-btn').style.display = 'block';
-  document.getElementById('f-time').value   = item.time   || '';
-  document.getElementById('f-type').value   = item.type   || 'act';
-  document.getElementById('f-title').value  = item.title  || '';
-  document.getElementById('f-sub').value    = item.sub    || '';
-  document.getElementById('f-conn').value   = item.conn   || '';
+  document.getElementById('modal-title').textContent = 'Edit activity';
+  document.getElementById('modal-delete-btn').style.display = 'block';
+  clearForm();
+  document.getElementById('f-time').value   = item.time || '';
+  document.getElementById('f-type').value   = item.type || 'act';
+  document.getElementById('f-title').value  = item.title || '';
+  document.getElementById('f-sub').value    = item.sub || '';
   document.getElementById('f-status').value = item.status || '';
-  document.getElementById('f-price').value  = item.price  || '';
-  document.getElementById('f-ref').value    = item.ref    || '';
-  document.getElementById('f-url').value    = item.url    || '';
-  document.getElementById('f-notes').value  = item.notes  || '';
-  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('f-conn').value   = item.conn || '';
+  if (item.booking) {
+    document.getElementById('f-ref').value     = item.booking.ref || '';
+    document.getElementById('f-price').value   = item.booking.price || '';
+    document.getElementById('f-tickets').value = item.booking.tickets || '';
+    document.getElementById('f-url').value     = item.booking.url || '';
+    document.getElementById('f-note').value    = item.booking.note || '';
+    showBookingFields(true);
+  }
+  openModal();
 }
 
-function clearModal() {
-  ['f-time','f-title','f-sub','f-conn','f-price','f-ref','f-url','f-notes'].forEach(id => {
+function clearForm() {
+  ['f-time','f-title','f-sub','f-conn','f-ref','f-price','f-tickets','f-url','f-note'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('f-type').value   = 'act';
   document.getElementById('f-status').value = '';
+  showBookingFields(false);
+}
+
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-title').focus(), 100);
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
-  currentModalItem = null;
-  modalDayIdx = null;
+  editItem = null;
+  bookingVisible = false;
 }
 
-function saveModal() {
-  const item = {
-    id:          currentModalItem ? tripData.days[currentModalItem.dayIdx].items[currentModalItem.itemIdx].id : uid(),
-    time:        document.getElementById('f-time').value.trim(),
-    type:        document.getElementById('f-type').value,
-    title:       document.getElementById('f-title').value.trim(),
-    sub:         document.getElementById('f-sub').value.trim(),
-    conn:        document.getElementById('f-conn').value.trim(),
-    status:      document.getElementById('f-status').value,
-    price:       document.getElementById('f-price').value.trim(),
-    ref:         document.getElementById('f-ref').value.trim(),
-    url:         document.getElementById('f-url').value.trim(),
-    notes:       document.getElementById('f-notes').value.trim(),
-  };
-  if (!item.title) { alert('Please enter a title.'); return; }
+function toggleBooking() { showBookingFields(!bookingVisible); }
+function showBookingFields(show) {
+  bookingVisible = show;
+  document.getElementById('booking-fields').style.display = show ? 'flex' : 'none';
+  document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking details' : '+ Add booking details';
+}
 
-  if (currentModalItem) {
-    tripData.days[currentModalItem.dayIdx].items[currentModalItem.itemIdx] = item;
+function saveItem() {
+  const time    = document.getElementById('f-time').value;
+  const type    = document.getElementById('f-type').value;
+  const title   = document.getElementById('f-title').value.trim();
+  const sub     = document.getElementById('f-sub').value.trim();
+  const statusV = document.getElementById('f-status').value;
+  const conn    = document.getElementById('f-conn').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+
+  const item = { time, type, title, sub, status: statusV || null };
+  if (conn) item.conn = conn;
+
+  if (bookingVisible) {
+    const ref = document.getElementById('f-ref').value.trim();
+    const price = document.getElementById('f-price').value.trim();
+    const tickets = document.getElementById('f-tickets').value.trim();
+    const url = document.getElementById('f-url').value.trim();
+    const note = document.getElementById('f-note').value.trim();
+    if (ref||price||tickets||url||note) {
+      item.booking = { ref, price, tickets, url, note };
+      item.status = item.status || 'booked';
+    }
+  }
+
+  const items = STATE.days[activeDay].items;
+  if (editItem && editItem.dayIdx === activeDay) {
+    items[editItem.itemIdx] = item;
   } else {
-    if (modalDayIdx === null) return;
-    tripData.days[modalDayIdx].items.push(item);
+    // Insert sorted by time
+    const toMins = t => { const [h,m]=(t||'').split(':').map(Number); return isNaN(h)?9999:h*60+(m||0); };
+    const pos = items.findIndex(it => it && !it.conn && toMins(it.time) > toMins(time));
+    if (pos === -1) items.push(item); else items.splice(pos, 0, item);
   }
+
   closeModal();
-  renderAll();
   scheduleSave();
+  render();
 }
 
-function deleteFromModal() {
-  if (!currentModalItem) return;
-  if (!confirm('Delete this item?')) return;
-  const { dayIdx, itemIdx } = currentModalItem;
-  tripData.days[dayIdx].items.splice(itemIdx, 1);
-  closeModal();
-  renderAll();
-  scheduleSave();
+// ── DAY SWITCH ────────────────────────────────────────────────────────
+function setDay(i) {
+  activeDay = i;
+  render();
 }
 
-// ── MODE TOGGLE ───────────────────────────────────────────────────────
-function setMode(mode) {
-  currentMode = mode;
-  document.querySelectorAll('.v2-mode-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.v2-mode-btn').forEach(b => {
-    if (b.textContent.toLowerCase() === mode) b.classList.add('active');
-  });
+// ── MODE ──────────────────────────────────────────────────────────────
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('mode-plan').classList.toggle('active', m==='plan');
+  document.getElementById('mode-today').classList.toggle('active', m==='today');
 }
 
-// ── SAVE / LOAD ───────────────────────────────────────────────────────
-function showSaveStatus(msg, cls) {
-  const el = document.getElementById('save-status');
-  el.textContent = msg;
-  el.className = 'v2-save-status ' + cls;
-  if (cls !== 'saving') setTimeout(() => { el.className = 'v2-save-status'; }, 2500);
-}
-
-async function persistSave() {
+// ── SHARE ─────────────────────────────────────────────────────────────
+async function triggerShare() {
   try {
-    await window.dbSave(RECORD_ID, tripData);
-    showSaveStatus('Saved ✓', 'saved');
-  } catch(e) {
-    showSaveStatus('Save failed', 'error');
-    console.error(e);
-  }
-}
-
-function scheduleSave() {
-  clearTimeout(saveTimer);
-  showSaveStatus('Saving…', 'saving');
-  saveTimer = setTimeout(persistSave, 1200);
-}
-
-async function manualSave() {
-  clearTimeout(saveTimer);
-  showSaveStatus('Saving…', 'saving');
-  await saveSnapshot();
-  await persistSave();
-  loadSnapshots();
-}
-
-async function loadData() {
-  try {
-    const data = await window.dbLoad(RECORD_ID);
-    if (data && data.days && data.days.length) {
-      tripData = data;
+    const token = await dbCreateShare(RECORD_ID);
+    const url = location.origin + '/share.html?t=' + token;
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      alert('Share link copied to clipboard:\n' + url);
     } else {
-      // Fresh trip — start with one empty day
-      tripData = { days: [emptyDay(1)] };
+      prompt('Share link (copy it):', url);
     }
   } catch(e) {
-    tripData = { days: [emptyDay(1)] };
+    alert('Could not create share link. ' + e.message);
   }
-  activeDay = 0;
-  renderAll();
 }
 
-// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeDrawer(); closeModal(); }
-  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); manualSave(); }
-});
-
 // ── INIT ──────────────────────────────────────────────────────────────
-document.addEventListener('mytrips:authed', loadData);
-if (window._mytripsAuthed) loadData();
+async function init() {
+  await loadSnapshots();
+  await loadData();
+}
+
+// Wait for auth.js and db.js to be ready
+window.addEventListener('load', () => { init(); });
 </script>
 </body>
 </html>
