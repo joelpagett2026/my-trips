@@ -339,3 +339,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   margin: 3px 12px;
   border-radius: 7px;
 }
+
+/* ── SECTION CLEAR BUTTON ── */
+.tl-section-clear {
+  opacity: 0;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 5px;
+  line-height: 1;
+  transition: all 0.12s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.tl-section-hdr:hover .tl-section-clear { opacity: 1; }
+.tl-section-clear:hover { color: #e53e3e; background: #fee; }
