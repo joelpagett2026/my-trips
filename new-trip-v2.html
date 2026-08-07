@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=8">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=9">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -185,50 +185,102 @@
       </div>
     </div>
     <div class="modal-body" id="modal-body-single">
+      <!-- Category first, always visible -->
       <div class="field-row">
         <div class="field-group">
-          <label class="field-label">Time</label>
-          <input class="field-input" id="f-time" type="time" placeholder="09:00">
-        </div>
-        <div class="field-group">
           <label class="field-label">Category</label>
-          <select class="field-select" id="f-type">
+          <select class="field-select" id="f-type" onchange="onCategoryChange()">
             <option value="act">Activity / Place</option>
             <option value="meal">Meal</option>
-            <option value="move">Transport / Walk</option>
+            <option value="move">Transport</option>
             <option value="hotel">Accommodation</option>
           </select>
         </div>
+        <div class="field-group">
+          <label class="field-label">Part of day</label>
+          <select class="field-select" id="f-period">
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+          </select>
+        </div>
       </div>
-      <div class="field-group">
-        <label class="field-label">Part of day</label>
-        <select class="field-select" id="f-period">
-          <option value="morning">Morning</option>
-          <option value="afternoon">Afternoon</option>
-          <option value="evening">Evening</option>
-        </select>
+
+      <!-- STANDARD FIELDS (activity / meal / hotel) -->
+      <div id="fields-standard">
+        <div class="field-group">
+          <label class="field-label">Title</label>
+          <input class="field-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Subtitle / location</label>
+          <input class="field-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car">
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Time (optional)</label>
+            <input class="field-input" id="f-time" type="time">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Status</label>
+            <select class="field-select" id="f-status">
+              <option value="">—</option>
+              <option value="booked">✓ Booked</option>
+              <option value="confirmed">✓ Confirmed</option>
+              <option value="walkin">Walk in only</option>
+              <option value="attention">Needs attention</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Travel time from previous (optional)</label>
+          <input class="field-input" id="f-conn" type="text" placeholder="e.g. 10 min walk">
+        </div>
       </div>
-      <div class="field-group">
-        <label class="field-label">Title</label>
-        <input class="field-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Subtitle / location</label>
-        <input class="field-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Status</label>
-        <select class="field-select" id="f-status">
-          <option value="">—</option>
-          <option value="booked">✓ Booked</option>
-          <option value="confirmed">✓ Confirmed</option>
-          <option value="walkin">Walk in only</option>
-          <option value="attention">Needs attention</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Travel time from previous (optional)</label>
-        <input class="field-input" id="f-conn" type="text" placeholder="e.g. 10 min walk">
+
+      <!-- TRANSPORT FIELDS -->
+      <div id="fields-transport" style="display:none;flex-direction:column;gap:13px;">
+        <div class="field-group">
+          <label class="field-label">Type of transport</label>
+          <div class="transport-type-row" id="f-transport-type-row">
+            <button type="button" class="tt-btn active" data-val="Flight">Flight</button>
+            <button type="button" class="tt-btn" data-val="Train">Train</button>
+            <button type="button" class="tt-btn" data-val="Coach">Coach</button>
+            <button type="button" class="tt-btn" data-val="Bus">Bus</button>
+            <button type="button" class="tt-btn" data-val="Ferry">Ferry</button>
+            <button type="button" class="tt-btn" data-val="Other">Other</button>
+          </div>
+          <input class="field-input" id="f-transport-type" type="hidden" value="Flight">
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Departure</label>
+            <input class="field-input" id="f-from" type="text" placeholder="e.g. London Gatwick">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Departure time</label>
+            <input class="field-input" id="f-depart" type="time">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Arrival</label>
+            <input class="field-input" id="f-to" type="text" placeholder="e.g. Porto">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Arrival time</label>
+            <input class="field-input" id="f-arrive" type="time">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Status</label>
+          <select class="field-select" id="f-status-move">
+            <option value="">—</option>
+            <option value="booked">✓ Booked</option>
+            <option value="confirmed">✓ Confirmed</option>
+            <option value="attention">Needs attention</option>
+          </select>
+        </div>
       </div>
 
       <!-- Booking details toggle -->
@@ -915,13 +967,24 @@ function openEditItem(dayIdx, itemIdx) {
   document.getElementById('modal-delete-btn').style.display = 'block';
   document.getElementById('modal-tabs').style.display = 'none';
   clearForm();
-  document.getElementById('f-time').value   = item.time || '';
   document.getElementById('f-type').value   = item.type || 'act';
   document.getElementById('f-period').value  = item.period || inferPeriod(item) || 'morning';
-  document.getElementById('f-title').value  = item.title || '';
-  document.getElementById('f-sub').value    = item.sub || '';
-  document.getElementById('f-status').value = item.status || '';
-  document.getElementById('f-conn').value   = item.conn || '';
+  onCategoryChange();
+  if (item.type === 'move') {
+    const tr = item.transport || {};
+    setTransportType(tr.mode || item.kicker || 'Flight');
+    document.getElementById('f-from').value   = tr.from || (item.title||'').split(' → ')[0] || '';
+    document.getElementById('f-to').value     = tr.to   || (item.title||'').split(' → ')[1] || '';
+    document.getElementById('f-depart').value = tr.depart || item.time || '';
+    document.getElementById('f-arrive').value = tr.arrive || '';
+    document.getElementById('f-status-move').value = item.status || '';
+  } else {
+    document.getElementById('f-time').value   = item.time || '';
+    document.getElementById('f-title').value  = item.title || '';
+    document.getElementById('f-sub').value    = item.sub || '';
+    document.getElementById('f-status').value = item.status || '';
+    document.getElementById('f-conn').value   = item.conn || '';
+  }
   if (item.booking) {
     document.getElementById('f-ref').value     = item.booking.ref || '';
     document.getElementById('f-price').value   = item.booking.price || '';
@@ -934,14 +997,43 @@ function openEditItem(dayIdx, itemIdx) {
 }
 
 function clearForm() {
-  ['f-time','f-title','f-sub','f-conn','f-ref','f-price','f-tickets','f-url','f-note'].forEach(id => {
-    document.getElementById(id).value = '';
+  ['f-ref','f-price','f-tickets','f-url','f-note',
+   'f-from','f-to','f-depart','f-arrive'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('f-type').value   = 'act';
+  ['f-time','f-title','f-sub','f-conn','f-status'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('f-type').value    = 'act';
   document.getElementById('f-period').value  = 'morning';
-  document.getElementById('f-status').value = '';
+  const sm = document.getElementById('f-status-move'); if(sm) sm.value = '';
+  setTransportType('Flight');
   showBookingFields(false);
+  onCategoryChange();
 }
+
+function onCategoryChange() {
+  const type = document.getElementById('f-type').value;
+  const isMove = type === 'move';
+  document.getElementById('fields-standard').style.display  = isMove ? 'none' : 'flex';
+  document.getElementById('fields-transport').style.display = isMove ? 'flex' : 'none';
+
+  document.getElementById('fields-standard').style.flexDirection = 'column';
+  document.getElementById('fields-standard').style.gap = '13px';
+}
+
+function setTransportType(val) {
+  document.getElementById('f-transport-type').value = val;
+  document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === val);
+  });
+}
+
+// Wire transport type buttons
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.tt-btn');
+  if (btn) setTransportType(btn.dataset.val);
+});
 
 function openModal() {
   setModalTab('single');
@@ -967,17 +1059,35 @@ function saveItem() {
   if (document.getElementById('tab-bulk').classList.contains('active')) {
     saveBulkItems(); return;
   }
-  const time    = document.getElementById('f-time').value;
-  const type    = document.getElementById('f-type').value;
-  const title   = document.getElementById('f-title').value.trim();
-  const sub     = document.getElementById('f-sub').value.trim();
-  const statusV = document.getElementById('f-status').value;
-  const period  = document.getElementById('f-period').value || 'morning';
-  const conn    = document.getElementById('f-conn').value.trim();
-  if (!title) { document.getElementById('f-title').focus(); return; }
+  const type   = document.getElementById('f-type').value;
+  const period = document.getElementById('f-period').value || 'morning';
+  let time, title, sub, statusV, conn, item;
 
-  const item = { time, type, period, title, sub, status: statusV || null };
-  if (conn) item.conn = conn;
+  if (type === 'move') {
+    const tType  = document.getElementById('f-transport-type').value;
+    const from   = document.getElementById('f-from').value.trim();
+    const to     = document.getElementById('f-to').value.trim();
+    const depart = document.getElementById('f-depart').value;
+    const arrive = document.getElementById('f-arrive').value;
+    statusV      = document.getElementById('f-status-move').value;
+    if (!from && !to) { document.getElementById('f-from').focus(); return; }
+    const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Other:'move' };
+    time  = depart;
+    title = [from, to].filter(Boolean).join(' → ');
+    sub   = [tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
+    item  = { time, type, period, title, sub, status: statusV || null,
+              transport: { mode: tType, from, to, depart, arrive },
+              icoType: icoMap[tType] || 'move', kicker: tType };
+  } else {
+    time   = document.getElementById('f-time').value;
+    title  = document.getElementById('f-title').value.trim();
+    sub    = document.getElementById('f-sub').value.trim();
+    statusV= document.getElementById('f-status').value;
+    conn   = document.getElementById('f-conn').value.trim();
+    if (!title) { document.getElementById('f-title').focus(); return; }
+    item   = { time, type, period, title, sub, status: statusV || null };
+    if (conn) item.conn = conn;
+  }
 
   if (bookingVisible) {
     const ref = document.getElementById('f-ref').value.trim();
