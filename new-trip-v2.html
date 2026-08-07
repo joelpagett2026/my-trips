@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=11">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=12">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -365,16 +365,32 @@ const ICO = {
   circle:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`,
   down:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
   plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  train:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="M8 19l-2 2"/><path d="M16 19l2 2"/><line x1="8" y1="19" x2="16" y2="19"/></svg>`,
+  bus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M16 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>`,
+  ferry:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2c1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.2.5 5.5 2.62 6"/><path d="M10 11V5l4 2"/><path d="M12 3v3"/><path d="M19.38 20c.12-.35.12-.7 0-1.05"/></svg>`,
+  coach:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M16 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>`,
 };
 
-function icoForType(t, sub) {
+const TRANSPORT_ICONS = {
+  Flight: ICO.plane,
+  Train:  ICO.train,
+  Bus:    ICO.bus,
+  Coach:  ICO.coach,
+  Ferry:  ICO.ferry,
+  Other:  ICO.walk,
+};
+
+function icoForType(t, sub, item) {
   if (t==='meal') {
-    const s = (sub||'').toLowerCase();
-    if (s.includes('breakfast')||s.includes('coffee')||s.includes('café')) return {html:ICO.coffee, cls:'meal'};
+    const s = ((item && item.title)||sub||'').toLowerCase();
+    if (s.includes('breakfast')||s.includes('coffee')||s.includes('café')||s.includes('caffe')) return {html:ICO.coffee, cls:'meal'};
     if (s.includes('dinner')) return {html:ICO.dinner, cls:'meal'};
     return {html:ICO.utensils, cls:'meal'};
   }
-  if (t==='move') return {html:ICO.plane, cls:'move'};
+  if (t==='move') {
+    const mode = (item && item.transport && item.transport.mode) || (item && item.kicker) || 'Flight';
+    return {html: TRANSPORT_ICONS[mode] || ICO.plane, cls:'move'};
+  }
   if (t==='hotel') return {html:ICO.home, cls:''};
   return {html:ICO.pin, cls:''};
 }
@@ -647,7 +663,7 @@ function makeConnectorNode(item) {
 }
 
 function makeItemNode(item, idx) {
-  const ico   = icoForType(item.type, item.title);
+  const ico   = icoForType(item.type, item.title, item);
   const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
   const meta  = [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
   const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : '');
@@ -893,7 +909,7 @@ function renderKeyBookings() {
     return;
   }
   el.innerHTML = items.slice(0,4).map(it => {
-    const ico = icoForType(it.type, it.title);
+    const ico = icoForType(it.type, it.title, it);
     return `<div class="bk-item"><div class="bk-ico" style="background:var(--teal-xdim)">${ico.html}</div>
       <div class="bk-body"><div class="bk-name">${it.title}</div>
       <div class="bk-meta">${it.day||''} ${it.time?'· '+it.time:''} · ${badgeHtml(it.status)}</div></div></div>`;
