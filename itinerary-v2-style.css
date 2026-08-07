@@ -296,15 +296,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   align-items: center;
   gap: 10px;
   padding: 11px 18px;
+  background: #f0f0ef;
   border-bottom: 1px solid var(--line);
   user-select: none;
 }
-.tl-section-accent {
-  width: 3px; height: 16px; border-radius: 99px; flex-shrink: 0;
-}
-.tl-section-accent.morning   { background: #f59e0b; }
-.tl-section-accent.afternoon { background: var(--teal); }
-.tl-section-accent.evening   { background: #6366f1; }
+.tl-section-accent { display: none; }
 .tl-section-label {
   font-size: 11px;
   font-weight: 700;
