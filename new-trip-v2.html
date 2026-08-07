@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=2">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=3">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -153,9 +153,38 @@
   <div class="modal">
     <div class="modal-head">
       <div class="modal-title" id="modal-title">Add activity</div>
+      <div class="modal-tabs" id="modal-tabs">
+        <button class="modal-tab active" id="tab-single" onclick="setModalTab('single')">Single</button>
+        <button class="modal-tab" id="tab-bulk" onclick="setModalTab('bulk')">Bulk import</button>
+      </div>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-    <div class="modal-body">
+    <!-- BULK IMPORT PANEL -->
+    <div class="modal-body" id="modal-body-bulk" style="display:none;">
+      <div class="field-group">
+        <label class="field-label">Part of day</label>
+        <select class="field-select" id="f-bulk-period">
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Activities — one per line</label>
+        <textarea class="field-textarea" id="f-bulk-list" rows="10"
+          placeholder="São Bento Station&#10;Porto Cathedral&#10;Dom Luís I Bridge&#10;Lunch — Nata Lisboa"></textarea>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:5px;">Each line becomes a separate activity. Blank lines are skipped.</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Category for all items</label>
+        <select class="field-select" id="f-bulk-type">
+          <option value="act">Activity / Place</option>
+          <option value="meal">Meal</option>
+          <option value="move">Transport / Walk</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-body" id="modal-body-single">
       <div class="field-row">
         <div class="field-group">
           <label class="field-label">Time</label>
@@ -222,10 +251,11 @@
         </div>
       </div>
     </div>
+    </div><!-- /modal-body-single -->
     <div class="modal-foot">
       <button class="modal-btn danger" id="modal-delete-btn" style="display:none" onclick="deleteCurrentItem()">Delete</button>
       <button class="modal-btn secondary" onclick="closeModal()">Cancel</button>
-      <button class="modal-btn primary" onclick="saveItem()">Save</button>
+      <button class="modal-btn primary" id="modal-save-btn" onclick="saveItem()">Save</button>
     </div>
   </div>
 </div>
@@ -812,6 +842,7 @@ function openEditItem(dayIdx, itemIdx) {
   if (!item) return;
   document.getElementById('modal-title').textContent = 'Edit activity';
   document.getElementById('modal-delete-btn').style.display = 'block';
+  document.getElementById('modal-tabs').style.display = 'none';
   clearForm();
   document.getElementById('f-time').value   = item.time || '';
   document.getElementById('f-type').value   = item.type || 'act';
@@ -840,6 +871,8 @@ function clearForm() {
 }
 
 function openModal() {
+  setModalTab('single');
+  document.getElementById('modal-tabs').style.display = '';
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-title').focus(), 100);
 }
@@ -858,6 +891,9 @@ function showBookingFields(show) {
 }
 
 function saveItem() {
+  if (document.getElementById('tab-bulk').classList.contains('active')) {
+    saveBulkItems(); return;
+  }
   const time    = document.getElementById('f-time').value;
   const type    = document.getElementById('f-type').value;
   const title   = document.getElementById('f-title').value.trim();
@@ -932,6 +968,42 @@ async function init() {
 }
 
 // Wait for auth.js and db.js to be ready
+// ── MODAL TAB SWITCHER ───────────────────────────────────────────────
+function setModalTab(tab) {
+  const isBulk = tab === 'bulk';
+  document.getElementById('modal-body-bulk').style.display   = isBulk ? 'flex' : 'none';
+  document.getElementById('modal-body-single').style.display = isBulk ? 'none' : 'flex';
+  document.getElementById('tab-single').classList.toggle('active', !isBulk);
+  document.getElementById('tab-bulk').classList.toggle('active',  isBulk);
+  document.getElementById('modal-delete-btn').style.display = 'none';
+  document.getElementById('modal-save-btn').textContent = isBulk ? 'Import all' : 'Save';
+  if (isBulk) setTimeout(() => document.getElementById('f-bulk-list').focus(), 80);
+}
+
+function saveBulkItems() {
+  const raw    = document.getElementById('f-bulk-list').value;
+  const period = document.getElementById('f-bulk-period').value;
+  const type   = document.getElementById('f-bulk-type').value;
+  const lines  = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) {
+    document.getElementById('f-bulk-list').focus();
+    return;
+  }
+  const kicker = period.charAt(0).toUpperCase() + period.slice(1);
+  const icoMap = { meal:'utensils', move:'move', act:'pin' };
+  lines.forEach(line => {
+    STATE.days[activeDay].items.push({
+      type, kicker, title: line,
+      icoType: icoMap[type] || 'pin',
+      sub: '', status: null, booking: null,
+    });
+  });
+  closeModal();
+  scheduleSave();
+  renderTimeline();
+  renderRightPanel();
+}
+
 window.addEventListener('load', () => { init(); });
 </script>
 </body>

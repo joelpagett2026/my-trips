@@ -267,3 +267,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Adjust time column to account for grip */
 .tl-time { padding-right: 11px; }
+
+/* ── MODAL TABS ── */
+.modal-head { flex-wrap: wrap; gap: 6px; }
+.modal-tabs {
+  display: flex; gap: 3px; background: var(--line);
+  padding: 3px; border-radius: 7px; margin-left: auto;
+}
+.modal-tab {
+  padding: 4px 12px; border-radius: 5px; border: none; background: none;
+  font-family: var(--font); font-size: 11px; font-weight: 700;
+  color: var(--text2); cursor: pointer; transition: all 0.13s;
+}
+.modal-tab.active { background: var(--surface); color: var(--teal); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.modal-tab:hover:not(.active) { color: var(--text); }
+#modal-body-bulk, #modal-body-single { flex-direction: column; }
