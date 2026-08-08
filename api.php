@@ -286,7 +286,8 @@ Return ONLY valid JSON, no markdown, no preamble:
   "significant": "One punchy sentence on why this place matters",
   "history": ["fact 1", "fact 2", "fact 3"],
   "lookout": ["thing to see 1", "thing to see 2", "thing to see 3"],
-  "fact": "One surprising or memorable fact"
+  "fact": "One surprising or memorable fact",
+  "wiki_search": "The exact Wikipedia article title for this place in English (e.g. 'São Bento railway station')"
 }
 
 Keep everything brief and scannable. Facts only. No waffle.
@@ -321,6 +322,30 @@ PROMPT;
         $text  = preg_replace('/```\s*$/m', '', $text);
         $about = json_decode(trim($text), true);
         if (!$about) { ok(['about' => null, 'raw' => substr($text,0,300), 'error' => 'parse_failed']); break; }
+
+        // Fetch a photo from Wikimedia Commons via the Wikipedia API
+        $photo = null;
+        $wikiSearch = trim($about['wiki_search'] ?? '');
+        if ($wikiSearch) {
+            $wikiUrl = 'https://en.wikipedia.org/w/api.php?action=query&titles='
+                . urlencode($wikiSearch)
+                . '&prop=pageimages&pithumbsize=800&format=json&redirects=1';
+            $wikiResp = @file_get_contents($wikiUrl, false, stream_context_create([
+                'http' => ['timeout' => 8, 'header' => "User-Agent: MyTripsApp/1.0\r\n"]
+            ]));
+            if ($wikiResp) {
+                $wikiData = json_decode($wikiResp, true);
+                $pages    = $wikiData['query']['pages'] ?? [];
+                foreach ($pages as $page) {
+                    if (!empty($page['thumbnail']['source'])) {
+                        $photo = $page['thumbnail']['source'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        $about['photo'] = $photo;
         ok(['about' => $about]);
 
         // ── PLACE PHOTO ─────────────────────────────────────────────────
