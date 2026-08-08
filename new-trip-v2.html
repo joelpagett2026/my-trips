@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=30">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=31">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -147,6 +147,22 @@
     </div>
     <div id="dr-booking-body"></div>
     <button class="dr-primary-btn" id="dr-open-btn" style="display:none">Open booking →</button>
+
+    <!-- ABOUT THIS PLACE -->
+    <div id="dr-about-wrap" style="display:none; margin-top:16px;">
+      <button class="dr-about-toggle" id="dr-about-toggle" onclick="toggleAbout()">
+        <span>📖 About this place</span>
+        <svg id="dr-about-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div id="dr-about-body" style="display:none;"></div>
+    </div>
+    <div id="dr-about-loading" style="display:none; margin-top:16px; text-align:center; padding:20px 0;">
+      <div class="dr-about-spinner"></div>
+      <div style="font-size:11px; color:var(--text3); margin-top:8px;">Generating visitor info…</div>
+    </div>
+    <button id="dr-about-retry" style="display:none; margin-top:12px; width:100%; background:none; border:1px solid var(--line); color:var(--text2); font-family:var(--font); font-size:11px; font-weight:700; padding:8px; border-radius:8px; cursor:pointer;" onclick="generateAbout(true)">
+      ↻ Generate visitor info
+    </button>
   </div>
 </div>
 
@@ -1082,11 +1098,27 @@ function openDrawerItem(dayIdx, itemIdx) {
   document.getElementById('dr-booking-body').innerHTML = bHtml;
   document.getElementById('drawer').classList.add('open');
   document.getElementById('drawer-overlay').classList.add('open');
+
+  // Show / generate About section for activity and ticketed types
+  if (item.type === 'act' || item.type === 'ticket') {
+    if (item._about) {
+      renderAbout(item._about);
+    } else {
+      generateAbout(false);
+    }
+  } else {
+    document.getElementById('dr-about-wrap').style.display    = 'none';
+    document.getElementById('dr-about-loading').style.display = 'none';
+    document.getElementById('dr-about-retry').style.display   = 'none';
+  }
 }
 
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawer-overlay').classList.remove('open');
+  aboutOpen = false;
+  document.getElementById('dr-about-body').style.display   = 'none';
+  document.getElementById('dr-about-chevron').style.transform = '';
 }
 
 function editCurrentItem() {
@@ -1593,6 +1625,97 @@ function deleteHotel() {
   closeHotelModal();
   scheduleSave();
   renderHotelPanel();
+}
+
+// ── ABOUT THIS PLACE ─────────────────────────────────────────────────
+let aboutOpen = false;
+
+function toggleAbout() {
+  aboutOpen = !aboutOpen;
+  document.getElementById('dr-about-body').style.display = aboutOpen ? 'block' : 'none';
+  document.getElementById('dr-about-chevron').style.transform = aboutOpen ? 'rotate(180deg)' : '';
+}
+
+async function generateAbout(force) {
+  if (!drawerItem) return;
+  const item = STATE.days[drawerItem.dayIdx]?.items?.[drawerItem.itemIdx];
+  if (!item || !item.title) return;
+
+  // Don't re-fetch if we already have it and not forced
+  if (item._about && !force) { renderAbout(item._about); return; }
+
+  // Show loading
+  document.getElementById('dr-about-wrap').style.display    = 'none';
+  document.getElementById('dr-about-loading').style.display = 'block';
+  document.getElementById('dr-about-retry').style.display   = 'none';
+
+  try {
+    const city = STATE.days[drawerItem.dayIdx]?.loc || STATE.meta?.dest || '';
+    const r = await fetch('/api.php?action=generate_about', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
+      body: JSON.stringify({ place: item.title, city }),
+    });
+    const j = await r.json();
+
+    document.getElementById('dr-about-loading').style.display = 'none';
+
+    if (j.ok && j.data?.about) {
+      item._about = j.data.about;
+      // Save quietly so it persists
+      scheduleSave();
+      renderAbout(item._about);
+    } else if (j.data?.error === 'No API key configured') {
+      // API key not set — show retry button with hint
+      document.getElementById('dr-about-retry').style.display = 'block';
+      document.getElementById('dr-about-retry').textContent = '↻ Generate visitor info (API key needed)';
+    } else {
+      document.getElementById('dr-about-retry').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('dr-about-loading').style.display = 'none';
+    document.getElementById('dr-about-retry').style.display   = 'block';
+  }
+}
+
+function renderAbout(about) {
+  // History bullets
+  const historyHtml = (about.history || []).map(f =>
+    `<li>${f}</li>`
+  ).join('');
+
+  // Lookout bullets
+  const lookoutHtml = (about.lookout || []).map(f =>
+    `<li>${f}</li>`
+  ).join('');
+
+  document.getElementById('dr-about-body').innerHTML = `
+    <div class="ab-section">
+      <div class="ab-icon-h">🏛️ Why it's significant</div>
+      <p class="ab-p">${about.significant || ''}</p>
+    </div>
+    ${historyHtml ? `<div class="ab-section">
+      <div class="ab-icon-h">📜 Key historical facts</div>
+      <ul class="ab-list">${historyHtml}</ul>
+    </div>` : ''}
+    ${lookoutHtml ? `<div class="ab-section">
+      <div class="ab-icon-h">⭐ What to look out for</div>
+      <ul class="ab-list">${lookoutHtml}</ul>
+    </div>` : ''}
+    ${about.duration ? `<div class="ab-section">
+      <div class="ab-icon-h">⏱️ How long to allow</div>
+      <p class="ab-p ab-duration">${about.duration}</p>
+    </div>` : ''}
+    ${about.fact ? `<div class="ab-section ab-fact">
+      <div class="ab-icon-h">💡 Interesting fact</div>
+      <p class="ab-p">${about.fact}</p>
+    </div>` : ''}
+    <button onclick="generateAbout(true)" class="ab-regen">↻ Regenerate</button>
+  `;
+
+  document.getElementById('dr-about-wrap').style.display = 'block';
+  // Auto-open on first load
+  if (!aboutOpen) { aboutOpen = true; toggleAbout(); }
 }
 
 window.addEventListener('load', () => { init(); });

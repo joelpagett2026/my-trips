@@ -255,6 +255,67 @@ const RECORD_ID = slug;",
             ->execute([$key, $val, $val]);
         ok();
 
+    // ── GENERATE ABOUT ───────────────────────────────────────────────
+    // POST /api.php?action=generate_about  { "place": "São Bento Station", "city": "Porto" }
+    // Returns { about: { significant, history[], lookout[], duration, fact } }
+    case 'generate_about':
+        $ANTHROPIC_KEY = ''; // ← PASTE YOUR ANTHROPIC API KEY HERE
+        if (!$ANTHROPIC_KEY) { ok(['about' => null, 'error' => 'No API key configured']); break; }
+
+        $place = trim($body['place'] ?? '');
+        $city  = trim($body['city']  ?? '');
+        if (!$place) fail('Missing place');
+
+        $context = $city ? "$place, $city" : $place;
+        $prompt  = "You are a concise, accurate travel guide writer. Generate visitor information for: "$context"
+
+"
+            . "Return ONLY valid JSON in this exact structure, no markdown, no explanation:
+"
+            . "{
+"
+            . "  "significant": "1-2 sentences on why it is historically/culturally significant",
+"
+            . "  "history": ["fact 1", "fact 2", "fact 3"],
+"
+            . "  "lookout": ["thing to look for 1", "thing to look for 2", "thing to look for 3"],
+"
+            . "  "duration": "e.g. 30–45 minutes",
+"
+            . "  "fact": "One genuinely surprising or memorable fact"
+"
+            . "}
+
+"
+            . "Be factual and accurate. Do not invent details. Write for a traveller standing at the location.";
+
+        $payload = json_encode([
+            'model'      => 'claude-sonnet-4-6',
+            'max_tokens' => 600,
+            'messages'   => [['role' => 'user', 'content' => $prompt]],
+        ]);
+
+        $ctx = stream_context_create(['http' => [
+            'method'  => 'POST',
+            'header'  => "Content-Type: application/json
+x-api-key: $ANTHROPIC_KEY
+anthropicversion: 2023-06-01
+",
+            'content' => $payload,
+            'timeout' => 20,
+        ]]);
+        $resp = @file_get_contents('https://api.anthropic.com/v1/messages', false, $ctx);
+        if (!$resp) fail('API request failed');
+
+        $data  = json_decode($resp, true);
+        $text  = $data['content'][0]['text'] ?? '';
+        // Strip any markdown fences
+        $text  = preg_replace('/^```(?:json)?\s*/m', '', $text);
+        $text  = preg_replace('/```\s*$/m', '', $text);
+        $about = json_decode(trim($text), true);
+        if (!$about) fail('Could not parse AI response');
+        ok(['about' => $about]);
+
     // ── PLACE PHOTO ─────────────────────────────────────────────────
     // GET /api.php?action=place_photo&q=Hotel+Name
     case 'place_photo':
