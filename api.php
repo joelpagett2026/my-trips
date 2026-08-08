@@ -306,15 +306,15 @@ PROMPT;
             'timeout' => 25,
             'ignore_errors' => true,
         ]]);
-        $resp = @file_get_contents('https://api.anthropic.com/v1/messages', false, $ctx);
-        if (!$resp) fail('Anthropic API request failed');
+        $resp = file_get_contents('https://api.anthropic.com/v1/messages', false, $ctx);
+        if ($resp === false) fail('Anthropic API unreachable - check server outbound HTTPS');
 
         $data  = json_decode($resp, true);
         $text  = $data['content'][0]['text'] ?? '';
         $text  = preg_replace('/^```(?:json)?\s*/m', '', $text);
         $text  = preg_replace('/```\s*$/m', '', $text);
         $about = json_decode(trim($text), true);
-        if (!$about) fail('Could not parse AI response: ' . substr($text, 0, 100));
+        if (!$about) { ok(['about' => null, 'raw' => substr($text,0,300), 'error' => 'parse_failed']); break; }
         ok(['about' => $about]);
 
         // ── PLACE PHOTO ─────────────────────────────────────────────────
