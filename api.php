@@ -323,25 +323,72 @@ PROMPT;
         $about = json_decode(trim($text), true);
         if (!$about) { ok(['about' => null, 'raw' => substr($text,0,300), 'error' => 'parse_failed']); break; }
 
-        // Fetch a photo from Wikimedia Commons via the Wikipedia API
+        // Fetch a photo — cascade: Wikipedia page image → Commons keyword search
         $photo = null;
         $wikiSearch = trim($about['wiki_search'] ?? '');
-        if ($wikiSearch) {
-            $wikiUrl = 'https://en.wikipedia.org/w/api.php?action=query&titles='
+        $searchTerm = $wikiSearch ?: $place;
+        $ua = "User-Agent: MyTripsApp/1.0 (joelpagett.co.uk)\r\n";
+
+        // Helper: fetch URL via curl silently
+        $fetchUrl = function(string $url) use ($ua): string {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 8,
+                CURLOPT_HTTPHEADER     => ['User-Agent: MyTripsApp/1.0'],
+            ]);
+            $r = curl_exec($ch);
+            curl_close($ch);
+            return $r ?: '';
+        };
+
+        // 1. Wikipedia page thumbnail
+        if (!$photo && $wikiSearch) {
+            $resp = $fetchUrl('https://en.wikipedia.org/w/api.php?action=query&titles='
                 . urlencode($wikiSearch)
-                . '&prop=pageimages&pithumbsize=800&format=json&redirects=1';
-            $wikiResp = @file_get_contents($wikiUrl, false, stream_context_create([
-                'http' => ['timeout' => 8, 'header' => "User-Agent: MyTripsApp/1.0\r\n"]
-            ]));
-            if ($wikiResp) {
-                $wikiData = json_decode($wikiResp, true);
-                $pages    = $wikiData['query']['pages'] ?? [];
-                foreach ($pages as $page) {
-                    if (!empty($page['thumbnail']['source'])) {
-                        $photo = $page['thumbnail']['source'];
-                        break;
-                    }
+                . '&prop=pageimages&pithumbsize=800&format=json&redirects=1');
+            $data = json_decode($resp, true);
+            foreach (($data['query']['pages'] ?? []) as $page) {
+                if (!empty($page['thumbnail']['source'])) {
+                    $photo = $page['thumbnail']['source']; break;
                 }
+            }
+        }
+
+        // 2. Wikimedia Commons keyword search (much broader coverage)
+        if (!$photo) {
+            $query = $searchTerm . ($city && strpos($searchTerm, $city) === false ? ' ' . $city : '');
+            $resp  = $fetchUrl('https://commons.wikimedia.org/w/api.php?action=query'
+                . '&generator=search&gsrnamespace=6&gsrsearch=' . urlencode($query)
+                . '&gsrlimit=5&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json');
+            $data  = json_decode($resp, true);
+            $best  = null; $bestW = 0;
+            foreach (($data['query']['pages'] ?? []) as $page) {
+                $ii   = $page['imageinfo'][0] ?? [];
+                $mime = $ii['mime'] ?? '';
+                $w    = $ii['width'] ?? 0;
+                $url  = $ii['thumburl'] ?? '';
+                // Prefer landscape photos (wider than tall), skip SVG/icons
+                if ($url && strpos($mime, 'image') === 0 && strpos($mime, 'svg') === false
+                    && $w > $bestW && $w >= 400) {
+                    $best = $url; $bestW = $w;
+                }
+            }
+            if ($best) $photo = $best;
+        }
+
+        // 3. Wikidata image property via SPARQL (catches things like cable cars, parks)
+        if (!$photo && $wikiSearch) {
+            $sparql = 'SELECT ?img WHERE { ?item wikibase:sitelinks ?sl . ?sl schema:name '
+                . json_encode($wikiSearch) . '@en . ?item wdt:P18 ?img } LIMIT 1';
+            $resp = $fetchUrl('https://query.wikidata.org/sparql?query='
+                . urlencode($sparql) . '&format=json');
+            $data = json_decode($resp, true);
+            $imgUri = $data['results']['bindings'][0]['img']['value'] ?? '';
+            if ($imgUri) {
+                // Convert Wikimedia file URI to a thumb URL
+                $file = rawurlencode(basename(str_replace(' ', '_', $imgUri)));
+                $photo = 'https://commons.wikimedia.org/wiki/Special:FilePath/' . $file . '?width=800';
             }
         }
 
