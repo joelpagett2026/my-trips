@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=29">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=30">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -344,20 +344,22 @@
           <input class="field-input" id="hf-checkout" type="text" placeholder="dd/mm/yyyy">
         </div>
       </div>
-      <div class="field-group">
-        <label class="field-label">Rate / night</label>
-        <input class="field-input" id="hf-nightly" type="text" placeholder="e.g. £77.50">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Rate / night</label>
+          <input class="field-input" id="hf-nightly" type="text" placeholder="e.g. £77.50">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Breakfast</label>
+          <select class="field-select" id="hf-breakfast">
+            <option value="not_included">Not included</option>
+            <option value="included">Included</option>
+          </select>
+        </div>
       </div>
       <div class="field-group">
         <label class="field-label">Booking reference</label>
         <input class="field-input" id="hf-ref" type="text" placeholder="e.g. 90900EE04320">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Breakfast</label>
-        <select class="field-select" id="hf-breakfast">
-          <option value="not_included">Not included</option>
-          <option value="included">Included</option>
-        </select>
       </div>
       <div class="field-group">
         <label class="field-label">Photo</label>
