@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=17">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=18">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -364,13 +364,19 @@
         <input class="field-input" id="hf-ref" type="text" placeholder="e.g. 90900EE04320">
       </div>
       <div class="field-group">
-        <label class="field-label">Photo URL <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--text3)">(paste from Google Images, Booking.com etc)</span></label>
-        <input class="field-input" id="hf-photo-url" type="url" placeholder="https://…">
-        <button type="button" onclick="previewHotelPhotoUrl()" style="margin-top:5px;background:var(--teal-xdim);border:1px solid var(--teal-dim);color:var(--teal);font-family:var(--font);font-size:10.5px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;width:100%;">Preview photo</button>
+        <label class="field-label">Photo</label>
+        <label class="hotel-upload-label" id="hotel-upload-label" for="hf-photo-file">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="hotel-upload-label-text">Upload photo</span>
+        </label>
+        <input type="file" id="hf-photo-file" accept="image/*" style="display:none;" onchange="onHotelPhotoSelected(this)">
       </div>
       <div id="hotel-photo-preview" style="display:none;">
         <img id="hotel-photo-img" src="" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
-        <div style="font-size:10px;color:var(--text3);margin-top:4px;"><button onclick="clearHotelPhoto()" style="background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;font-family:inherit;padding:0;">✕ Remove photo</button></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:5px;display:flex;align-items:center;gap:8px;">
+          <span id="hotel-photo-size"></span>
+          <button onclick="clearHotelPhoto()" style="background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;font-family:inherit;padding:0;margin-left:auto;">✕ Remove</button>
+        </div>
       </div>
       <div id="hotel-photo-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
     </div>
@@ -1414,14 +1420,18 @@ function openHotelModal(idx) {
   document.getElementById('hf-status').value   = h ? (h.status  || 'confirmed') : 'confirmed';
   document.getElementById('hotel-delete-btn').style.display = h ? 'block' : 'none';
   document.getElementById('hotel-photo-status').style.display = 'none';
-  document.getElementById('hf-photo-url').value = '';
+  document.getElementById('hf-photo-file').value = '';
+  document.getElementById('hotel-upload-label-text').textContent = 'Upload photo';
 
   if (h && h.photo) {
     fetchedPhotoUrl = h.photo;
-    document.getElementById('hf-photo-url').value = h.photo;
     showHotelPhotoPreview(h.photo);
+    document.getElementById('hotel-upload-label-text').textContent = 'Replace photo';
+    document.getElementById('hotel-photo-size').textContent = '';
   } else {
+    fetchedPhotoUrl = null;
     document.getElementById('hotel-photo-preview').style.display = 'none';
+    document.getElementById('hotel-photo-size').textContent = '';
   }
 
   document.getElementById('hotel-modal-overlay').classList.add('open');
@@ -1442,13 +1452,48 @@ function showHotelPhotoPreview(url) {
 function clearHotelPhoto() {
   fetchedPhotoUrl = null;
   document.getElementById('hotel-photo-preview').style.display = 'none';
+  document.getElementById('hf-photo-file').value = '';
+  document.getElementById('hotel-upload-label-text').textContent = 'Upload photo';
+  document.getElementById('hotel-photo-size').textContent = '';
 }
 
-function previewHotelPhotoUrl() {
-  const url = document.getElementById('hf-photo-url').value.trim();
-  if (!url) return;
-  fetchedPhotoUrl = url;
-  showHotelPhotoPreview(url);
+// Resize image to max 800×500 and convert to base64
+function resizeAndEncode(file, maxW, maxH) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      const ratio = Math.min(maxW / w, maxH / h, 1);
+      w = Math.round(w * ratio); h = Math.round(h * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onHotelPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('hotel-photo-status');
+  status.textContent = 'Processing…'; status.style.display = 'block';
+  try {
+    const b64 = await resizeAndEncode(file, 800, 500);
+    fetchedPhotoUrl = b64;
+    showHotelPhotoPreview(b64);
+    // Show approx size
+    const kb = Math.round(b64.length * 0.75 / 1024);
+    document.getElementById('hotel-photo-size').textContent = kb + ' KB stored';
+    status.style.display = 'none';
+  } catch(e) {
+    status.textContent = 'Could not process image.'; 
+  }
 }
 
 function saveHotel() {
@@ -1460,8 +1505,8 @@ function saveHotel() {
   const status  = document.getElementById('hf-status').value;
   if (!name) { document.getElementById('hf-name').focus(); return; }
 
-  // Use pasted URL or already-fetched URL
-  let photo = fetchedPhotoUrl || document.getElementById('hf-photo-url').value.trim() || null;
+  // Use uploaded/stored photo
+  let photo = fetchedPhotoUrl || null;
 
   // Compute nights
   let nights = '';
