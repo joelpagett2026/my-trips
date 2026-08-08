@@ -22,7 +22,7 @@
   --shadow:     0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
   --shadow-lift:0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.07);
   --r:14px; --r-sm:9px;
-  --sb-w:228px; --rp-w:392px;
+  --sb-w:228px; --rp-w:342px;
   --font:'Montserrat',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -190,15 +190,36 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Map button */
 .hotel-map-btn {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  width: 100%; padding: 10px 12px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%; padding: 12px;
   background: var(--teal-xdim); color: var(--teal);
-  font-family: var(--font); font-size: 11px; font-weight: 700;
+  font-family: var(--font); font-size: 12px; font-weight: 700;
   text-decoration: none; letter-spacing: 0.03em;
   border-top: 1px solid var(--teal-dim);
-  transition: background 0.13s;
+  transition: background 0.13s; border-left: none; border-right: none; border-bottom: none; cursor: pointer;
 }
 .hotel-map-btn:hover { background: var(--teal-dim); }
+
+/* Rate/ref on one line */
+.h-row-split {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+}
+.h-row-split > div { padding: 8px 12px; }
+.h-row-split > div:first-child { border-right: 1px solid var(--line); }
+.h-row-split .h-row-k { font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3); }
+.h-row-split .h-row-v { font-size:12px;font-weight:600;color:var(--text); }
+
+/* Three-dot edit button — top-right of image */
+.hotel-edit-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.45); border: none; color: #fff;
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s; backdrop-filter: blur(4px);
+}
+.hotel-img:hover .hotel-edit-btn { opacity: 1; }
+.hotel-edit-btn:hover { background: rgba(0,0,0,0.65); }
 .readiness-ring{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--teal-xdim);border-radius:var(--r-sm);}
 .ring-pct{font-size:20px;font-weight:800;color:var(--teal);line-height:1;}
 .ring-label{font-size:10px;color:var(--text2);margin-top:2px;}

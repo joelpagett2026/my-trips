@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=20">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=21">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -926,13 +926,20 @@ function hotelForDay(dayIdx) {
 
 function renderHotelCard(h, hotelIdx) {
   // Photo area — real image if stored, else teal gradient placeholder
+  // Three-dot edit button sits in top-right corner of the image
+  const editBtn = `<button class="hotel-edit-btn" onclick="openHotelModal(${hotelIdx})" title="Edit accommodation">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+  </button>`;
+
   const imgHtml = h.photo
     ? `<div class="hotel-img" style="background:url('${h.photo}') center/cover no-repeat;">
          <div class="hotel-img-overlay"></div>
+         ${editBtn}
        </div>`
     : `<div class="hotel-img hotel-img-placeholder">
          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
          <span class="hotel-img-lbl">${h.name||'Hotel'}</span>
+         ${editBtn}
        </div>`;
 
   // Nights calculation — use stored value or compute from dates
@@ -947,29 +954,29 @@ function renderHotelCard(h, hotelIdx) {
     ? 'https://www.google.com/maps/search/' + encodeURIComponent(h.name + (h.city ? ', ' + h.city : ''))
     : 'https://www.google.com/maps';
 
-  // Build rows — only show fields that have data
+  // Rate/night + Booking ref on one line when both present
+  const rateRefRow = (h.nightly || h.ref) ? `
+    <div class="h-row h-row-split">
+      ${h.nightly ? `<div><div class="h-row-k">Rate / night</div><div class="h-row-v">${h.nightly}</div></div>` : ''}
+      ${h.ref     ? `<div><div class="h-row-k">Booking ref</div><div class="h-row-v h-ref">${h.ref}</div></div>` : ''}
+    </div>` : '';
+
   const rows = [
     h.name     && `<div class="h-row"><div class="h-row-k">Hotel</div><div class="h-row-v h-name">${h.name}</div></div>`,
     h.checkin  && `<div class="h-row"><div class="h-row-k">Check in</div><div class="h-row-v">${h.checkin}</div></div>`,
     h.checkout && `<div class="h-row"><div class="h-row-k">Check out</div><div class="h-row-v">${h.checkout}</div></div>`,
     nights     && `<div class="h-row"><div class="h-row-k">Nights</div><div class="h-row-v">${nights}</div></div>`,
-    h.nightly  && `<div class="h-row"><div class="h-row-k">Rate / night</div><div class="h-row-v">${h.nightly}</div></div>`,
-    h.ref      && `<div class="h-row"><div class="h-row-k">Booking ref</div><div class="h-row-v h-ref">${h.ref}</div></div>`,
+    rateRefRow,
   ].filter(Boolean).join('');
 
   return `<div class="hotel-card">
     ${imgHtml}
     <div class="hotel-body">
       ${rows}
-      <div style="display:flex;gap:1px;">
-        <a class="hotel-map-btn" href="${mapsUrl}" target="_blank" rel="noopener" style="flex:1;border-right:1px solid var(--teal-dim);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
-          Open in Maps
-        </a>
-        <button onclick="openHotelModal(${hotelIdx})" class="hotel-map-btn" style="flex:0 0 auto;padding:10px 14px;border:none;cursor:pointer;background:none;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </div>
+      <a class="hotel-map-btn" href="${mapsUrl}" target="_blank" rel="noopener">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+        Open in Maps
+      </a>
     </div>
   </div>`;
 }
