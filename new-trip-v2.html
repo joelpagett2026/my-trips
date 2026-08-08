@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=31">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=32">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -150,11 +150,8 @@
 
     <!-- ABOUT THIS PLACE -->
     <div id="dr-about-wrap" style="display:none; margin-top:16px;">
-      <button class="dr-about-toggle" id="dr-about-toggle" onclick="toggleAbout()">
-        <span>📖 About this place</span>
-        <svg id="dr-about-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div id="dr-about-body" style="display:none;"></div>
+      <div class="dr-about-header">📖 About this place</div>
+      <div id="dr-about-body"></div>
     </div>
     <div id="dr-about-loading" style="display:none; margin-top:16px; text-align:center; padding:20px 0;">
       <div class="dr-about-spinner"></div>
@@ -1116,9 +1113,7 @@ function openDrawerItem(dayIdx, itemIdx) {
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawer-overlay').classList.remove('open');
-  aboutOpen = false;
-  document.getElementById('dr-about-body').style.display   = 'none';
-  document.getElementById('dr-about-chevron').style.transform = '';
+  document.getElementById('dr-about-body').innerHTML = '';
 }
 
 function editCurrentItem() {
@@ -1628,14 +1623,6 @@ function deleteHotel() {
 }
 
 // ── ABOUT THIS PLACE ─────────────────────────────────────────────────
-let aboutOpen = false;
-
-function toggleAbout() {
-  aboutOpen = !aboutOpen;
-  document.getElementById('dr-about-body').style.display = aboutOpen ? 'block' : 'none';
-  document.getElementById('dr-about-chevron').style.transform = aboutOpen ? 'rotate(180deg)' : '';
-}
-
 async function generateAbout(force) {
   if (!drawerItem) return;
   const item = STATE.days[drawerItem.dayIdx]?.items?.[drawerItem.itemIdx];
@@ -1714,8 +1701,6 @@ function renderAbout(about) {
   `;
 
   document.getElementById('dr-about-wrap').style.display = 'block';
-  // Auto-open on first load
-  if (!aboutOpen) { aboutOpen = true; toggleAbout(); }
 }
 
 window.addEventListener('load', () => { init(); });
