@@ -284,13 +284,13 @@ You are a concise travel guide writer. Generate visitor information for: "{$cont
 Return ONLY valid JSON, no markdown, no preamble:
 {
   "significant": "One punchy sentence on why this place matters",
-  "history": ["fact 1", "fact 2", "fact 3"],
-  "lookout": ["thing to see 1", "thing to see 2", "thing to see 3"],
+  "history": ["up to 3 short bullets mixing historical facts AND practical things to look out for — keep each under 20 words"],
+  "lookout": [],
   "fact": "One surprising or memorable fact",
   "wiki_search": "The exact Wikipedia article title for this place in English (e.g. 'São Bento railway station')"
 }
 
-Keep everything brief and scannable. Facts only. No waffle.
+Keep bullets short and scannable. Mix history and visitor tips together. No waffle.
 PROMPT;
 
         $payload = json_encode([
