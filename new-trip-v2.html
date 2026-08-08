@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=36">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=37">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -399,6 +399,14 @@
   </div>
 </div>
 
+<!-- MOBILE BOTTOM NAV (hidden on desktop via CSS) -->
+<div class="mob-nav" id="mob-nav">
+  <div class="mob-nav-days" id="mob-nav-days"></div>
+  <button class="mob-nav-add" onclick="openAddItem()" title="Add activity">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+</div>
+
 <!-- SNAPSHOT BAR -->
 <div class="snapshot-bar" id="snapshot-bar">
   <span id="snapshot-msg">Snapshot saved</span>
@@ -569,8 +577,29 @@ function showSnapshotBar(show) {
 function render() {
   renderSidebar();
   renderDaySelector();
+  renderMobNav();
   renderTimeline();
   renderRightPanel();
+}
+
+function renderMobNav() {
+  const wrap = document.getElementById('mob-nav-days');
+  if (!wrap) return;
+  wrap.innerHTML = STATE.days.map((d, i) => {
+    const warns = (d.items||[]).filter(it => it && it.status === 'attention').length;
+    const hasItems = (d.items||[]).filter(it => it && it.title).length > 0;
+    const dotCls = warns ? 'warn' : (hasItems ? 'ok' : '');
+    return `<button class="mob-day-btn ${i === activeDay ? 'active' : ''}" onclick="setDay(${i})">
+      <span class="mob-day-num">Day ${i+1}</span>
+      <span class="mob-day-date">${(d.date||'').split('/').slice(0,2).join('/')}</span>
+      <span class="mob-day-dot ${dotCls}"></span>
+    </button>`;
+  }).join('');
+  // Scroll active day into view
+  setTimeout(() => {
+    const active = wrap.querySelector('.mob-day-btn.active');
+    if (active) active.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+  }, 50);
 }
 
 function renderSidebar() {
