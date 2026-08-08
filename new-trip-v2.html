@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=22">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=23">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -956,14 +956,14 @@ function renderHotelCard(h, hotelIdx) {
 
   // Rate/night + Booking ref — label·value on same line (not two-column grid)
   const rateRefRow = (h.nightly || h.ref) ? `<div class="h-row-split">
-    ${h.nightly ? `<div class="h-row-inline"><span class="h-row-k">Rate / night</span><span class="h-row-v">${h.nightly}</span></div>` : ''}
-    ${h.ref     ? `<div class="h-row-inline"><span class="h-row-k">Booking ref</span><span class="h-row-v h-ref">${h.ref}</span></div>` : ''}
+    ${h.nightly ? `<div class="h-row-inline"><span class="h-row-k">Rate</span><span class="h-row-v">${h.nightly}</span></div>` : ''}
+    ${h.ref     ? `<div class="h-row-inline"><span class="h-row-k">Reference</span><span class="h-row-v h-ref">${h.ref}</span></div>` : ''}
   </div>` : '';
 
   const rows = [
-    h.name     && `<div class="h-row"><div class="h-row-k">Hotel</div><div class="h-row-v h-name teal">${h.name}</div></div>`,
-    h.checkin  && `<div class="h-row"><div class="h-row-k">Check in</div><div class="h-row-v teal">${h.checkin}</div></div>`,
-    h.checkout && `<div class="h-row"><div class="h-row-k">Check out</div><div class="h-row-v teal">${h.checkout}</div></div>`,
+    h.name     && `<div class="h-row"><div class="h-row-k">Hotel</div><div class="h-row-v h-name">${h.name}</div></div>`,
+    h.checkin  && `<div class="h-row"><div class="h-row-k">Check in</div><div class="h-row-v">${h.checkin}</div></div>`,
+    h.checkout && `<div class="h-row"><div class="h-row-k">Check out</div><div class="h-row-v">${h.checkout}</div></div>`,
     nights     && `<div class="h-row"><div class="h-row-k">Nights</div><div class="h-row-v">${nights}</div></div>`,
     rateRefRow,
   ].filter(Boolean).join('');
