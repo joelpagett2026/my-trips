@@ -195,19 +195,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: var(--teal-xdim); color: var(--teal);
   font-family: var(--font); font-size: 12px; font-weight: 700;
   text-decoration: none; letter-spacing: 0.03em;
-  border-top: 1px solid var(--teal-dim);
+  border-top: 1px solid var(--line);
   transition: background 0.13s; border-left: none; border-right: none; border-bottom: none; cursor: pointer;
 }
 .hotel-map-btn:hover { background: var(--teal-dim); }
 
-/* Rate/ref — label·value inline, stays on one row */
-.h-row-split { display: flex; flex-direction: column; }
-.h-row-inline {
-  display: flex; align-items: baseline; gap: 7px;
-  padding: 8px 12px; border-bottom: 1px solid var(--line);
-}
-.h-row-inline .h-row-k { font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);white-space:nowrap;flex-shrink:0; }
-.h-row-inline .h-row-v { font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
 
 /* Three-dot edit button — top-right of image */
 .hotel-edit-btn {

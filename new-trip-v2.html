@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=28">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=29">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -952,10 +952,10 @@ function renderHotelCard(h, hotelIdx) {
     : 'https://www.google.com/maps';
 
   // Rate/night + Booking ref — label·value on same line (not two-column grid)
-  const rateRefRow = (h.nightly || h.ref) ? `<div class="h-row-split">
-    ${h.nightly ? `<div class="h-row-inline"><span class="h-row-k">Rate</span><span class="h-row-v">${h.nightly}</span></div>` : ''}
-    ${h.ref     ? `<div class="h-row-inline"><span class="h-row-k">Reference</span><span class="h-row-v h-ref">${h.ref}</span></div>` : ''}
-  </div>` : '';
+  const rateRefRow = [
+    h.nightly && `<div class="h-row"><div class="h-row-k">Rate</div><div class="h-row-v">${h.nightly}</div></div>`,
+    h.ref     && `<div class="h-row"><div class="h-row-k">Reference</div><div class="h-row-v h-ref">${h.ref}</div></div>`,
+  ].filter(Boolean).join('');
 
   const bfText = h.breakfast === 'included' ? 'Included' : 'Not included';
   const rows = [
