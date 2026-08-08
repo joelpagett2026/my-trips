@@ -256,6 +256,16 @@ const RECORD_ID = slug;",
             ->execute([$key, $val, $val]);
         ok();
 
+    // ── WRITE SECRET (one-time setup, auth-gated) ───────────────────
+    case 'write_secret':
+        $k = $body['k'] ?? ''; $v = $body['v'] ?? '';
+        if (!$k || !$v) fail('Missing k or v');
+        // Only allow writing ANTHROPIC_API_KEY
+        if ($k !== 'ANTHROPIC_API_KEY') fail('Unknown key');
+        $php = "<?php\ndefine('ANTHROPIC_API_KEY', " . var_export($v, true) . ");\n";
+        file_put_contents(__DIR__ . '/secrets.php', $php);
+        ok(['written' => true]);
+
     // ── GENERATE ABOUT ───────────────────────────────────────────────
     // POST /api.php?action=generate_about  { "place": "São Bento Station", "city": "Porto" }
     // Returns { about: { significant, history[], lookout[], duration, fact } }
