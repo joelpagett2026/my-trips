@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=35">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=36">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1638,18 +1638,26 @@ async function generateAbout(force) {
 
   try {
     const city = STATE.days[drawerItem.dayIdx]?.loc || STATE.meta?.dest || '';
-    const r = await fetch('/api.php?action=generate_about', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
-      body: JSON.stringify({ place: item.title, city }),
-    });
-    const j = await r.json();
+
+    // Fire both requests in parallel — about text + photo
+    const [aboutResp, photoResp] = await Promise.all([
+      fetch('/api.php?action=generate_about', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
+        body: JSON.stringify({ place: item.title, city }),
+      }),
+      fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(item.title) + '&city=' + encodeURIComponent(city), {
+        headers: { 'X-Auth-Token': AUTH_TOKEN },
+      }).then(r => r.json()).catch(() => ({ photo: null })),
+    ]);
+    const j = await aboutResp.json();
 
     document.getElementById('dr-about-loading').style.display = 'none';
 
     if (j.ok && j.data?.about) {
       item._about = j.data.about;
-      // Save quietly so it persists
+      // Attach photo from parallel fetch
+      item._about.photo = photoResp.data?.photo || photoResp.photo || null;
       scheduleSave();
       renderAbout(item._about);
     } else if (j.data?.error === 'No API key configured') {

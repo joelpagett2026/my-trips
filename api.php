@@ -334,123 +334,69 @@ PROMPT;
         $about = json_decode(trim($text), true);
         if (!$about) { ok(['about' => null, 'raw' => substr($text,0,300), 'error' => 'parse_failed']); break; }
 
-        // Fetch a photo — cascade: Wikipedia page image → Commons keyword search
-        $photo = null;
-        $wikiSearch = trim($about['wiki_search'] ?? '');
-        $searchTerm = $wikiSearch ?: $place;
-        $ua = "User-Agent: MyTripsApp/1.0 (joelpagett.co.uk)\r\n";
-
-        // Helper: fetch URL via curl silently
-        $fetchUrl = function(string $url) use ($ua): string {
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 8,
-                CURLOPT_HTTPHEADER     => ['User-Agent: MyTripsApp/1.0'],
-            ]);
-            $r = curl_exec($ch);
-            curl_close($ch);
-            return $r ?: '';
-        };
-
-        // 0. Google Places photo (highest quality, best coverage)
-        if (!$photo && $PLACES_KEY) {
-            // Find place_id
-            $findUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
-                . '?input=' . urlencode($place . ($city ? ', ' . $city : ''))
-                . '&inputtype=textquery&fields=place_id,photos&key=' . $PLACES_KEY;
-            $findResp = $fetchUrl($findUrl);
-            $findData = json_decode($findResp, true);
-            $photoRef = $findData['candidates'][0]['photos'][0]['photo_reference'] ?? null;
-
-            if (!$photoRef) {
-                // Fallback to textsearch
-                $textUrl  = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
-                    . '?query=' . urlencode($place . ($city ? ' ' . $city : ''))
-                    . '&key=' . $PLACES_KEY;
-                $textData = json_decode($fetchUrl($textUrl), true);
-                $photoRef = $textData['results'][0]['photos'][0]['photo_reference'] ?? null;
-            }
-
-            if ($photoRef) {
-                // Resolve redirect to get final CDN URL
-                $photoApiUrl = 'https://maps.googleapis.com/maps/api/place/photo'
-                    . '?maxwidth=800&photo_reference=' . urlencode($photoRef)
-                    . '&key=' . $PLACES_KEY;
-                $ch2 = curl_init($photoApiUrl);
-                curl_setopt_array($ch2, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_FOLLOWLOCATION => false,
-                    CURLOPT_TIMEOUT        => 8,
-                    CURLOPT_HEADER         => true,
-                ]);
-                $raw = curl_exec($ch2);
-                curl_close($ch2);
-                // Extract Location header from response
-                if (preg_match('/^Location:\s*(.+)$/im', $raw, $m)) {
-                    $photo = trim($m[1]);
-                } else {
-                    // Use the photo API URL directly — browser will follow redirect
-                    $photo = $photoApiUrl;
-                }
-            }
-        }
-
-        // 1. Wikipedia page thumbnail
-        if (!$photo && $wikiSearch) {
-            $resp = $fetchUrl('https://en.wikipedia.org/w/api.php?action=query&titles='
-                . urlencode($wikiSearch)
-                . '&prop=pageimages&pithumbsize=800&format=json&redirects=1');
-            $data = json_decode($resp, true);
-            foreach (($data['query']['pages'] ?? []) as $page) {
-                if (!empty($page['thumbnail']['source'])) {
-                    $photo = $page['thumbnail']['source']; break;
-                }
-            }
-        }
-
-        // 2. Wikimedia Commons keyword search (much broader coverage)
-        if (!$photo) {
-            $query = $searchTerm . ($city && strpos($searchTerm, $city) === false ? ' ' . $city : '');
-            $commonsUrl = 'https://commons.wikimedia.org/w/api.php?action=query'
-                . '&generator=search&gsrnamespace=6&gsrsearch=' . urlencode($query)
-                . '&gsrlimit=5&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json';
-            $resp  = $fetchUrl($commonsUrl);
-            $data  = json_decode($resp, true);
-            $best  = null; $bestW = 0;
-            foreach (($data['query']['pages'] ?? []) as $page) {
-                $ii   = $page['imageinfo'][0] ?? [];
-                $mime = $ii['mime'] ?? '';
-                $w    = $ii['width'] ?? 0;
-                $url  = $ii['thumburl'] ?? '';
-                // Prefer landscape photos (wider than tall), skip SVG/icons
-                if ($url && strpos($mime, 'image') === 0 && strpos($mime, 'svg') === false
-                    && $w > $bestW && $w >= 400) {
-                    $best = $url; $bestW = $w;
-                }
-            }
-            if ($best) $photo = $best;
-        }
-
-        // 3. Wikidata image property via SPARQL (catches things like cable cars, parks)
-        if (!$photo && $wikiSearch) {
-            $sparql = 'SELECT ?img WHERE { ?item wikibase:sitelinks ?sl . ?sl schema:name '
-                . json_encode($wikiSearch) . '@en . ?item wdt:P18 ?img } LIMIT 1';
-            $resp = $fetchUrl('https://query.wikidata.org/sparql?query='
-                . urlencode($sparql) . '&format=json');
-            $data = json_decode($resp, true);
-            $imgUri = $data['results']['bindings'][0]['img']['value'] ?? '';
-            if ($imgUri) {
-                // Convert Wikimedia file URI to a thumb URL
-                $file = rawurlencode(basename(str_replace(' ', '_', $imgUri)));
-                $photo = 'https://commons.wikimedia.org/wiki/Special:FilePath/' . $file . '?width=800';
-            }
-        }
-
-        $about['photo'] = $photo;
+        // Photo is fetched separately via place_photo_v2 to avoid timeout
         ok(['about' => $about]);
 
-        // ── PLACE PHOTO ─────────────────────────────────────────────────
+        // ── PLACE PHOTO V2 — full cascade (called separately from client) ───
+    // GET /api.php?action=place_photo_v2&q=Place+Name&city=City
+    case 'place_photo_v2':
+        $PLACES_KEY = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
+        $q    = trim($_GET['q']    ?? '');
+        $city = trim($_GET['city'] ?? '');
+        if (!$q) ok(['photo' => null]);
+
+        $fetchUrlFn = function(string $url): string {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_TIMEOUT=>8,
+                CURLOPT_HTTPHEADER=>['User-Agent: MyTripsApp/1.0']]);
+            $r = curl_exec($ch); curl_close($ch); return $r ?: '';
+        };
+
+        $photo = null;
+
+        // 1. Google Places
+        if (!$photo && $PLACES_KEY) {
+            $findData = json_decode($fetchUrlFn('https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input='
+                .urlencode($q.($city?', '.$city:'')).'&inputtype=textquery&fields=place_id,photos&key='.$PLACES_KEY), true);
+            $photoRef = $findData['candidates'][0]['photos'][0]['photo_reference'] ?? null;
+            if (!$photoRef) {
+                $textData = json_decode($fetchUrlFn('https://maps.googleapis.com/maps/api/place/textsearch/json?query='
+                    .urlencode($q.($city?' '.$city:'')).'&key='.$PLACES_KEY), true);
+                $photoRef = $textData['results'][0]['photos'][0]['photo_reference'] ?? null;
+            }
+            if ($photoRef) {
+                $photo = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference='
+                    .urlencode($photoRef).'&key='.$PLACES_KEY;
+            }
+        }
+
+        // 2. Wikimedia Commons keyword search
+        if (!$photo) {
+            $query = $q.($city && strpos($q,$city)===false?' '.$city:'');
+            $data  = json_decode($fetchUrlFn('https://commons.wikimedia.org/w/api.php?action=query'
+                .'&generator=search&gsrnamespace=6&gsrsearch='.urlencode($query)
+                .'&gsrlimit=5&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json'), true);
+            $bestW = 0;
+            foreach (($data['query']['pages'] ?? []) as $page) {
+                $ii=$page['imageinfo'][0]??[]; $mime=$ii['mime']??''; $w=$ii['width']??0; $url=$ii['thumburl']??'';
+                if ($url && strpos($mime,'image')===0 && strpos($mime,'svg')===false && $w>$bestW && $w>=400) {
+                    $photo=$url; $bestW=$w;
+                }
+            }
+        }
+
+        // 3. Wikipedia page thumbnail
+        if (!$photo) {
+            $wData = json_decode($fetchUrlFn('https://en.wikipedia.org/w/api.php?action=query&titles='
+                .urlencode($q).'&prop=pageimages&pithumbsize=800&format=json&redirects=1'), true);
+            foreach (($wData['query']['pages'] ?? []) as $page) {
+                if (!empty($page['thumbnail']['source'])) { $photo=$page['thumbnail']['source']; break; }
+            }
+        }
+
+        ok(['photo' => $photo]);
+
+    // ── PLACE PHOTO ─────────────────────────────────────────────────
     // GET /api.php?action=place_photo&q=Hotel+Name
     case 'place_photo':
         $q = trim($_GET['q'] ?? '');
