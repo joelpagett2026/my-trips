@@ -2,3 +2,5 @@
 install.php
 config.php
 *.log
+
+secrets.php

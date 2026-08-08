@@ -1,4 +1,5 @@
 <?php
+if (file_exists(__DIR__ . '/secrets.php')) require_once __DIR__ . '/secrets.php';
 // ══════════════════════════════════════════════════════════════════════
 //  MY TRIPS — API
 //  Configure the four constants below, then upload to your server.
@@ -259,7 +260,7 @@ const RECORD_ID = slug;",
     // POST /api.php?action=generate_about  { "place": "São Bento Station", "city": "Porto" }
     // Returns { about: { significant, history[], lookout[], duration, fact } }
     case 'generate_about':
-        $ANTHROPIC_KEY = ''; // ← PASTE YOUR ANTHROPIC API KEY HERE
+        $ANTHROPIC_KEY = defined('ANTHROPIC_API_KEY') ? ANTHROPIC_API_KEY : (getenv('ANTHROPIC_API_KEY') ?: '');
         if (!$ANTHROPIC_KEY) { ok(['about' => null, 'error' => 'No API key configured']); break; }
 
         $place = trim($body['place'] ?? '');
