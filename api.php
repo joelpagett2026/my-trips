@@ -1,5 +1,5 @@
 <?php
-if (file_exists(__DIR__ . '/secrets.php')) require_once __DIR__ . '/secrets.php';
+@include_once __DIR__ . '/secrets.php';
 // ══════════════════════════════════════════════════════════════════════
 //  MY TRIPS — API
 //  Configure the four constants below, then upload to your server.
