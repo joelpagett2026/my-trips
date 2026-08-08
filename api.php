@@ -394,7 +394,6 @@ PROMPT;
         }
 
         $about['photo'] = $photo;
-        $about['_photo_debug'] = $photo ? 'found' : 'none';
         ok(['about' => $about]);
 
         // ── PLACE PHOTO ─────────────────────────────────────────────────
