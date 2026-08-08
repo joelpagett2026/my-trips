@@ -268,7 +268,7 @@ const RECORD_ID = slug;",
 
     // ── GENERATE ABOUT ───────────────────────────────────────────────
     // POST /api.php?action=generate_about  { "place": "São Bento Station", "city": "Porto" }
-    // Returns { about: { significant, history[], lookout[], duration, fact } }
+    // Returns { about: { significant, history[], lookout[], fact } }
     case 'generate_about':
         $ANTHROPIC_KEY = defined('ANTHROPIC_API_KEY') ? ANTHROPIC_API_KEY : (getenv('ANTHROPIC_API_KEY') ?: '');
         if (!$ANTHROPIC_KEY) { ok(['about' => null, 'error' => 'No API key configured']); break; }
@@ -279,18 +279,17 @@ const RECORD_ID = slug;",
 
         $context = $city ? $place . ', ' . $city : $place;
         $prompt = <<<PROMPT
-You are a concise, accurate travel guide writer. Generate visitor information for: "{$context}"
+You are a concise travel guide writer. Generate visitor information for: "{$context}"
 
-Return ONLY valid JSON in this exact structure, no markdown, no preamble:
+Return ONLY valid JSON, no markdown, no preamble:
 {
-  "significant": "1-2 sentences on why it is historically or culturally significant",
+  "significant": "One punchy sentence on why this place matters",
   "history": ["fact 1", "fact 2", "fact 3"],
   "lookout": ["thing to see 1", "thing to see 2", "thing to see 3"],
-  "duration": "e.g. 30-45 minutes",
-  "fact": "One genuinely surprising or memorable fact"
+  "fact": "One surprising or memorable fact"
 }
 
-Be factual and accurate. Do not invent details. Write for a traveller standing at the location.
+Keep everything brief and scannable. Facts only. No waffle.
 PROMPT;
 
         $payload = json_encode([
