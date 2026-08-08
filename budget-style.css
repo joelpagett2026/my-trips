@@ -1,0 +1,171 @@
+/* ══════════════════════════════════════════════════════════════════
+   MY TRIPS — Budget Dashboard Styles
+   Uses itinerary-v2-style.css variables
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── PAGE LAYOUT ── */
+.budget-page { flex:1; display:flex; flex-direction:column; min-width:0; height:100vh; overflow:hidden; background:var(--bg); }
+.budget-main { flex:1; overflow-y:auto; padding:24px 24px 48px; }
+
+/* ── GRID ── */
+.budget-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:auto auto;
+  gap:16px;
+  margin-bottom:16px;
+}
+.budget-panel {
+  background:var(--surface);
+  border-radius:var(--r);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+
+/* ── PANEL HEADER ── */
+.bp-head {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+.bp-ico {
+  width:32px; height:32px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.bp-ico svg { width:16px; height:16px; stroke:currentColor; }
+.bp-ico.hotel  { background:rgba(14,122,135,0.1); color:var(--teal); }
+.bp-ico.flight { background:rgba(99,102,241,0.1); color:#6366f1; }
+.bp-ico.transport { background:rgba(217,123,10,0.1); color:#d97b0a; }
+.bp-ico.attraction { background:rgba(26,138,82,0.1); color:var(--green); }
+.bp-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text2); flex:1; }
+.bp-total-badge {
+  font-size:12px; font-weight:800; color:var(--teal);
+  background:var(--teal-xdim); padding:3px 10px; border-radius:20px;
+}
+
+/* ── PANEL BODY ── */
+.bp-body { flex:1; padding:0; overflow:hidden; }
+.bp-row {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:10px 18px; border-bottom:1px solid var(--line);
+  transition:background 0.12s; cursor:default;
+}
+.bp-row:last-of-type { border-bottom:none; }
+.bp-row:hover { background:var(--teal-xdim); }
+.bp-row-ico { width:22px; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding-top:1px; }
+.bp-row-ico svg { width:12px; height:12px; stroke:var(--text3); }
+.bp-row-info { flex:1; min-width:0; }
+.bp-row-name { font-size:12.5px; font-weight:600; color:var(--text); line-height:1.3; }
+.bp-row-meta { font-size:11px; color:var(--text2); margin-top:2px; }
+.bp-row-right { text-align:right; flex-shrink:0; }
+.bp-row-cost { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; }
+.bp-row-avios { font-size:10px; font-weight:600; color:#6366f1; margin-top:2px; white-space:nowrap; }
+.bp-row-cost.unavailable { color:var(--text3); font-weight:500; font-size:11px; }
+.bp-row-link { font-size:10px; color:var(--teal); text-decoration:none; font-weight:600; margin-top:3px; display:block; }
+.bp-row-link:hover { text-decoration:underline; }
+
+/* ── PANEL FOOTER (totals) ── */
+.bp-foot {
+  border-top:2px solid var(--line);
+  background:rgba(0,0,0,0.02);
+  padding:10px 18px;
+  display:flex; flex-direction:column; gap:4px;
+  flex-shrink:0;
+}
+.bp-foot-row { display:flex; justify-content:space-between; align-items:center; }
+.bp-foot-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text3); }
+.bp-foot-val   { font-size:13px; font-weight:800; color:var(--text); }
+.bp-foot-val.teal  { color:var(--teal); }
+.bp-foot-val.avios { color:#6366f1; }
+.bp-foot-val.avg   { color:var(--text2); font-size:11px; font-weight:600; }
+
+/* ── TRIP TOTAL PANEL (full width, prominent) ── */
+.budget-total-panel {
+  background:var(--surface);
+  border-radius:var(--r);
+  box-shadow:0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  overflow:hidden;
+}
+.btp-head {
+  background:linear-gradient(135deg,var(--teal) 0%,var(--teal2) 100%);
+  padding:18px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.btp-head-title { font-size:13px; font-weight:800; color:rgba(255,255,255,0.8); text-transform:uppercase; letter-spacing:0.08em; }
+.btp-grand { font-size:32px; font-weight:800; color:#fff; letter-spacing:-0.5px; }
+.btp-body { display:flex; gap:0; }
+
+/* Category breakdown rows */
+.btp-cats { flex:1; padding:0; }
+.btp-cat-row {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 20px; border-bottom:1px solid var(--line);
+}
+.btp-cat-row:last-child { border-bottom:none; }
+.btp-cat-name { font-size:12px; font-weight:600; color:var(--text2); width:90px; flex-shrink:0; }
+.btp-cat-bar-wrap { flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden; }
+.btp-cat-bar { height:100%; border-radius:99px; transition:width 0.4s ease; }
+.btp-cat-bar.hotel      { background:var(--teal); }
+.btp-cat-bar.flight     { background:#6366f1; }
+.btp-cat-bar.transport  { background:#d97b0a; }
+.btp-cat-bar.attraction { background:var(--green); }
+.btp-cat-val { font-size:12px; font-weight:700; color:var(--text); width:60px; text-align:right; flex-shrink:0; }
+.btp-cat-pct { font-size:10px; color:var(--text3); width:36px; text-align:right; flex-shrink:0; }
+
+/* Donut chart */
+.btp-chart-wrap { width:160px; flex-shrink:0; display:flex; align-items:center; justify-content:center; padding:16px; border-left:1px solid var(--line); }
+.btp-donut { position:relative; width:120px; height:120px; }
+.btp-donut svg { width:120px; height:120px; transform:rotate(-90deg); }
+.btp-donut-center {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.btp-donut-pct { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; }
+
+/* Summary totals at bottom of trip total */
+.btp-summary {
+  display:flex; gap:0;
+  border-top:1px solid var(--line);
+  background:rgba(0,0,0,0.02);
+}
+.btp-sum-item {
+  flex:1; padding:12px 16px; text-align:center;
+  border-right:1px solid var(--line);
+}
+.btp-sum-item:last-child { border-right:none; }
+.btp-sum-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text3); margin-bottom:4px; }
+.btp-sum-val   { font-size:15px; font-weight:800; color:var(--text); }
+.btp-sum-val.avios { color:#6366f1; font-size:13px; }
+
+/* Avios input inline */
+.avios-input {
+  border:none; background:transparent; font-family:var(--font);
+  font-size:10px; font-weight:600; color:#6366f1;
+  width:80px; outline:none; cursor:text; padding:0;
+}
+.avios-input:focus { background:rgba(99,102,241,0.08); border-radius:4px; padding:0 4px; }
+.avios-input::placeholder { color:rgba(99,102,241,0.4); }
+
+/* Empty state */
+.bp-empty {
+  padding:20px 18px;
+  font-size:11.5px; color:var(--text3); font-style:italic;
+  text-align:center;
+}
+
+/* Responsive */
+@media (max-width:900px) {
+  .budget-grid { grid-template-columns:1fr; }
+  .btp-body { flex-direction:column; }
+  .btp-chart-wrap { width:100%; border-left:none; border-top:1px solid var(--line); padding:14px; }
+  .btp-summary { flex-wrap:wrap; }
+  .btp-sum-item { min-width:50%; }
+}
+@media (max-width:600px) {
+  .budget-main { padding:14px 14px 80px; }
+  .btp-grand { font-size:26px; }
+  .btp-chart-wrap { display:none; }
+}

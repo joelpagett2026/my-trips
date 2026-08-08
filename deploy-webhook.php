@@ -87,6 +87,7 @@ $itineraries = [
     ['slug' => 'gothenburg-2026', 'filename' => 'gothenburg-2026.html',   'dest' => 'Gothenburg',         'dep' => '09/10/2026', 'ret' => '12/10/2026', 'trav' => '2', 'status' => 'planning'],
     ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
     ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
+    ['slug' => 'porto-budget',       'filename' => 'porto-budget.html',     'dest' => 'Porto',  'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
     ['slug' => 'porto-2026-v2',     'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
     ['slug' => 'graz-ljubljana-lake-bled-2027', 'filename' => 'graz-ljubljana-lake-bled-2027.html', 'dest' => 'Graz, Ljubljana & Lake Bled', 'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'],
 ];
@@ -104,7 +105,8 @@ foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks'
 
 // ── REGENERATE ALL ITINERARY PAGES FROM TEMPLATE ─────────────────────
 $templateV1  = file_get_contents(REPO_PATH . '/new-trip.html');
-$templateV2  = file_get_contents(REPO_PATH . '/new-trip-v2.html');
+$templateV2      = file_get_contents(REPO_PATH . '/new-trip-v2.html');
+$templateBudget = file_get_contents(REPO_PATH . '/budget-template.html');
 $regenerated = [];
 $regen_failed = [];
 
@@ -123,8 +125,13 @@ const RECORD_ID = slug;";
 if ($templateV1) {
     foreach ($itineraries as $trip) {
         // Pick template: v2 if specified, else v1
-        $useTemplate  = (!empty($trip['template']) && $trip['template'] === 'new-trip-v2.html' && $templateV2)
-                        ? $templateV2 : $templateV1;
+        if (!empty($trip['template']) && $trip['template'] === 'budget-template.html' && $templateBudget) {
+            $useTemplate = $templateBudget;
+        } elseif (!empty($trip['template']) && $trip['template'] === 'new-trip-v2.html' && $templateV2) {
+            $useTemplate = $templateV2;
+        } else {
+            $useTemplate = $templateV1;
+        }
         $placeholder  = $placeholderV1; // same placeholder in both templates
 
         $baked = "// Baked-in trip data\n"
@@ -156,7 +163,7 @@ if ($templateV1) {
 $coreFiles = [
     'api.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'itinerary-v2-style.css', 'deploy-webhook.php',
-    'index.html', 'new-trip.html', 'new-trip-v2.html', 'settings.html',
+    'index.html', 'new-trip.html', 'new-trip-v2.html', 'budget-template.html', 'budget-style.css', 'settings.html',
     'robots.txt', '.htaccess', 'favicon.ico',
 ];
 
