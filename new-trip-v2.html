@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=15">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=16">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -363,10 +363,14 @@
         <label class="field-label">Booking reference</label>
         <input class="field-input" id="hf-ref" type="text" placeholder="e.g. 90900EE04320">
       </div>
+      <div class="field-group">
+        <label class="field-label">Photo URL <span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--text3)">(paste from Google Images, Booking.com etc)</span></label>
+        <input class="field-input" id="hf-photo-url" type="url" placeholder="https://…">
+        <button type="button" onclick="previewHotelPhotoUrl()" style="margin-top:5px;background:var(--teal-xdim);border:1px solid var(--teal-dim);color:var(--teal);font-family:var(--font);font-size:10.5px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;width:100%;">Preview photo</button>
+      </div>
       <div id="hotel-photo-preview" style="display:none;">
-        <div class="field-label" style="margin-bottom:6px;">Photo</div>
-        <img id="hotel-photo-img" src="" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
-        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Fetched from Google Places · <button onclick="clearHotelPhoto()" style="background:none;border:none;color:var(--teal);font-size:10px;cursor:pointer;font-family:inherit;padding:0;">Remove</button></div>
+        <img id="hotel-photo-img" src="" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;"><button onclick="clearHotelPhoto()" style="background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;font-family:inherit;padding:0;">✕ Remove photo</button></div>
       </div>
       <div id="hotel-photo-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
     </div>
@@ -1410,9 +1414,11 @@ function openHotelModal(idx) {
   document.getElementById('hf-status').value   = h ? (h.status  || 'confirmed') : 'confirmed';
   document.getElementById('hotel-delete-btn').style.display = h ? 'block' : 'none';
   document.getElementById('hotel-photo-status').style.display = 'none';
+  document.getElementById('hf-photo-url').value = '';
 
   if (h && h.photo) {
     fetchedPhotoUrl = h.photo;
+    document.getElementById('hf-photo-url').value = h.photo;
     showHotelPhotoPreview(h.photo);
   } else {
     document.getElementById('hotel-photo-preview').style.display = 'none';
@@ -1438,37 +1444,14 @@ function clearHotelPhoto() {
   document.getElementById('hotel-photo-preview').style.display = 'none';
 }
 
-async function fetchHotelPhoto(name) {
-  if (!name) return null;
-  const status = document.getElementById('hotel-photo-status');
-  status.textContent = 'Fetching photo…';
-  status.style.display = 'block';
-  try {
-    const r = await fetch('/api.php?action=place_photo&q=' + encodeURIComponent(name), {
-      headers: { 'X-Auth-Token': AUTH_TOKEN }
-    });
-    const j = await r.json();
-    status.style.display = 'none';
-    return j.photo || null;
-  } catch {
-    status.style.display = 'none';
-    return null;
-  }
+function previewHotelPhotoUrl() {
+  const url = document.getElementById('hf-photo-url').value.trim();
+  if (!url) return;
+  fetchedPhotoUrl = url;
+  showHotelPhotoPreview(url);
 }
 
-// Auto-fetch photo when hotel name is blurred
-document.addEventListener('blur', async e => {
-  if (e.target.id !== 'hf-name') return;
-  const name = e.target.value.trim();
-  if (!name || fetchedPhotoUrl) return;
-  const url = await fetchHotelPhoto(name);
-  if (url) {
-    fetchedPhotoUrl = url;
-    showHotelPhotoPreview(url);
-  }
-}, true);
-
-async function saveHotel() {
+function saveHotel() {
   const name    = document.getElementById('hf-name').value.trim();
   const checkin = document.getElementById('hf-checkin').value.trim();
   const checkout= document.getElementById('hf-checkout').value.trim();
@@ -1477,9 +1460,8 @@ async function saveHotel() {
   const status  = document.getElementById('hf-status').value;
   if (!name) { document.getElementById('hf-name').focus(); return; }
 
-  // Fetch photo if not already loaded
-  let photo = fetchedPhotoUrl;
-  if (!photo) photo = await fetchHotelPhoto(name);
+  // Use pasted URL or already-fetched URL
+  let photo = fetchedPhotoUrl || document.getElementById('hf-photo-url').value.trim() || null;
 
   // Compute nights
   let nights = '';
