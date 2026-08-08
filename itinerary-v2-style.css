@@ -147,15 +147,58 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp-col{width:var(--rp-w);min-width:var(--rp-w);border-left:1px solid var(--line);background:var(--surface);overflow-y:auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:18px;}
 .rp-section{display:flex;flex-direction:column;gap:9px;}
 .rp-h{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);padding-bottom:4px;border-bottom:1px solid var(--line);}
-.hotel-card{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;}
-.hotel-img{height:82px;background:linear-gradient(135deg,var(--teal) 0%,var(--teal2) 100%);display:flex;align-items:center;justify-content:center;}
-.hotel-img-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:rgba(255,255,255,0.75);background:rgba(0,0,0,0.22);padding:3px 9px;border-radius:20px;}
-.hotel-body{padding:11px 12px;}
-.hotel-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:3px;}
-.hotel-dates{font-size:10.5px;color:var(--text2);margin-bottom:7px;}
-.hotel-btns{display:flex;gap:6px;margin-top:9px;}
-.hotel-btns button{flex:1;background:none;border:1px solid var(--line);color:var(--text2);font-family:var(--font);font-size:10.5px;font-weight:700;padding:5px 0;border-radius:6px;cursor:pointer;transition:all 0.12s;}
-.hotel-btns button:hover{border-color:var(--teal);color:var(--teal);}
+.hotel-card { border:1px solid var(--line); border-radius:var(--r-sm); overflow:hidden; }
+
+/* Photo / placeholder */
+.hotel-img {
+  height: 130px; position: relative;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal2) 100%);
+  display: flex; align-items: flex-end; justify-content: flex-start;
+  padding: 10px 12px; gap: 8px;
+}
+.hotel-img-placeholder {
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+}
+.hotel-img-lbl {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: rgba(255,255,255,0.75);
+  background: rgba(0,0,0,0.22); padding: 3px 9px; border-radius: 20px;
+}
+.hotel-img-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%);
+}
+
+/* Detail rows */
+.hotel-body { padding: 0; }
+.h-row {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 12px; border-bottom: 1px solid var(--line);
+}
+.h-row:last-of-type { border-bottom: none; }
+.h-row-k {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text3);
+  width: 72px; flex-shrink: 0;
+}
+.h-row-v {
+  font-size: 12px; font-weight: 600; color: var(--text); flex: 1; min-width: 0;
+}
+.h-name { font-size: 12.5px; font-weight: 700; line-height: 1.3; }
+.h-ref  { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; color: var(--text2); font-weight: 600; font-size: 11px; }
+
+/* Map button */
+.hotel-map-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 10px 12px;
+  background: var(--teal-xdim); color: var(--teal);
+  font-family: var(--font); font-size: 11px; font-weight: 700;
+  text-decoration: none; letter-spacing: 0.03em;
+  border-top: 1px solid var(--teal-dim);
+  transition: background 0.13s;
+}
+.hotel-map-btn:hover { background: var(--teal-dim); }
 .readiness-ring{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--teal-xdim);border-radius:var(--r-sm);}
 .ring-pct{font-size:20px;font-weight:800;color:var(--teal);line-height:1;}
 .ring-label{font-size:10px;color:var(--text2);margin-top:2px;}
@@ -382,13 +425,4 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .tl-restore-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-xdim); }
 
-/* ── MULTI-STAY HOTEL PANEL ── */
-.hotel-other .hotel-card {
-  opacity: 0.45;
-  filter: grayscale(0.4);
-}
-.hotel-other .hotel-img { height: 52px; }
-.hotel-ref {
-  font-size: 10px; color: var(--text3); margin-top: 3px;
-  font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
-}
+

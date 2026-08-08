@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=13">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=14">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -858,37 +858,59 @@ function hotelForDay(dayIdx) {
 }
 
 function renderHotelCard(h) {
-  const nights = h.nights ? h.nights + ' night' + (h.nights !== 1 ? 's' : '') + ' · ' : '';
-  return `
-    <div class="hotel-card">
-      <div class="hotel-img"><div class="hotel-img-lbl">${h.name||'Hotel'}</div></div>
-      <div class="hotel-body">
-        <div class="hotel-name">${h.name||''}</div>
-        <div class="hotel-dates">${h.checkin||''} → ${h.checkout||''} · ${nights}${h.nightly||''}/night</div>
-        ${h.ref ? `<div class="hotel-ref">Ref: ${h.ref}</div>` : ''}
-        <div style="margin-top:6px;">${badgeHtml(h.status||'confirmed')}</div>
-        <div class="hotel-btns"><button>View booking</button><button>Map</button></div>
-      </div>
-    </div>`;
+  // Photo area — real image if stored, else teal gradient placeholder
+  const imgHtml = h.photo
+    ? `<div class="hotel-img" style="background:url('${h.photo}') center/cover no-repeat;">
+         <div class="hotel-img-overlay"></div>
+       </div>`
+    : `<div class="hotel-img hotel-img-placeholder">
+         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+         <span class="hotel-img-lbl">${h.name||'Hotel'}</span>
+       </div>`;
+
+  // Nights calculation — use stored value or compute from dates
+  let nights = h.nights || '';
+  if (!nights && h.checkin && h.checkout) {
+    const ci = parseDate(h.checkin), co = parseDate(h.checkout);
+    if (ci && co) nights = Math.round((co - ci) / 86400000);
+  }
+
+  // Google Maps link
+  const mapsUrl = h.name
+    ? 'https://www.google.com/maps/search/' + encodeURIComponent(h.name + (h.city ? ', ' + h.city : ''))
+    : 'https://www.google.com/maps';
+
+  // Build rows — only show fields that have data
+  const rows = [
+    h.name     && `<div class="h-row"><div class="h-row-k">Hotel</div><div class="h-row-v h-name">${h.name}</div></div>`,
+    h.checkin  && `<div class="h-row"><div class="h-row-k">Check in</div><div class="h-row-v">${h.checkin}</div></div>`,
+    h.checkout && `<div class="h-row"><div class="h-row-k">Check out</div><div class="h-row-v">${h.checkout}</div></div>`,
+    nights     && `<div class="h-row"><div class="h-row-k">Nights</div><div class="h-row-v">${nights}</div></div>`,
+    h.nightly  && `<div class="h-row"><div class="h-row-k">Rate / night</div><div class="h-row-v">${h.nightly}</div></div>`,
+    h.ref      && `<div class="h-row"><div class="h-row-k">Booking ref</div><div class="h-row-v h-ref">${h.ref}</div></div>`,
+  ].filter(Boolean).join('');
+
+  return `<div class="hotel-card">
+    ${imgHtml}
+    <div class="hotel-body">
+      ${rows}
+      <a class="hotel-map-btn" href="${mapsUrl}" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+        Open in Maps
+      </a>
+    </div>
+  </div>`;
 }
 
 function renderHotelPanel() {
   const el = document.getElementById('rp-hotel');
+  // Show only the hotel for the current day
   const h = hotelForDay(activeDay);
   if (!h) {
     el.innerHTML = '<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No accommodation added yet.</div>';
     return;
   }
-  const hotels = STATE.meta.hotels || [STATE.meta.hotel];
-  // If multiple stays, show all with current one highlighted
-  if (hotels.length > 1) {
-    el.innerHTML = hotels.map(stay => {
-      const isCurrent = stay === h;
-      return `<div class="${isCurrent ? '' : 'hotel-other'}">${renderHotelCard(stay)}</div>`;
-    }).join('');
-  } else {
-    el.innerHTML = renderHotelCard(h);
-  }
+  el.innerHTML = renderHotelCard(h);
 }
 
 function renderReadiness() {
