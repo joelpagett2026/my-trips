@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=41">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=42">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -21,7 +21,7 @@
     <div class="sb-meta" id="sb-meta"></div>
   </div>
   <nav class="sb-nav">
-    <button class="sb-btn active">
+    <button class="sb-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       Itinerary
     </button>
@@ -36,7 +36,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
       Map
     </button>
-    <button class="sb-btn" onclick="location.href=budgetPageUrl">
+    <button class="sb-btn" id="sb-btn-budget" onclick="setView('budget')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Budget
     </button>
@@ -85,7 +85,7 @@
   <!-- DAY SUMMARY -->
 
   <!-- CONTENT -->
-  <div class="v2-content">
+  <div class="v2-content" id="view-itinerary">
     <!-- TIMELINE -->
     <div class="tl-col" id="tl-col"></div>
 
@@ -111,7 +111,13 @@
         <div id="rp-bookings"></div>
       </div>
     </div>
+  </div><!-- /view-itinerary -->
+
+  <!-- BUDGET VIEW -->
+  <div class="v2-content" id="view-budget" style="display:none;overflow-y:auto;">
+    <div id="budget-main" style="flex:1;overflow-y:auto;padding:24px 24px 48px;min-width:0;width:100%;"></div>
   </div>
+
 </div>
 
 <!-- DRAWER -->
@@ -1733,6 +1739,133 @@ function renderAbout(about) {
   `;
 
   document.getElementById('dr-about-wrap').style.display = 'block';
+}
+
+// ── VIEW SWITCHING ───────────────────────────────────────────────────
+let currentView = 'itinerary';
+
+function setView(view) {
+  currentView = view;
+  const isBudget = view === 'budget';
+  document.getElementById('view-itinerary').style.display = isBudget ? 'none' : '';
+  document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
+  document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
+  document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
+  if (isBudget) {
+    document.getElementById('tb-kicker').textContent = 'Budget';
+    document.getElementById('tb-title').textContent  = (STATE.meta && STATE.meta.dest) || dest;
+    renderBudgetView();
+  } else {
+    render();
+  }
+}
+
+function parsePrice(str, numTrav) {
+  if (!str) return null;
+  const pp = /pp/i.test(str);
+  const m  = String(str).replace(/,/g,'').match(/[\d.]+/);
+  if (!m) return null;
+  return parseFloat(m[0]) * (pp ? numTrav : 1);
+}
+
+function extractBudget(state) {
+  const numTrav = parseInt(state.meta && state.meta.trav ? state.meta.trav : trav) || 2;
+  const parsePr = str => parsePrice(str, numTrav);
+  const hotels = (state.meta && state.meta.hotels ? state.meta.hotels : []).map(h => {
+    const ci = parseDate(h.checkin), co = parseDate(h.checkout);
+    const nights = h.nights || (ci && co ? Math.round((co-ci)/86400000) : null);
+    const nightly = parsePr(h.nightly);
+    return { ...h, nights, nightly, total: nightly && nights ? nightly * nights : null };
+  });
+  const flights = [], transport = [], attractions = [];
+  for (const d of state.days || []) {
+    for (const it of (d.items || [])) {
+      if (!it) continue;
+      const b = it.booking || {};
+      const price = parsePr(b.price);
+      if (it.type === 'move') {
+        const k = it.kicker || (it.transport && it.transport.mode) || 'Transport';
+        if (k === 'Flight') flights.push({title:it.title, kicker:k, price, rawPrice:b.price, date:d.date, ref:b.ref, avios:it._avios||null});
+        else if (price) transport.push({title:it.title, kicker:k, price, rawPrice:b.price, date:d.date});
+      } else if ((it.type === 'act' || it.type === 'ticket') && price) {
+        attractions.push({title:it.title, price, rawPrice:b.price, date:d.date, ref:b.ref, tickets:b.tickets, url:b.url});
+      }
+    }
+  }
+  return { hotels, flights, transport, attractions, numTrav };
+}
+
+function renderBudgetView() {
+  const el = document.getElementById('budget-main');
+  if (!STATE || !STATE.days) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">No data</div>'; return; }
+  const { hotels, flights, transport, attractions, numTrav } = extractBudget(STATE);
+  const fmt = n => n ? '\xA3' + n.toFixed(2).replace(/\.00$/, '') : '\u2014';
+  const hotelTotal  = hotels.reduce((a,h) => a+(h.total||0), 0);
+  const flightTotal = flights.reduce((a,f) => a+(f.price||0), 0);
+  const transTotal  = transport.reduce((a,t) => a+(t.price||0), 0);
+  const actTotal    = attractions.reduce((a,a2) => a+(a2.price||0), 0);
+  const grand       = hotelTotal + flightTotal + transTotal + actTotal;
+  const perPerson   = numTrav > 1 ? grand / numTrav : null;
+  const totalAvios  = flights.reduce((a,f) => a+(parseInt(f.avios)||0), 0);
+
+  const cats = [
+    {label:'Hotel', val:hotelTotal, color:'#0e7a87'},
+    {label:'Flights', val:flightTotal, color:'#6366f1'},
+    {label:'Transport', val:transTotal, color:'#d97b0a'},
+    {label:'Activities', val:actTotal, color:'#1a8a52'},
+  ];
+
+  const summaryHtml = `<div class="bv-summary">
+    <div class="bv-grand">
+      <div class="bv-grand-label">Total trip cost</div>
+      <div class="bv-grand-val">${fmt(grand)}</div>
+      ${perPerson ? `<div class="bv-grand-pp">${fmt(perPerson)} per person</div>` : ''}
+      ${totalAvios ? `<div class="bv-grand-avios">\u2726 ${totalAvios.toLocaleString()} Avios</div>` : ''}
+    </div>
+    <div class="bv-cat-bars">
+      ${cats.filter(c=>c.val).map(c => {
+        const pct = grand ? Math.round((c.val/grand)*100) : 0;
+        return `<div class="bv-cat-row">
+          <div class="bv-cat-dot" style="background:${c.color}"></div>
+          <div class="bv-cat-name">${c.label}</div>
+          <div class="bv-cat-bar-wrap"><div class="bv-cat-bar" style="width:${pct}%;background:${c.color}"></div></div>
+          <div class="bv-cat-val">${fmt(c.val)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  const mkRow = (name, meta, cost, rawCost, extra) =>
+    `<div class="bv-row"><div class="bv-row-info"><div class="bv-row-name">${name}</div>${meta?`<div class="bv-row-meta">${meta}</div>`:''} ${extra||''}</div><div class="bv-row-right"><div class="bv-row-cost">${fmt(cost)}</div>${rawCost&&rawCost!==fmt(cost)?`<div class="bv-row-sub">${rawCost}</div>`:''}</div></div>`;
+
+  const mkPanel = (title, color, rows, footHtml) =>
+    `<div class="bv-panel"><div class="bv-panel-head" style="border-left:3px solid ${color}"><span class="bv-panel-title">${title}</span></div><div class="bv-panel-body">${rows||'<div class="bv-empty">None logged</div>'}</div>${footHtml?`<div class="bv-panel-foot">${footHtml}</div>`:''}</div>`;
+
+  const hotelRows  = hotels.map(h => mkRow(h.name, `${h.checkin||''} \u2192 ${h.checkout||''} \u00B7 ${h.nights||'?'} nights${h.breakfast==='included'?' \u00B7 Breakfast incl.':''}${h.ref?' \u00B7 Ref: '+h.ref:''}`, h.total, null, h.nightly?`<div class="bv-row-sub">${fmt(h.nightly)}/night</div>`:'')).join('');
+  const flightRows = flights.map((f,i) => mkRow(f.title, `${f.date||''}${f.ref?' \u00B7 Ref: '+f.ref:''}`, f.price, f.rawPrice, `<div class="bv-row-avios">\u2726 <input class="bv-avios-input" placeholder="Add Avios" value="${f.avios||''}" onchange="saveBudgetAvios(${i},this.value)"></div>`)).join('');
+  const transRows  = transport.map(t => mkRow(t.title, `${t.kicker||''}${t.date?' \u00B7 '+t.date:''}`, t.price, t.rawPrice, '')).join('');
+  const actRows    = attractions.map(a => mkRow(a.title, `${a.date||''}${a.tickets?' \u00B7 '+a.tickets:''}`, a.price, a.rawPrice, '')).join('');
+
+  el.innerHTML = summaryHtml + `<div class="bv-grid">
+    ${mkPanel('Accommodation', '#0e7a87', hotelRows, hotelTotal?`<div class="bv-foot-row"><span>Total stay</span><span>${fmt(hotelTotal)}</span></div>`:'')}
+    ${mkPanel('Flights', '#6366f1', flightRows, [flightTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(flightTotal)}</span></div>`:'', totalAvios?`<div class="bv-foot-row"><span>Avios</span><span style="color:#6366f1">${totalAvios.toLocaleString()}</span></div>`:''].filter(Boolean).join(''))}
+    ${mkPanel('Transport', '#d97b0a', transRows, transTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(transTotal)}</span></div>`:'')}
+    ${mkPanel('Activities', '#1a8a52', actRows, [actTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(actTotal)}</span></div>`:'', perPerson?`<div class="bv-foot-row"><span>Per person</span><span>${fmt(perPerson)}</span></div>`:''].filter(Boolean).join(''))}
+  </div>`;
+}
+
+async function saveBudgetAvios(flightIdx, value) {
+  const num = parseInt(value) || null;
+  let fi = 0;
+  for (const d of STATE.days || []) {
+    for (const it of (d.items || [])) {
+      if (!it || it.type !== 'move') continue;
+      const k = it.kicker || (it.transport && it.transport.mode) || '';
+      if (k === 'Flight') { if (fi === flightIdx) { it._avios = num; break; } fi++; }
+    }
+  }
+  scheduleSave();
+  renderBudgetView();
 }
 
 window.addEventListener('load', () => { init(); });
