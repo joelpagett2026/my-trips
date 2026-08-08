@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=43">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=44">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1855,7 +1855,17 @@ function renderBudgetView() {
 
   const hotelRows  = hotels.map(h => mkRow(h.name, `${h.checkin||''} \u2192 ${h.checkout||''} \u00B7 ${h.nights||'?'} nights${h.breakfast==='included'?' \u00B7 Breakfast incl.':''}${h.ref?' \u00B7 Ref: '+h.ref:''}`, h.total, null, h.nightly?`<div class="bv-row-sub">${fmt(h.nightly)}/night</div>`:'')).join('');
   const flightRows = flights.map((f,i) => mkRow(f.title, `${f.date||''}${f.ref?' \u00B7 Ref: '+f.ref:''}`, f.price, f.rawPrice, `<div class="bv-row-avios">\u2726 <input class="bv-avios-input" placeholder="Add Avios" value="${f.avios||''}" onchange="saveBudgetAvios(${i},this.value)"></div>`)).join('');
-  const transRows  = transport.map(t => mkRow(t.title, `${t.kicker||''}${t.date?' \u00B7 '+t.date:''}`, t.price, t.rawPrice, '')).join('');
+  // Group transport by day
+  const transByDay = {};
+  transport.forEach(t => {
+    const key = t.date || 'Unknown';
+    if (!transByDay[key]) transByDay[key] = { date: key, items: [], total: 0 };
+    transByDay[key].items.push(t.title);
+    transByDay[key].total += (t.price || 0);
+  });
+  const transRows = Object.values(transByDay).sort((a,b) => a.date.localeCompare(b.date)).map(day =>
+    mkRow(day.date, day.items.join(', '), day.total, null, '')
+  ).join('');
   const actRows    = attractions.map(a => mkRow(a.title, `${a.date||''}${a.tickets?' \u00B7 '+a.tickets:''}`, a.price, a.rawPrice, '')).join('');
 
   el.innerHTML = summaryHtml + `<div class="bv-grid">
