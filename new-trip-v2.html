@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=42">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=43">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -64,15 +64,15 @@
     </div>
     <div class="tb-right">
       <span class="tb-status" id="tb-status"></span>
-      <div class="mode-toggle">
+      <div class="mode-toggle" id="tb-mode">
         <button class="mode-btn active" id="mode-plan" onclick="setMode('plan')">Plan</button>
         <button class="mode-btn" id="mode-today" onclick="setMode('today')">Today</button>
       </div>
-      <button class="tb-btn" onclick="openAddDay()">
+      <button class="tb-btn" id="tb-add-day" onclick="openAddDay()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add day
       </button>
-      <button class="tb-btn" onclick="triggerShare()">
+      <button class="tb-btn" id="tb-share" onclick="triggerShare()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>
         Share
       </button>
@@ -1751,6 +1751,18 @@ function setView(view) {
   document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
   document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
   document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
+
+  // Hide/show day selector and itinerary-specific topbar controls
+  document.getElementById('day-selector').style.display = isBudget ? 'none' : '';
+  ['tb-add-day','tb-share','tb-mode','tb-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isBudget ? 'none' : '';
+  });
+  // Hide day list in sidebar
+  const sbDays = document.querySelector('.sb-section-label');
+  if (sbDays) sbDays.style.display = isBudget ? 'none' : '';
+  document.getElementById('sb-days').style.display = isBudget ? 'none' : '';
+
   if (isBudget) {
     document.getElementById('tb-kicker').textContent = 'Budget';
     document.getElementById('tb-title').textContent  = (STATE.meta && STATE.meta.dest) || dest;
