@@ -358,9 +358,10 @@ PROMPT;
         // 2. Wikimedia Commons keyword search (much broader coverage)
         if (!$photo) {
             $query = $searchTerm . ($city && strpos($searchTerm, $city) === false ? ' ' . $city : '');
-            $resp  = $fetchUrl('https://commons.wikimedia.org/w/api.php?action=query'
+            $commonsUrl = 'https://commons.wikimedia.org/w/api.php?action=query'
                 . '&generator=search&gsrnamespace=6&gsrsearch=' . urlencode($query)
-                . '&gsrlimit=5&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json');
+                . '&gsrlimit=5&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json';
+            $resp  = $fetchUrl($commonsUrl);
             $data  = json_decode($resp, true);
             $best  = null; $bestW = 0;
             foreach (($data['query']['pages'] ?? []) as $page) {
@@ -393,6 +394,7 @@ PROMPT;
         }
 
         $about['photo'] = $photo;
+        $about['_photo_debug'] = $photo ? 'found' : 'none';
         ok(['about' => $about]);
 
         // ── PLACE PHOTO ─────────────────────────────────────────────────
