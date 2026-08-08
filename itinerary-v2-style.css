@@ -176,7 +176,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   display: flex; align-items: baseline; gap: 8px;
   padding: 8px 12px; border-bottom: 1px solid var(--line);
 }
-.h-row:last-of-type { border-bottom: none; }
 .h-row-k {
   font-size: 9.5px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.07em; color: var(--text3);
@@ -207,7 +206,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   display: flex; align-items: baseline; gap: 7px;
   padding: 8px 12px; border-bottom: 1px solid var(--line);
 }
-.h-row-inline:last-child { border-bottom: none; }
 .h-row-inline .h-row-k { font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);white-space:nowrap;flex-shrink:0; }
 .h-row-inline .h-row-v { font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
