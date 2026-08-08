@@ -262,9 +262,19 @@ const RECORD_ID = slug;",
         if (!$k || !$v) fail('Missing k or v');
         // Only allow writing ANTHROPIC_API_KEY
         if (!in_array($k, ['ANTHROPIC_API_KEY','PLACES_API_KEY'])) fail('Unknown key');
-        $php = "<?php\ndefine('ANTHROPIC_API_KEY', " . var_export($v, true) . ");\n";
+        // Read existing secrets and update/add the key
+        $secrets = [];
+        $existing = @file_get_contents(__DIR__ . '/secrets.php');
+        if ($existing && preg_match_all("/define\('([^']+)',\s*'([^']+)'\)/", $existing, $m, PREG_SET_ORDER)) {
+            foreach ($m as $row) $secrets[$row[1]] = $row[2];
+        }
+        $secrets[$k] = $v;
+        $php = "<?php
+";
+        foreach ($secrets as $sk => $sv) $php .= "define('" . $sk . "', " . var_export($sv, true) . ");
+";
         file_put_contents(__DIR__ . '/secrets.php', $php);
-        ok(['written' => true]);
+        ok(['written' => true, 'keys' => array_keys($secrets)]);
 
     // ── GENERATE ABOUT ───────────────────────────────────────────────
     // POST /api.php?action=generate_about  { "place": "São Bento Station", "city": "Porto" }
@@ -305,7 +315,7 @@ PROMPT;
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $payload,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 25,
+            CURLOPT_TIMEOUT        => 30,
             CURLOPT_HTTPHEADER     => [
                 'Content-Type: application/json',
                 'x-api-key: ' . $ANTHROPIC_KEY,
