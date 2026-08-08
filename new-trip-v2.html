@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=14">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=15">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -93,7 +93,10 @@
     <!-- RIGHT PANEL -->
     <div class="rp-col">
       <div class="rp-section">
-        <div class="rp-h">Accommodation</div>
+        <div class="rp-h" style="display:flex;align-items:center;">
+          Accommodation
+          <button onclick="openHotelModal()" style="margin-left:auto;background:none;border:none;color:var(--teal);font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;padding:0;letter-spacing:0.03em;">+ Add / Edit</button>
+        </div>
         <div id="rp-hotel">—</div>
       </div>
       <div class="rp-section">
@@ -320,6 +323,61 @@
   </div>
 </div>
 
+<!-- HOTEL MODAL -->
+<div class="modal-overlay" id="hotel-modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="hotel-modal-title">Add accommodation</div>
+      <button class="modal-close" onclick="closeHotelModal()">×</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;gap:13px;">
+      <div class="field-group">
+        <label class="field-label">Hotel name</label>
+        <input class="field-input" id="hf-name" type="text" placeholder="e.g. Fontinha Porto">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Check in</label>
+          <input class="field-input" id="hf-checkin" type="text" placeholder="dd/mm/yyyy">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Check out</label>
+          <input class="field-input" id="hf-checkout" type="text" placeholder="dd/mm/yyyy">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Rate / night</label>
+          <input class="field-input" id="hf-nightly" type="text" placeholder="e.g. £77.50">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Status</label>
+          <select class="field-select" id="hf-status">
+            <option value="confirmed">✓ Confirmed</option>
+            <option value="booked">✓ Booked</option>
+            <option value="attention">Needs attention</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Booking reference</label>
+        <input class="field-input" id="hf-ref" type="text" placeholder="e.g. 90900EE04320">
+      </div>
+      <div id="hotel-photo-preview" style="display:none;">
+        <div class="field-label" style="margin-bottom:6px;">Photo</div>
+        <img id="hotel-photo-img" src="" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Fetched from Google Places · <button onclick="clearHotelPhoto()" style="background:none;border:none;color:var(--teal);font-size:10px;cursor:pointer;font-family:inherit;padding:0;">Remove</button></div>
+      </div>
+      <div id="hotel-photo-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn danger" id="hotel-delete-btn" style="display:none" onclick="deleteHotel()">Delete</button>
+      <button class="modal-btn secondary" onclick="closeHotelModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveHotel()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- SNAPSHOT BAR -->
 <div class="snapshot-bar" id="snapshot-bar">
   <span id="snapshot-msg">Snapshot saved</span>
@@ -342,6 +400,7 @@ const RECORD_ID = slug;
 // ────────────────────────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────────────────────────
+const AUTH_TOKEN = '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395';
 let STATE = { days: [], meta: { dest, dep, ret, trav, status, hotel: null, budget: null } };
 let activeDay = 0;
 let currentMode = 'plan';
@@ -857,7 +916,7 @@ function hotelForDay(dayIdx) {
   return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
 }
 
-function renderHotelCard(h) {
+function renderHotelCard(h, hotelIdx) {
   // Photo area — real image if stored, else teal gradient placeholder
   const imgHtml = h.photo
     ? `<div class="hotel-img" style="background:url('${h.photo}') center/cover no-repeat;">
@@ -894,10 +953,15 @@ function renderHotelCard(h) {
     ${imgHtml}
     <div class="hotel-body">
       ${rows}
-      <a class="hotel-map-btn" href="${mapsUrl}" target="_blank" rel="noopener">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
-        Open in Maps
-      </a>
+      <div style="display:flex;gap:1px;">
+        <a class="hotel-map-btn" href="${mapsUrl}" target="_blank" rel="noopener" style="flex:1;border-right:1px solid var(--teal-dim);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+          Open in Maps
+        </a>
+        <button onclick="openHotelModal(${hotelIdx})" class="hotel-map-btn" style="flex:0 0 auto;padding:10px 14px;border:none;cursor:pointer;background:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
     </div>
   </div>`;
 }
@@ -910,7 +974,9 @@ function renderHotelPanel() {
     el.innerHTML = '<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No accommodation added yet.</div>';
     return;
   }
-  el.innerHTML = renderHotelCard(h);
+  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
+  const idx = hotels.indexOf(h);
+  el.innerHTML = renderHotelCard(h, idx);
 }
 
 function renderReadiness() {
@@ -1323,6 +1389,127 @@ function clearPeriod(periodKey) {
     showSnapshotBar(true);
     setTimeout(() => showSnapshotBar(false), 6000);
   }
+}
+
+// ── HOTEL MODAL ──────────────────────────────────────────────────────
+let editHotelIdx = null;  // index into STATE.meta.hotels, or null for new
+let fetchedPhotoUrl = null;
+
+function openHotelModal(idx) {
+  editHotelIdx = (idx !== undefined) ? idx : null;
+  fetchedPhotoUrl = null;
+  const hotels = STATE.meta.hotels || [];
+  const h = (editHotelIdx !== null) ? hotels[editHotelIdx] : null;
+
+  document.getElementById('hotel-modal-title').textContent = h ? 'Edit accommodation' : 'Add accommodation';
+  document.getElementById('hf-name').value     = h ? (h.name    || '') : '';
+  document.getElementById('hf-checkin').value  = h ? (h.checkin || '') : '';
+  document.getElementById('hf-checkout').value = h ? (h.checkout|| '') : '';
+  document.getElementById('hf-nightly').value  = h ? (h.nightly || '') : '';
+  document.getElementById('hf-ref').value      = h ? (h.ref     || '') : '';
+  document.getElementById('hf-status').value   = h ? (h.status  || 'confirmed') : 'confirmed';
+  document.getElementById('hotel-delete-btn').style.display = h ? 'block' : 'none';
+  document.getElementById('hotel-photo-status').style.display = 'none';
+
+  if (h && h.photo) {
+    fetchedPhotoUrl = h.photo;
+    showHotelPhotoPreview(h.photo);
+  } else {
+    document.getElementById('hotel-photo-preview').style.display = 'none';
+  }
+
+  document.getElementById('hotel-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('hf-name').focus(), 80);
+}
+
+function closeHotelModal() {
+  document.getElementById('hotel-modal-overlay').classList.remove('open');
+  editHotelIdx = null;
+  fetchedPhotoUrl = null;
+}
+
+function showHotelPhotoPreview(url) {
+  document.getElementById('hotel-photo-img').src = url;
+  document.getElementById('hotel-photo-preview').style.display = 'block';
+}
+
+function clearHotelPhoto() {
+  fetchedPhotoUrl = null;
+  document.getElementById('hotel-photo-preview').style.display = 'none';
+}
+
+async function fetchHotelPhoto(name) {
+  if (!name) return null;
+  const status = document.getElementById('hotel-photo-status');
+  status.textContent = 'Fetching photo…';
+  status.style.display = 'block';
+  try {
+    const r = await fetch('/api.php?action=place_photo&q=' + encodeURIComponent(name), {
+      headers: { 'X-Auth-Token': AUTH_TOKEN }
+    });
+    const j = await r.json();
+    status.style.display = 'none';
+    return j.photo || null;
+  } catch {
+    status.style.display = 'none';
+    return null;
+  }
+}
+
+// Auto-fetch photo when hotel name is blurred
+document.addEventListener('blur', async e => {
+  if (e.target.id !== 'hf-name') return;
+  const name = e.target.value.trim();
+  if (!name || fetchedPhotoUrl) return;
+  const url = await fetchHotelPhoto(name);
+  if (url) {
+    fetchedPhotoUrl = url;
+    showHotelPhotoPreview(url);
+  }
+}, true);
+
+async function saveHotel() {
+  const name    = document.getElementById('hf-name').value.trim();
+  const checkin = document.getElementById('hf-checkin').value.trim();
+  const checkout= document.getElementById('hf-checkout').value.trim();
+  const nightly = document.getElementById('hf-nightly').value.trim();
+  const ref     = document.getElementById('hf-ref').value.trim();
+  const status  = document.getElementById('hf-status').value;
+  if (!name) { document.getElementById('hf-name').focus(); return; }
+
+  // Fetch photo if not already loaded
+  let photo = fetchedPhotoUrl;
+  if (!photo) photo = await fetchHotelPhoto(name);
+
+  // Compute nights
+  let nights = '';
+  if (checkin && checkout) {
+    const ci = parseDate(checkin), co = parseDate(checkout);
+    if (ci && co) nights = Math.round((co - ci) / 86400000);
+  }
+
+  const hotel = { name, checkin, checkout, nights, nightly, ref, status, photo: photo || null };
+
+  if (!STATE.meta.hotels) STATE.meta.hotels = [];
+  if (editHotelIdx !== null) {
+    STATE.meta.hotels[editHotelIdx] = hotel;
+  } else {
+    STATE.meta.hotels.push(hotel);
+  }
+
+  closeHotelModal();
+  scheduleSave();
+  renderHotelPanel();
+}
+
+function deleteHotel() {
+  if (editHotelIdx === null) return;
+  if (!confirm('Remove this hotel?')) return;
+  takeSnapshot();
+  STATE.meta.hotels.splice(editHotelIdx, 1);
+  closeHotelModal();
+  scheduleSave();
+  renderHotelPanel();
 }
 
 window.addEventListener('load', () => { init(); });

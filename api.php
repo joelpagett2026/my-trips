@@ -255,6 +255,49 @@ const RECORD_ID = slug;",
             ->execute([$key, $val, $val]);
         ok();
 
+    // ── PLACE PHOTO ─────────────────────────────────────────────────
+    // GET /api.php?action=place_photo&q=Hotel+Name
+    case 'place_photo':
+        $q = trim($_GET['q'] ?? '');
+        if (!$q) ok(['photo' => null]);
+        $key = 'AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8';
+
+        // Step 1: find photo_reference via findplacefromtext
+        $searchUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
+            . '?input=' . urlencode($q)
+            . '&inputtype=textquery'
+            . '&fields=place_id,photos'
+            . '&key=' . $key;
+        $searchRes = json_decode(@file_get_contents($searchUrl), true);
+        $photoRef  = $searchRes['candidates'][0]['photos'][0]['photo_reference'] ?? null;
+
+        if (!$photoRef) {
+            // Fallback: textsearch
+            $textUrl  = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
+                . '?query=' . urlencode($q)
+                . '&key=' . $key;
+            $textRes  = json_decode(@file_get_contents($textUrl), true);
+            $photoRef = $textRes['results'][0]['photos'][0]['photo_reference'] ?? null;
+        }
+
+        if (!$photoRef) { ok(['photo' => null]); }
+
+        // Step 2: resolve photo reference — follow redirect to get CDN URL
+        $photoUrl = 'https://maps.googleapis.com/maps/api/place/photo'
+            . '?maxwidth=800'
+            . '&photo_reference=' . urlencode($photoRef)
+            . '&key=' . $key;
+        $ctx = stream_context_create(['http' => ['method' => 'GET', 'follow_location' => 0, 'ignore_errors' => true]]);
+        @file_get_contents($photoUrl, false, $ctx);
+        $finalUrl = null;
+        foreach ($http_response_header ?? [] as $hdr) {
+            if (stripos($hdr, 'Location:') === 0) {
+                $finalUrl = trim(substr($hdr, 9));
+                break;
+            }
+        }
+        ok(['photo' => $finalUrl ?: $photoUrl]);
+
     default:
         fail('Unknown action');
 }
