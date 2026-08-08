@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=12">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=13">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -835,23 +835,60 @@ function renderRightPanel() {
   renderKeyBookings();
 }
 
-function renderHotelPanel() {
-  const h = STATE.meta.hotel;
-  const el = document.getElementById('rp-hotel');
-  if (!h) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No accommodation added yet.</div>`;
-    return;
+// Parse dd/mm/yyyy → Date for comparison
+function parseDate(str) {
+  if (!str) return null;
+  const [d,m,y] = str.split('/').map(Number);
+  return new Date(y, m-1, d);
+}
+
+// Find the hotel covering the active day (checkin <= day < checkout)
+function hotelForDay(dayIdx) {
+  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
+  if (!hotels.length) return null;
+  const dayDate = parseDate(STATE.days[dayIdx]?.date);
+  if (!dayDate) return hotels[0]; // no date — show first
+  for (const h of hotels) {
+    const ci = parseDate(h.checkin);
+    const co = parseDate(h.checkout);
+    if (ci && co && dayDate >= ci && dayDate < co) return h;
   }
-  el.innerHTML = `
+  // Fallback: closest upcoming
+  return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
+}
+
+function renderHotelCard(h) {
+  const nights = h.nights ? h.nights + ' night' + (h.nights !== 1 ? 's' : '') + ' · ' : '';
+  return `
     <div class="hotel-card">
       <div class="hotel-img"><div class="hotel-img-lbl">${h.name||'Hotel'}</div></div>
       <div class="hotel-body">
         <div class="hotel-name">${h.name||''}</div>
-        <div class="hotel-dates">${h.checkin||''} → ${h.checkout||''} · ${h.nights||''} nights · ${h.nightly||''}/night</div>
+        <div class="hotel-dates">${h.checkin||''} → ${h.checkout||''} · ${nights}${h.nightly||''}/night</div>
+        ${h.ref ? `<div class="hotel-ref">Ref: ${h.ref}</div>` : ''}
         <div style="margin-top:6px;">${badgeHtml(h.status||'confirmed')}</div>
         <div class="hotel-btns"><button>View booking</button><button>Map</button></div>
       </div>
     </div>`;
+}
+
+function renderHotelPanel() {
+  const el = document.getElementById('rp-hotel');
+  const h = hotelForDay(activeDay);
+  if (!h) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No accommodation added yet.</div>';
+    return;
+  }
+  const hotels = STATE.meta.hotels || [STATE.meta.hotel];
+  // If multiple stays, show all with current one highlighted
+  if (hotels.length > 1) {
+    el.innerHTML = hotels.map(stay => {
+      const isCurrent = stay === h;
+      return `<div class="${isCurrent ? '' : 'hotel-other'}">${renderHotelCard(stay)}</div>`;
+    }).join('');
+  } else {
+    el.innerHTML = renderHotelCard(h);
+  }
 }
 
 function renderReadiness() {
