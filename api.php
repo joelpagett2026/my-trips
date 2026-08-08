@@ -261,7 +261,7 @@ const RECORD_ID = slug;",
         $k = $body['k'] ?? ''; $v = $body['v'] ?? '';
         if (!$k || !$v) fail('Missing k or v');
         // Only allow writing ANTHROPIC_API_KEY
-        if ($k !== 'ANTHROPIC_API_KEY') fail('Unknown key');
+        if (!in_array($k, ['ANTHROPIC_API_KEY','PLACES_API_KEY'])) fail('Unknown key');
         $php = "<?php\ndefine('ANTHROPIC_API_KEY', " . var_export($v, true) . ");\n";
         file_put_contents(__DIR__ . '/secrets.php', $php);
         ok(['written' => true]);
@@ -271,6 +271,7 @@ const RECORD_ID = slug;",
     // Returns { about: { significant, history[], lookout[], fact } }
     case 'generate_about':
         $ANTHROPIC_KEY = defined('ANTHROPIC_API_KEY') ? ANTHROPIC_API_KEY : (getenv('ANTHROPIC_API_KEY') ?: '');
+        $PLACES_KEY    = defined('PLACES_API_KEY')    ? PLACES_API_KEY    : (getenv('PLACES_API_KEY')    ?: '');
         if (!$ANTHROPIC_KEY) { ok(['about' => null, 'error' => 'No API key configured']); break; }
 
         $place = trim($body['place'] ?? '');
@@ -341,6 +342,49 @@ PROMPT;
             curl_close($ch);
             return $r ?: '';
         };
+
+        // 0. Google Places photo (highest quality, best coverage)
+        if (!$photo && $PLACES_KEY) {
+            // Find place_id
+            $findUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
+                . '?input=' . urlencode($place . ($city ? ', ' . $city : ''))
+                . '&inputtype=textquery&fields=place_id,photos&key=' . $PLACES_KEY;
+            $findResp = $fetchUrl($findUrl);
+            $findData = json_decode($findResp, true);
+            $photoRef = $findData['candidates'][0]['photos'][0]['photo_reference'] ?? null;
+
+            if (!$photoRef) {
+                // Fallback to textsearch
+                $textUrl  = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
+                    . '?query=' . urlencode($place . ($city ? ' ' . $city : ''))
+                    . '&key=' . $PLACES_KEY;
+                $textData = json_decode($fetchUrl($textUrl), true);
+                $photoRef = $textData['results'][0]['photos'][0]['photo_reference'] ?? null;
+            }
+
+            if ($photoRef) {
+                // Resolve redirect to get final CDN URL
+                $photoApiUrl = 'https://maps.googleapis.com/maps/api/place/photo'
+                    . '?maxwidth=800&photo_reference=' . urlencode($photoRef)
+                    . '&key=' . $PLACES_KEY;
+                $ch2 = curl_init($photoApiUrl);
+                curl_setopt_array($ch2, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => false,
+                    CURLOPT_TIMEOUT        => 8,
+                    CURLOPT_HEADER         => true,
+                ]);
+                $raw = curl_exec($ch2);
+                curl_close($ch2);
+                // Extract Location header from response
+                if (preg_match('/^Location:\s*(.+)$/im', $raw, $m)) {
+                    $photo = trim($m[1]);
+                } else {
+                    // Use the photo API URL directly — browser will follow redirect
+                    $photo = $photoApiUrl;
+                }
+            }
+        }
 
         // 1. Wikipedia page thumbnail
         if (!$photo && $wikiSearch) {
