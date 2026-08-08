@@ -299,15 +299,22 @@ PROMPT;
             'messages'   => [['role' => 'user', 'content' => $prompt]],
         ]);
 
-        $ctx = stream_context_create(['http' => [
-            'method'  => 'POST',
-            'header'  => "Content-Type: application/json\r\nx-api-key: {$ANTHROPIC_KEY}\r\nanthropicversion: 2023-06-01\r\n",
-            'content' => $payload,
-            'timeout' => 25,
-            'ignore_errors' => true,
-        ]]);
-        $resp = file_get_contents('https://api.anthropic.com/v1/messages', false, $ctx);
-        if ($resp === false) fail('Anthropic API unreachable - check server outbound HTTPS');
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 25,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'x-api-key: ' . $ANTHROPIC_KEY,
+                'anthropic-version: 2023-06-01',
+            ],
+        ]);
+        $resp    = curl_exec($ch);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+        if (!$resp) fail('Anthropic API unreachable: ' . $curlErr);
 
         $data  = json_decode($resp, true);
         $text  = $data['content'][0]['text'] ?? '';
