@@ -459,3 +459,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   transition: all 0.13s; letter-spacing: 0.02em;
 }
 .hotel-upload-label:hover { border-color: var(--teal); background: var(--teal-dim); }
+
+/* ── HOTEL BREAKFAST ── */
+.h-bf-yes { color: var(--green); font-weight: 700; }
+.h-bf-no  { color: var(--text3); }

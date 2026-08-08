@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=24">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=25">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -361,6 +361,13 @@
       <div class="field-group">
         <label class="field-label">Booking reference</label>
         <input class="field-input" id="hf-ref" type="text" placeholder="e.g. 90900EE04320">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Breakfast</label>
+        <select class="field-select" id="hf-breakfast">
+          <option value="not_included">Not included</option>
+          <option value="included">Included</option>
+        </select>
       </div>
       <div class="field-group">
         <label class="field-label">Photo</label>
@@ -960,12 +967,14 @@ function renderHotelCard(h, hotelIdx) {
     ${h.ref     ? `<div class="h-row-inline"><span class="h-row-k">Reference</span><span class="h-row-v h-ref">${h.ref}</span></div>` : ''}
   </div>` : '';
 
+  const bfText = h.breakfast === 'included' ? 'Included' : 'Not included';
   const rows = [
     h.name     && `<div class="h-row"><div class="h-row-k">Hotel</div><div class="h-row-v h-name">${h.name}</div></div>`,
     h.checkin  && `<div class="h-row"><div class="h-row-k">Check in</div><div class="h-row-v">${h.checkin}</div></div>`,
     h.checkout && `<div class="h-row"><div class="h-row-k">Check out</div><div class="h-row-v">${h.checkout}</div></div>`,
     nights     && `<div class="h-row"><div class="h-row-k">Nights</div><div class="h-row-v">${nights}</div></div>`,
     rateRefRow,
+    `<div class="h-row"><div class="h-row-k">Breakfast</div><div class="h-row-v ${h.breakfast==='included'?'h-bf-yes':'h-bf-no'}">${bfText}</div></div>`,
   ].filter(Boolean).join('');
 
   return `<div class="hotel-card">
@@ -1421,7 +1430,8 @@ function openHotelModal(idx) {
   document.getElementById('hf-checkout').value = h ? (h.checkout|| '') : '';
   document.getElementById('hf-nightly').value  = h ? (h.nightly || '') : '';
   document.getElementById('hf-ref').value      = h ? (h.ref     || '') : '';
-  document.getElementById('hf-status').value   = h ? (h.status  || 'confirmed') : 'confirmed';
+  document.getElementById('hf-status').value    = h ? (h.status    || 'confirmed') : 'confirmed';
+  document.getElementById('hf-breakfast').value = h ? (h.breakfast || 'not_included') : 'not_included';
   document.getElementById('hotel-delete-btn').style.display = h ? 'block' : 'none';
   document.getElementById('hotel-photo-status').style.display = 'none';
   document.getElementById('hf-photo-file').value = '';
@@ -1519,7 +1529,12 @@ function saveHotel() {
     if (ci && co) nights = Math.round((co - ci) / 86400000);
   }
 
-  const hotel = { name, checkin, checkout, nights, nightly, ref, status, photo: photo || null };
+  const breakfast = document.getElementById('hf-breakfast').value;
+  const hotel = { name, checkin, checkout, nights, nightly, ref, status, breakfast, photo: photo || null };
+
+  // Remove any hotel-generated breakfast items from old version of this hotel
+  const oldHotel = (editHotelIdx !== null && STATE.meta.hotels) ? STATE.meta.hotels[editHotelIdx] : null;
+  if (oldHotel) removeHotelBreakfasts(oldHotel);
 
   if (!STATE.meta.hotels) STATE.meta.hotels = [];
   if (editHotelIdx !== null) {
@@ -1528,9 +1543,56 @@ function saveHotel() {
     STATE.meta.hotels.push(hotel);
   }
 
+  // Add breakfast items to days covered by this hotel (day after checkin up to checkout)
+  if (breakfast === 'included') addHotelBreakfasts(hotel);
+
   closeHotelModal();
   scheduleSave();
-  renderHotelPanel();
+  render();
+}
+
+// Find all days whose date falls between checkin (exclusive) and checkout (inclusive)
+// i.e. Day 2 of the stay onwards — you've slept there, breakfast is available
+function daysForHotelBreakfast(hotel) {
+  const ci = parseDate(hotel.checkin);
+  const co = parseDate(hotel.checkout);
+  if (!ci || !co) return [];
+  return STATE.days.filter(d => {
+    const dt = parseDate(d.date);
+    return dt && dt > ci && dt <= co;
+  });
+}
+
+function addHotelBreakfasts(hotel) {
+  daysForHotelBreakfast(hotel).forEach(day => {
+    // Don't add if a hotel breakfast already exists for this hotel
+    const already = (day.items || []).some(it =>
+      it && it._hotelBreakfast === hotel.name
+    );
+    if (already) return;
+    if (!day.items) day.items = [];
+    // Insert at start of morning items
+    day.items.unshift({
+      time:     '09:00',
+      type:     'meal',
+      period:   'morning',
+      icoType:  'coffee',
+      kicker:   'Breakfast',
+      title:    'Breakfast — ' + hotel.name,
+      sub:      'Included with stay',
+      status:   'confirmed',
+      booking:  null,
+      _hotelBreakfast: hotel.name,  // tag so we can remove it later
+    });
+  });
+}
+
+function removeHotelBreakfasts(hotel) {
+  STATE.days.forEach(day => {
+    day.items = (day.items || []).filter(it =>
+      !(it && it._hotelBreakfast === hotel.name)
+    );
+  });
 }
 
 function deleteHotel() {
