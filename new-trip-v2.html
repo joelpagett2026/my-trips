@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=26">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=27">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -344,19 +344,9 @@
           <input class="field-input" id="hf-checkout" type="text" placeholder="dd/mm/yyyy">
         </div>
       </div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Rate / night</label>
-          <input class="field-input" id="hf-nightly" type="text" placeholder="e.g. £77.50">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Status</label>
-          <select class="field-select" id="hf-status">
-            <option value="confirmed">✓ Confirmed</option>
-            <option value="booked">✓ Booked</option>
-            <option value="attention">Needs attention</option>
-          </select>
-        </div>
+      <div class="field-group">
+        <label class="field-label">Rate / night</label>
+        <input class="field-input" id="hf-nightly" type="text" placeholder="e.g. £77.50">
       </div>
       <div class="field-group">
         <label class="field-label">Booking reference</label>
@@ -1430,7 +1420,6 @@ function openHotelModal(idx) {
   document.getElementById('hf-checkout').value = h ? (h.checkout|| '') : '';
   document.getElementById('hf-nightly').value  = h ? (h.nightly || '') : '';
   document.getElementById('hf-ref').value      = h ? (h.ref     || '') : '';
-  document.getElementById('hf-status').value    = h ? (h.status    || 'confirmed') : 'confirmed';
   document.getElementById('hf-breakfast').value = h ? (h.breakfast || 'not_included') : 'not_included';
   document.getElementById('hotel-delete-btn').style.display = h ? 'block' : 'none';
   document.getElementById('hotel-photo-status').style.display = 'none';
@@ -1516,7 +1505,6 @@ function saveHotel() {
   const checkout= document.getElementById('hf-checkout').value.trim();
   const nightly = document.getElementById('hf-nightly').value.trim();
   const ref     = document.getElementById('hf-ref').value.trim();
-  const status  = document.getElementById('hf-status').value;
   if (!name) { document.getElementById('hf-name').focus(); return; }
 
   // Use uploaded/stored photo
@@ -1530,7 +1518,7 @@ function saveHotel() {
   }
 
   const breakfast = document.getElementById('hf-breakfast').value;
-  const hotel = { name, checkin, checkout, nights, nightly, ref, status, breakfast, photo: photo || null };
+  const hotel = { name, checkin, checkout, nights, nightly, ref, breakfast, photo: photo || null };
 
   // Remove any hotel-generated breakfast items from old version of this hotel
   const oldHotel = (editHotelIdx !== null && STATE.meta.hotels) ? STATE.meta.hotels[editHotelIdx] : null;
