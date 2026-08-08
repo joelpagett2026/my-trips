@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=40">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=41">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -36,7 +36,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
       Map
     </button>
-    <button class="sb-btn">
+    <button class="sb-btn" onclick="location.href='/'+slug.replace('-v2','-budget')+'.html'">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Budget
     </button>
@@ -1064,6 +1064,7 @@ function renderReadiness() {
 }
 
 function renderBudget() {
+  const budgetUrl = '/' + slug.replace('-v2', '-budget') + '.html';
   const b = STATE.meta.budget;
   if (!b) {
     document.getElementById('rp-budget').innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No budget set.</div>`;
@@ -1080,7 +1081,7 @@ function renderBudget() {
       <div class="bb-row"><div class="bb-lbl">Activities</div><div class="bb-track"><div class="bb-fill act" style="width:${pct(b.act)}%"></div></div><div class="bb-val">£${b.act||0}</div></div>
       <div class="bb-row"><div class="bb-lbl">Transport</div><div class="bb-track"><div class="bb-fill trans" style="width:${pct(b.trans)}%"></div></div><div class="bb-val">£${b.trans||0}</div></div>
     </div>
-    <button class="rp-link-btn">View full budget →</button>`;
+    <a href="${budgetUrl}" class="rp-link-btn" style="display:block;text-align:center;text-decoration:none;">View full budget →</a>\`;
 }
 
 function renderKeyBookings() {

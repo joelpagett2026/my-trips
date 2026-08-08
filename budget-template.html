@@ -67,7 +67,7 @@ const status = params.get('status') || 'upcoming';
 const slug   = params.get('slug') || 'new-trip';
 
 // Use slug as the database record ID
-const RECORD_ID = slug;
+const RECORD_ID = slug.replace('-budget', '-v2');
 // Budget-specific derived values (computed after bake)
 const _trav = parseInt(trav) || 2;
 const TRIP_URL = '/' + slug.replace('-budget','') + '-v2.html';

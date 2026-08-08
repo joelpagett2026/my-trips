@@ -522,6 +522,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
    - Timeline runs left-to-right full width
    - Bottom navigation bar for day switching + actions
    ══════════════════════════════════════════════════════════════════ */
+.mob-nav { display: none; }
+
 @media (max-width: 768px) {
 
   /* Hide desktop chrome */
@@ -582,6 +584,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .tl-add-btn { font-size: 11px; padding: 9px; }
 
   /* ── BOTTOM NAV BAR ── */
+  .mob-nav { display: flex; }
   .mob-nav {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
     background: var(--surface);
