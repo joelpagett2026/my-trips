@@ -87,7 +87,7 @@ $itineraries = [
     ['slug' => 'gothenburg-2026', 'filename' => 'gothenburg-2026.html',   'dest' => 'Gothenburg',         'dep' => '09/10/2026', 'ret' => '12/10/2026', 'trav' => '2', 'status' => 'planning'],
     ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
     ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
-    ['slug' => 'porto-budget',       'filename' => 'porto-budget.html',     'dest' => 'Porto',  'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
+    ['slug' => 'porto-2026-v2',      'filename' => 'porto-budget.html',     'dest' => 'Porto',  'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
     ['slug' => 'porto-2026-v2',     'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
     ['slug' => 'graz-ljubljana-lake-bled-2027', 'filename' => 'graz-ljubljana-lake-bled-2027.html', 'dest' => 'Graz, Ljubljana & Lake Bled', 'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'],
 ];

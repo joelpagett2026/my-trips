@@ -67,10 +67,10 @@ const status = params.get('status') || 'upcoming';
 const slug   = params.get('slug') || 'new-trip';
 
 // Use slug as the database record ID
-const RECORD_ID = slug.replace('-budget', '-v2');
+const RECORD_ID = slug;
 // Budget-specific derived values (computed after bake)
 const _trav = parseInt(trav) || 2;
-const TRIP_URL = '/' + slug.replace('-budget','') + '-v2.html';
+const TRIP_URL = '/' + slug + '-v2.html';
 
 const AUTH_TOKEN = '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395';
 
