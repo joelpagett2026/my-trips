@@ -57,17 +57,20 @@
 </div>
 
 <script>
-// ── BAKE POINT ──────────────────────────────────────────────────────
 // Read URL params
-const params   = new URLSearchParams(window.location.search);
-const dest     = params.get('dest') || 'Trip';
-const dep      = params.get('dep')  || '';
-const ret      = params.get('ret')  || '';
-const trav     = parseInt(params.get('trav') || '2');
-const slug     = params.get('slug') || 'trip';
-const TRIP_URL = '/' + slug + '.html';
-const RECORD_ID = slug.replace('-budget','');
-// ────────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const dest   = params.get('dest') || 'New Trip';
+const dep    = params.get('dep')  || '';
+const ret    = params.get('ret')  || '';
+const trav   = params.get('trav') || '2';
+const status = params.get('status') || 'upcoming';
+const slug   = params.get('slug') || 'new-trip';
+
+// Use slug as the database record ID
+const RECORD_ID = slug;
+// Budget-specific derived values (computed after bake)
+const _trav = parseInt(trav) || 2;
+const TRIP_URL = '/' + slug.replace('-budget','') + '-v2.html';
 
 const AUTH_TOKEN = '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395';
 
@@ -109,7 +112,7 @@ function rowIco(type, kicker) {
 
 // ── EXTRACT BUDGET DATA FROM STATE ─────────────────────────────────
 function extractBudget(state) {
-  const numTrav = trav;
+  const numTrav = _trav;
   const hotels     = [];
   const flights    = [];
   const transport  = [];
@@ -184,7 +187,7 @@ async function loadAndRender() {
   const flag = {'Porto':'🇵🇹','Hamburg':'🇩🇪','Cyprus':'🇨🇾','China':'🇨🇳','Dubai':'🇦🇪','Costa Rica':'🇨🇷','Canada':'🇨🇦'}[dest] || '🌍';
   document.getElementById('sb-flag').textContent = flag;
   document.getElementById('sb-name').textContent = dest;
-  document.getElementById('sb-meta').textContent = (dep&&ret ? dep+' → '+ret+'\n' : '') + trav + ' traveller' + (trav!==1?'s':'');
+  document.getElementById('sb-meta').textContent = (dep&&ret ? dep+' → '+ret+'\n' : '') + trav + ' traveller' + (_trav!==1?'s':'');
   document.getElementById('tb-title').textContent = dest + ' · Budget';
   document.getElementById('tb-kicker').textContent = dep && ret ? dep + ' – ' + ret : 'Budget';
 
