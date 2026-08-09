@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=53">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=54">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -58,6 +58,9 @@
 
   <!-- TOP BAR -->
   <div class="v2-topbar">
+    <button class="tb-hamburger" id="tb-hamburger" onclick="toggleMobMenu()" aria-label="Menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <div class="tb-left">
       <div class="tb-kicker" id="tb-kicker">Loading…</div>
       <div class="tb-title" id="tb-title"></div>
@@ -413,6 +416,39 @@
   </button>
 </div>
 
+<!-- MOBILE NAV MENU -->
+<div class="mob-menu-overlay" id="mob-menu-overlay" onclick="closeMobMenu()"></div>
+<div class="mob-menu" id="mob-menu">
+  <div class="mob-menu-head">
+    <div class="mob-menu-trip" id="mob-menu-trip">Porto</div>
+    <button class="mob-menu-close" onclick="closeMobMenu()">×</button>
+  </div>
+  <nav class="mob-menu-nav">
+    <button class="mob-menu-item active" id="mmb-itinerary" onclick="closeMobMenu();setView('itinerary')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Itinerary
+    </button>
+    <button class="mob-menu-item" id="mmb-budget" onclick="closeMobMenu();setView('budget')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Budget
+    </button>
+    <button class="mob-menu-item" id="mmb-bookings" onclick="closeMobMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      Bookings
+    </button>
+    <button class="mob-menu-item" id="mmb-map" onclick="closeMobMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+      Map
+    </button>
+  </nav>
+  <div class="mob-menu-footer">
+    <button class="mob-menu-item" onclick="closeMobMenu();location.href='/trips/'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      All trips
+    </button>
+  </div>
+</div>
+
 <!-- SNAPSHOT BAR -->
 <div class="snapshot-bar" id="snapshot-bar">
   <span id="snapshot-msg">Snapshot saved</span>
@@ -620,6 +656,9 @@ function renderMobNav() {
 }
 
 function renderSidebar() {
+  // Sync mobile menu trip name
+  const mmTrip = document.getElementById('mob-menu-trip');
+  if (mmTrip) mmTrip.textContent = STATE.meta?.dest || dest;
   const m = STATE.meta;
   document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
   document.getElementById('sb-name').textContent = m.dest || dest;
@@ -1902,6 +1941,28 @@ function openMapsForItem() {
   const q = encodeURIComponent(item.title + (item.sub ? ', ' + item.sub : ''));
   window.open('https://www.google.com/maps/search/' + q, '_blank');
 }
+
+function toggleMobMenu() {
+  const menu = document.getElementById('mob-menu');
+  const overlay = document.getElementById('mob-menu-overlay');
+  const open = menu.classList.contains('open');
+  menu.classList.toggle('open', !open);
+  overlay.classList.toggle('open', !open);
+}
+function closeMobMenu() {
+  document.getElementById('mob-menu').classList.remove('open');
+  document.getElementById('mob-menu-overlay').classList.remove('open');
+}
+
+// Keep mobile menu active state in sync with setView
+const _origSetView = setView;
+setView = function(view) {
+  _origSetView(view);
+  ['itinerary','budget','bookings','map'].forEach(v => {
+    const btn = document.getElementById('mmb-' + v);
+    if (btn) btn.classList.toggle('active', v === view);
+  });
+};
 
 (function waitForAuth() {
   if (typeof isAuthed !== 'function' || typeof dbLoad !== 'function') {
