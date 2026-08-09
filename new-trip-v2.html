@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=73">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=74">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -2182,7 +2182,7 @@ function renderMapView() {
   const dayFilterHtml = isMobile
     ? `<select class="mf-select" onchange="setMapFilter('day',this.value)">
         <option value="all" ${_mapDayFilter==='all'?'selected':''}>All days</option>
-        ${days.map((d,i) => { const dt=(d.date||'').split('/').slice(0,2).join('/'); return `<option value="${i}" ${_mapDayFilter===String(i)?'selected':''}>Day ${i+1} · ${dt} · ${d.loc||''}</option>`; }).join('')}
+        ${days.map((d,i) => { const dt=(d.date||'').split('/').slice(0,2).join('/'); const loc=(d.loc||'').split(' ')[0]; return `<option value="${i}" ${_mapDayFilter===String(i)?'selected':''}>Day ${i+1} · ${dt} · ${loc}</option>`; }).join('')}
        </select>`
     : `<div class="mf-row">
         <button class="mf-btn ${_mapDayFilter==='all'?'active':''}" onclick="setMapFilter('day','all')">All days</button>
