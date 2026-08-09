@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=69">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=70">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -119,6 +119,16 @@
   <!-- BUDGET VIEW -->
   <div class="v2-content" id="view-budget" style="display:none;overflow-y:auto;">
     <div id="budget-main" style="flex:1;overflow-y:auto;min-width:0;width:100%;"></div>
+  </div>
+
+  <!-- MAP VIEW -->
+  <div class="v2-content" id="view-map" style="display:none;position:relative;overflow:hidden;">
+    <div id="map-sidebar" class="map-sidebar">
+      <div class="map-filters" id="map-filters"></div>
+      <div class="map-list" id="map-list"></div>
+    </div>
+    <div id="map-canvas" style="flex:1;height:100%;"></div>
+    <div id="map-status" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.95);padding:16px 24px;border-radius:12px;font-size:13px;color:var(--text2);font-weight:600;box-shadow:var(--shadow-lift);text-align:center;"></div>
   </div>
 
   <!-- BOOKINGS VIEW -->
@@ -439,7 +449,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       Bookings
     </button>
-    <button class="mob-menu-item" id="mmb-map" onclick="closeMobMenu()">
+    <button class="mob-menu-item" id="mmb-map" onclick="closeMobMenu();setView('map')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
       Map
     </button>
@@ -1815,14 +1825,16 @@ function setView(view) {
   currentView = view;
   const isBudget = view === 'budget';
   const isBookings = view === 'bookings';
-  document.getElementById('view-itinerary').style.display = (!isBudget && !isBookings) ? '' : 'none';
+  const isMap = view === 'map';
+  document.getElementById('view-itinerary').style.display = (!isBudget && !isBookings && !isMap) ? '' : 'none';
   document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
   document.getElementById('view-bookings').style.display  = isBookings ? '' : 'none';
+  document.getElementById('view-map').style.display       = isMap ? '' : 'none';
   document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
   document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
 
   // Hide/show day selector and itinerary-specific topbar controls
-  const hideChrome = isBudget || view === 'bookings';
+  const hideChrome = isBudget || view === 'bookings' || view === 'map';
   document.getElementById('day-selector').style.display = hideChrome ? 'none' : '';
   ['tb-add-day','tb-share','tb-mode','tb-status'].forEach(id => {
     const el = document.getElementById(id);
@@ -1841,6 +1853,10 @@ function setView(view) {
     document.getElementById('tb-kicker').textContent = 'Bookings';
     document.getElementById('tb-title').textContent  = (STATE.meta && STATE.meta.dest) || dest;
     renderBookingsView();
+  } else if (view === 'map') {
+    document.getElementById('tb-kicker').textContent = 'Map';
+    document.getElementById('tb-title').textContent  = (STATE.meta && STATE.meta.dest) || dest;
+    initMapView();
   } else {
     render();
   }
@@ -2008,7 +2024,22 @@ function renderBookingsView() {
     ...cats.map(c=>({key:c.key,label:c.label,count:c.count}))
   ];
 
-  const filtered = bookingsFilter==='all' ? all : all.filter(b=>b.cat===bookingsFilter);
+  const sections = [
+    { key:'hotel',      label:'Hotels',      items:hotels,     color:'#0e7a87' },
+    { key:'flight',     label:'Flights',     items:flights,    color:'#6366f1' },
+    { key:'transport',  label:'Travel',      items:transport,  color:'#d97b0a' },
+    { key:'attraction', label:'Attractions', items:attractions,color:'#1a8a52' },
+    { key:'dining',     label:'Dining',      items:dining,     color:'#9333ea' },
+  ].filter(sec => sec.items.length > 0);
+
+  const renderSection = (sec) => `
+    <div class="bk-section">
+      <div class="bk-section-head" style="border-left:3px solid ${sec.color}">
+        <span class="bk-section-title">${sec.label}</span>
+        <span class="bk-section-count">${sec.items.length}</span>
+      </div>
+      <div class="bk-list">${sec.items.map(b => mkCard({...b, cat:sec.key})).join('')}</div>
+    </div>`;
 
   el.innerHTML = `
     <div class="bk-summary">
@@ -2023,31 +2054,219 @@ function renderBookingsView() {
         </div>`).join('')}
       </div>
     </div>
-
-    ${upcoming.length ? `<div class="bk-upcoming">
-      <div class="bk-upcoming-label">Upcoming</div>
-      ${upcoming.map(b=>`<div class="bk-upcoming-item">
-        <div class="bk-upcoming-ico ${b.cat}">${catIcons[b.cat]||''}</div>
-        <div class="bk-upcoming-info">
-          <div class="bk-upcoming-name">${b.name}</div>
-          <div class="bk-upcoming-meta">${b.date||''} ${b.depart||''}</div>
-        </div>
-        ${statusBadge(b.status)}
-      </div>`).join('')}
-    </div>` : ''}
-
-    <div class="bk-filters">
-      ${filters.map(f=>`<button class="bk-filter ${bookingsFilter===f.key?'active':''}" onclick="setBookingsFilter('${f.key}')">${f.label} <span>${f.count}</span></button>`).join('')}
-    </div>
-
-    <div class="bk-list">
-      ${filtered.length ? filtered.map(mkCard).join('') : '<div class="bk-empty">No bookings in this category yet.</div>'}
-    </div>`;
+    ${sections.map(renderSection).join('')}`;
 }
 
 function setBookingsFilter(key) {
   bookingsFilter = key;
   renderBookingsView();
+}
+
+// ── MAP VIEW ─────────────────────────────────────────────────────────
+const MAPS_API_KEY = 'AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8';
+let _mapInstance = null;
+let _mapMarkers  = [];
+let _mapInfoWin  = null;
+let _mapDayFilter = 'all';
+let _mapCatFilter = 'all';
+let _mapGeocoding = false;
+
+const MAP_CAT_COLORS = {
+  act:    '#0e7a87',
+  ticket: '#6366f1',
+  meal:   '#d97b0a',
+  hotel:  '#1a8a52',
+  move:   '#888888',
+};
+
+function itemsToMap(state) {
+  const items = [];
+  (state.days||[]).forEach((d, di) => {
+    (d.items||[]).forEach(it => {
+      if (!it || !it.title) return;
+      if (it.type === 'move') return; // skip transport
+      if (!it._geo || !it._geo.lat) return;
+      items.push({ ...it, _dayIdx: di, _dayDate: d.date, _dayLoc: d.loc });
+    });
+  });
+  return items;
+}
+
+function itemsNeedingGeo(state) {
+  const out = [];
+  (state.days||[]).forEach((d, di) => {
+    (d.items||[]).forEach((it, ii) => {
+      if (!it || !it.title) return;
+      if (it.type === 'move') return;
+      if (it._geo && it._geo.lat) return;
+      out.push({ dayIdx: di, itemIdx: ii, title: it.title, city: d.loc||dest });
+    });
+  });
+  return out;
+}
+
+async function geocodeBatch(items) {
+  const status = document.getElementById('map-status');
+  status.style.display = 'block';
+  let done = 0;
+  for (const item of items) {
+    const it = STATE.days[item.dayIdx].items[item.itemIdx];
+    if (!it) continue;
+    status.innerHTML = `Locating places… ${done}/${items.length}<br><small style="opacity:.6">${it.title}</small>`;
+    try {
+      const r = await fetch('/api.php?action=geocode_item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
+        body: JSON.stringify({ place: it.title, city: item.city }),
+      });
+      const j = await r.json();
+      if (j.ok && j.data?.geo) {
+        it._geo = j.data.geo;
+        scheduleSave();
+      }
+    } catch(e) { /* skip failed */ }
+    done++;
+    await new Promise(r => setTimeout(r, 120)); // brief pause between calls
+  }
+  status.style.display = 'none';
+}
+
+async function loadGoogleMaps() {
+  if (window.google && window.google.maps) return;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=places`;
+    s.async = true;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function initMapView() {
+  if (_mapGeocoding) return;
+
+  // Geocode any items that don't have geo yet
+  const needsGeo = itemsNeedingGeo(STATE);
+  if (needsGeo.length > 0) {
+    _mapGeocoding = true;
+    await geocodeBatch(needsGeo);
+    _mapGeocoding = false;
+  }
+
+  // Load Google Maps
+  try {
+    await loadGoogleMaps();
+  } catch(e) {
+    document.getElementById('map-status').style.display = 'block';
+    document.getElementById('map-status').textContent = 'Could not load Google Maps';
+    return;
+  }
+
+  renderMapView();
+}
+
+function renderMapView() {
+  const allItems = itemsToMap(STATE);
+  const filtered = allItems.filter(it => {
+    if (_mapDayFilter !== 'all' && it._dayIdx !== parseInt(_mapDayFilter)) return false;
+    if (_mapCatFilter !== 'all' && it.type !== _mapCatFilter) return false;
+    return true;
+  });
+
+  // Render filter bar
+  const days = STATE.days||[];
+  const filterEl = document.getElementById('map-filters');
+  filterEl.innerHTML = `
+    <div class="mf-row">
+      <button class="mf-btn ${_mapDayFilter==='all'?'active':''}" onclick="setMapFilter('day','all')">All days</button>
+      ${days.map((d,i) => `<button class="mf-btn ${_mapDayFilter===String(i)?'active':''}" onclick="setMapFilter('day','${i}')">Day ${i+1}</button>`).join('')}
+    </div>
+    <div class="mf-row">
+      <button class="mf-btn ${_mapCatFilter==='all'?'active':''}" onclick="setMapFilter('cat','all')">All</button>
+      <button class="mf-btn cat-act ${_mapCatFilter==='act'?'active':''}" onclick="setMapFilter('cat','act')">Places</button>
+      <button class="mf-btn cat-meal ${_mapCatFilter==='meal'?'active':''}" onclick="setMapFilter('cat','meal')">Meals</button>
+      <button class="mf-btn cat-ticket ${_mapCatFilter==='ticket'?'active':''}" onclick="setMapFilter('cat','ticket')">Tickets</button>
+      <button class="mf-btn cat-hotel ${_mapCatFilter==='hotel'?'active':''}" onclick="setMapFilter('cat','hotel')">Hotels</button>
+    </div>`;
+
+  // Render list
+  const listEl = document.getElementById('map-list');
+  listEl.innerHTML = filtered.length ? filtered.map((it,i) => `
+    <div class="ml-item" onclick="focusMapItem(${i})" data-mi="${i}">
+      <div class="ml-dot" style="background:${MAP_CAT_COLORS[it.type]||'#888'}"></div>
+      <div class="ml-info">
+        <div class="ml-name">${it.title}</div>
+        <div class="ml-meta">Day ${it._dayIdx+1} · ${it._dayLoc||''}</div>
+      </div>
+    </div>`).join('') : '<div class="ml-empty">No places to show for this filter.</div>';
+
+  // Render map
+  const canvas = document.getElementById('map-canvas');
+  if (filtered.length === 0) return;
+
+  const bounds = new google.maps.LatLngBounds();
+  filtered.forEach(it => bounds.extend({ lat: it._geo.lat, lng: it._geo.lng }));
+
+  if (!_mapInstance) {
+    _mapInstance = new google.maps.Map(canvas, {
+      zoom: 13, center: bounds.getCenter(),
+      mapTypeControl: false, fullscreenControl: false, streetViewControl: false,
+      styles: [{ featureType:'poi', elementType:'labels', stylers:[{visibility:'off'}] }]
+    });
+    _mapInfoWin = new google.maps.InfoWindow();
+  }
+
+  // Clear old markers
+  _mapMarkers.forEach(m => m.setMap(null));
+  _mapMarkers = [];
+
+  filtered.forEach((it, i) => {
+    const color = MAP_CAT_COLORS[it.type] || '#888';
+    const marker = new google.maps.Marker({
+      position: { lat: it._geo.lat, lng: it._geo.lng },
+      map: _mapInstance,
+      title: it.title,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 9,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: '#fff',
+        strokeWeight: 2,
+      }
+    });
+    marker.addListener('click', () => {
+      _mapInfoWin.setContent(`
+        <div style="font-family:Montserrat,sans-serif;min-width:160px;max-width:220px;">
+          <div style="font-size:13px;font-weight:700;color:#444;margin-bottom:4px">${it.title}</div>
+          <div style="font-size:11px;color:#888;margin-bottom:8px">Day ${it._dayIdx+1} · ${it._dayDate||''}</div>
+          ${it._geo.address ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">${it._geo.address}</div>` : ''}
+          <button onclick="setView('itinerary');setDay(${it._dayIdx})" style="font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;background:#0e7a87;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;">View in itinerary</button>
+        </div>`);
+      _mapInfoWin.open(_mapInstance, marker);
+      // Highlight list item
+      document.querySelectorAll('.ml-item').forEach(el => el.classList.remove('active'));
+      const el = document.querySelector(`[data-mi="${i}"]`);
+      if (el) { el.classList.add('active'); el.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+    });
+    _mapMarkers.push(marker);
+  });
+
+  _mapInstance.fitBounds(bounds);
+}
+
+function focusMapItem(idx) {
+  if (!_mapMarkers[idx]) return;
+  _mapInstance.panTo(_mapMarkers[idx].getPosition());
+  _mapInstance.setZoom(15);
+  google.maps.event.trigger(_mapMarkers[idx], 'click');
+}
+
+function setMapFilter(type, val) {
+  if (type === 'day') _mapDayFilter = val;
+  else _mapCatFilter = val;
+  renderMapView();
 }
 
 function renderBudgetView() {

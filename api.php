@@ -276,6 +276,62 @@ const RECORD_ID = slug;",
         file_put_contents(__DIR__ . '/secrets.php', $php);
         ok(['written' => true, 'keys' => array_keys($secrets)]);
 
+    // ── GEOCODE ITEM ─────────────────────────────────────────────────
+    // POST /api.php?action=geocode_item  { "place": "Title", "city": "Porto" }
+    // Returns { geo: { place_id, lat, lng, name, address, types, confidence } }
+    case 'geocode_item':
+        $PLACES_KEY_GEO = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
+        if (!$PLACES_KEY_GEO) { ok(['geo' => null, 'error' => 'No Places API key']); break; }
+
+        $place = trim($body['place'] ?? '');
+        $city  = trim($body['city']  ?? '');
+        if (!$place) fail('Missing place');
+
+        $query = $city ? $place . ', ' . $city : $place;
+
+        $geoFetch = function(string $url): array {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_TIMEOUT=>8,
+                CURLOPT_HTTPHEADER=>['User-Agent: MyTripsApp/1.0']]);
+            $r = curl_exec($ch); curl_close($ch);
+            return json_decode($r ?: '{}', true) ?: [];
+        };
+
+        // Try findplacefromtext first (most accurate)
+        $findUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
+            . '?input=' . urlencode($query)
+            . '&inputtype=textquery'
+            . '&fields=place_id,name,formatted_address,geometry,types'
+            . '&key=' . $PLACES_KEY_GEO;
+        $findData = $geoFetch($findUrl);
+        $candidate = $findData['candidates'][0] ?? null;
+
+        if (!$candidate || empty($candidate['geometry'])) {
+            // Fallback: textsearch
+            $textUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
+                . '?query=' . urlencode($query)
+                . '&key=' . $PLACES_KEY_GEO;
+            $textData = $geoFetch($textUrl);
+            $candidate = $textData['results'][0] ?? null;
+        }
+
+        if (!$candidate || empty($candidate['geometry']['location'])) {
+            ok(['geo' => null, 'error' => 'Not found']);
+            break;
+        }
+
+        $loc = $candidate['geometry']['location'];
+        ok(['geo' => [
+            'place_id'  => $candidate['place_id'] ?? '',
+            'lat'       => $loc['lat'],
+            'lng'       => $loc['lng'],
+            'name'      => $candidate['name'] ?? $place,
+            'address'   => $candidate['formatted_address'] ?? $candidate['vicinity'] ?? '',
+            'types'     => array_slice($candidate['types'] ?? [], 0, 3),
+            'confidence'=> 'ok',
+        ]]);
+        break;
+
     // ── GENERATE ABOUT ───────────────────────────────────────────────
     // POST /api.php?action=generate_about  { "place": "São Bento Station", "city": "Porto" }
     // Returns { about: { significant, history[], lookout[], fact } }

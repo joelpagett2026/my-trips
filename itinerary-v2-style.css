@@ -876,3 +876,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-badge-cancelled { background:rgba(229,62,62,0.12);  color:#e53e3e; }
 
 .bk-empty { padding:32px; text-align:center; color:var(--text3); font-size:12.5px; font-style:italic; }
+
+/* ── MAP VIEW ── */
+#view-map { overflow: hidden !important; }
+.map-sidebar {
+  width: 280px; flex-shrink: 0; background: var(--surface);
+  border-right: 1px solid var(--line); display: flex;
+  flex-direction: column; overflow: hidden;
+}
+.map-filters { padding: 12px 12px 0; flex-shrink: 0; }
+.mf-row { display: flex; gap: 5px; margin-bottom: 6px; flex-wrap: wrap; }
+.mf-btn {
+  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--line);
+  background: none; font-family: var(--font); font-size: 10.5px; font-weight: 700;
+  color: var(--text2); cursor: pointer; transition: all 0.12s; white-space: nowrap;
+}
+.mf-btn:hover { border-color: var(--teal); color: var(--teal); }
+.mf-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+.mf-btn.cat-meal.active    { background: #d97b0a; border-color: #d97b0a; }
+.mf-btn.cat-ticket.active  { background: #6366f1; border-color: #6366f1; }
+.mf-btn.cat-hotel.active   { background: #1a8a52; border-color: #1a8a52; }
+
+.map-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+.ml-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; cursor: pointer; transition: background 0.1s;
+  border-bottom: 1px solid var(--line);
+}
+.ml-item:hover, .ml-item.active { background: var(--teal-xdim); }
+.ml-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ml-info { min-width: 0; flex: 1; }
+.ml-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.ml-meta { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.ml-empty { padding: 20px 14px; font-size: 12px; color: var(--text3); font-style: italic; }
+
+@media (max-width: 768px) {
+  #view-map { flex-direction: column !important; }
+  .map-sidebar { width: 100%; height: 200px; border-right: none; border-bottom: 1px solid var(--line); }
+  #map-canvas { flex: 1; min-height: 0; }
+  .map-list { flex-direction: row; display: flex; overflow-x: auto; overflow-y: hidden; padding: 6px; gap: 6px; }
+  .ml-item { flex-direction: column; align-items: flex-start; min-width: 140px; border-bottom: none; border-radius: 8px; background: var(--bg); }
+}
