@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=61">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=62">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -625,12 +625,16 @@ function showSnapshotBar(show) {
 
 // ── RENDER ────────────────────────────────────────────────────────────
 function render() {
-  renderSidebar();
-  renderDaySelector();
-  renderMobNav();
-  renderDaySummary();
-  renderTimeline();
-  renderRightPanel();
+  const fns = [renderSidebar, renderDaySelector, renderMobNav, renderDaySummary, renderTimeline, renderRightPanel];
+  for (const fn of fns) {
+    try { fn(); }
+    catch(e) {
+      const kb = document.getElementById('tb-kicker');
+      if (kb) kb.textContent = 'Error in ' + fn.name + ': ' + (e.message||e).toString().slice(0,60);
+      console.error(fn.name, e);
+      return;
+    }
+  }
 }
 
 function renderMobNav() {
