@@ -681,7 +681,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── INLINE BUDGET VIEW ── */
 #view-budget { background:var(--bg); }
-#budget-main { max-width:1200px; }
+#budget-main { max-width:1200px; padding:24px 24px 48px; }
 
 .bv-summary {
   background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow);
