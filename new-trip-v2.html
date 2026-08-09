@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=52">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=53">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1153,6 +1153,7 @@ function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('dr-about-body').innerHTML = '';
+  const regenBtn = document.getElementById('dr-btn-regen'); if (regenBtn) regenBtn.style.display = 'none';
 }
 
 function editCurrentItem() {
@@ -1737,10 +1738,11 @@ function renderAbout(about) {
       <div class="ab-icon-h">Interesting fact</div>
       <p class="ab-p">${about.fact}</p>
     </div>` : ''}
-    <button onclick="generateAbout(true)" class="ab-regen">↻ Regenerate</button>
   `;
 
   document.getElementById('dr-about-wrap').style.display = 'block';
+  const regenBtn = document.getElementById('dr-btn-regen');
+  if (regenBtn) regenBtn.style.display = '';
 }
 
 // ── VIEW SWITCHING ───────────────────────────────────────────────────
@@ -1893,6 +1895,14 @@ async function saveBudgetAvios(flightIdx, value) {
 }
 
 // Wait for auth.js + db.js to be ready, then init
+function openMapsForItem() {
+  if (!drawerItem) return;
+  const item = STATE.days[drawerItem.dayIdx]?.items?.[drawerItem.itemIdx];
+  if (!item) return;
+  const q = encodeURIComponent(item.title + (item.sub ? ', ' + item.sub : ''));
+  window.open('https://www.google.com/maps/search/' + q, '_blank');
+}
+
 (function waitForAuth() {
   if (typeof isAuthed !== 'function' || typeof dbLoad !== 'function') {
     setTimeout(waitForAuth, 50); return;
