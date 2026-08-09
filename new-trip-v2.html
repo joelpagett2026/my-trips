@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=48">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=49">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -519,7 +519,14 @@ async function loadData() {
     }
   } catch(e) {
     console.error('Load failed', e);
-    document.getElementById('tb-kicker').textContent = 'Failed to load — refresh to retry';
+    const msg = e && e.message ? e.message : String(e);
+    document.getElementById('tb-kicker').textContent = msg.includes('token') || msg.includes('auth') 
+      ? 'Session expired — re-enter PIN' : 'Load error: ' + msg.slice(0,40);
+    // If token issue, trigger PIN overlay by calling auth.js clearSession + reload
+    if (msg.includes('token') || msg.includes('auth') || !msg) {
+      if (typeof clearSession === 'function') clearSession();
+      setTimeout(() => location.reload(), 500);
+    }
     return;
   }
   render();
@@ -1895,14 +1902,17 @@ async function saveBudgetAvios(flightIdx, value) {
 
 // Wait for auth.js + db.js to be ready, then init
 (function waitForAuth() {
-  if (typeof isAuthed === 'function' && typeof dbLoad === 'function' && isAuthed()) {
-    init().catch(e => {
-      console.error('Init failed:', e);
-      document.getElementById('tb-kicker').textContent = 'Error loading — try refreshing';
-    });
-    return;
+  if (typeof isAuthed !== 'function' || typeof dbLoad !== 'function') {
+    setTimeout(waitForAuth, 50); return;
   }
-  setTimeout(waitForAuth, 50);
+  if (!isAuthed()) {
+    // Not authed — auth.js will show PIN overlay, wait for it to complete
+    setTimeout(waitForAuth, 200); return;
+  }
+  init().catch(e => {
+    console.error('Init failed:', e);
+    document.getElementById('tb-kicker').textContent = 'Error: ' + (e && e.message ? e.message.slice(0,50) : 'unknown');
+  });
 })();
 </script>
 </body>
