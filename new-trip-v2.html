@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=45">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=46">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1890,7 +1890,15 @@ async function saveBudgetAvios(flightIdx, value) {
   renderBudgetView();
 }
 
-window.addEventListener('load', () => { init(); });
+// Wait for auth.js to verify PIN before running init (matches original template pattern)
+(function waitForAuth() {
+  if (typeof isAuthed === 'function' && isAuthed()) {
+    init();
+    return;
+  }
+  // auth.js not ready yet — poll
+  setTimeout(waitForAuth, 50);
+})();
 </script>
 </body>
 </html>
