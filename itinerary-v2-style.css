@@ -542,8 +542,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   /* ── TIMELINE FILLS REMAINING SPACE ── */
   .v2-content { flex: 1; overflow: hidden; display: flex; min-height: 0; }
   .tl-col {
-    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: 14px 14px 130px; /* generous bottom clears nav + safe area */
+    flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch;
+    padding: 14px 14px calc(160px + env(safe-area-inset-bottom, 20px));
   }
   #view-budget { overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
   #budget-main { padding-bottom: 130px !important; }
