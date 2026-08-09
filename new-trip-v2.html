@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=49">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=50">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -652,22 +652,9 @@ function renderDaySelector() {
 function renderDaySummary() {
   const d = STATE.days[activeDay];
   if (!d) return;
-  const items = d.items || [];
-  const meals = items.filter(it => it && it.type==='meal').length;
-  const acts  = items.filter(it => it && it.type==='act').length;
-  const tix   = items.filter(it => it && it.booking && it.booking.tickets).length;
-  const warns = items.filter(it => it && it.status==='attention').length;
-  const warnHtml = warns ? `<div class="ds-sep"></div><div class="ds-warn">${ICO.warn} ${warns} needs attention</div>` : '';
-  document.getElementById('day-summary').innerHTML = `
-    <div class="ds-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${acts} activit${acts===1?'y':'ies'}</div>
-    <div class="ds-sep"></div>
-    <div class="ds-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>${meals} meal${meals===1?'':'s'}</div>
-    ${tix ? `<div class="ds-sep"></div><div class="ds-pill">${ICO.ticket.replace('<svg','<svg width="11" height="11"')} ${tix} ticket${tix===1?'':'s'}</div>` : ''}
-    ${warnHtml}`;
-
-  // Topbar kicker + title
+  // Update topbar kicker and title
   document.getElementById('tb-kicker').textContent = `Day ${activeDay+1} of ${STATE.days.length} · ${d.date||''}`;
-  document.getElementById('tb-title').textContent = d.loc || d.title || dest;
+  document.getElementById('tb-title').textContent  = d.loc || d.title || dest;
 }
 
 // Infer a period from an item that has no explicit period set
