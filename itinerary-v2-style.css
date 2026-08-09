@@ -753,7 +753,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: rgba(255,255,255,0.15); border: none;
   color: #fff; width: 36px; height: 36px; border-radius: 9px;
   cursor: pointer; flex-shrink: 0; align-items: center; justify-content: center;
-  margin-right: 10px; transition: background 0.13s;
+  margin-left: 8px; transition: background 0.13s;
 }
 .tb-hamburger:hover { background: rgba(255,255,255,0.25); }
 
@@ -764,10 +764,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .mob-menu-overlay.open { display: block; }
 
 .mob-menu {
-  position: fixed; top: 0; left: 0; bottom: 0; z-index: 81;
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 81;
   width: 260px; background: var(--sidebar);
   display: flex; flex-direction: column;
-  transform: translateX(-100%);
+  transform: translateX(100%);
   transition: transform 0.24s cubic-bezier(.4,0,.2,1);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
