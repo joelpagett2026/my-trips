@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=68">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=69">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -119,6 +119,11 @@
   <!-- BUDGET VIEW -->
   <div class="v2-content" id="view-budget" style="display:none;overflow-y:auto;">
     <div id="budget-main" style="flex:1;overflow-y:auto;min-width:0;width:100%;"></div>
+  </div>
+
+  <!-- BOOKINGS VIEW -->
+  <div class="v2-content" id="view-bookings" style="display:none;overflow-y:auto;">
+    <div id="bookings-main" style="flex:1;overflow-y:auto;min-width:0;width:100%;"></div>
   </div>
 
 </div>
@@ -430,7 +435,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Budget
     </button>
-    <button class="mob-menu-item" id="mmb-bookings" onclick="closeMobMenu()">
+    <button class="mob-menu-item" id="mmb-bookings" onclick="closeMobMenu();setView('bookings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       Bookings
     </button>
@@ -1809,26 +1814,33 @@ let currentView = 'itinerary';
 function setView(view) {
   currentView = view;
   const isBudget = view === 'budget';
-  document.getElementById('view-itinerary').style.display = isBudget ? 'none' : '';
+  const isBookings = view === 'bookings';
+  document.getElementById('view-itinerary').style.display = (!isBudget && !isBookings) ? '' : 'none';
   document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
+  document.getElementById('view-bookings').style.display  = isBookings ? '' : 'none';
   document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
   document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
 
   // Hide/show day selector and itinerary-specific topbar controls
-  document.getElementById('day-selector').style.display = isBudget ? 'none' : '';
+  const hideChrome = isBudget || view === 'bookings';
+  document.getElementById('day-selector').style.display = hideChrome ? 'none' : '';
   ['tb-add-day','tb-share','tb-mode','tb-status'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.style.display = isBudget ? 'none' : '';
+    if (el) el.style.display = hideChrome ? 'none' : '';
   });
   // Hide day list in sidebar
   const sbDays = document.querySelector('.sb-section-label');
-  if (sbDays) sbDays.style.display = isBudget ? 'none' : '';
-  document.getElementById('sb-days').style.display = isBudget ? 'none' : '';
+  if (sbDays) sbDays.style.display = hideChrome ? 'none' : '';
+  document.getElementById('sb-days').style.display = hideChrome ? 'none' : '';
 
   if (isBudget) {
     document.getElementById('tb-kicker').textContent = 'Budget';
     document.getElementById('tb-title').textContent  = (STATE.meta && STATE.meta.dest) || dest;
     renderBudgetView();
+  } else if (view === 'bookings') {
+    document.getElementById('tb-kicker').textContent = 'Bookings';
+    document.getElementById('tb-title').textContent  = (STATE.meta && STATE.meta.dest) || dest;
+    renderBookingsView();
   } else {
     render();
   }
@@ -1867,6 +1879,175 @@ function extractBudget(state) {
     }
   }
   return { hotels, flights, transport, attractions, numTrav };
+}
+
+// ── BOOKINGS VIEW ────────────────────────────────────────────────────
+
+function extractBookings(state) {
+  const numTrav = parseInt(state.meta?.trav || trav) || 2;
+  const parsePr = str => {
+    if (!str) return null;
+    const pp = /pp/i.test(str);
+    const m = String(str).replace(/,/g,'').match(/[\d.]+/);
+    return m ? parseFloat(m[0]) * (pp ? numTrav : 1) : null;
+  };
+
+  const hotels     = (state.meta?.hotels || []).map(h => ({
+    cat:'hotel', name:h.name, checkin:h.checkin, checkout:h.checkout,
+    nights:h.nights, price:parsePr(h.nightly) && h.nights ? parsePr(h.nightly)*h.nights : null,
+    ref:h.ref, breakfast:h.breakfast, photo:h.photo, status:'confirmed',
+    date:h.checkin,
+  }));
+
+  const flights=[], transport=[], attractions=[], dining=[];
+
+  for (const d of state.days||[]) {
+    for (const it of d.items||[]) {
+      if (!it) continue;
+      const b = it.booking||{};
+      const st = it.status||'';
+      const hasRef = !!(b.ref);
+      const hasUrl = !!(b.url);
+      const hasTix = !!(b.tickets);
+      const hasPrice = !!(b.price);
+      const isConfirmed = st==='confirmed'||st==='booked'||hasRef||hasUrl||(hasTix&&hasPrice);
+      if (!isConfirmed) continue;
+
+      const price = parsePr(b.price);
+      const base = { name:it.title, date:d.date, status:st||'confirmed', ref:b.ref||'',
+                     price, rawPrice:b.price, url:b.url, dayIdx:state.days.indexOf(d) };
+
+      if (it.type==='move') {
+        const k = it.kicker||(it.transport?.mode)||'';
+        const tr = it.transport||{};
+        const obj = {...base, kicker:k, from:tr.from, to:tr.to, depart:tr.depart, arrive:tr.arrive };
+        k==='Flight' ? flights.push(obj) : transport.push(obj);
+      } else if (it.type==='meal' && (st==='booked'||st==='confirmed')) {
+        dining.push({...base, cat:'dining', sub:it.sub});
+      } else if (it.type==='act'||it.type==='ticket') {
+        attractions.push({...base, cat:'attraction', tickets:b.tickets, sub:it.sub});
+      }
+    }
+  }
+  return { hotels, flights, transport, attractions, dining };
+}
+
+let bookingsFilter = 'all';
+
+function renderBookingsView() {
+  const el = document.getElementById('bookings-main');
+  if (!STATE?.days) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">No data</div>'; return; }
+
+  const { hotels, flights, transport, attractions, dining } = extractBookings(STATE);
+  const all = [
+    ...hotels.map(b=>({...b,cat:'hotel'})),
+    ...flights.map(b=>({...b,cat:'flight'})),
+    ...transport.map(b=>({...b,cat:'transport'})),
+    ...attractions.map(b=>({...b,cat:'attraction'})),
+    ...dining.map(b=>({...b,cat:'dining'})),
+  ].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+
+  const fmt = n => n ? '£'+n.toFixed(2).replace(/\.00$/,'') : null;
+  const statusBadge = s => {
+    const cls = s==='confirmed'||s==='booked' ? 'bk-badge-confirmed' : s==='cancelled' ? 'bk-badge-cancelled' : 'bk-badge-pending';
+    const lbl = s==='booked'?'Booked':s==='confirmed'?'Confirmed':s==='cancelled'?'Cancelled':'Pending';
+    return `<span class="bk-badge ${cls}">${lbl}</span>`;
+  };
+
+  // Summary
+  const total = all.length;
+  const cats = [
+    {key:'hotel',label:'Hotels',count:hotels.length,color:'#0e7a87'},
+    {key:'flight',label:'Flights',count:flights.length,color:'#6366f1'},
+    {key:'transport',label:'Travel',count:transport.length,color:'#d97b0a'},
+    {key:'attraction',label:'Attractions',count:attractions.length,color:'#1a8a52'},
+    {key:'dining',label:'Dining',count:dining.length,color:'#9333ea'},
+  ].filter(c=>c.count>0);
+
+  // Next upcoming booking
+  const today = new Date();
+  const todayStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  const upcoming = all.filter(b => (b.date||'') >= todayStr).slice(0,3);
+
+  const catIcons = {
+    hotel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    flight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+    transport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><line x1="8" y1="19" x2="16" y2="19"/><path d="M8 19l-2 2"/><path d="M16 19l2 2"/></svg>',
+    attraction: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>',
+    dining: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+  };
+
+  const mkCard = (b) => {
+    const ico = catIcons[b.cat] || catIcons.attraction;
+    const actions = [
+      b.url ? `<a href="${b.url}" target="_blank" class="bk-action">View ticket →</a>` : null,
+      `<button class="bk-action" onclick="setView('itinerary');setDay(${b.dayIdx||0})">View in itinerary</button>`,
+    ].filter(Boolean).join('');
+    const meta = [
+      b.date, b.depart&&b.arrive ? b.depart+' – '+b.arrive : (b.depart||b.arrive||''),
+      b.tickets, b.ref ? 'Ref: '+b.ref : null, b.nights ? b.nights+' nights' : null,
+      b.breakfast==='included' ? 'Breakfast incl.' : null,
+    ].filter(Boolean).join(' · ');
+    return `<div class="bk-card">
+      <div class="bk-card-ico ${b.cat}">${ico}</div>
+      <div class="bk-card-body">
+        <div class="bk-card-name">${b.name}</div>
+        ${meta ? `<div class="bk-card-meta">${meta}</div>` : ''}
+        <div class="bk-card-row2">
+          ${statusBadge(b.status)}
+          ${b.price ? `<span class="bk-card-price">${fmt(b.price)}</span>` : ''}
+        </div>
+        ${actions ? `<div class="bk-card-actions">${actions}</div>` : ''}
+      </div>
+    </div>`;
+  };
+
+  // Filter tabs
+  const filters = [
+    {key:'all',label:'All',count:total},
+    ...cats.map(c=>({key:c.key,label:c.label,count:c.count}))
+  ];
+
+  const filtered = bookingsFilter==='all' ? all : all.filter(b=>b.cat===bookingsFilter);
+
+  el.innerHTML = `
+    <div class="bk-summary">
+      <div class="bk-summary-total">
+        <div class="bk-summary-num">${total}</div>
+        <div class="bk-summary-label">Confirmed bookings</div>
+      </div>
+      <div class="bk-summary-cats">
+        ${cats.map(c=>`<div class="bk-summary-cat">
+          <div class="bk-summary-cat-dot" style="background:${c.color}"></div>
+          <span>${c.label}</span><strong>${c.count}</strong>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${upcoming.length ? `<div class="bk-upcoming">
+      <div class="bk-upcoming-label">Upcoming</div>
+      ${upcoming.map(b=>`<div class="bk-upcoming-item">
+        <div class="bk-upcoming-ico ${b.cat}">${catIcons[b.cat]||''}</div>
+        <div class="bk-upcoming-info">
+          <div class="bk-upcoming-name">${b.name}</div>
+          <div class="bk-upcoming-meta">${b.date||''} ${b.depart||''}</div>
+        </div>
+        ${statusBadge(b.status)}
+      </div>`).join('')}
+    </div>` : ''}
+
+    <div class="bk-filters">
+      ${filters.map(f=>`<button class="bk-filter ${bookingsFilter===f.key?'active':''}" onclick="setBookingsFilter('${f.key}')">${f.label} <span>${f.count}</span></button>`).join('')}
+    </div>
+
+    <div class="bk-list">
+      ${filtered.length ? filtered.map(mkCard).join('') : '<div class="bk-empty">No bookings in this category yet.</div>'}
+    </div>`;
+}
+
+function setBookingsFilter(key) {
+  bookingsFilter = key;
+  renderBookingsView();
 }
 
 function renderBudgetView() {
