@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=65">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=66">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1332,7 +1332,20 @@ document.addEventListener('click', e => {
 function openModal() {
   setModalTab('single');
   document.getElementById('modal-tabs').style.display = '';
-  document.getElementById('modal-overlay').classList.add('open');
+  const overlay = document.getElementById('modal-overlay');
+  // Force full-width on mobile by removing overlay padding via inline style
+  if (window.innerWidth <= 768) {
+    overlay.style.padding = '0';
+    overlay.style.alignItems = 'flex-end';
+    const modal = overlay.querySelector('.modal');
+    if (modal) {
+      modal.style.maxWidth = '100%';
+      modal.style.width = '100%';
+      modal.style.borderRadius = '20px 20px 0 0';
+      modal.style.margin = '0';
+    }
+  }
+  overlay.classList.add('open');
   setTimeout(() => document.getElementById('f-title').focus(), 100);
 }
 
