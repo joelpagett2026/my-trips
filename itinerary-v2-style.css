@@ -673,10 +673,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   /* ── MODAL full-screen on mobile ── */
   .modal-overlay { align-items: flex-end; padding: 0; }
   .modal {
-    max-width: 100%; border-radius: 20px 20px 0 0;
+    width: 100% !important; max-width: 100% !important;
+    margin: 0 !important; border-radius: 20px 20px 0 0 !important;
     max-height: 92dvh; max-height: 92vh;
   }
-  .hotel-modal-overlay .modal { border-radius: 20px 20px 0 0; }
+  .hotel-modal-overlay .modal { border-radius: 20px 20px 0 0 !important; }
 }
 
 /* ── INLINE BUDGET VIEW ── */
