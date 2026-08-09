@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=62">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=63">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -761,9 +761,7 @@ function renderTimeline() {
     hdr.innerHTML =
       '<div class="tl-section-accent ' + key + '"></div>' +
       '<span class="tl-section-label">' + label + '</span>' +
-      '<span class="tl-section-count" id="tl-count-' + key + '">' +
-        buckets[key].length + ' item' + (buckets[key].length !== 1 ? 's' : '') +
-      '</span>' +
+
       '<button class="tl-section-clear" data-clear-period="' + key + '" title="Remove all ' + label.toLowerCase() + ' items">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>';
