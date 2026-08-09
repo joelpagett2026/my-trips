@@ -280,8 +280,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .modal-title{font-size:14px;font-weight:800;color:var(--text);}
 .modal-close{background:none;border:none;font-size:20px;color:var(--text3);cursor:pointer;padding:0 3px;border-radius:4px;line-height:1;}
 .modal-close:hover{background:var(--line);}
-.modal-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:13px;}
-.modal-foot{padding:13px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;}
+.modal-body{flex:1;min-height:0;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:13px;}
+.modal-foot{flex-shrink:0;padding:13px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;}
 .field-group{display:flex;flex-direction:column;gap:5px;}
 .field-label{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;}
 .field-input,.field-select,.field-textarea{border:1.5px solid var(--line);border-radius:7px;padding:8px 11px;font-family:var(--font);font-size:16px;color:var(--text);background:var(--surface);outline:none;transition:border-color 0.13s;width:100%;}
@@ -671,7 +671,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   }
 
   /* ── MODAL full-screen on mobile ── */
-  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-overlay { align-items: flex-end; padding: 0 !important; }
   .modal {
     width: 100% !important; max-width: 100% !important;
     margin: 0 !important; border-radius: 20px 20px 0 0 !important;
