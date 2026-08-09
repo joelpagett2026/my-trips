@@ -917,3 +917,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .map-list { flex-direction: row; display: flex; overflow-x: auto; overflow-y: hidden; padding: 6px; gap: 6px; }
   .ml-item { flex-direction: column; align-items: flex-start; min-width: 140px; border-bottom: none; border-radius: 8px; background: var(--bg); }
 }
+
+/* Map day filter dropdown (mobile) */
+.mf-select {
+  width: 100%; padding: 8px 12px; margin-bottom: 6px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--text);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  appearance: auto; cursor: pointer;
+}
