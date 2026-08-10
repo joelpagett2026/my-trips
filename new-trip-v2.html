@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=90">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=91">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -16,9 +16,8 @@
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
   <div class="sb-trip">
-    <div class="sb-flag" id="sb-flag">🌍</div>
     <div class="sb-photo" id="sb-photo"></div>
-    <div class="sb-name-row"><div class="sb-name" id="sb-name">Loading…</div><span class="sb-name-plane" id="sb-name-plane"></span></div>
+    <div class="sb-name" id="sb-name">Loading…</div>
     <div class="sb-meta" id="sb-meta"></div>
   </div>
   <nav class="sb-nav">
@@ -580,13 +579,6 @@ function badgeHtml(status, label) {
   return `<span class="badge ${status}">${ic}${txt}</span>`;
 }
 
-// ── FLAG HELPER ───────────────────────────────────────────────────────
-function flagFor(d) {
-  const map = { 'Porto':'🇵🇹','Porto 2026':'🇵🇹','Hamburg':'🇩🇪','Gothenburg':'🇸🇪','Cyprus':'🇨🇾','China':'🇨🇳','Dubai':'🇦🇪','Costa Rica':'🇨🇷','Canada':'🇨🇦','Hong Kong':'🇭🇰','Taiwan':'🇹🇼' };
-  for (const [k,v] of Object.entries(map)) { if (d.toLowerCase().includes(k.toLowerCase())) return v; }
-  return '🌍';
-}
-
 // ── LOAD / SAVE ───────────────────────────────────────────────────────
 async function loadData() {
   try {
@@ -762,10 +754,7 @@ function renderSidebar() {
   const mmTrip = document.getElementById('mob-menu-trip');
   if (mmTrip) mmTrip.textContent = STATE.meta?.dest || dest;
   const m = STATE.meta;
-  document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
   document.getElementById('sb-name').textContent = m.dest || dest;
-  document.getElementById('sb-name-plane').innerHTML =
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`;
   const depFmt = m.dep || dep;
   const retFmt = m.ret || ret;
   document.getElementById('sb-meta').textContent = formatDateRangeNice(depFmt, retFmt) + (depFmt && retFmt ? '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
