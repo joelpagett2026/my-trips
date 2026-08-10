@@ -1141,14 +1141,66 @@ function renderHotelPanel() {
 }
 
 function renderReadiness() {
-  const items = STATE.days.flatMap(d => d.items||[]).filter(Boolean);
-  const booked = items.filter(it => it.status==='booked'||it.status==='confirmed').length;
-  const total  = items.filter(it => it.status).length;
-  const pct    = total ? Math.round((booked/total)*100) : 100;
-  const warns  = items.filter(it => it.status==='attention').length;
-  const hasHotel = !!STATE.meta.hotel;
+  const days = STATE.days || [];
+  const N = days.length;
+
+  const isFlight = it => it && it.type === 'move' &&
+    ((it.transport && it.transport.mode === 'Flight') || it.kicker === 'Flight');
+  const isConfirmed = it => {
+    if (!it) return false;
+    const st = it.status, b = it.booking || {};
+    return st === 'confirmed' || st === 'booked' || !!b.ref || !!b.url || (!!b.tickets && !!b.price);
+  };
+  const isActivity = it => it && ['place','attraction','act','ticket'].includes(it.type);
+
+  // Flights to and from the destination — first flight found = outbound,
+  // last flight found = return (any flights between are internal/domestic legs).
+  let flights = [];
+  days.forEach(d => (d.items||[]).forEach(it => { if (isFlight(it)) flights.push(it); }));
+  const outboundOk = flights.length > 0 && isConfirmed(flights[0]);
+  const returnOk   = flights.length > 1 && isConfirmed(flights[flights.length - 1]);
+
+  // Hotel booked for every night of the trip (every day except the last —
+  // no night's stay is needed after departure day).
+  const nights = Math.max(N - 1, 0);
+  let hotelDone = 0;
+  for (let i = 0; i < nights; i++) if (hotelForDay(i)) hotelDone++;
+
+  // Dinner booked, but only for days that already have a meal planned in
+  // the afternoon or evening — days with no such module are skipped entirely.
+  let dinnerTotal = 0, dinnerDone = 0;
+  days.forEach(d => {
+    const meal = (d.items||[]).find(it => it && it.type === 'meal' && (it.period === 'evening' || it.period === 'afternoon'));
+    if (meal) {
+      dinnerTotal++;
+      if (isConfirmed(meal)) dinnerDone++;
+    }
+  });
+
+  // At least one activity on every day except the first and last.
+  const middleDays = Math.max(N - 2, 0);
+  let activityDone = 0;
+  for (let i = 1; i < N - 1; i++) if ((days[i].items||[]).some(isActivity)) activityDone++;
+
+  const total = 2 + nights + dinnerTotal + middleDays;
+  const done  = (outboundOk?1:0) + (returnOk?1:0) + hotelDone + dinnerDone + activityDone;
+  const pct   = total ? Math.round((done/total)*100) : 100;
   const circumference = 2 * Math.PI * 22;
   const offset = circumference * (1 - pct/100);
+
+  const rows = [
+    `<div class="r-row ${outboundOk?'ok':'tbc'}">${outboundOk?ICO.check:ICO.circle} Outbound flight ${outboundOk?'booked':'not booked'}</div>`,
+    `<div class="r-row ${returnOk?'ok':'tbc'}">${returnOk?ICO.check:ICO.circle} Return flight ${returnOk?'booked':'not booked'}</div>`,
+  ];
+  if (nights > 0) {
+    rows.push(`<div class="r-row ${hotelDone===nights?'ok':'tbc'}">${hotelDone===nights?ICO.check:ICO.circle} Hotel booked · ${hotelDone}/${nights} night${nights===1?'':'s'}</div>`);
+  }
+  if (dinnerTotal > 0) {
+    rows.push(`<div class="r-row ${dinnerDone===dinnerTotal?'ok':'tbc'}">${dinnerDone===dinnerTotal?ICO.check:ICO.circle} Dinner booked · ${dinnerDone}/${dinnerTotal} evening${dinnerTotal===1?'':'s'}</div>`);
+  }
+  if (middleDays > 0) {
+    rows.push(`<div class="r-row ${activityDone===middleDays?'ok':'tbc'}">${activityDone===middleDays?ICO.check:ICO.circle} Activity planned · ${activityDone}/${middleDays} day${middleDays===1?'':'s'}</div>`);
+  }
 
   document.getElementById('rp-readiness').innerHTML = `
     <div class="readiness-ring">
@@ -1160,11 +1212,7 @@ function renderReadiness() {
       </svg>
       <div><div class="ring-pct">${pct}%</div><div class="ring-label">${pct>=100?'All set!':pct>=80?'Almost there!':'In progress'}</div></div>
     </div>
-    <div class="r-list">
-      <div class="r-row ${hasHotel?'ok':'tbc'}">${hasHotel?ICO.check:ICO.circle} ${hasHotel?'Hotel confirmed':'No hotel added yet'}</div>
-      <div class="r-row ${booked>0?'ok':'tbc'}">${booked>0?ICO.check:ICO.circle} ${booked} item${booked===1?'':'s'} booked</div>
-      ${warns ? `<div class="r-row warn">${ICO.warn} ${warns} need${warns===1?'s':''} attention</div>` : ''}
-    </div>`;
+    <div class="r-list">${rows.join('')}</div>`;
 }
 
 function renderPlacesToEat() {
