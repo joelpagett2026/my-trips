@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=86">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=87">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -41,6 +41,7 @@
     </button>
   </nav>
   <div class="sb-bottom">
+    <div class="sb-readiness" id="sb-readiness"></div>
     <button class="sb-btn" onclick="location.href='/settings.html'">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       Settings
@@ -99,10 +100,6 @@
           <button onclick="openHotelModal()" style="margin-left:auto;background:none;border:none;color:var(--teal);font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;padding:0;letter-spacing:0.03em;">+ Add / Edit</button>
         </div>
         <div id="rp-hotel">—</div>
-      </div>
-      <div class="rp-section">
-        <div class="rp-h">Trip Readiness</div>
-        <div id="rp-readiness"></div>
       </div>
       <div class="rp-section">
         <div class="rp-h">Places to Eat</div>
@@ -718,6 +715,8 @@ function renderSidebar() {
       <span>Day ${i+1} · ${dy.date||'—'}</span>
     </button>`;
   }).join('');
+
+  renderSidebarReadiness();
 }
 
 function renderDaySelector() {
@@ -1043,7 +1042,6 @@ function dragCleanup() {
 
 function renderRightPanel() {
   renderHotelPanel();
-  renderReadiness();
   renderPlacesToEat();
 }
 
@@ -1140,9 +1138,11 @@ function renderHotelPanel() {
   el.innerHTML = renderHotelCard(h, idx);
 }
 
-function renderReadiness() {
+function renderSidebarReadiness() {
   const days = STATE.days || [];
   const N = days.length;
+  const el = document.getElementById('sb-readiness');
+  if (!el) return;
 
   const isFlight = it => it && it.type === 'move' &&
     ((it.transport && it.transport.mode === 'Flight') || it.kicker === 'Flight');
@@ -1166,10 +1166,12 @@ function renderReadiness() {
   let hotelDone = 0;
   for (let i = 0; i < nights; i++) if (hotelForDay(i)) hotelDone++;
 
-  // Dinner booked, but only for days that already have a meal planned in
-  // the afternoon or evening — days with no such module are skipped entirely.
+  // Dinner booked, for days that already have a meal planned in the
+  // afternoon or evening — skipping the first and last night of the trip,
+  // and skipping days with no such module at all.
   let dinnerTotal = 0, dinnerDone = 0;
-  days.forEach(d => {
+  days.forEach((d, i) => {
+    if (i === 0 || i === N - 1) return;
     const meal = (d.items||[]).find(it => it && it.type === 'meal' && (it.period === 'evening' || it.period === 'afternoon'));
     if (meal) {
       dinnerTotal++;
@@ -1185,34 +1187,14 @@ function renderReadiness() {
   const total = 2 + nights + dinnerTotal + middleDays;
   const done  = (outboundOk?1:0) + (returnOk?1:0) + hotelDone + dinnerDone + activityDone;
   const pct   = total ? Math.round((done/total)*100) : 100;
-  const circumference = 2 * Math.PI * 22;
-  const offset = circumference * (1 - pct/100);
+  const label = pct>=100?'All set!':pct>=80?'Almost there!':'In progress';
 
-  const rows = [
-    `<div class="r-row ${outboundOk?'ok':'tbc'}">${outboundOk?ICO.check:ICO.circle} Outbound flight ${outboundOk?'booked':'not booked'}</div>`,
-    `<div class="r-row ${returnOk?'ok':'tbc'}">${returnOk?ICO.check:ICO.circle} Return flight ${returnOk?'booked':'not booked'}</div>`,
-  ];
-  if (nights > 0) {
-    rows.push(`<div class="r-row ${hotelDone===nights?'ok':'tbc'}">${hotelDone===nights?ICO.check:ICO.circle} Hotel booked · ${hotelDone}/${nights} night${nights===1?'':'s'}</div>`);
-  }
-  if (dinnerTotal > 0) {
-    rows.push(`<div class="r-row ${dinnerDone===dinnerTotal?'ok':'tbc'}">${dinnerDone===dinnerTotal?ICO.check:ICO.circle} Dinner booked · ${dinnerDone}/${dinnerTotal} evening${dinnerTotal===1?'':'s'}</div>`);
-  }
-  if (middleDays > 0) {
-    rows.push(`<div class="r-row ${activityDone===middleDays?'ok':'tbc'}">${activityDone===middleDays?ICO.check:ICO.circle} Activity planned · ${activityDone}/${middleDays} day${middleDays===1?'':'s'}</div>`);
-  }
-
-  document.getElementById('rp-readiness').innerHTML = `
-    <div class="readiness-ring">
-      <svg width="52" height="52" viewBox="0 0 52 52">
-        <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(14,122,135,0.15)" stroke-width="5"/>
-        <circle cx="26" cy="26" r="22" fill="none" stroke="#0e7a87" stroke-width="5"
-          stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
-          stroke-linecap="round" transform="rotate(-90 26 26)"/>
-      </svg>
-      <div><div class="ring-pct">${pct}%</div><div class="ring-label">${pct>=100?'All set!':pct>=80?'Almost there!':'In progress'}</div></div>
+  el.innerHTML = `
+    <div class="sb-readiness-row">
+      <span class="sb-readiness-pct">${pct}%</span>
+      <span class="sb-readiness-lbl">${label}</span>
     </div>
-    <div class="r-list">${rows.join('')}</div>`;
+    <div class="sb-readiness-track"><div class="sb-readiness-fill" style="width:${pct}%"></div></div>`;
 }
 
 function renderPlacesToEat() {
