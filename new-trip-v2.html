@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=79">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=80">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -895,6 +895,9 @@ function makeItemNode(item, idx) {
         (meta     ? '<div class="tl-meta">' + meta + '</div>' : '') +
       '</div>' +
       '<button class="tl-more-btn">···</button>' +
+      '<button class="tl-delete-btn" title="Remove from itinerary">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button>' +
     '</div>';
 
   row.querySelector('.tl-body-wrap').addEventListener('click', () => {
@@ -903,6 +906,18 @@ function makeItemNode(item, idx) {
   row.querySelector('.tl-more-btn').addEventListener('click', e => {
     e.stopPropagation();
     if (!dragMoved) openEditItem(activeDay, idx);
+  });
+  row.querySelector('.tl-delete-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    if (dragMoved) return;
+    if (!confirm('Remove this activity from the itinerary?')) return;
+    const items = STATE.days[activeDay].items;
+    takeSnapshot();
+    items.splice(idx, 1);
+    scheduleSave();
+    render();
+    showSnapshotBar(true);
+    setTimeout(() => showSnapshotBar(false), 6000);
   });
   return row;
 }

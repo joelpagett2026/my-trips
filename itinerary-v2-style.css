@@ -135,6 +135,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-price{font-size:11px;font-weight:600;color:var(--text2);}
 .tl-more-btn{opacity:0;background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:3px 6px;border-radius:5px;align-self:flex-start;margin-top:3px;line-height:1;font-family:var(--font);transition:all 0.12s;flex-shrink:0;}
 .tl-more-btn:hover{background:var(--line);color:var(--text);}
+.tl-delete-btn{opacity:0;background:none;border:none;color:var(--text3);cursor:pointer;padding:5px;border-radius:5px;align-self:flex-start;margin-top:3px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all 0.12s;flex-shrink:0;}
+.tl-delete-btn svg{width:12px;height:12px;stroke:currentColor;}
+.tl-delete-btn:hover{background:#fee;color:#e53e3e;}
+.tl-item:hover .tl-delete-btn{opacity:1;}
 .tl-add-btn{display:flex;align-items:center;gap:8px;width:100%;padding:10px;margin-top:6px;background:none;border:1.5px dashed rgba(14,122,135,0.25);border-radius:9px;color:var(--text3);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.14s;justify-content:center;letter-spacing:0.02em;}
 .tl-add-btn svg{width:14px;height:14px;stroke:currentColor;}
 .tl-add-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-xdim);}
@@ -319,7 +323,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 @media (max-width:1100px){:root{--rp-w:240px;}}
 @media (max-width:900px){.v2-sidebar,.rp-col{display:none;}}
-@media print{.v2-sidebar,.rp-col,.v2-topbar,.day-selector,.day-summary,.tl-more-btn,.tl-add-btn{display:none!important;}body{overflow:visible;}.tl-col{overflow:visible;padding:0;}}
+@media print{.v2-sidebar,.rp-col,.v2-topbar,.day-selector,.day-summary,.tl-more-btn,.tl-delete-btn,.tl-add-btn{display:none!important;}body{overflow:visible;}.tl-col{overflow:visible;padding:0;}}
 
 /* ── DRAG HANDLE ── */
 .tl-grip {
@@ -587,6 +591,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
   /* Hide ··· button on mobile — use tap to open drawer instead */
   .tl-more-btn { display: none; }
+  .tl-delete-btn { display: none; }
 
   /* Add button */
   .tl-add-btn { font-size: 11px; padding: 9px; }
