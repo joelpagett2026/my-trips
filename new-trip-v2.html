@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=76">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=77">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -222,72 +222,115 @@
       </div>
     </div>
     <div class="modal-body" id="modal-body-single">
-      <!-- Category first, always visible -->
-      <div class="field-row">
+      <!-- Category bubbles, always visible -->
+      <div class="field-group">
+        <label class="field-label">Category</label>
+        <div class="transport-type-row" id="f-category-row">
+          <button type="button" class="tt-btn active" data-cat="place">Place</button>
+          <button type="button" class="tt-btn" data-cat="attraction">Attraction</button>
+          <button type="button" class="tt-btn" data-cat="meal">Meal</button>
+          <button type="button" class="tt-btn" data-cat="move">Transport</button>
+        </div>
+        <input type="hidden" id="f-type" value="place">
+        <input type="hidden" id="f-period" value="morning">
+      </div>
+
+      <!-- PLACE FIELDS -->
+      <div id="fields-place" style="display:flex;flex-direction:column;gap:13px;">
         <div class="field-group">
-          <label class="field-label">Category</label>
-          <select class="field-select" id="f-type" onchange="onCategoryChange()">
-            <option value="act">Activity / Place</option>
-            <option value="meal">Meal</option>
-            <option value="move">Transport</option>
-            <option value="hotel">Accommodation</option>
-          </select>
+          <label class="field-label">Location</label>
+          <input class="field-input" id="f-place-location" type="text" placeholder="e.g. São Bento Station">
         </div>
         <div class="field-group">
-          <label class="field-label">Part of day</label>
-          <select class="field-select" id="f-period">
-            <option value="morning">Morning</option>
-            <option value="afternoon">Afternoon</option>
-            <option value="evening">Evening</option>
-          </select>
+          <label class="field-label">Time (optional)</label>
+          <input class="field-input" id="f-place-time" type="time">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-place-notes" placeholder="Any extra details…"></textarea>
         </div>
       </div>
 
-      <!-- STANDARD FIELDS (activity / meal / hotel) -->
-      <div id="fields-standard">
+      <!-- ATTRACTION FIELDS -->
+      <div id="fields-attraction" style="display:none;flex-direction:column;gap:13px;">
         <div class="field-group">
-          <label class="field-label">Title</label>
-          <input class="field-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Subtitle / location</label>
-          <input class="field-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car">
+          <label class="field-label">Name</label>
+          <input class="field-input" id="f-att-name" type="text" placeholder="e.g. Teleférico de Gaia">
         </div>
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Time (optional)</label>
-            <input class="field-input" id="f-time" type="time">
+            <input class="field-input" id="f-att-time" type="time">
           </div>
           <div class="field-group">
-            <label class="field-label">Status</label>
-            <select class="field-select" id="f-status">
-              <option value="">—</option>
-              <option value="booked">✓ Booked</option>
-              <option value="confirmed">✓ Confirmed</option>
-              <option value="walkin">Walk in only</option>
-              <option value="attention">Needs attention</option>
-            </select>
+            <label class="field-label">Cost (optional)</label>
+            <input class="field-input" id="f-att-cost" type="text" placeholder="e.g. £6.00 pp">
           </div>
         </div>
         <div class="field-group">
-          <label class="field-label">Travel time from previous (optional)</label>
-          <input class="field-input" id="f-conn" type="text" placeholder="e.g. 10 min walk">
+          <label class="field-label">Ticket link</label>
+          <input class="field-input" id="f-att-link" type="url" placeholder="https://…">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Booked</label>
+          <div class="f-slider-row">
+            <label class="f-slider">
+              <input type="checkbox" id="f-att-booked" onchange="onAttBookedChange()">
+              <span class="f-slider-track"></span>
+            </label>
+            <span class="f-slider-label" id="f-att-booked-label">No</span>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-att-notes" placeholder="Any extra details…"></textarea>
+        </div>
+      </div>
+
+      <!-- MEAL FIELDS -->
+      <div id="fields-meal" style="display:none;flex-direction:column;gap:13px;">
+        <div class="field-group">
+          <label class="field-label">Restaurant name</label>
+          <input class="field-input" id="f-meal-name" type="text" placeholder="e.g. Duello Porto">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Status</label>
+          <div class="transport-type-row" id="f-meal-status-row">
+            <button type="button" class="tt-btn" data-val="booked">Booked</button>
+            <button type="button" class="tt-btn active" data-val="walkin">Walk in only</button>
+          </div>
+          <input class="field-input" id="f-meal-status" type="hidden" value="walkin">
+        </div>
+        <div id="fields-meal-booked" style="display:none;flex-direction:column;gap:13px;">
+          <div class="field-group">
+            <label class="field-label">Time booked</label>
+            <input class="field-input" id="f-meal-time" type="time">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Notes</label>
+            <textarea class="field-textarea" id="f-meal-notes" placeholder="Any extra details…"></textarea>
+          </div>
         </div>
       </div>
 
       <!-- TRANSPORT FIELDS -->
       <div id="fields-transport" style="display:none;flex-direction:column;gap:13px;">
         <div class="field-group">
-          <label class="field-label">Type of transport</label>
+          <label class="field-label">Method</label>
           <div class="transport-type-row" id="f-transport-type-row">
             <button type="button" class="tt-btn active" data-val="Flight">Flight</button>
             <button type="button" class="tt-btn" data-val="Train">Train</button>
             <button type="button" class="tt-btn" data-val="Coach">Coach</button>
             <button type="button" class="tt-btn" data-val="Bus">Bus</button>
             <button type="button" class="tt-btn" data-val="Ferry">Ferry</button>
+            <button type="button" class="tt-btn" data-val="Tram">Tram</button>
             <button type="button" class="tt-btn" data-val="Other">Other</button>
           </div>
           <input class="field-input" id="f-transport-type" type="hidden" value="Flight">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Cost (optional)</label>
+          <input class="field-input" id="f-move-cost" type="text" placeholder="e.g. £40 pp">
         </div>
         <div class="field-row">
           <div class="field-group">
@@ -311,28 +354,24 @@
         </div>
         <div class="field-group">
           <label class="field-label">Status</label>
-          <select class="field-select" id="f-status-move">
-            <option value="">—</option>
-            <option value="booked">✓ Booked</option>
-            <option value="confirmed">✓ Confirmed</option>
-            <option value="attention">Needs attention</option>
-          </select>
+          <div class="transport-type-row" id="f-status-move-row">
+            <button type="button" class="tt-btn active" data-val="booked">Booked</button>
+            <button type="button" class="tt-btn" data-val="payonuse">Pay on use</button>
+            <button type="button" class="tt-btn" data-val="na">N/A</button>
+          </div>
+          <input class="field-input" id="f-status-move" type="hidden" value="booked">
         </div>
       </div>
 
-      <!-- Booking details toggle -->
-      <button class="booking-toggle" id="booking-toggle-btn" onclick="toggleBooking()">
+      <!-- Booking reference toggle (transport only) -->
+      <button class="booking-toggle" id="booking-toggle-btn" style="display:none;" onclick="toggleBooking()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-        Add booking details
+        Add booking reference
       </button>
       <div class="booking-fields" id="booking-fields" style="display:none;">
         <div class="field-group">
           <label class="field-label">Booking reference</label>
           <input class="field-input" id="f-ref" type="text" placeholder="e.g. ZTQNBT">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Price</label>
-          <input class="field-input" id="f-price" type="text" placeholder="e.g. £40 pp">
         </div>
         <div class="field-group">
           <label class="field-label">Tickets / quantity</label>
@@ -342,12 +381,7 @@
           <label class="field-label">Booking URL</label>
           <input class="field-input" id="f-url" type="url" placeholder="https://…">
         </div>
-        <div class="field-group">
-          <label class="field-label">Notes</label>
-          <textarea class="field-textarea" id="f-note" placeholder="Any extra details…"></textarea>
-        </div>
       </div>
-    </div>
     </div><!-- /modal-body-single -->
     <div class="modal-foot">
       <button class="modal-btn danger" id="modal-delete-btn" style="display:none" onclick="deleteCurrentItem()">Delete</button>
@@ -536,6 +570,7 @@ function icoForType(t, sub, item) {
     return {html: TRANSPORT_ICONS[mode] || ICO.plane, cls:'move'};
   }
   if (t==='hotel') return {html:ICO.home, cls:''};
+  if (t==='attraction' || t==='ticket') return {html:ICO.ticket, cls:'ticket'};
   return {html:ICO.pin, cls:''};
 }
 
@@ -836,7 +871,7 @@ function makeItemNode(item, idx) {
   const ico   = icoForType(item.type, item.title, item);
   const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
   const meta  = [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
-  const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : '');
+  const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
 
   const row = document.createElement('div');
   row.className = 'tl-item';
@@ -1189,7 +1224,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   document.getElementById('drawer-overlay').classList.add('open');
 
   // Show / generate About section for activity and ticketed types
-  if (item.type === 'act' || item.type === 'ticket') {
+  if (item.type === 'act' || item.type === 'ticket' || item.type === 'place' || item.type === 'attraction') {
     if (item._about) {
       renderAbout(item._about);
     } else {
@@ -1269,59 +1304,92 @@ function openEditItem(dayIdx, itemIdx) {
   document.getElementById('modal-delete-btn').style.display = 'block';
   document.getElementById('modal-tabs').style.display = 'none';
   clearForm();
-  document.getElementById('f-type').value   = item.type || 'act';
-  document.getElementById('f-period').value  = item.period || inferPeriod(item) || 'morning';
-  onCategoryChange();
-  if (item.type === 'move') {
+  document.getElementById('f-period').value = item.period || inferPeriod(item) || 'morning';
+
+  // Determine which category bubble this legacy/current item belongs to
+  let cat = item.type;
+  if (item.type === 'act' || item.type === 'ticket') {
+    const hasBookingInfo = item.booking && (item.booking.price || item.booking.tickets || item.booking.url || item.booking.ref);
+    cat = hasBookingInfo ? 'attraction' : 'place';
+  } else if (!['place','attraction','meal','move'].includes(item.type)) {
+    cat = 'place'; // fallback for any legacy/unrecognised type
+  }
+  setCategory(cat);
+
+  if (cat === 'move') {
     const tr = item.transport || {};
     setTransportType(tr.mode || item.kicker || 'Flight');
-    document.getElementById('f-from').value   = tr.from || (item.title||'').split(' → ')[0] || '';
-    document.getElementById('f-to').value     = tr.to   || (item.title||'').split(' → ')[1] || '';
-    document.getElementById('f-depart').value = tr.depart || item.time || '';
-    document.getElementById('f-arrive').value = tr.arrive || '';
-    document.getElementById('f-status-move').value = item.status || '';
+    document.getElementById('f-from').value      = tr.from || (item.title||'').split(' → ')[0] || '';
+    document.getElementById('f-to').value        = tr.to   || (item.title||'').split(' → ')[1] || '';
+    document.getElementById('f-depart').value    = tr.depart || item.time || '';
+    document.getElementById('f-arrive').value    = tr.arrive || '';
+    document.getElementById('f-move-cost').value = (item.booking && item.booking.price) || '';
+    const moveStatusMap = { booked:'booked', confirmed:'booked', payonuse:'payonuse', na:'na' };
+    setMoveStatus(moveStatusMap[item.status] || 'na');
+    if (item.booking && (item.booking.ref || item.booking.tickets || item.booking.url)) {
+      document.getElementById('f-ref').value     = item.booking.ref || '';
+      document.getElementById('f-tickets').value = item.booking.tickets || '';
+      document.getElementById('f-url').value     = item.booking.url || '';
+      showBookingFields(true);
+    }
+  } else if (cat === 'attraction') {
+    document.getElementById('f-att-name').value  = item.title || '';
+    document.getElementById('f-att-time').value  = item.time || '';
+    document.getElementById('f-att-link').value  = (item.booking && item.booking.url) || '';
+    document.getElementById('f-att-cost').value  = (item.booking && item.booking.price) || '';
+    document.getElementById('f-att-notes').value = (item.booking && item.booking.note) || '';
+    document.getElementById('f-att-booked').checked = item.status === 'booked' || item.status === 'confirmed';
+    onAttBookedChange();
+  } else if (cat === 'meal') {
+    document.getElementById('f-meal-name').value = item.title || '';
+    const st = item.status === 'booked' ? 'booked' : 'walkin';
+    setMealStatus(st);
+    if (st === 'booked') {
+      document.getElementById('f-meal-time').value  = item.time || '';
+      document.getElementById('f-meal-notes').value = (item.booking && item.booking.note) || '';
+    }
   } else {
-    document.getElementById('f-time').value   = item.time || '';
-    document.getElementById('f-title').value  = item.title || '';
-    document.getElementById('f-sub').value    = item.sub || '';
-    document.getElementById('f-status').value = item.status || '';
-    document.getElementById('f-conn').value   = item.conn || '';
-  }
-  if (item.booking) {
-    document.getElementById('f-ref').value     = item.booking.ref || '';
-    document.getElementById('f-price').value   = item.booking.price || '';
-    document.getElementById('f-tickets').value = item.booking.tickets || '';
-    document.getElementById('f-url').value     = item.booking.url || '';
-    document.getElementById('f-note').value    = item.booking.note || '';
-    showBookingFields(true);
+    document.getElementById('f-place-location').value = item.title || '';
+    document.getElementById('f-place-time').value      = item.time || '';
+    document.getElementById('f-place-notes').value     = (item.booking && item.booking.note) || '';
   }
   openModal();
 }
 
 function clearForm() {
-  ['f-ref','f-price','f-tickets','f-url','f-note',
-   'f-from','f-to','f-depart','f-arrive'].forEach(id => {
+  ['f-place-location','f-place-time','f-place-notes',
+   'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
+   'f-meal-name','f-meal-time','f-meal-notes',
+   'f-from','f-to','f-depart','f-arrive','f-move-cost',
+   'f-ref','f-tickets','f-url'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  ['f-time','f-title','f-sub','f-conn','f-status'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('f-type').value    = 'act';
-  document.getElementById('f-period').value  = 'morning';
-  const sm = document.getElementById('f-status-move'); if(sm) sm.value = '';
+  document.getElementById('f-att-booked').checked = false;
+  onAttBookedChange();
+  document.getElementById('f-period').value = 'morning';
+  setCategory('place');
   setTransportType('Flight');
+  setMoveStatus('booked');
+  setMealStatus('walkin');
   showBookingFields(false);
+}
+
+function setCategory(cat) {
+  document.getElementById('f-type').value = cat;
+  document.querySelectorAll('#f-category-row .tt-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.cat === cat);
+  });
   onCategoryChange();
 }
 
 function onCategoryChange() {
   const type = document.getElementById('f-type').value;
-  const isMove = type === 'move';
-  document.getElementById('fields-standard').style.display  = isMove ? 'none' : 'flex';
-  document.getElementById('fields-transport').style.display = isMove ? 'flex' : 'none';
-
-  document.getElementById('fields-standard').style.flexDirection = 'column';
-  document.getElementById('fields-standard').style.gap = '13px';
+  document.getElementById('fields-place').style.display       = type === 'place'      ? 'flex' : 'none';
+  document.getElementById('fields-attraction').style.display  = type === 'attraction' ? 'flex' : 'none';
+  document.getElementById('fields-meal').style.display        = type === 'meal'       ? 'flex' : 'none';
+  document.getElementById('fields-transport').style.display   = type === 'move'       ? 'flex' : 'none';
+  document.getElementById('booking-toggle-btn').style.display = type === 'move'       ? ''     : 'none';
+  if (type !== 'move') showBookingFields(false);
 }
 
 function setTransportType(val) {
@@ -1331,10 +1399,39 @@ function setTransportType(val) {
   });
 }
 
-// Wire transport type buttons + section clear
+function setMoveStatus(val) {
+  document.getElementById('f-status-move').value = val;
+  document.querySelectorAll('#f-status-move-row .tt-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === val);
+  });
+}
+
+function setMealStatus(val) {
+  document.getElementById('f-meal-status').value = val;
+  document.querySelectorAll('#f-meal-status-row .tt-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === val);
+  });
+  document.getElementById('fields-meal-booked').style.display = val === 'booked' ? 'flex' : 'none';
+}
+
+function onAttBookedChange() {
+  const checked = document.getElementById('f-att-booked').checked;
+  document.getElementById('f-att-booked-label').textContent = checked ? 'Yes' : 'No';
+}
+
+// Wire category / method / status bubble clicks + section clear
 document.addEventListener('click', e => {
-  const ttBtn = e.target.closest('.tt-btn');
+  const catBtn = e.target.closest('#f-category-row .tt-btn');
+  if (catBtn) { setCategory(catBtn.dataset.cat); return; }
+
+  const ttBtn = e.target.closest('#f-transport-type-row .tt-btn');
   if (ttBtn) { setTransportType(ttBtn.dataset.val); return; }
+
+  const msBtn = e.target.closest('#f-status-move-row .tt-btn');
+  if (msBtn) { setMoveStatus(msBtn.dataset.val); return; }
+
+  const mlBtn = e.target.closest('#f-meal-status-row .tt-btn');
+  if (mlBtn) { setMealStatus(mlBtn.dataset.val); return; }
 
   const clearBtn = e.target.closest('[data-clear-period]');
   if (clearBtn) {
@@ -1347,7 +1444,7 @@ function openModal() {
   setModalTab('single');
   document.getElementById('modal-tabs').style.display = '';
   document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('f-title').focus(), 100);
+  setTimeout(() => document.getElementById('f-place-location').focus(), 100);
 }
 
 function closeModal() {
@@ -1360,7 +1457,7 @@ function toggleBooking() { showBookingFields(!bookingVisible); }
 function showBookingFields(show) {
   bookingVisible = show;
   document.getElementById('booking-fields').style.display = show ? 'flex' : 'none';
-  document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking details' : '+ Add booking details';
+  document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking reference' : '+ Add booking reference';
 }
 
 function saveItem() {
@@ -1369,7 +1466,8 @@ function saveItem() {
   }
   const type   = document.getElementById('f-type').value;
   const period = document.getElementById('f-period').value || 'morning';
-  let time, title, sub, statusV, conn, item;
+  const orig   = (editItem && editItem.item) || null;
+  let time, title, item;
 
   if (type === 'move') {
     const tType  = document.getElementById('f-transport-type').value;
@@ -1377,36 +1475,57 @@ function saveItem() {
     const to     = document.getElementById('f-to').value.trim();
     const depart = document.getElementById('f-depart').value;
     const arrive = document.getElementById('f-arrive').value;
-    statusV      = document.getElementById('f-status-move').value;
+    const cost   = document.getElementById('f-move-cost').value.trim();
+    const statusV = document.getElementById('f-status-move').value || 'na';
     if (!from && !to) { document.getElementById('f-from').focus(); return; }
-    const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Other:'move' };
+    const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Tram:'move', Other:'move' };
     time  = depart;
     title = [from, to].filter(Boolean).join(' → ');
-    sub   = [tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
-    item  = { time, type, period, title, sub, status: statusV || null,
-              transport: { mode: tType, from, to, depart, arrive },
-              icoType: icoMap[tType] || 'move', kicker: tType };
+    const sub = [tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
+    item = { time, type, period, title, sub, status: statusV,
+             transport: { mode: tType, from, to, depart, arrive },
+             icoType: icoMap[tType] || 'move', kicker: tType };
+    const ref     = document.getElementById('f-ref').value.trim();
+    const tickets = document.getElementById('f-tickets').value.trim();
+    const url     = document.getElementById('f-url').value.trim();
+    if (cost || ref || tickets || url) {
+      item.booking = { ref, price: cost, tickets, url, note: (orig && orig.booking && orig.booking.note) || '' };
+    }
+  } else if (type === 'attraction') {
+    title = document.getElementById('f-att-name').value.trim();
+    if (!title) { document.getElementById('f-att-name').focus(); return; }
+    time = document.getElementById('f-att-time').value;
+    const link   = document.getElementById('f-att-link').value.trim();
+    const cost   = document.getElementById('f-att-cost').value.trim();
+    const notes  = document.getElementById('f-att-notes').value.trim();
+    const booked = document.getElementById('f-att-booked').checked;
+    item = { time, type, period, title, sub:'', status: booked ? 'booked' : null };
+    if (link || cost || notes) item.booking = { ref:'', price: cost, tickets:'', url: link, note: notes };
+  } else if (type === 'meal') {
+    title = document.getElementById('f-meal-name').value.trim();
+    if (!title) { document.getElementById('f-meal-name').focus(); return; }
+    const statusV = document.getElementById('f-meal-status').value || 'walkin';
+    time = statusV === 'booked' ? document.getElementById('f-meal-time').value : '';
+    const notes = statusV === 'booked' ? document.getElementById('f-meal-notes').value.trim() : '';
+    item = { time, type, period, title, sub:'', status: statusV };
+    if (notes) item.booking = { ref:'', price:'', tickets:'', url:'', note: notes };
   } else {
-    time   = document.getElementById('f-time').value;
-    title  = document.getElementById('f-title').value.trim();
-    sub    = document.getElementById('f-sub').value.trim();
-    statusV= document.getElementById('f-status').value;
-    conn   = document.getElementById('f-conn').value.trim();
-    if (!title) { document.getElementById('f-title').focus(); return; }
-    item   = { time, type, period, title, sub, status: statusV || null };
-    if (conn) item.conn = conn;
+    title = document.getElementById('f-place-location').value.trim();
+    if (!title) { document.getElementById('f-place-location').focus(); return; }
+    time = document.getElementById('f-place-time').value;
+    const notes = document.getElementById('f-place-notes').value.trim();
+    item = { time, type, period, title, sub:'', status: null };
+    if (notes) item.booking = { ref:'', price:'', tickets:'', url:'', note: notes };
   }
 
-  if (bookingVisible) {
-    const ref = document.getElementById('f-ref').value.trim();
-    const price = document.getElementById('f-price').value.trim();
-    const tickets = document.getElementById('f-tickets').value.trim();
-    const url = document.getElementById('f-url').value.trim();
-    const note = document.getElementById('f-note').value.trim();
-    if (ref||price||tickets||url||note) {
-      item.booking = { ref, price, tickets, url, note };
-      item.status = item.status || 'booked';
-    }
+  // Preserve data with no editable field in this modal when editing an existing item
+  if (orig) {
+    if (orig._geo)                    item._geo      = orig._geo;
+    if (orig._about)                  item._about    = orig._about;
+    if (orig.conn !== undefined)      item.conn      = orig.conn;
+    if (orig.connWarn !== undefined)  item.connWarn  = orig.connWarn;
+    if (orig._avios !== undefined)    item._avios    = orig._avios;
+    if (type !== 'move' && orig.sub)  item.sub       = orig.sub;
   }
 
   const items = STATE.days[activeDay].items;
@@ -1890,7 +2009,7 @@ function extractBudget(state) {
         const k = it.kicker || (it.transport && it.transport.mode) || 'Transport';
         if (k === 'Flight') flights.push({title:it.title, kicker:k, price, rawPrice:b.price, date:d.date, ref:b.ref, avios:it._avios||null});
         else if (price) transport.push({title:it.title, kicker:k, price, rawPrice:b.price, date:d.date});
-      } else if ((it.type === 'act' || it.type === 'ticket') && price) {
+      } else if ((it.type === 'act' || it.type === 'ticket' || it.type === 'attraction') && price) {
         attractions.push({title:it.title, price, rawPrice:b.price, date:d.date, ref:b.ref, tickets:b.tickets, url:b.url});
       }
     }
@@ -1941,7 +2060,7 @@ function extractBookings(state) {
         k==='Flight' ? flights.push(obj) : transport.push(obj);
       } else if (it.type==='meal' && (st==='booked'||st==='confirmed')) {
         dining.push({...base, cat:'dining', sub:it.sub});
-      } else if (it.type==='act'||it.type==='ticket') {
+      } else if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
         attractions.push({...base, cat:'attraction', tickets:b.tickets, sub:it.sub});
       }
     }
@@ -2074,11 +2193,16 @@ let _mapGeocoding = false;
 
 const MAP_CAT_COLORS = {
   act:    '#0e7a87',
+  place:  '#0e7a87',
   ticket: '#6366f1',
+  attraction: '#6366f1',
   meal:   '#d97b0a',
   hotel:  '#1a8a52',
   move:   '#888888',
 };
+
+// Map filter buttons group legacy + current type names under one filter
+const MAP_CAT_GROUPS = { act: ['place','act'], ticket: ['attraction','ticket'], meal: ['meal'], hotel: ['hotel'] };
 
 function itemsToMap(state) {
   const items = [];
@@ -2171,7 +2295,7 @@ function renderMapView() {
   const allItems = itemsToMap(STATE);
   const filtered = allItems.filter(it => {
     if (_mapDayFilter !== 'all' && it._dayIdx !== parseInt(_mapDayFilter)) return false;
-    if (_mapCatFilter !== 'all' && it.type !== _mapCatFilter) return false;
+    if (_mapCatFilter !== 'all' && !(MAP_CAT_GROUPS[_mapCatFilter]||[_mapCatFilter]).includes(it.type)) return false;
     return true;
   });
 
@@ -2195,7 +2319,7 @@ function renderMapView() {
       <button class="mf-btn ${_mapCatFilter==='all'?'active':''}" onclick="setMapFilter('cat','all')">All</button>
       <button class="mf-btn cat-act ${_mapCatFilter==='act'?'active':''}" onclick="setMapFilter('cat','act')">Places</button>
       <button class="mf-btn cat-meal ${_mapCatFilter==='meal'?'active':''}" onclick="setMapFilter('cat','meal')">Meals</button>
-      <button class="mf-btn cat-ticket ${_mapCatFilter==='ticket'?'active':''}" onclick="setMapFilter('cat','ticket')">Tickets</button>
+      <button class="mf-btn cat-ticket ${_mapCatFilter==='ticket'?'active':''}" onclick="setMapFilter('cat','ticket')">Attractions</button>
       <button class="mf-btn cat-hotel ${_mapCatFilter==='hotel'?'active':''}" onclick="setMapFilter('cat','hotel')">Hotels</button>
     </div>`;
 
