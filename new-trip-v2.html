@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=75">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=76">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -848,12 +848,22 @@ function renderSidebar() {
       if (photo) hero.style.backgroundImage = `url('${photo}')`;
     }).catch(()=>{});
   }
-  // Sidebar days list
+  // Sidebar days list — full formatted date
+  const dayNames  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthFull  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const ordinal = n => { const s=['th','st','nd','rd']; const v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
+
   document.getElementById('sb-days').innerHTML = STATE.days.map((dy,i) => {
-    const dt = (dy.date||'').split('/').slice(0,2).join('/');
+    let label = '';
+    if (dy.date) {
+      const [dd,mm,yyyy] = dy.date.split('/').map(Number);
+      const d = new Date(yyyy, mm-1, dd);
+      label = `${dayNames[d.getDay()]} ${ordinal(dd)} ${monthFull[mm-1]}`;
+    }
     return `<button class="sb-day-item ${i===activeDay?'active':''}" onclick="setDay(${i})">
       <span class="sb-day-num">Day ${i+1}</span>
-      <span class="sb-day-date-label">${dt}</span>
+      <span class="sb-day-date-label">${label}</span>
     </button>`;
   }).join('');
 
