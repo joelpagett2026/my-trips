@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=82">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=83">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1756,6 +1756,33 @@ function nearestNeighbourOrder(n, costFn) {
   return bestOrder;
 }
 
+// Local-search refinement: repeatedly un-cross any pair of edges in the route
+// where swapping their order reduces total cost. This is what catches
+// zig-zag / backtracking routes that greedy nearest-neighbour can leave behind.
+function twoOptImprove(order, costFn) {
+  const n = order.length;
+  if (n < 4) return order;
+  const route = order.slice();
+  let improved = true, iterations = 0;
+  while (improved && iterations < 200) {
+    improved = false;
+    iterations++;
+    for (let i = 0; i < n - 2; i++) {
+      for (let j = i + 2; j < n - 1; j++) {
+        const a = route[i], b = route[i+1], c = route[j], d = route[j+1];
+        const before = costFn(a,b) + costFn(c,d);
+        const after  = costFn(a,c) + costFn(b,d);
+        if (after < before - 1e-9) {
+          let lo = i+1, hi = j;
+          while (lo < hi) { const t = route[lo]; route[lo] = route[hi]; route[hi] = t; lo++; hi--; }
+          improved = true;
+        }
+      }
+    }
+  }
+  return route;
+}
+
 async function regeneratePeriod(periodKey, btnEl) {
   if (btnEl && btnEl.classList.contains('spinning')) return; // already running
   const day = STATE.days[activeDay];
@@ -1783,16 +1810,17 @@ async function regeneratePeriod(periodKey, btnEl) {
   if (btnEl) btnEl.classList.add('spinning');
 
   const points = withGeo.map(i => ({ idx: i, lat: items[i]._geo.lat, lng: items[i]._geo.lng }));
-  let orderedLocal, usedRealWalkingTimes = true;
+  let orderedLocal, usedRealWalkingTimes = true, costFn;
   try {
     const matrix = await getWalkingDurationMatrix(points);
-    orderedLocal = nearestNeighbourOrder(points.length, (a, b) => matrix[a][b]);
+    costFn = (a, b) => matrix[a][b];
   } catch (e) {
     // Google walking times unavailable — fall back to straight-line distance
     usedRealWalkingTimes = false;
-    orderedLocal = nearestNeighbourOrder(points.length, (a, b) =>
-      haversineKm(points[a].lat, points[a].lng, points[b].lat, points[b].lng));
+    costFn = (a, b) => haversineKm(points[a].lat, points[a].lng, points[b].lat, points[b].lng);
   }
+  orderedLocal = nearestNeighbourOrder(points.length, costFn);
+  orderedLocal = twoOptImprove(orderedLocal, costFn);
   const orderedIdx = orderedLocal.map(i => points[i].idx);
   const newOrderForSlots = orderedIdx.concat(withoutGeo); // unlocated stops keep their relative order, appended last
 
