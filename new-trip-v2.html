@@ -51,7 +51,6 @@
     </button>
   </nav>
   <div class="sb-bottom">
-    <div class="sb-readiness" id="sb-readiness"></div>
     <button class="sb-btn" onclick="openTripSettings()">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       Trip Settings
@@ -1265,9 +1264,6 @@ function renderHotelPanel() {
 function renderSidebarReadiness() {
   const days = STATE.days || [];
   const N = days.length;
-  const el = document.getElementById('sb-readiness');
-  if (!el) return;
-
   const isFlight = it => it && it.type === 'move' &&
     ((it.transport && it.transport.mode === 'Flight') || it.kicker === 'Flight');
   const isConfirmed = it => {
@@ -1323,26 +1319,6 @@ function renderSidebarReadiness() {
   const circumference = 2 * Math.PI * 23;
   const offset = circumference * (1 - pct/100);
   const title = pct>=100 ? 'Trip complete 🎉' : label;
-
-  // Left sidebar — keep existing ring layout
-  el.innerHTML = `
-    <div class="sbr-ring-wrap">
-      <svg width="58" height="58" viewBox="0 0 58 58">
-        <circle cx="29" cy="29" r="23" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
-        <circle cx="29" cy="29" r="23" fill="none" stroke="var(--teal2)" stroke-width="5"
-          stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
-          stroke-linecap="round" transform="rotate(-90 29 29)"/>
-      </svg>
-      <div class="sbr-ring-pct">${pct}%</div>
-    </div>
-    <div class="sbr-title">${title}</div>
-    <div class="sb-readiness-track"><div class="sb-readiness-fill" style="width:${pct}%"></div></div>
-    <div class="sb-readiness-cats">
-      ${catRow(flightsOk, 'Flights')}
-      ${catRow(restaurantsOk, 'Restaurants')}
-      ${catRow(hotelsOk, 'Hotels')}
-      ${catRow(activitiesOk, 'Activities')}
-    </div>`;
 
   // Right panel — compact single row
   const rpEl = document.getElementById('rp-readiness');
