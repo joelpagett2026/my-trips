@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=94">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=95">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -16,9 +16,13 @@
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
   <div class="sb-trip">
-    <div class="sb-photo" id="sb-photo"></div>
-    <div class="sb-name" id="sb-name">Loading…</div>
-    <div class="sb-meta" id="sb-meta"></div>
+    <div class="sb-card">
+      <div class="sb-card-photo" id="sb-photo">
+        <div class="sb-card-overlay"></div>
+        <div class="sb-card-title" id="sb-name">Loading…</div>
+      </div>
+      <div class="sb-card-meta" id="sb-meta"></div>
+    </div>
   </div>
   <nav class="sb-nav">
     <button class="sb-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
@@ -812,10 +816,13 @@ function renderSidebar() {
   const mmTrip = document.getElementById('mob-menu-trip');
   if (mmTrip) mmTrip.textContent = STATE.meta?.dest || dest;
   const m = STATE.meta;
-  document.getElementById('sb-name').textContent = m.dest || dest;
+  // Update card title and meta
+  const cardTitle = document.getElementById('sb-name');
+  if (cardTitle) cardTitle.textContent = m.dest || dest;
   const depFmt = m.dep || dep;
   const retFmt = m.ret || ret;
-  document.getElementById('sb-meta').textContent = formatDateRangeNice(depFmt, retFmt) + (depFmt && retFmt ? '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
+  const metaEl = document.getElementById('sb-meta');
+  if (metaEl) metaEl.textContent = formatDateRangeNice(depFmt, retFmt) + (depFmt && retFmt ? '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
   ensureCoverPhoto();
 
   const d = STATE.days[activeDay];
