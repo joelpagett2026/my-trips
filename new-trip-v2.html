@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=98">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=99">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1323,8 +1323,8 @@ function renderSidebarReadiness() {
   // Right panel — donut + icon categories card
   const rpEl = document.getElementById('rp-readiness');
   if (rpEl) {
-    const circ = (2 * Math.PI * 36).toFixed(1);
-    const off  = (2 * Math.PI * 36 * (1 - pct/100)).toFixed(1);
+    const circ = (2 * Math.PI * 28).toFixed(1);
+    const off  = (2 * Math.PI * 28 * (1 - pct/100)).toFixed(1);
     const label2 = pct >= 100 ? 'All set!' : pct >= 80 ? 'Almost!' : 'In progress';
 
     const catDefs = [
@@ -1338,11 +1338,11 @@ function renderSidebarReadiness() {
 
     rpEl.innerHTML = `<div class="rr-card">
       <div class="rr-donut">
-        <svg width="88" height="88" viewBox="0 0 88 88">
-          <circle cx="44" cy="44" r="36" fill="none" stroke="var(--line)" stroke-width="7"/>
-          <circle cx="44" cy="44" r="36" fill="none" stroke="var(--teal)" stroke-width="7"
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r="28" fill="none" stroke="var(--line)" stroke-width="6"/>
+          <circle cx="36" cy="36" r="28" fill="none" stroke="var(--teal)" stroke-width="6"
             stroke-dasharray="${circ}" stroke-dashoffset="${off}"
-            stroke-linecap="round" transform="rotate(-90 44 44)"/>
+            stroke-linecap="round" transform="rotate(-90 36 36)"/>
         </svg>
         <div class="rr-donut-inner">
           <div class="rr-pct">${pct}%</div>
