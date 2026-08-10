@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=92">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=93">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -16,11 +16,7 @@
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
   <div class="sb-trip">
-    <div class="sb-photo" id="sb-photo">
-      <button class="sb-trip-edit-btn" onclick="openTripSettings()" title="Trip settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-      </button>
-    </div>
+    <div class="sb-photo" id="sb-photo"></div>
     <div class="sb-name" id="sb-name">Loading…</div>
     <div class="sb-meta" id="sb-meta"></div>
   </div>
@@ -52,9 +48,9 @@
   </nav>
   <div class="sb-bottom">
     <div class="sb-readiness" id="sb-readiness"></div>
-    <button class="sb-btn" onclick="location.href='/settings.html'">
+    <button class="sb-btn" onclick="openTripSettings()">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-      Settings
+      Trip Settings
     </button>
     <button class="sb-btn" onclick="location.href='/trips/'">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

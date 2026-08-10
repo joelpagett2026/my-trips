@@ -233,9 +233,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .hotel-img:hover .hotel-edit-btn { opacity: 1; }
 .hotel-edit-btn:hover { background: rgba(0,0,0,0.65); }
-.sb-trip-edit-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.4);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.15s;}
-.sb-trip-edit-btn svg{width:12px;height:12px;stroke:currentColor;}
-.sb-trip-edit-btn:hover{background:rgba(0,0,0,0.65);}
 .sb-readiness{padding:12px 10px 12px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:4px;display:flex;flex-direction:column;align-items:center;text-align:center;}
 .sbr-ring-wrap{position:relative;width:58px;height:58px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
 .sbr-ring-wrap svg{position:absolute;top:0;left:0;}
