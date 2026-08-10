@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=85">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=86">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -105,11 +105,7 @@
         <div id="rp-readiness"></div>
       </div>
       <div class="rp-section">
-        <div class="rp-h">Estimated Spend</div>
-        <div id="rp-budget"></div>
-      </div>
-      <div class="rp-section">
-        <div class="rp-h">Key Bookings</div>
+        <div class="rp-h">Places to Eat</div>
         <div id="rp-bookings"></div>
       </div>
     </div>
@@ -1048,8 +1044,7 @@ function dragCleanup() {
 function renderRightPanel() {
   renderHotelPanel();
   renderReadiness();
-  renderBudget();
-  renderKeyBookings();
+  renderPlacesToEat();
 }
 
 // Parse dd/mm/yyyy → Date for comparison
@@ -1172,39 +1167,19 @@ function renderReadiness() {
     </div>`;
 }
 
-function renderBudget() {
-  const budgetUrl = budgetPageUrl;
-  const b = STATE.meta.budget;
-  if (!b) {
-    document.getElementById('rp-budget').innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No budget set.</div>`;
-    return;
-  }
-  const total = (b.stay||0)+(b.food||0)+(b.act||0)+(b.trans||0);
-  const pct = (n) => total ? Math.round((n/total)*100) : 0;
-  document.getElementById('rp-budget').innerHTML = `
-    <div class="budget-total">£${total}</div>
-    <div class="budget-sub">for ${STATE.meta.trav||trav} travellers</div>
-    <div class="budget-bars">
-      <div class="bb-row"><div class="bb-lbl">Stay</div><div class="bb-track"><div class="bb-fill" style="width:${pct(b.stay)}%"></div></div><div class="bb-val">£${b.stay||0}</div></div>
-      <div class="bb-row"><div class="bb-lbl">Food</div><div class="bb-track"><div class="bb-fill food" style="width:${pct(b.food)}%"></div></div><div class="bb-val">£${b.food||0}</div></div>
-      <div class="bb-row"><div class="bb-lbl">Activities</div><div class="bb-track"><div class="bb-fill act" style="width:${pct(b.act)}%"></div></div><div class="bb-val">£${b.act||0}</div></div>
-      <div class="bb-row"><div class="bb-lbl">Transport</div><div class="bb-track"><div class="bb-fill trans" style="width:${pct(b.trans)}%"></div></div><div class="bb-val">£${b.trans||0}</div></div>
-    </div>
-    <a href="${budgetUrl}" class="rp-link-btn" style="display:block;text-align:center;text-decoration:none;">View full budget →</a>`;
-}
-
-function renderKeyBookings() {
-  const items = STATE.days.flatMap(d => (d.items||[]).map(it => it && it.booking ? {day:d.date, ...it} : null)).filter(Boolean);
+function renderPlacesToEat() {
+  const day = STATE.days[activeDay];
+  const meals = (day?.items || []).filter(it => it && it.type === 'meal');
   const el = document.getElementById('rp-bookings');
-  if (!items.length) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No bookings yet.</div>`;
+  if (!meals.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No meals added for this day.</div>`;
     return;
   }
-  el.innerHTML = items.slice(0,4).map(it => {
+  el.innerHTML = meals.map(it => {
     const ico = icoForType(it.type, it.title, it);
-    return `<div class="bk-item"><div class="bk-ico" style="background:var(--teal-xdim)">${ico.html}</div>
+    return `<div class="bk-item bk-item--eat"><div class="bk-ico" style="background:rgba(217,123,10,0.12);color:#d97b0a">${ico.html}</div>
       <div class="bk-body"><div class="bk-name">${it.title}</div>
-      <div class="bk-meta">${it.day||''} ${it.time?'· '+it.time:''} · ${badgeHtml(it.status)}</div></div></div>`;
+      <div class="bk-meta">${it.time?it.time+' · ':''}${badgeHtml(it.status)}</div></div></div>`;
   }).join('');
 }
 
