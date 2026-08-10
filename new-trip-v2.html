@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=88">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=89">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -17,27 +17,34 @@
 <aside class="v2-sidebar">
   <div class="sb-trip">
     <div class="sb-flag" id="sb-flag">🌍</div>
-    <div class="sb-name" id="sb-name">Loading…</div>
+    <div class="sb-photo" id="sb-photo"></div>
+    <div class="sb-name-row"><div class="sb-name" id="sb-name">Loading…</div><span class="sb-name-plane" id="sb-name-plane"></span></div>
     <div class="sb-meta" id="sb-meta"></div>
   </div>
   <nav class="sb-nav">
     <button class="sb-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       Itinerary
+      <span class="sb-chevron" id="sb-days-toggle" onclick="event.stopPropagation();toggleDaysCollapse();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
     </button>
-    <div id="sb-days"></div>
+    <div id="sb-days" class="sb-timeline"></div>
     <div class="sb-divider"></div>
     <button class="sb-btn" id="sb-btn-bookings" onclick="setView('bookings')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       Bookings
+      <span class="sb-chevron-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
     </button>
     <button class="sb-btn" id="sb-btn-map" onclick="setView('map')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
       Map
+      <span class="sb-chevron-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
     </button>
     <button class="sb-btn" id="sb-btn-budget" onclick="setView('budget')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Budget
+      <span class="sb-chevron-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
     </button>
   </nav>
   <div class="sb-bottom">
@@ -698,6 +705,58 @@ function renderMobNav() {
   }, 50);
 }
 
+function formatDateRangeNice(dep, ret) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const parse = s => { const [d,m,y] = (s||'').split('/').map(Number); return (d&&m&&y) ? {d,m,y} : null; };
+  const a = parse(dep), b = parse(ret);
+  if (!a || !b) return (dep && ret) ? dep + ' → ' + ret : '';
+  return a.d + ' ' + months[a.m-1] + ' – ' + b.d + ' ' + months[b.m-1] + ' ' + b.y;
+}
+
+function formatDayLabel(dateStr) {
+  if (!dateStr) return '—';
+  const [d,m,y] = dateStr.split('/').map(Number);
+  if (!d || !m || !y) return dateStr;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const wd = new Date(y, m-1, d).toLocaleDateString('en-GB', { weekday: 'short' });
+  return wd + ', ' + d + ' ' + months[m-1];
+}
+
+let sbDaysCollapsed = false;
+function toggleDaysCollapse() {
+  sbDaysCollapsed = !sbDaysCollapsed;
+  document.getElementById('sb-days').classList.toggle('collapsed', sbDaysCollapsed);
+  document.getElementById('sb-days-toggle').classList.toggle('collapsed', sbDaysCollapsed);
+}
+
+async function ensureCoverPhoto() {
+  const m = STATE.meta;
+  const el = document.getElementById('sb-photo');
+  if (m._coverPhoto) { el.style.backgroundImage = `url('${m._coverPhoto}')`; el.classList.remove('loading','empty'); return; }
+  if (m._coverPhoto === '') { el.classList.add('empty'); el.classList.remove('loading'); return; } // previously tried, none found
+  el.classList.add('loading');
+  try {
+    const destName = m.dest || dest;
+    const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(destName), {
+      headers: { 'X-Auth-Token': AUTH_TOKEN },
+    });
+    const j = await r.json();
+    const photo = j.data?.photo || j.photo || null;
+    m._coverPhoto = photo || '';
+    if (photo) {
+      el.style.backgroundImage = `url('${photo}')`;
+      el.classList.remove('loading');
+      scheduleSave();
+    } else {
+      el.classList.add('empty');
+      el.classList.remove('loading');
+    }
+  } catch (e) {
+    el.classList.add('empty');
+    el.classList.remove('loading');
+  }
+}
+
 function renderSidebar() {
   // Sync mobile menu trip name
   const mmTrip = document.getElementById('mob-menu-trip');
@@ -705,14 +764,18 @@ function renderSidebar() {
   const m = STATE.meta;
   document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
   document.getElementById('sb-name').textContent = m.dest || dest;
+  document.getElementById('sb-name-plane').innerHTML =
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`;
   const depFmt = m.dep || dep;
   const retFmt = m.ret || ret;
-  document.getElementById('sb-meta').textContent = (depFmt && retFmt ? depFmt + ' → ' + retFmt + '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
+  document.getElementById('sb-meta').textContent = formatDateRangeNice(depFmt, retFmt) + (depFmt && retFmt ? '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
+  ensureCoverPhoto();
 
   const d = STATE.days[activeDay];
   document.getElementById('sb-days').innerHTML = STATE.days.map((dy,i) => {
     return `<button class="sb-day-item ${i===activeDay?'active':''}" onclick="setDay(${i})">
-      <span>Day ${i+1} · ${dy.date||'—'}</span>
+      <span class="sb-day-dot-col"><span class="sb-day-dot"></span></span>
+      <span>Day ${i+1} • ${formatDayLabel(dy.date)}</span>
     </button>`;
   }).join('');
 
@@ -1196,16 +1259,26 @@ function renderSidebarReadiness() {
   const catRow = (ok, label) =>
     `<div class="sb-rc-row ${ok?'ok':''}">${ok?ICO.check:ICO.circle}<span>${label}</span></div>`;
 
+  const circumference = 2 * Math.PI * 23;
+  const offset = circumference * (1 - pct/100);
+  const title = pct>=100 ? 'Trip complete 🎉' : label;
+
   el.innerHTML = `
-    <div class="sb-readiness-row">
-      <span class="sb-readiness-pct">${pct}%</span>
-      <span class="sb-readiness-lbl">${label}</span>
+    <div class="sbr-ring-wrap">
+      <svg width="58" height="58" viewBox="0 0 58 58">
+        <circle cx="29" cy="29" r="23" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
+        <circle cx="29" cy="29" r="23" fill="none" stroke="var(--teal2)" stroke-width="5"
+          stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
+          stroke-linecap="round" transform="rotate(-90 29 29)"/>
+      </svg>
+      <div class="sbr-ring-pct">${pct}%</div>
     </div>
+    <div class="sbr-title">${title}</div>
     <div class="sb-readiness-track"><div class="sb-readiness-fill" style="width:${pct}%"></div></div>
     <div class="sb-readiness-cats">
       ${catRow(flightsOk, 'Flights')}
-      ${catRow(hotelsOk, 'Hotels')}
       ${catRow(restaurantsOk, 'Restaurants')}
+      ${catRow(hotelsOk, 'Hotels')}
       ${catRow(activitiesOk, 'Activities')}
     </div>`;
 }
