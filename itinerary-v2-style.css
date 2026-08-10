@@ -221,6 +221,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .sb-readiness-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);}
 .sb-readiness-track{height:4px;background:rgba(255,255,255,0.12);border-radius:99px;overflow:hidden;}
 .sb-readiness-fill{height:100%;border-radius:99px;background:var(--teal2);transition:width 0.3s;}
+.sb-readiness-cats{display:flex;flex-direction:column;gap:5px;margin-top:9px;}
+.sb-rc-row{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:rgba(255,255,255,0.4);}
+.sb-rc-row svg{width:11px;height:11px;flex-shrink:0;stroke:rgba(255,255,255,0.3);}
+.sb-rc-row.ok{color:rgba(255,255,255,0.85);}
+.sb-rc-row.ok svg{stroke:var(--green);}
 .bk-item{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:border-color 0.12s;}
 .bk-item:hover{border-color:var(--teal);}
 .bk-item--eat{background:rgba(217,123,10,0.06);border-color:rgba(217,123,10,0.25);}

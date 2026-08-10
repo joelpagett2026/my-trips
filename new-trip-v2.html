@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=87">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=88">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1189,12 +1189,25 @@ function renderSidebarReadiness() {
   const pct   = total ? Math.round((done/total)*100) : 100;
   const label = pct>=100?'All set!':pct>=80?'Almost there!':'In progress';
 
+  const flightsOk     = outboundOk && returnOk;
+  const hotelsOk       = hotelDone === nights;
+  const restaurantsOk  = dinnerDone === dinnerTotal;
+  const activitiesOk   = activityDone === middleDays;
+  const catRow = (ok, label) =>
+    `<div class="sb-rc-row ${ok?'ok':''}">${ok?ICO.check:ICO.circle}<span>${label}</span></div>`;
+
   el.innerHTML = `
     <div class="sb-readiness-row">
       <span class="sb-readiness-pct">${pct}%</span>
       <span class="sb-readiness-lbl">${label}</span>
     </div>
-    <div class="sb-readiness-track"><div class="sb-readiness-fill" style="width:${pct}%"></div></div>`;
+    <div class="sb-readiness-track"><div class="sb-readiness-fill" style="width:${pct}%"></div></div>
+    <div class="sb-readiness-cats">
+      ${catRow(flightsOk, 'Flights')}
+      ${catRow(hotelsOk, 'Hotels')}
+      ${catRow(restaurantsOk, 'Restaurants')}
+      ${catRow(activitiesOk, 'Activities')}
+    </div>`;
 }
 
 function renderPlacesToEat() {
