@@ -1021,8 +1021,12 @@ function buildDynamicCard(t) {
     `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}">`
   ).join('');
 
+  const imageAreaHtml = t.photo
+    ? `<img src="${t.photo}" alt="${t.dest}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<div id="${mapId}" class="card-map"></div>`;
+
   a.innerHTML = `<div class="card-image-area" style="background:#e0eef0;position:relative;">
-    <div id="${mapId}" class="card-map"></div>
+    ${imageAreaHtml}
     <div class="card-map-flags">${flagsHtml}</div>
     <div class="card-status-pill ${statusClass}">${statusLabel}</div>
   </div>
@@ -1033,7 +1037,8 @@ function buildDynamicCard(t) {
   </div>`;
 
   // Render map — use stored points if available, else geocode destination
-  setTimeout(async () => {
+  // Skipped entirely when a cover photo is set for this trip.
+  if (!t.photo) setTimeout(async () => {
     try {
       const mapEl = document.getElementById(mapId);
       if (!mapEl) return;
