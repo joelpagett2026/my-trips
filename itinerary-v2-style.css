@@ -42,7 +42,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .sb-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
 .sb-name-plane{width:14px;height:14px;flex-shrink:0;display:flex;}
 .sb-name-plane svg{width:14px;height:14px;stroke:var(--teal2);}
-.sb-meta{font-size:10.5px;color:rgba(255,255,255,0.4);font-weight:500;line-height:1.65;white-space:pre-line;}
+.sb-meta{font-size:10.5px;color:rgba(255,255,255,0.85);font-weight:500;line-height:1.65;white-space:pre-line;}
 .sb-nav{flex:1;padding:8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;scrollbar-width:none;}
 .sb-nav::-webkit-scrollbar{display:none;}
 .sb-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);cursor:pointer;transition:all 0.14s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);}
