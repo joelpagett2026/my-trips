@@ -1025,10 +1025,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rr-pct   { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
 .rr-label { font-size: 8.5px; color: var(--text3); font-weight: 600; margin-top: 1px; }
 .rr-divider { width: 1px; background: var(--line); align-self: stretch; margin: 0 8px; flex-shrink: 0; }
-.rr-cats { display: flex; gap: 0; flex: 1; min-width: 0; }
-.rr-cat  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
-           padding: 0 1px; border-right: 1px solid var(--line); }
-.rr-cat:last-child { border-right: none; }
+.rr-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-width: 0; }
+.rr-cat  { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; }
 .rr-cat-ico {
   width: 32px; height: 32px; border-radius: 50%;
   background: var(--bg); display: flex; align-items: center; justify-content: center;
