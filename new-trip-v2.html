@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=83">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=84">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -719,12 +719,8 @@ function renderSidebar() {
 
   const d = STATE.days[activeDay];
   document.getElementById('sb-days').innerHTML = STATE.days.map((dy,i) => {
-    const warns = (dy.items||[]).filter(it => it && it.status==='attention').length;
-    const allBooked = (dy.items||[]).filter(it => it && it.status).every(it => it.status==='booked'||it.status==='confirmed'||it.status==='walkin');
-    const dotCls = warns ? 'warn' : (dy.items&&dy.items.length ? '' : 'none');
     return `<button class="sb-day-item ${i===activeDay?'active':''}" onclick="setDay(${i})">
       <span>Day ${i+1} · ${dy.date||'—'}</span>
-      <span class="sb-day-dot ${dotCls}"></span>
     </button>`;
   }).join('');
 }
