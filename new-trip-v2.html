@@ -700,7 +700,6 @@ function renderDaySelector() {
     `<div class="day-tab ${i===activeDay?'active':''}" onclick="setDay(${i})">
       <div class="dt-n">Day ${i+1}</div>
       <div class="dt-date">${d.date||'—'}</div>
-      <div class="dt-loc">${d.title||d.loc||'—'}</div>
     </div>`
   ).join('');
 }
