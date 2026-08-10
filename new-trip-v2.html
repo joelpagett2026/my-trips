@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=80">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=81">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -810,6 +810,9 @@ function renderTimeline() {
       '<div class="tl-section-accent ' + key + '"></div>' +
       '<span class="tl-section-label">' + label + '</span>' +
 
+      '<button class="tl-section-regen" data-regen-period="' + key + '" title="Reorder ' + label.toLowerCase() + ' stops by nearest distance">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>' +
+      '</button>' +
       '<button class="tl-section-clear" data-clear-period="' + key + '" title="Remove all ' + label.toLowerCase() + ' items">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>';
@@ -1452,6 +1455,12 @@ document.addEventListener('click', e => {
     e.stopPropagation();
     clearPeriod(clearBtn.dataset.clearPeriod);
   }
+
+  const regenBtn = e.target.closest('[data-regen-period]');
+  if (regenBtn) {
+    e.stopPropagation();
+    regeneratePeriod(regenBtn.dataset.regenPeriod, regenBtn);
+  }
 });
 
 function openModal() {
@@ -1676,6 +1685,89 @@ function clearPeriod(periodKey) {
     showSnapshotBar(true);
     setTimeout(() => showSnapshotBar(false), 6000);
   }
+}
+
+// ── REORDER SECTION BY NEAREST STOP ─────────────────────────────────
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Greedy nearest-neighbour route, tried from every possible starting point,
+// keeping whichever full route covers the least total distance.
+function nearestNeighbourOrder(points) {
+  const n = points.length;
+  if (n <= 2) return points.map(p => p.idx);
+  let bestOrder = null, bestDist = Infinity;
+  for (let start = 0; start < n; start++) {
+    const visited = new Array(n).fill(false);
+    visited[start] = true;
+    const order = [start];
+    let cur = start, total = 0;
+    for (let step = 1; step < n; step++) {
+      let nearest = -1, nearestD = Infinity;
+      for (let j = 0; j < n; j++) {
+        if (visited[j]) continue;
+        const dist = haversineKm(points[cur].lat, points[cur].lng, points[j].lat, points[j].lng);
+        if (dist < nearestD) { nearestD = dist; nearest = j; }
+      }
+      visited[nearest] = true;
+      order.push(nearest);
+      total += nearestD;
+      cur = nearest;
+    }
+    if (total < bestDist) { bestDist = total; bestOrder = order; }
+  }
+  return bestOrder.map(i => points[i].idx);
+}
+
+function regeneratePeriod(periodKey, btnEl) {
+  const day = STATE.days[activeDay];
+  if (!day) return;
+  const items = day.items || [];
+
+  // Marker slots: place/attraction-style stops in this period with no fixed
+  // time — timed items, meals, and transport keep their exact position.
+  const markerSlots = [];
+  items.forEach((it, i) => {
+    if (!it) return;
+    const p = it.period || inferPeriod(it);
+    if (p !== periodKey) return;
+    if (it.type === 'meal' || it.type === 'move') return;
+    if (it.time) return;
+    markerSlots.push(i);
+  });
+
+  if (markerSlots.length < 2) return; // nothing meaningful to reorder
+
+  const withGeo    = markerSlots.filter(i => items[i]._geo && items[i]._geo.lat != null);
+  const withoutGeo = markerSlots.filter(i => !(items[i]._geo && items[i]._geo.lat != null));
+  if (withGeo.length < 2) return; // not enough located stops yet
+
+  if (btnEl) btnEl.classList.add('spinning');
+
+  const points = withGeo.map(i => ({ idx: i, lat: items[i]._geo.lat, lng: items[i]._geo.lng }));
+  const orderedIdx = nearestNeighbourOrder(points);
+  const newOrderForSlots = orderedIdx.concat(withoutGeo); // unlocated stops keep their relative order, appended last
+
+  takeSnapshot();
+  const reordered = newOrderForSlots.map(i => items[i]);
+  markerSlots.forEach((slot, k) => { items[slot] = reordered[k]; });
+
+  scheduleSave();
+  renderTimeline();
+  renderRightPanel();
+  document.getElementById('snapshot-msg').textContent = 'Reordered ' + withGeo.length + ' stops';
+  showSnapshotBar(true);
+  setTimeout(() => {
+    showSnapshotBar(false);
+    document.getElementById('snapshot-msg').textContent = 'Snapshot saved';
+  }, 6000);
+  if (btnEl) setTimeout(() => btnEl.classList.remove('spinning'), 500);
 }
 
 // ── HOTEL MODAL ──────────────────────────────────────────────────────
