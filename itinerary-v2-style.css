@@ -1025,10 +1025,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rr-pct   { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
 .rr-label { font-size: 10px; color: var(--teal); font-weight: 700; margin-top: 2px; }
 .rr-divider { width: 1px; background: var(--line); align-self: stretch; margin: 0 10px; flex-shrink: 0; }
-.rr-cats { display: flex; flex: 1; min-width: 0; }
+.rr-cats { display: flex; flex: 1; min-width: 0; gap: 4px; }
 .rr-cat  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
-           gap: 5px; padding: 0 2px; }
-.rr-cat:last-child { border-right: none; }
+           gap: 4px; }
 .rr-cat-ico {
   width: 44px; height: 44px; border-radius: 50%;
   background: var(--bg); display: flex; align-items: center; justify-content: center;
@@ -1043,5 +1042,4 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .rr-check svg { width: 10px; height: 10px; }
 .rr-cat-name   { font-size: 10.5px; font-weight: 700; color: var(--text); text-align: center; }
-.rr-cat-status { font-size: 10px; color: var(--text3); font-weight: 500; }
-.rr-cat-status.ok { color: var(--teal); font-weight: 600; }
+.rr-cat-status { display: none; }
