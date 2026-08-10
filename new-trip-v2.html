@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=76">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=74">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -15,48 +15,37 @@
 
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
-  <!-- Hero photo + trip name -->
-  <div class="sb-hero" id="sb-hero">
-    <div class="sb-hero-overlay"></div>
-    <div class="sb-hero-text" id="sb-name">Loading…</div>
+  <div class="sb-trip">
+    <div class="sb-flag" id="sb-flag">🌍</div>
+    <div class="sb-name" id="sb-name">Loading…</div>
+    <div class="sb-meta" id="sb-meta"></div>
   </div>
-  <!-- Trip meta -->
-  <div class="sb-trip-meta">
-    <div class="sb-meta-row">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span id="sb-dates">—</span>
-    </div>
-    <div class="sb-meta-row">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span id="sb-travellers">—</span>
-    </div>
-  </div>
-  <!-- Nav rows -->
   <nav class="sb-nav">
-    <button class="sb-hub-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span>Itinerary</span>
-      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <button class="sb-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Itinerary
     </button>
-    <button class="sb-hub-btn" onclick="setView('bookings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-      <span>Bookings</span>
-      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-    <button class="sb-hub-btn" onclick="setView('map')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
-      <span>Map</span>
-      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-    <button class="sb-hub-btn" id="sb-btn-budget" onclick="setView('budget')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      <span>Budget</span>
-      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-    <div class="sb-section-label" style="margin-top:8px;">Days</div>
+    <div class="sb-section-label">Days</div>
     <div id="sb-days"></div>
+    <div class="sb-divider"></div>
+    <button class="sb-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      Bookings
+    </button>
+    <button class="sb-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+      Map
+    </button>
+    <button class="sb-btn" id="sb-btn-budget" onclick="setView('budget')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Budget
+    </button>
   </nav>
   <div class="sb-bottom">
+    <button class="sb-btn" onclick="location.href='/settings.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Settings
+    </button>
     <button class="sb-btn" onclick="location.href='/trips/'">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       All trips
@@ -113,7 +102,15 @@
         <div id="rp-hotel">—</div>
       </div>
       <div class="rp-section">
-        <div class="rp-h">Places to Eat</div>
+        <div class="rp-h">Trip Readiness</div>
+        <div id="rp-readiness"></div>
+      </div>
+      <div class="rp-section">
+        <div class="rp-h">Estimated Spend</div>
+        <div id="rp-budget"></div>
+      </div>
+      <div class="rp-section">
+        <div class="rp-h">Key Bookings</div>
         <div id="rp-bookings"></div>
       </div>
     </div>
@@ -159,6 +156,7 @@
 
     <!-- ABOUT THIS PLACE -->
     <div id="dr-about-wrap" style="display:none; margin-top:16px;">
+      <div class="dr-about-header">About this place</div>
       <div id="dr-about-body"></div>
     </div>
     <div id="dr-about-loading" style="display:none; margin-top:16px; text-align:center; padding:20px 0;">
@@ -224,115 +222,72 @@
       </div>
     </div>
     <div class="modal-body" id="modal-body-single">
-      <!-- Category bubbles, always visible -->
-      <div class="field-group">
-        <label class="field-label">Category</label>
-        <div class="transport-type-row" id="f-category-row">
-          <button type="button" class="tt-btn active" data-cat="place">Place</button>
-          <button type="button" class="tt-btn" data-cat="attraction">Attraction</button>
-          <button type="button" class="tt-btn" data-cat="meal">Meal</button>
-          <button type="button" class="tt-btn" data-cat="move">Transport</button>
-        </div>
-        <input type="hidden" id="f-type" value="place">
-        <input type="hidden" id="f-period" value="morning">
-      </div>
-
-      <!-- PLACE FIELDS -->
-      <div id="fields-place" style="display:flex;flex-direction:column;gap:13px;">
+      <!-- Category first, always visible -->
+      <div class="field-row">
         <div class="field-group">
-          <label class="field-label">Location</label>
-          <input class="field-input" id="f-place-location" type="text" placeholder="e.g. São Bento Station">
+          <label class="field-label">Category</label>
+          <select class="field-select" id="f-type" onchange="onCategoryChange()">
+            <option value="act">Activity / Place</option>
+            <option value="meal">Meal</option>
+            <option value="move">Transport</option>
+            <option value="hotel">Accommodation</option>
+          </select>
         </div>
         <div class="field-group">
-          <label class="field-label">Time (optional)</label>
-          <input class="field-input" id="f-place-time" type="time">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Notes</label>
-          <textarea class="field-textarea" id="f-place-notes" placeholder="Any extra details…"></textarea>
+          <label class="field-label">Part of day</label>
+          <select class="field-select" id="f-period">
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+          </select>
         </div>
       </div>
 
-      <!-- ATTRACTION FIELDS -->
-      <div id="fields-attraction" style="display:none;flex-direction:column;gap:13px;">
+      <!-- STANDARD FIELDS (activity / meal / hotel) -->
+      <div id="fields-standard">
         <div class="field-group">
-          <label class="field-label">Name</label>
-          <input class="field-input" id="f-att-name" type="text" placeholder="e.g. Teleférico de Gaia">
+          <label class="field-label">Title</label>
+          <input class="field-input" id="f-title" type="text" placeholder="e.g. Teleférico de Gaia">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Subtitle / location</label>
+          <input class="field-input" id="f-sub" type="text" placeholder="e.g. Gaia Cable Car">
         </div>
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Time (optional)</label>
-            <input class="field-input" id="f-att-time" type="time">
+            <input class="field-input" id="f-time" type="time">
           </div>
           <div class="field-group">
-            <label class="field-label">Cost (optional)</label>
-            <input class="field-input" id="f-att-cost" type="text" placeholder="e.g. £6.00 pp">
+            <label class="field-label">Status</label>
+            <select class="field-select" id="f-status">
+              <option value="">—</option>
+              <option value="booked">✓ Booked</option>
+              <option value="confirmed">✓ Confirmed</option>
+              <option value="walkin">Walk in only</option>
+              <option value="attention">Needs attention</option>
+            </select>
           </div>
         </div>
         <div class="field-group">
-          <label class="field-label">Ticket link</label>
-          <input class="field-input" id="f-att-link" type="url" placeholder="https://…">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Booked</label>
-          <div class="f-slider-row">
-            <label class="f-slider">
-              <input type="checkbox" id="f-att-booked" onchange="onAttBookedChange()">
-              <span class="f-slider-track"></span>
-            </label>
-            <span class="f-slider-label" id="f-att-booked-label">No</span>
-          </div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Notes</label>
-          <textarea class="field-textarea" id="f-att-notes" placeholder="Any extra details…"></textarea>
-        </div>
-      </div>
-
-      <!-- MEAL FIELDS -->
-      <div id="fields-meal" style="display:none;flex-direction:column;gap:13px;">
-        <div class="field-group">
-          <label class="field-label">Restaurant name</label>
-          <input class="field-input" id="f-meal-name" type="text" placeholder="e.g. Duello Porto">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Status</label>
-          <div class="transport-type-row" id="f-meal-status-row">
-            <button type="button" class="tt-btn" data-val="booked">Booked</button>
-            <button type="button" class="tt-btn active" data-val="walkin">Walk in only</button>
-          </div>
-          <input class="field-input" id="f-meal-status" type="hidden" value="walkin">
-        </div>
-        <div id="fields-meal-booked" style="display:none;flex-direction:column;gap:13px;">
-          <div class="field-group">
-            <label class="field-label">Time booked</label>
-            <input class="field-input" id="f-meal-time" type="time">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Notes</label>
-            <textarea class="field-textarea" id="f-meal-notes" placeholder="Any extra details…"></textarea>
-          </div>
+          <label class="field-label">Travel time from previous (optional)</label>
+          <input class="field-input" id="f-conn" type="text" placeholder="e.g. 10 min walk">
         </div>
       </div>
 
       <!-- TRANSPORT FIELDS -->
       <div id="fields-transport" style="display:none;flex-direction:column;gap:13px;">
         <div class="field-group">
-          <label class="field-label">Method</label>
+          <label class="field-label">Type of transport</label>
           <div class="transport-type-row" id="f-transport-type-row">
             <button type="button" class="tt-btn active" data-val="Flight">Flight</button>
             <button type="button" class="tt-btn" data-val="Train">Train</button>
             <button type="button" class="tt-btn" data-val="Coach">Coach</button>
             <button type="button" class="tt-btn" data-val="Bus">Bus</button>
             <button type="button" class="tt-btn" data-val="Ferry">Ferry</button>
-            <button type="button" class="tt-btn" data-val="Tram">Tram</button>
             <button type="button" class="tt-btn" data-val="Other">Other</button>
           </div>
           <input class="field-input" id="f-transport-type" type="hidden" value="Flight">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Cost (optional)</label>
-          <input class="field-input" id="f-move-cost" type="text" placeholder="e.g. £40 pp">
         </div>
         <div class="field-row">
           <div class="field-group">
@@ -356,24 +311,28 @@
         </div>
         <div class="field-group">
           <label class="field-label">Status</label>
-          <div class="transport-type-row" id="f-status-move-row">
-            <button type="button" class="tt-btn active" data-val="booked">Booked</button>
-            <button type="button" class="tt-btn" data-val="payonuse">Pay on use</button>
-            <button type="button" class="tt-btn" data-val="na">N/A</button>
-          </div>
-          <input class="field-input" id="f-status-move" type="hidden" value="booked">
+          <select class="field-select" id="f-status-move">
+            <option value="">—</option>
+            <option value="booked">✓ Booked</option>
+            <option value="confirmed">✓ Confirmed</option>
+            <option value="attention">Needs attention</option>
+          </select>
         </div>
       </div>
 
-      <!-- Booking reference toggle (transport only) -->
-      <button class="booking-toggle" id="booking-toggle-btn" style="display:none;" onclick="toggleBooking()">
+      <!-- Booking details toggle -->
+      <button class="booking-toggle" id="booking-toggle-btn" onclick="toggleBooking()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-        Add booking reference
+        Add booking details
       </button>
       <div class="booking-fields" id="booking-fields" style="display:none;">
         <div class="field-group">
           <label class="field-label">Booking reference</label>
           <input class="field-input" id="f-ref" type="text" placeholder="e.g. ZTQNBT">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Price</label>
+          <input class="field-input" id="f-price" type="text" placeholder="e.g. £40 pp">
         </div>
         <div class="field-group">
           <label class="field-label">Tickets / quantity</label>
@@ -383,7 +342,12 @@
           <label class="field-label">Booking URL</label>
           <input class="field-input" id="f-url" type="url" placeholder="https://…">
         </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-note" placeholder="Any extra details…"></textarea>
+        </div>
       </div>
+    </div>
     </div><!-- /modal-body-single -->
     <div class="modal-foot">
       <button class="modal-btn danger" id="modal-delete-btn" style="display:none" onclick="deleteCurrentItem()">Delete</button>
@@ -453,63 +417,6 @@
       <button class="modal-btn danger" id="hotel-delete-btn" style="display:none" onclick="deleteHotel()">Delete</button>
       <button class="modal-btn secondary" onclick="closeHotelModal()">Cancel</button>
       <button class="modal-btn primary" onclick="saveHotel()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- TRIP SETTINGS MODAL -->
-<div class="modal-overlay" id="trip-settings-overlay">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">Trip settings</div>
-      <button class="modal-close" onclick="closeTripSettings()">×</button>
-    </div>
-    <div class="modal-body" style="flex-direction:column;gap:13px;">
-      <div class="field-group">
-        <label class="field-label">Cover photo</label>
-        <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px;">Used for this trip's sidebar and its card on the homepage.</div>
-        <label class="hotel-upload-label" id="ts-upload-label" for="ts-photo-file">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span id="ts-upload-label-text">Upload photo</span>
-        </label>
-        <input type="file" id="ts-photo-file" accept="image/*" style="display:none;" onchange="onTripPhotoSelected(this)">
-      </div>
-      <div id="ts-photo-preview" style="display:none;">
-        <img id="ts-photo-img" src="" alt="" style="width:100%;height:130px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
-        <div style="font-size:10px;color:var(--text3);margin-top:5px;display:flex;align-items:center;gap:8px;">
-          <span id="ts-photo-size"></span>
-          <button onclick="clearTripPhoto()" style="background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;font-family:inherit;padding:0;margin-left:auto;">✕ Remove</button>
-        </div>
-      </div>
-      <div id="ts-photo-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Departure date</label>
-          <input class="field-input" id="ts-dep" type="text" placeholder="dd/mm/yyyy">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Return date</label>
-          <input class="field-input" id="ts-ret" type="text" placeholder="dd/mm/yyyy">
-        </div>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:-6px;">Changing the departure date shifts every day in the itinerary by the same amount.</div>
-
-      <div class="field-group">
-        <label class="field-label">Travellers</label>
-        <input class="field-input" id="ts-trav" type="number" min="1" style="max-width:100px;">
-      </div>
-
-      <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
-        <label class="field-label">AI place information</label>
-        <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Generates "About this place" text and a photo for every place/attraction in the itinerary that doesn't have it yet.</div>
-        <button class="modal-btn secondary" id="ts-ai-btn" style="width:100%;" onclick="generateAllAboutInfo()">✨ Generate all AI info for places</button>
-        <div id="ts-ai-status" style="font-size:10.5px;color:var(--text3);margin-top:8px;display:none;"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="modal-btn secondary" onclick="closeTripSettings()">Cancel</button>
-      <button class="modal-btn primary" onclick="saveTripSettings()">Save</button>
     </div>
   </div>
 </div>
@@ -629,7 +536,6 @@ function icoForType(t, sub, item) {
     return {html: TRANSPORT_ICONS[mode] || ICO.plane, cls:'move'};
   }
   if (t==='hotel') return {html:ICO.home, cls:''};
-  if (t==='attraction' || t==='ticket') return {html:ICO.ticket, cls:'ticket'};
   return {html:ICO.pin, cls:''};
 }
 
@@ -639,6 +545,13 @@ function badgeHtml(status, label) {
   const ic = icons[status] ? `<span style="display:inline-flex;width:9px;height:9px;align-items:center;">${icons[status]}</span>` : '';
   const txt = label || { booked:'Booked', confirmed:'Confirmed', walkin:'Walk in only', attention:'Needs attention' }[status] || status;
   return `<span class="badge ${status}">${ic}${txt}</span>`;
+}
+
+// ── FLAG HELPER ───────────────────────────────────────────────────────
+function flagFor(d) {
+  const map = { 'Porto':'🇵🇹','Porto 2026':'🇵🇹','Hamburg':'🇩🇪','Gothenburg':'🇸🇪','Cyprus':'🇨🇾','China':'🇨🇳','Dubai':'🇦🇪','Costa Rica':'🇨🇷','Canada':'🇨🇦','Hong Kong':'🇭🇰','Taiwan':'🇹🇼' };
+  for (const [k,v] of Object.entries(map)) { if (d.toLowerCase().includes(k.toLowerCase())) return v; }
+  return '🌍';
 }
 
 // ── LOAD / SAVE ───────────────────────────────────────────────────────
@@ -759,122 +672,35 @@ function renderMobNav() {
   }, 50);
 }
 
-function formatDateRangeNice(dep, ret) {
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const parse = s => { const [d,m,y] = (s||'').split('/').map(Number); return (d&&m&&y) ? {d,m,y} : null; };
-  const a = parse(dep), b = parse(ret);
-  if (!a || !b) return (dep && ret) ? dep + ' → ' + ret : '';
-  return a.d + ' ' + months[a.m-1] + ' – ' + b.d + ' ' + months[b.m-1] + ' ' + b.y;
-}
-
-function formatDayLabel(dateStr) {
-  if (!dateStr) return '—';
-  const [d,m,y] = dateStr.split('/').map(Number);
-  if (!d || !m || !y) return dateStr;
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const wd = new Date(y, m-1, d).toLocaleDateString('en-GB', { weekday: 'short' });
-  return wd + ', ' + d + ' ' + months[m-1];
-}
-
-let sbDaysCollapsed = false;
-function toggleDaysCollapse() {
-  sbDaysCollapsed = !sbDaysCollapsed;
-  document.getElementById('sb-days').classList.toggle('collapsed', sbDaysCollapsed);
-  document.getElementById('sb-days-toggle').classList.toggle('collapsed', sbDaysCollapsed);
-}
-
-async function ensureCoverPhoto() {
-  const m = STATE.meta;
-  const el = document.getElementById('sb-photo');
-  if (m.coverPhoto) { el.style.backgroundImage = `url('${m.coverPhoto}')`; el.classList.remove('loading','empty'); return; }
-  if (m._coverPhoto) { el.style.backgroundImage = `url('${m._coverPhoto}')`; el.classList.remove('loading','empty'); return; }
-  if (m._coverPhoto === '') { el.classList.add('empty'); el.classList.remove('loading'); return; } // previously tried, none found
-  el.classList.add('loading');
-  try {
-    const destName = m.dest || dest;
-    const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(destName), {
-      headers: { 'X-Auth-Token': AUTH_TOKEN },
-    });
-    const j = await r.json();
-    const photo = j.data?.photo || j.photo || null;
-    m._coverPhoto = photo || '';
-    if (photo) {
-      el.style.backgroundImage = `url('${photo}')`;
-      el.classList.remove('loading');
-      scheduleSave();
-    } else {
-      el.classList.add('empty');
-      el.classList.remove('loading');
-    }
-  } catch (e) {
-    el.classList.add('empty');
-    el.classList.remove('loading');
-  }
-}
-
 function renderSidebar() {
   // Sync mobile menu trip name
   const mmTrip = document.getElementById('mob-menu-trip');
   if (mmTrip) mmTrip.textContent = STATE.meta?.dest || dest;
   const m = STATE.meta;
+  document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
+  document.getElementById('sb-name').textContent = m.dest || dest;
+  const depFmt = m.dep || dep;
+  const retFmt = m.ret || ret;
+  document.getElementById('sb-meta').textContent = (depFmt && retFmt ? depFmt + ' → ' + retFmt + '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
 
-  // Update hero
-  document.getElementById('sb-name').textContent = m?.dest || dest;
-
-  // Dates
-  const depFmt = (m?.dep||dep||'').replace(/(\d+)\/(\d+)\/(\d+)/, (_, d, mo, y) => {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return `${parseInt(d)} ${months[parseInt(mo)-1]} ${y}`;
-  });
-  const retFmt = (m?.ret||ret||'').replace(/(\d+)\/(\d+)\/(\d+)/, (_, d, mo, y) => {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return `${parseInt(d)} ${months[parseInt(mo)-1]} ${y}`;
-  });
-  const sbDates = document.getElementById('sb-dates');
-  if (sbDates) sbDates.textContent = depFmt && retFmt ? `${depFmt} – ${retFmt}` : depFmt || '—';
-
-  const sbTrav = document.getElementById('sb-travellers');
-  if (sbTrav) { const n = parseInt(m?.trav||trav)||2; sbTrav.textContent = `${n} traveller${n!==1?'s':''}`; }
-
-  // Hero photo — fetch from Wikimedia for the destination
-  const hero = document.getElementById('sb-hero');
-  if (hero && !hero.dataset.loaded) {
-    hero.dataset.loaded = '1';
-    const destName = m?.dest || dest;
-    fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(destName) + '&city=', {
-      headers: { 'X-Auth-Token': AUTH_TOKEN }
-    }).then(r=>r.json()).then(j => {
-      const photo = j.data?.photo || j.photo;
-      if (photo) hero.style.backgroundImage = `url('${photo}')`;
-    }).catch(()=>{});
-  }
-  // Sidebar days list — full formatted date
-  const dayNames  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const monthFull  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const ordinal = n => { const s=['th','st','nd','rd']; const v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
-
+  const d = STATE.days[activeDay];
   document.getElementById('sb-days').innerHTML = STATE.days.map((dy,i) => {
-    let label = '';
-    if (dy.date) {
-      const [dd,mm,yyyy] = dy.date.split('/').map(Number);
-      const d = new Date(yyyy, mm-1, dd);
-      label = `${dayNames[d.getDay()]} ${ordinal(dd)} ${monthFull[mm-1]}`;
-    }
+    const warns = (dy.items||[]).filter(it => it && it.status==='attention').length;
+    const allBooked = (dy.items||[]).filter(it => it && it.status).every(it => it.status==='booked'||it.status==='confirmed'||it.status==='walkin');
+    const dotCls = warns ? 'warn' : (dy.items&&dy.items.length ? '' : 'none');
     return `<button class="sb-day-item ${i===activeDay?'active':''}" onclick="setDay(${i})">
-      <span class="sb-day-num">Day ${i+1}</span>
-      <span class="sb-day-date-label">${label}</span>
+      <span>Day ${i+1} · ${dy.date||'—'}</span>
+      <span class="sb-day-dot ${dotCls}"></span>
     </button>`;
   }).join('');
-
-  renderSidebarReadiness();
 }
 
 function renderDaySelector() {
   document.getElementById('day-selector').innerHTML = STATE.days.map((d,i) =>
     `<div class="day-tab ${i===activeDay?'active':''}" onclick="setDay(${i})">
       <div class="dt-n">Day ${i+1}</div>
-      <div class="dt-date">${(d.date||'').split('/').slice(0,2).join('/')||'—'}</div>
+      <div class="dt-date">${d.date||'—'}</div>
+      <div class="dt-loc">${d.title||d.loc||'—'}</div>
     </div>`
   ).join('');
 }
@@ -951,9 +777,6 @@ function renderTimeline() {
       '<div class="tl-section-accent ' + key + '"></div>' +
       '<span class="tl-section-label">' + label + '</span>' +
 
-      '<button class="tl-section-regen" data-regen-period="' + key + '" title="Reorder ' + label.toLowerCase() + ' stops by nearest distance">' +
-        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>' +
-      '</button>' +
       '<button class="tl-section-clear" data-clear-period="' + key + '" title="Remove all ' + label.toLowerCase() + ' items">' +
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>';
@@ -1014,7 +837,7 @@ function makeItemNode(item, idx) {
   const ico   = icoForType(item.type, item.title, item);
   const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
   const meta  = [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
-  const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
+  const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : '');
 
   const row = document.createElement('div');
   row.className = 'tl-item';
@@ -1039,9 +862,6 @@ function makeItemNode(item, idx) {
         (meta     ? '<div class="tl-meta">' + meta + '</div>' : '') +
       '</div>' +
       '<button class="tl-more-btn">···</button>' +
-      '<button class="tl-delete-btn" title="Remove from itinerary">' +
-        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-      '</button>' +
     '</div>';
 
   row.querySelector('.tl-body-wrap').addEventListener('click', () => {
@@ -1050,18 +870,6 @@ function makeItemNode(item, idx) {
   row.querySelector('.tl-more-btn').addEventListener('click', e => {
     e.stopPropagation();
     if (!dragMoved) openEditItem(activeDay, idx);
-  });
-  row.querySelector('.tl-delete-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    if (dragMoved) return;
-    if (!confirm('Remove this activity from the itinerary?')) return;
-    const items = STATE.days[activeDay].items;
-    takeSnapshot();
-    items.splice(idx, 1);
-    scheduleSave();
-    render();
-    showSnapshotBar(true);
-    setTimeout(() => showSnapshotBar(false), 6000);
   });
   return row;
 }
@@ -1193,7 +1001,9 @@ function dragCleanup() {
 
 function renderRightPanel() {
   renderHotelPanel();
-  renderPlacesToEat();
+  renderReadiness();
+  renderBudget();
+  renderKeyBookings();
 }
 
 // Parse dd/mm/yyyy → Date for comparison
@@ -1289,101 +1099,66 @@ function renderHotelPanel() {
   el.innerHTML = renderHotelCard(h, idx);
 }
 
-function renderSidebarReadiness() {
-  const days = STATE.days || [];
-  const N = days.length;
-  const el = document.getElementById('sb-readiness');
-  if (!el) return;
-
-  const isFlight = it => it && it.type === 'move' &&
-    ((it.transport && it.transport.mode === 'Flight') || it.kicker === 'Flight');
-  const isConfirmed = it => {
-    if (!it) return false;
-    const st = it.status, b = it.booking || {};
-    return st === 'confirmed' || st === 'booked' || !!b.ref || !!b.url || (!!b.tickets && !!b.price);
-  };
-  const isActivity = it => it && ['place','attraction','act','ticket'].includes(it.type);
-
-  // Flights to and from the destination — first flight found = outbound,
-  // last flight found = return (any flights between are internal/domestic legs).
-  let flights = [];
-  days.forEach(d => (d.items||[]).forEach(it => { if (isFlight(it)) flights.push(it); }));
-  const outboundOk = flights.length > 0 && isConfirmed(flights[0]);
-  const returnOk   = flights.length > 1 && isConfirmed(flights[flights.length - 1]);
-
-  // Hotel booked for every night of the trip (every day except the last —
-  // no night's stay is needed after departure day).
-  const nights = Math.max(N - 1, 0);
-  let hotelDone = 0;
-  for (let i = 0; i < nights; i++) if (hotelForDay(i)) hotelDone++;
-
-  // Dinner booked, for days that already have a meal planned in the
-  // afternoon or evening — skipping the first and last night of the trip,
-  // and skipping days with no such module at all.
-  let dinnerTotal = 0, dinnerDone = 0;
-  days.forEach((d, i) => {
-    if (i === 0 || i === N - 1) return;
-    const meal = (d.items||[]).find(it => it && it.type === 'meal' && (it.period === 'evening' || it.period === 'afternoon'));
-    if (meal) {
-      dinnerTotal++;
-      if (isConfirmed(meal)) dinnerDone++;
-    }
-  });
-
-  // At least one activity on every day except the first and last.
-  const middleDays = Math.max(N - 2, 0);
-  let activityDone = 0;
-  for (let i = 1; i < N - 1; i++) if ((days[i].items||[]).some(isActivity)) activityDone++;
-
-  const total = 2 + nights + dinnerTotal + middleDays;
-  const done  = (outboundOk?1:0) + (returnOk?1:0) + hotelDone + dinnerDone + activityDone;
-  const pct   = total ? Math.round((done/total)*100) : 100;
-  const label = pct>=100?'All set!':pct>=80?'Almost there!':'In progress';
-
-  const flightsOk     = outboundOk && returnOk;
-  const hotelsOk       = hotelDone === nights;
-  const restaurantsOk  = dinnerDone === dinnerTotal;
-  const activitiesOk   = activityDone === middleDays;
-  const catRow = (ok, label) =>
-    `<div class="sb-rc-row ${ok?'ok':''}">${ok?ICO.check:ICO.circle}<span>${label}</span></div>`;
-
-  const circumference = 2 * Math.PI * 23;
+function renderReadiness() {
+  const items = STATE.days.flatMap(d => d.items||[]).filter(Boolean);
+  const booked = items.filter(it => it.status==='booked'||it.status==='confirmed').length;
+  const total  = items.filter(it => it.status).length;
+  const pct    = total ? Math.round((booked/total)*100) : 100;
+  const warns  = items.filter(it => it.status==='attention').length;
+  const hasHotel = !!STATE.meta.hotel;
+  const circumference = 2 * Math.PI * 22;
   const offset = circumference * (1 - pct/100);
-  const title = pct>=100 ? 'Trip complete 🎉' : label;
 
-  el.innerHTML = `
-    <div class="sbr-ring-wrap">
-      <svg width="58" height="58" viewBox="0 0 58 58">
-        <circle cx="29" cy="29" r="23" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5"/>
-        <circle cx="29" cy="29" r="23" fill="none" stroke="var(--teal2)" stroke-width="5"
+  document.getElementById('rp-readiness').innerHTML = `
+    <div class="readiness-ring">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(14,122,135,0.15)" stroke-width="5"/>
+        <circle cx="26" cy="26" r="22" fill="none" stroke="#0e7a87" stroke-width="5"
           stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"
-          stroke-linecap="round" transform="rotate(-90 29 29)"/>
+          stroke-linecap="round" transform="rotate(-90 26 26)"/>
       </svg>
-      <div class="sbr-ring-pct">${pct}%</div>
+      <div><div class="ring-pct">${pct}%</div><div class="ring-label">${pct>=100?'All set!':pct>=80?'Almost there!':'In progress'}</div></div>
     </div>
-    <div class="sbr-title">${title}</div>
-    <div class="sb-readiness-track"><div class="sb-readiness-fill" style="width:${pct}%"></div></div>
-    <div class="sb-readiness-cats">
-      ${catRow(flightsOk, 'Flights')}
-      ${catRow(restaurantsOk, 'Restaurants')}
-      ${catRow(hotelsOk, 'Hotels')}
-      ${catRow(activitiesOk, 'Activities')}
+    <div class="r-list">
+      <div class="r-row ${hasHotel?'ok':'tbc'}">${hasHotel?ICO.check:ICO.circle} ${hasHotel?'Hotel confirmed':'No hotel added yet'}</div>
+      <div class="r-row ${booked>0?'ok':'tbc'}">${booked>0?ICO.check:ICO.circle} ${booked} item${booked===1?'':'s'} booked</div>
+      ${warns ? `<div class="r-row warn">${ICO.warn} ${warns} need${warns===1?'s':''} attention</div>` : ''}
     </div>`;
 }
 
-function renderPlacesToEat() {
-  const day = STATE.days[activeDay];
-  const meals = (day?.items || []).filter(it => it && it.type === 'meal');
-  const el = document.getElementById('rp-bookings');
-  if (!meals.length) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No meals added for this day.</div>`;
+function renderBudget() {
+  const budgetUrl = budgetPageUrl;
+  const b = STATE.meta.budget;
+  if (!b) {
+    document.getElementById('rp-budget').innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No budget set.</div>`;
     return;
   }
-  el.innerHTML = meals.map(it => {
+  const total = (b.stay||0)+(b.food||0)+(b.act||0)+(b.trans||0);
+  const pct = (n) => total ? Math.round((n/total)*100) : 0;
+  document.getElementById('rp-budget').innerHTML = `
+    <div class="budget-total">£${total}</div>
+    <div class="budget-sub">for ${STATE.meta.trav||trav} travellers</div>
+    <div class="budget-bars">
+      <div class="bb-row"><div class="bb-lbl">Stay</div><div class="bb-track"><div class="bb-fill" style="width:${pct(b.stay)}%"></div></div><div class="bb-val">£${b.stay||0}</div></div>
+      <div class="bb-row"><div class="bb-lbl">Food</div><div class="bb-track"><div class="bb-fill food" style="width:${pct(b.food)}%"></div></div><div class="bb-val">£${b.food||0}</div></div>
+      <div class="bb-row"><div class="bb-lbl">Activities</div><div class="bb-track"><div class="bb-fill act" style="width:${pct(b.act)}%"></div></div><div class="bb-val">£${b.act||0}</div></div>
+      <div class="bb-row"><div class="bb-lbl">Transport</div><div class="bb-track"><div class="bb-fill trans" style="width:${pct(b.trans)}%"></div></div><div class="bb-val">£${b.trans||0}</div></div>
+    </div>
+    <a href="${budgetUrl}" class="rp-link-btn" style="display:block;text-align:center;text-decoration:none;">View full budget →</a>`;
+}
+
+function renderKeyBookings() {
+  const items = STATE.days.flatMap(d => (d.items||[]).map(it => it && it.booking ? {day:d.date, ...it} : null)).filter(Boolean);
+  const el = document.getElementById('rp-bookings');
+  if (!items.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No bookings yet.</div>`;
+    return;
+  }
+  el.innerHTML = items.slice(0,4).map(it => {
     const ico = icoForType(it.type, it.title, it);
-    return `<div class="bk-item bk-item--eat"><div class="bk-ico" style="background:rgba(217,123,10,0.12);color:#d97b0a">${ico.html}</div>
+    return `<div class="bk-item"><div class="bk-ico" style="background:var(--teal-xdim)">${ico.html}</div>
       <div class="bk-body"><div class="bk-name">${it.title}</div>
-      <div class="bk-meta">${it.time?it.time+' · ':''}${badgeHtml(it.status)}</div></div></div>`;
+      <div class="bk-meta">${it.day||''} ${it.time?'· '+it.time:''} · ${badgeHtml(it.status)}</div></div></div>`;
   }).join('');
 }
 
@@ -1415,7 +1190,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   document.getElementById('drawer-overlay').classList.add('open');
 
   // Show / generate About section for activity and ticketed types
-  if (item.type === 'act' || item.type === 'ticket' || item.type === 'place' || item.type === 'attraction') {
+  if (item.type === 'act' || item.type === 'ticket') {
     if (item._about) {
       renderAbout(item._about);
     } else {
@@ -1495,92 +1270,59 @@ function openEditItem(dayIdx, itemIdx) {
   document.getElementById('modal-delete-btn').style.display = 'block';
   document.getElementById('modal-tabs').style.display = 'none';
   clearForm();
-  document.getElementById('f-period').value = item.period || inferPeriod(item) || 'morning';
-
-  // Determine which category bubble this legacy/current item belongs to
-  let cat = item.type;
-  if (item.type === 'act' || item.type === 'ticket') {
-    const hasBookingInfo = item.booking && (item.booking.price || item.booking.tickets || item.booking.url || item.booking.ref);
-    cat = hasBookingInfo ? 'attraction' : 'place';
-  } else if (!['place','attraction','meal','move'].includes(item.type)) {
-    cat = 'place'; // fallback for any legacy/unrecognised type
-  }
-  setCategory(cat);
-
-  if (cat === 'move') {
+  document.getElementById('f-type').value   = item.type || 'act';
+  document.getElementById('f-period').value  = item.period || inferPeriod(item) || 'morning';
+  onCategoryChange();
+  if (item.type === 'move') {
     const tr = item.transport || {};
     setTransportType(tr.mode || item.kicker || 'Flight');
-    document.getElementById('f-from').value      = tr.from || (item.title||'').split(' → ')[0] || '';
-    document.getElementById('f-to').value        = tr.to   || (item.title||'').split(' → ')[1] || '';
-    document.getElementById('f-depart').value    = tr.depart || item.time || '';
-    document.getElementById('f-arrive').value    = tr.arrive || '';
-    document.getElementById('f-move-cost').value = (item.booking && item.booking.price) || '';
-    const moveStatusMap = { booked:'booked', confirmed:'booked', payonuse:'payonuse', na:'na' };
-    setMoveStatus(moveStatusMap[item.status] || 'na');
-    if (item.booking && (item.booking.ref || item.booking.tickets || item.booking.url)) {
-      document.getElementById('f-ref').value     = item.booking.ref || '';
-      document.getElementById('f-tickets').value = item.booking.tickets || '';
-      document.getElementById('f-url').value     = item.booking.url || '';
-      showBookingFields(true);
-    }
-  } else if (cat === 'attraction') {
-    document.getElementById('f-att-name').value  = item.title || '';
-    document.getElementById('f-att-time').value  = item.time || '';
-    document.getElementById('f-att-link').value  = (item.booking && item.booking.url) || '';
-    document.getElementById('f-att-cost').value  = (item.booking && item.booking.price) || '';
-    document.getElementById('f-att-notes').value = (item.booking && item.booking.note) || '';
-    document.getElementById('f-att-booked').checked = item.status === 'booked' || item.status === 'confirmed';
-    onAttBookedChange();
-  } else if (cat === 'meal') {
-    document.getElementById('f-meal-name').value = item.title || '';
-    const st = item.status === 'booked' ? 'booked' : 'walkin';
-    setMealStatus(st);
-    if (st === 'booked') {
-      document.getElementById('f-meal-time').value  = item.time || '';
-      document.getElementById('f-meal-notes').value = (item.booking && item.booking.note) || '';
-    }
+    document.getElementById('f-from').value   = tr.from || (item.title||'').split(' → ')[0] || '';
+    document.getElementById('f-to').value     = tr.to   || (item.title||'').split(' → ')[1] || '';
+    document.getElementById('f-depart').value = tr.depart || item.time || '';
+    document.getElementById('f-arrive').value = tr.arrive || '';
+    document.getElementById('f-status-move').value = item.status || '';
   } else {
-    document.getElementById('f-place-location').value = item.title || '';
-    document.getElementById('f-place-time').value      = item.time || '';
-    document.getElementById('f-place-notes').value     = (item.booking && item.booking.note) || '';
+    document.getElementById('f-time').value   = item.time || '';
+    document.getElementById('f-title').value  = item.title || '';
+    document.getElementById('f-sub').value    = item.sub || '';
+    document.getElementById('f-status').value = item.status || '';
+    document.getElementById('f-conn').value   = item.conn || '';
+  }
+  if (item.booking) {
+    document.getElementById('f-ref').value     = item.booking.ref || '';
+    document.getElementById('f-price').value   = item.booking.price || '';
+    document.getElementById('f-tickets').value = item.booking.tickets || '';
+    document.getElementById('f-url').value     = item.booking.url || '';
+    document.getElementById('f-note').value    = item.booking.note || '';
+    showBookingFields(true);
   }
   openModal();
 }
 
 function clearForm() {
-  ['f-place-location','f-place-time','f-place-notes',
-   'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
-   'f-meal-name','f-meal-time','f-meal-notes',
-   'f-from','f-to','f-depart','f-arrive','f-move-cost',
-   'f-ref','f-tickets','f-url'].forEach(id => {
+  ['f-ref','f-price','f-tickets','f-url','f-note',
+   'f-from','f-to','f-depart','f-arrive'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('f-att-booked').checked = false;
-  onAttBookedChange();
-  document.getElementById('f-period').value = 'morning';
-  setCategory('place');
-  setTransportType('Flight');
-  setMoveStatus('booked');
-  setMealStatus('walkin');
-  showBookingFields(false);
-}
-
-function setCategory(cat) {
-  document.getElementById('f-type').value = cat;
-  document.querySelectorAll('#f-category-row .tt-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.cat === cat);
+  ['f-time','f-title','f-sub','f-conn','f-status'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
   });
+  document.getElementById('f-type').value    = 'act';
+  document.getElementById('f-period').value  = 'morning';
+  const sm = document.getElementById('f-status-move'); if(sm) sm.value = '';
+  setTransportType('Flight');
+  showBookingFields(false);
   onCategoryChange();
 }
 
 function onCategoryChange() {
   const type = document.getElementById('f-type').value;
-  document.getElementById('fields-place').style.display       = type === 'place'      ? 'flex' : 'none';
-  document.getElementById('fields-attraction').style.display  = type === 'attraction' ? 'flex' : 'none';
-  document.getElementById('fields-meal').style.display        = type === 'meal'       ? 'flex' : 'none';
-  document.getElementById('fields-transport').style.display   = type === 'move'       ? 'flex' : 'none';
-  document.getElementById('booking-toggle-btn').style.display = type === 'move'       ? ''     : 'none';
-  if (type !== 'move') showBookingFields(false);
+  const isMove = type === 'move';
+  document.getElementById('fields-standard').style.display  = isMove ? 'none' : 'flex';
+  document.getElementById('fields-transport').style.display = isMove ? 'flex' : 'none';
+
+  document.getElementById('fields-standard').style.flexDirection = 'column';
+  document.getElementById('fields-standard').style.gap = '13px';
 }
 
 function setTransportType(val) {
@@ -1590,50 +1332,15 @@ function setTransportType(val) {
   });
 }
 
-function setMoveStatus(val) {
-  document.getElementById('f-status-move').value = val;
-  document.querySelectorAll('#f-status-move-row .tt-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.val === val);
-  });
-}
-
-function setMealStatus(val) {
-  document.getElementById('f-meal-status').value = val;
-  document.querySelectorAll('#f-meal-status-row .tt-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.val === val);
-  });
-  document.getElementById('fields-meal-booked').style.display = val === 'booked' ? 'flex' : 'none';
-}
-
-function onAttBookedChange() {
-  const checked = document.getElementById('f-att-booked').checked;
-  document.getElementById('f-att-booked-label').textContent = checked ? 'Yes' : 'No';
-}
-
-// Wire category / method / status bubble clicks + section clear
+// Wire transport type buttons + section clear
 document.addEventListener('click', e => {
-  const catBtn = e.target.closest('#f-category-row .tt-btn');
-  if (catBtn) { setCategory(catBtn.dataset.cat); return; }
-
-  const ttBtn = e.target.closest('#f-transport-type-row .tt-btn');
+  const ttBtn = e.target.closest('.tt-btn');
   if (ttBtn) { setTransportType(ttBtn.dataset.val); return; }
-
-  const msBtn = e.target.closest('#f-status-move-row .tt-btn');
-  if (msBtn) { setMoveStatus(msBtn.dataset.val); return; }
-
-  const mlBtn = e.target.closest('#f-meal-status-row .tt-btn');
-  if (mlBtn) { setMealStatus(mlBtn.dataset.val); return; }
 
   const clearBtn = e.target.closest('[data-clear-period]');
   if (clearBtn) {
     e.stopPropagation();
     clearPeriod(clearBtn.dataset.clearPeriod);
-  }
-
-  const regenBtn = e.target.closest('[data-regen-period]');
-  if (regenBtn) {
-    e.stopPropagation();
-    regeneratePeriod(regenBtn.dataset.regenPeriod, regenBtn);
   }
 });
 
@@ -1641,7 +1348,7 @@ function openModal() {
   setModalTab('single');
   document.getElementById('modal-tabs').style.display = '';
   document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('f-place-location').focus(), 100);
+  setTimeout(() => document.getElementById('f-title').focus(), 100);
 }
 
 function closeModal() {
@@ -1654,7 +1361,7 @@ function toggleBooking() { showBookingFields(!bookingVisible); }
 function showBookingFields(show) {
   bookingVisible = show;
   document.getElementById('booking-fields').style.display = show ? 'flex' : 'none';
-  document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking reference' : '+ Add booking reference';
+  document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking details' : '+ Add booking details';
 }
 
 function saveItem() {
@@ -1663,8 +1370,7 @@ function saveItem() {
   }
   const type   = document.getElementById('f-type').value;
   const period = document.getElementById('f-period').value || 'morning';
-  const orig   = (editItem && editItem.item) || null;
-  let time, title, item;
+  let time, title, sub, statusV, conn, item;
 
   if (type === 'move') {
     const tType  = document.getElementById('f-transport-type').value;
@@ -1672,57 +1378,36 @@ function saveItem() {
     const to     = document.getElementById('f-to').value.trim();
     const depart = document.getElementById('f-depart').value;
     const arrive = document.getElementById('f-arrive').value;
-    const cost   = document.getElementById('f-move-cost').value.trim();
-    const statusV = document.getElementById('f-status-move').value || 'na';
+    statusV      = document.getElementById('f-status-move').value;
     if (!from && !to) { document.getElementById('f-from').focus(); return; }
-    const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Tram:'move', Other:'move' };
+    const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Other:'move' };
     time  = depart;
     title = [from, to].filter(Boolean).join(' → ');
-    const sub = [tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
-    item = { time, type, period, title, sub, status: statusV,
-             transport: { mode: tType, from, to, depart, arrive },
-             icoType: icoMap[tType] || 'move', kicker: tType };
-    const ref     = document.getElementById('f-ref').value.trim();
-    const tickets = document.getElementById('f-tickets').value.trim();
-    const url     = document.getElementById('f-url').value.trim();
-    if (cost || ref || tickets || url) {
-      item.booking = { ref, price: cost, tickets, url, note: (orig && orig.booking && orig.booking.note) || '' };
-    }
-  } else if (type === 'attraction') {
-    title = document.getElementById('f-att-name').value.trim();
-    if (!title) { document.getElementById('f-att-name').focus(); return; }
-    time = document.getElementById('f-att-time').value;
-    const link   = document.getElementById('f-att-link').value.trim();
-    const cost   = document.getElementById('f-att-cost').value.trim();
-    const notes  = document.getElementById('f-att-notes').value.trim();
-    const booked = document.getElementById('f-att-booked').checked;
-    item = { time, type, period, title, sub:'', status: booked ? 'booked' : null };
-    if (link || cost || notes) item.booking = { ref:'', price: cost, tickets:'', url: link, note: notes };
-  } else if (type === 'meal') {
-    title = document.getElementById('f-meal-name').value.trim();
-    if (!title) { document.getElementById('f-meal-name').focus(); return; }
-    const statusV = document.getElementById('f-meal-status').value || 'walkin';
-    time = statusV === 'booked' ? document.getElementById('f-meal-time').value : '';
-    const notes = statusV === 'booked' ? document.getElementById('f-meal-notes').value.trim() : '';
-    item = { time, type, period, title, sub:'', status: statusV };
-    if (notes) item.booking = { ref:'', price:'', tickets:'', url:'', note: notes };
+    sub   = [tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
+    item  = { time, type, period, title, sub, status: statusV || null,
+              transport: { mode: tType, from, to, depart, arrive },
+              icoType: icoMap[tType] || 'move', kicker: tType };
   } else {
-    title = document.getElementById('f-place-location').value.trim();
-    if (!title) { document.getElementById('f-place-location').focus(); return; }
-    time = document.getElementById('f-place-time').value;
-    const notes = document.getElementById('f-place-notes').value.trim();
-    item = { time, type, period, title, sub:'', status: null };
-    if (notes) item.booking = { ref:'', price:'', tickets:'', url:'', note: notes };
+    time   = document.getElementById('f-time').value;
+    title  = document.getElementById('f-title').value.trim();
+    sub    = document.getElementById('f-sub').value.trim();
+    statusV= document.getElementById('f-status').value;
+    conn   = document.getElementById('f-conn').value.trim();
+    if (!title) { document.getElementById('f-title').focus(); return; }
+    item   = { time, type, period, title, sub, status: statusV || null };
+    if (conn) item.conn = conn;
   }
 
-  // Preserve data with no editable field in this modal when editing an existing item
-  if (orig) {
-    if (orig._geo)                    item._geo      = orig._geo;
-    if (orig._about)                  item._about    = orig._about;
-    if (orig.conn !== undefined)      item.conn      = orig.conn;
-    if (orig.connWarn !== undefined)  item.connWarn  = orig.connWarn;
-    if (orig._avios !== undefined)    item._avios    = orig._avios;
-    if (type !== 'move' && orig.sub)  item.sub       = orig.sub;
+  if (bookingVisible) {
+    const ref = document.getElementById('f-ref').value.trim();
+    const price = document.getElementById('f-price').value.trim();
+    const tickets = document.getElementById('f-tickets').value.trim();
+    const url = document.getElementById('f-url').value.trim();
+    const note = document.getElementById('f-note').value.trim();
+    if (ref||price||tickets||url||note) {
+      item.booking = { ref, price, tickets, url, note };
+      item.status = item.status || 'booked';
+    }
   }
 
   const items = STATE.days[activeDay].items;
@@ -1859,160 +1544,6 @@ function clearPeriod(periodKey) {
     showSnapshotBar(true);
     setTimeout(() => showSnapshotBar(false), 6000);
   }
-}
-
-// ── REORDER SECTION BY NEAREST STOP ─────────────────────────────────
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) ** 2 +
-            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-// Ask Google for real walking times between every pair of points in one call.
-// Returns an NxN matrix of seconds, or throws if the API is unavailable/denied.
-async function getWalkingDurationMatrix(points) {
-  await loadGoogleMaps();
-  if (!window.google || !google.maps || !google.maps.DistanceMatrixService) {
-    throw new Error('DistanceMatrixService unavailable');
-  }
-  const service = new google.maps.DistanceMatrixService();
-  const latLngs = points.map(p => new google.maps.LatLng(p.lat, p.lng));
-  const response = await new Promise((resolve, reject) => {
-    service.getDistanceMatrix({
-      origins: latLngs,
-      destinations: latLngs,
-      travelMode: google.maps.TravelMode.WALKING,
-      unitSystem: google.maps.UnitSystem.METRIC,
-    }, (res, status) => {
-      if (status === 'OK') resolve(res); else reject(new Error('DistanceMatrix status: ' + status));
-    });
-  });
-  const n = points.length;
-  const matrix = Array.from({ length: n }, () => new Array(n).fill(Infinity));
-  for (let i = 0; i < n; i++) {
-    const row = response.rows[i];
-    if (!row) continue;
-    for (let j = 0; j < n; j++) {
-      const el = row.elements[j];
-      if (el && el.status === 'OK') matrix[i][j] = el.duration.value; // seconds
-    }
-  }
-  return matrix;
-}
-
-// Greedy nearest-neighbour route over an arbitrary cost function, tried from
-// every possible starting point, keeping whichever full route costs least.
-function nearestNeighbourOrder(n, costFn) {
-  if (n <= 2) return Array.from({ length: n }, (_, i) => i);
-  let bestOrder = null, bestCost = Infinity;
-  for (let start = 0; start < n; start++) {
-    const visited = new Array(n).fill(false);
-    visited[start] = true;
-    const order = [start];
-    let cur = start, total = 0;
-    for (let step = 1; step < n; step++) {
-      let nearest = -1, nearestC = Infinity;
-      for (let j = 0; j < n; j++) {
-        if (visited[j]) continue;
-        const c = costFn(cur, j);
-        if (c < nearestC) { nearestC = c; nearest = j; }
-      }
-      visited[nearest] = true;
-      order.push(nearest);
-      total += nearestC;
-      cur = nearest;
-    }
-    if (total < bestCost) { bestCost = total; bestOrder = order; }
-  }
-  return bestOrder;
-}
-
-// Local-search refinement: repeatedly un-cross any pair of edges in the route
-// where swapping their order reduces total cost. This is what catches
-// zig-zag / backtracking routes that greedy nearest-neighbour can leave behind.
-function twoOptImprove(order, costFn) {
-  const n = order.length;
-  if (n < 4) return order;
-  const route = order.slice();
-  let improved = true, iterations = 0;
-  while (improved && iterations < 200) {
-    improved = false;
-    iterations++;
-    for (let i = 0; i < n - 2; i++) {
-      for (let j = i + 2; j < n - 1; j++) {
-        const a = route[i], b = route[i+1], c = route[j], d = route[j+1];
-        const before = costFn(a,b) + costFn(c,d);
-        const after  = costFn(a,c) + costFn(b,d);
-        if (after < before - 1e-9) {
-          let lo = i+1, hi = j;
-          while (lo < hi) { const t = route[lo]; route[lo] = route[hi]; route[hi] = t; lo++; hi--; }
-          improved = true;
-        }
-      }
-    }
-  }
-  return route;
-}
-
-async function regeneratePeriod(periodKey, btnEl) {
-  if (btnEl && btnEl.classList.contains('spinning')) return; // already running
-  const day = STATE.days[activeDay];
-  if (!day) return;
-  const items = day.items || [];
-
-  // Marker slots: place/attraction-style stops in this period with no fixed
-  // time — timed items, meals, and transport keep their exact position.
-  const markerSlots = [];
-  items.forEach((it, i) => {
-    if (!it) return;
-    const p = it.period || inferPeriod(it);
-    if (p !== periodKey) return;
-    if (it.type === 'meal' || it.type === 'move') return;
-    if (it.time) return;
-    markerSlots.push(i);
-  });
-
-  if (markerSlots.length < 2) return; // nothing meaningful to reorder
-
-  const withGeo    = markerSlots.filter(i => items[i]._geo && items[i]._geo.lat != null);
-  const withoutGeo = markerSlots.filter(i => !(items[i]._geo && items[i]._geo.lat != null));
-  if (withGeo.length < 2) return; // not enough located stops yet
-
-  if (btnEl) btnEl.classList.add('spinning');
-
-  const points = withGeo.map(i => ({ idx: i, lat: items[i]._geo.lat, lng: items[i]._geo.lng }));
-  let orderedLocal, usedRealWalkingTimes = true, costFn;
-  try {
-    const matrix = await getWalkingDurationMatrix(points);
-    costFn = (a, b) => matrix[a][b];
-  } catch (e) {
-    // Google walking times unavailable — fall back to straight-line distance
-    usedRealWalkingTimes = false;
-    costFn = (a, b) => haversineKm(points[a].lat, points[a].lng, points[b].lat, points[b].lng);
-  }
-  orderedLocal = nearestNeighbourOrder(points.length, costFn);
-  orderedLocal = twoOptImprove(orderedLocal, costFn);
-  const orderedIdx = orderedLocal.map(i => points[i].idx);
-  const newOrderForSlots = orderedIdx.concat(withoutGeo); // unlocated stops keep their relative order, appended last
-
-  takeSnapshot();
-  const reordered = newOrderForSlots.map(i => items[i]);
-  markerSlots.forEach((slot, k) => { items[slot] = reordered[k]; });
-
-  scheduleSave();
-  renderTimeline();
-  renderRightPanel();
-  document.getElementById('snapshot-msg').textContent =
-    'Reordered ' + withGeo.length + ' stops' + (usedRealWalkingTimes ? '' : ' (approx.)');
-  showSnapshotBar(true);
-  setTimeout(() => {
-    showSnapshotBar(false);
-    document.getElementById('snapshot-msg').textContent = 'Snapshot saved';
-  }, 6000);
-  if (btnEl) btnEl.classList.remove('spinning');
 }
 
 // ── HOTEL MODAL ──────────────────────────────────────────────────────
@@ -2204,157 +1735,6 @@ function deleteHotel() {
   renderHotelPanel();
 }
 
-// ── TRIP SETTINGS MODAL ──────────────────────────────────────────────
-let _tsPendingPhoto = undefined; // undefined = no change, '' = removed, string = new photo
-
-function parseDMY(s) {
-  const [d,m,y] = (s||'').split('/').map(Number);
-  return (d && m && y) ? new Date(y, m-1, d) : null;
-}
-function formatDMY(dt) {
-  const dd = String(dt.getDate()).padStart(2,'0');
-  const mm = String(dt.getMonth()+1).padStart(2,'0');
-  return dd + '/' + mm + '/' + dt.getFullYear();
-}
-
-function openTripSettings() {
-  _tsPendingPhoto = undefined;
-  const m = STATE.meta;
-  document.getElementById('ts-dep').value  = m.dep  || dep  || '';
-  document.getElementById('ts-ret').value  = m.ret  || ret  || '';
-  document.getElementById('ts-trav').value = m.trav || trav || '2';
-  const existingPhoto = m.coverPhoto || m._coverPhoto || '';
-  if (existingPhoto) {
-    document.getElementById('ts-photo-img').src = existingPhoto;
-    document.getElementById('ts-photo-preview').style.display = 'block';
-  } else {
-    document.getElementById('ts-photo-preview').style.display = 'none';
-  }
-  document.getElementById('ts-photo-status').style.display = 'none';
-  document.getElementById('ts-ai-status').style.display = 'none';
-  document.getElementById('ts-ai-btn').disabled = false;
-  document.getElementById('ts-ai-btn').textContent = '✨ Generate all AI info for places';
-  document.getElementById('trip-settings-overlay').classList.add('open');
-}
-
-function closeTripSettings() {
-  document.getElementById('trip-settings-overlay').classList.remove('open');
-}
-
-async function onTripPhotoSelected(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const status = document.getElementById('ts-photo-status');
-  status.textContent = 'Processing…'; status.style.display = 'block';
-  try {
-    const b64 = await resizeAndEncode(file, 900, 560);
-    _tsPendingPhoto = b64;
-    document.getElementById('ts-photo-img').src = b64;
-    document.getElementById('ts-photo-preview').style.display = 'block';
-    status.textContent = 'Ready — will be saved with this trip';
-  } catch (e) {
-    status.textContent = 'Could not process that image';
-  }
-}
-
-function clearTripPhoto() {
-  _tsPendingPhoto = '';
-  document.getElementById('ts-photo-preview').style.display = 'none';
-  document.getElementById('ts-photo-file').value = '';
-  document.getElementById('ts-photo-status').style.display = 'none';
-}
-
-async function saveTripSettings() {
-  const newDep  = document.getElementById('ts-dep').value.trim();
-  const newRet  = document.getElementById('ts-ret').value.trim();
-  const newTrav = document.getElementById('ts-trav').value.trim() || '2';
-  const m = STATE.meta;
-
-  // Shift every day's date by the same amount the departure date moved
-  const oldDepDt = parseDMY(m.dep || dep);
-  const newDepDt = parseDMY(newDep);
-  if (oldDepDt && newDepDt) {
-    const deltaDays = Math.round((newDepDt - oldDepDt) / 86400000);
-    if (deltaDays !== 0) {
-      STATE.days.forEach(day => {
-        const dDt = parseDMY(day.date);
-        if (dDt) { dDt.setDate(dDt.getDate() + deltaDays); day.date = formatDMY(dDt); }
-      });
-    }
-  }
-  m.dep  = newDep;
-  m.ret  = newRet;
-  m.trav = newTrav;
-
-  if (_tsPendingPhoto !== undefined) {
-    m.coverPhoto = _tsPendingPhoto || '';
-  }
-
-  takeSnapshot();
-  scheduleSave();
-  closeTripSettings();
-  render();
-
-  // Keep the homepage trip-registry card in sync
-  try {
-    const registry = await dbLoadRegistry();
-    const entry = registry.find(r => r.slug === RECORD_ID);
-    if (entry) {
-      entry.dep = m.dep; entry.ret = m.ret;
-      if (_tsPendingPhoto !== undefined) entry.photo = m.coverPhoto || '';
-      await dbSaveRegistry(registry);
-    }
-  } catch (e) { /* registry sync is best-effort */ }
-}
-
-async function generateAllAboutInfo() {
-  const btn = document.getElementById('ts-ai-btn');
-  const status = document.getElementById('ts-ai-status');
-  const isEligible = it => it && ['place','attraction','act','ticket'].includes(it.type) && it.title && !it._about;
-
-  const targets = [];
-  STATE.days.forEach((d, di) => (d.items||[]).forEach((it, ii) => {
-    if (isEligible(it)) targets.push({ dayIdx: di, itemIdx: ii, title: it.title, city: d.loc || STATE.meta.dest || dest });
-  }));
-
-  if (!targets.length) {
-    status.style.display = 'block';
-    status.textContent = 'Everything already has AI info generated.';
-    return;
-  }
-
-  btn.disabled = true;
-  status.style.display = 'block';
-  let done = 0;
-  for (const t of targets) {
-    const item = STATE.days[t.dayIdx]?.items?.[t.itemIdx];
-    if (!item) { done++; continue; }
-    status.innerHTML = `Generating info… ${done}/${targets.length}<br><small style="opacity:.6">${t.title}</small>`;
-    try {
-      const [aboutResp, photoResp] = await Promise.all([
-        fetch('/api.php?action=generate_about', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
-          body: JSON.stringify({ place: t.title, city: t.city }),
-        }),
-        fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(t.title) + '&city=' + encodeURIComponent(t.city), {
-          headers: { 'X-Auth-Token': AUTH_TOKEN },
-        }).then(r => r.json()).catch(() => ({ photo: null })),
-      ]);
-      const j = await aboutResp.json();
-      if (j.ok && j.data?.about) {
-        item._about = j.data.about;
-        item._about.photo = photoResp.data?.photo || photoResp.photo || null;
-        scheduleSave();
-      }
-    } catch (e) { /* skip failed, continue with the rest */ }
-    done++;
-    await new Promise(r => setTimeout(r, 200)); // brief pause between calls
-  }
-  status.textContent = `Done — generated info for ${done} place${done===1?'':'s'}.`;
-  btn.disabled = false;
-}
-
 // ── ABOUT THIS PLACE ─────────────────────────────────────────────────
 async function generateAbout(force) {
   if (!drawerItem) return;
@@ -2450,9 +1830,8 @@ function setView(view) {
   document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
   document.getElementById('view-bookings').style.display  = isBookings ? '' : 'none';
   document.getElementById('view-map').style.display       = isMap ? '' : 'none';
-  document.querySelectorAll('.sb-hub-btn').forEach(b => b.classList.remove('active'));
-  if (!isBudget && view!=='bookings' && view!=='map') document.getElementById('sb-btn-itinerary').classList.add('active');
-  if (isBudget) document.getElementById('sb-btn-budget').classList.add('active');
+  document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
+  document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
 
   // Hide/show day selector and itinerary-specific topbar controls
   const hideChrome = isBudget || view === 'bookings' || view === 'map';
@@ -2462,6 +1841,8 @@ function setView(view) {
     if (el) el.style.display = hideChrome ? 'none' : '';
   });
   // Hide day list in sidebar
+  const sbDays = document.querySelector('.sb-section-label');
+  if (sbDays) sbDays.style.display = hideChrome ? 'none' : '';
   document.getElementById('sb-days').style.display = hideChrome ? 'none' : '';
 
   if (isBudget) {
@@ -2508,7 +1889,7 @@ function extractBudget(state) {
         const k = it.kicker || (it.transport && it.transport.mode) || 'Transport';
         if (k === 'Flight') flights.push({title:it.title, kicker:k, price, rawPrice:b.price, date:d.date, ref:b.ref, avios:it._avios||null});
         else if (price) transport.push({title:it.title, kicker:k, price, rawPrice:b.price, date:d.date});
-      } else if ((it.type === 'act' || it.type === 'ticket' || it.type === 'attraction') && price) {
+      } else if ((it.type === 'act' || it.type === 'ticket') && price) {
         attractions.push({title:it.title, price, rawPrice:b.price, date:d.date, ref:b.ref, tickets:b.tickets, url:b.url});
       }
     }
@@ -2559,7 +1940,7 @@ function extractBookings(state) {
         k==='Flight' ? flights.push(obj) : transport.push(obj);
       } else if (it.type==='meal' && (st==='booked'||st==='confirmed')) {
         dining.push({...base, cat:'dining', sub:it.sub});
-      } else if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
+      } else if (it.type==='act'||it.type==='ticket') {
         attractions.push({...base, cat:'attraction', tickets:b.tickets, sub:it.sub});
       }
     }
@@ -2692,16 +2073,11 @@ let _mapGeocoding = false;
 
 const MAP_CAT_COLORS = {
   act:    '#0e7a87',
-  place:  '#0e7a87',
   ticket: '#6366f1',
-  attraction: '#6366f1',
   meal:   '#d97b0a',
   hotel:  '#1a8a52',
   move:   '#888888',
 };
-
-// Map filter buttons group legacy + current type names under one filter
-const MAP_CAT_GROUPS = { act: ['place','act'], ticket: ['attraction','ticket'], meal: ['meal'], hotel: ['hotel'] };
 
 function itemsToMap(state) {
   const items = [];
@@ -2794,7 +2170,7 @@ function renderMapView() {
   const allItems = itemsToMap(STATE);
   const filtered = allItems.filter(it => {
     if (_mapDayFilter !== 'all' && it._dayIdx !== parseInt(_mapDayFilter)) return false;
-    if (_mapCatFilter !== 'all' && !(MAP_CAT_GROUPS[_mapCatFilter]||[_mapCatFilter]).includes(it.type)) return false;
+    if (_mapCatFilter !== 'all' && it.type !== _mapCatFilter) return false;
     return true;
   });
 
@@ -2818,7 +2194,7 @@ function renderMapView() {
       <button class="mf-btn ${_mapCatFilter==='all'?'active':''}" onclick="setMapFilter('cat','all')">All</button>
       <button class="mf-btn cat-act ${_mapCatFilter==='act'?'active':''}" onclick="setMapFilter('cat','act')">Places</button>
       <button class="mf-btn cat-meal ${_mapCatFilter==='meal'?'active':''}" onclick="setMapFilter('cat','meal')">Meals</button>
-      <button class="mf-btn cat-ticket ${_mapCatFilter==='ticket'?'active':''}" onclick="setMapFilter('cat','ticket')">Attractions</button>
+      <button class="mf-btn cat-ticket ${_mapCatFilter==='ticket'?'active':''}" onclick="setMapFilter('cat','ticket')">Tickets</button>
       <button class="mf-btn cat-hotel ${_mapCatFilter==='hotel'?'active':''}" onclick="setMapFilter('cat','hotel')">Hotels</button>
     </div>`;
 
