@@ -1043,3 +1043,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rr-check svg { width: 8px; height: 8px; }
 .rr-cat-name   { font-size: 9px; font-weight: 700; color: var(--text); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .rr-cat-status { display: none; }
+
+/* Custom sidebar icons via CSS mask */
+.sb-custom-ico {
+  display: inline-block; width: 18px; height: 18px; flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+}

@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=107">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=108">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -26,7 +26,7 @@
   </div>
   <nav class="sb-nav">
     <button class="sb-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-itinerary.png');mask-image:url('/icons/nav-itinerary.png');background:currentColor;"></span>
       Itinerary
       <span class="sb-chevron" id="sb-days-toggle" onclick="event.stopPropagation();toggleDaysCollapse();">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -35,17 +35,17 @@
     <div id="sb-days" class="sb-timeline"></div>
     <div class="sb-divider"></div>
     <button class="sb-btn" id="sb-btn-bookings" onclick="setView('bookings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-bookings.png');mask-image:url('/icons/nav-bookings.png');background:currentColor;"></span>
       Bookings
       <span class="sb-chevron-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
     </button>
     <button class="sb-btn" id="sb-btn-map" onclick="setView('map')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-map.png');mask-image:url('/icons/nav-map.png');background:currentColor;"></span>
       Map
       <span class="sb-chevron-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
     </button>
     <button class="sb-btn" id="sb-btn-budget" onclick="setView('budget')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-budget.png');mask-image:url('/icons/nav-budget.png');background:currentColor;"></span>
       Budget
       <span class="sb-chevron-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
     </button>
