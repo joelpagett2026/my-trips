@@ -682,7 +682,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── INLINE BUDGET VIEW ── */
 #view-budget { background:var(--bg); }
-#budget-main { max-width:1200px; padding:24px 24px 48px; }
+#budget-main { max-width:none; padding:24px 24px 48px; }
 
 .bv-summary {
   background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow);
@@ -701,7 +701,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bv-cat-bar  { height:100%; border-radius:99px; transition:width 0.4s; }
 .bv-cat-val  { font-size:12px; font-weight:800; color:var(--text); width:52px; text-align:right; flex-shrink:0; }
 
-.bv-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.bv-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr)); gap:14px; }
 .bv-panel { background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; }
 .bv-panel-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); background:rgba(0,0,0,0.01); }
 .bv-panel-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text2); }
@@ -818,7 +818,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   }
 }
 /* ── BOOKINGS VIEW ── */
-#bookings-main { max-width:860px; padding:24px 24px 48px; }
+#bookings-main { max-width:none; padding:24px 24px 48px; }
 @media (max-width:768px) { #bookings-main { max-width:none; padding:14px 14px 130px; } }
 
 .bk-summary {
@@ -853,7 +853,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-filter.active span { color:rgba(255,255,255,0.7); }
 .bk-filter:hover:not(.active) { border-color:var(--teal); color:var(--teal); }
 
-.bk-list { display:flex; flex-direction:column; gap:10px; }
+.bk-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px; }
 .bk-card { background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); display:flex; gap:14px; padding:14px 16px; }
 .bk-card-ico { width:36px; height:36px; border-radius:10px; background:var(--teal-xdim); color:var(--teal); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
 .bk-card-ico svg { width:17px; height:17px; stroke:currentColor; }
