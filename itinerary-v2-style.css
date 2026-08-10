@@ -467,11 +467,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .h-bf-no  { color: var(--text3); }
 
 /* ── ABOUT THIS PLACE ── */
-.dr-about-header {
-  font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--teal);
-  padding: 2px 0 10px;
-}
 
 #dr-about-body {
   margin-top: 10px;
