@@ -77,8 +77,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .day-tab{display:flex;flex-direction:column;align-items:center;padding:10px 14px;cursor:pointer;border-bottom:2.5px solid transparent;color:var(--text2);white-space:nowrap;transition:all 0.14s;gap:2px;min-width:76px;user-select:none;}
 .day-tab:hover{color:var(--text);background:var(--teal-xdim);}
 .day-tab.active{border-bottom-color:var(--teal);color:var(--teal);}
-.dt-n{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.6;}
-.dt-date{font-size:12px;font-weight:700;}
+.dt-n{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;opacity:0.6;}
+.dt-date{font-size:14px;font-weight:700;}
 .dt-loc{font-size:10px;font-weight:500;opacity:0.7;max-width:86px;overflow:hidden;text-overflow:ellipsis;}
 .day-tab.active .dt-n,.day-tab.active .dt-date{opacity:1;}
 
