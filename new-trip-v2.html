@@ -28,11 +28,11 @@
     <div class="sb-section-label">Days</div>
     <div id="sb-days"></div>
     <div class="sb-divider"></div>
-    <button class="sb-btn">
+    <button class="sb-btn" id="sb-btn-bookings" onclick="setView('bookings')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       Bookings
     </button>
-    <button class="sb-btn">
+    <button class="sb-btn" id="sb-btn-map" onclick="setView('map')">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
       Map
     </button>
@@ -1829,8 +1829,10 @@ function setView(view) {
   document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
   document.getElementById('view-bookings').style.display  = isBookings ? '' : 'none';
   document.getElementById('view-map').style.display       = isMap ? '' : 'none';
-  document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
+  document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget && !isBookings && !isMap);
   document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
+  document.getElementById('sb-btn-bookings').classList.toggle('active', isBookings);
+  document.getElementById('sb-btn-map').classList.toggle('active', isMap);
 
   // Hide/show day selector and itinerary-specific topbar controls
   const hideChrome = isBudget || view === 'bookings' || view === 'map';
