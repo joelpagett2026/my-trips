@@ -990,3 +990,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   font-family: var(--font); font-size: 14px; font-weight: 700;
   appearance: auto; cursor: pointer; box-sizing: border-box;
 }
+
+/* ── RIGHT PANEL COMPACT READINESS ── */
+.rp-readiness-section { padding: 10px 12px !important; }
+.rp-ready-row { display: flex; align-items: center; gap: 12px; }
+.rp-ready-pct {
+  font-size: 13px; font-weight: 800;
+  padding: 5px 10px; border-radius: 20px; flex-shrink: 0;
+  font-family: var(--font);
+}
+.rp-ready-cats { display: flex; flex-wrap: wrap; gap: 6px 12px; flex: 1; }
+.rp-ready-cat {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  font-family: var(--font);
+}
+.rp-ready-cat svg { stroke: var(--text3); flex-shrink: 0; }
+.rp-ready-cat.ok { color: var(--green); }
+.rp-ready-cat.ok svg { stroke: var(--green); }

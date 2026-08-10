@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=95">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=96">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -104,6 +104,9 @@
 
     <!-- RIGHT PANEL -->
     <div class="rp-col">
+      <div class="rp-section rp-readiness-section">
+        <div id="rp-readiness"></div>
+      </div>
       <div class="rp-section">
         <div class="rp-h" style="display:flex;align-items:center;">
           Accommodation
@@ -1317,6 +1320,7 @@ function renderSidebarReadiness() {
   const offset = circumference * (1 - pct/100);
   const title = pct>=100 ? 'Trip complete 🎉' : label;
 
+  // Left sidebar — keep existing ring layout
   el.innerHTML = `
     <div class="sbr-ring-wrap">
       <svg width="58" height="58" viewBox="0 0 58 58">
@@ -1335,6 +1339,29 @@ function renderSidebarReadiness() {
       ${catRow(hotelsOk, 'Hotels')}
       ${catRow(activitiesOk, 'Activities')}
     </div>`;
+
+  // Right panel — compact single row
+  const rpEl = document.getElementById('rp-readiness');
+  if (rpEl) {
+    const ckIco = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const cats = [
+      { ok: flightsOk,    label: 'Flights'     },
+      { ok: hotelsOk,     label: 'Hotels'      },
+      { ok: restaurantsOk,label: 'Restaurants' },
+      { ok: activitiesOk, label: 'Activities'  },
+    ];
+    rpEl.innerHTML = `<div class="rp-ready-row">
+      <div class="rp-ready-pct" style="background:${pct>=100?'var(--teal)':'rgba(14,122,135,0.15)'}; color:${pct>=100?'#fff':'var(--teal)'}">
+        ${pct}%
+      </div>
+      <div class="rp-ready-cats">
+        ${cats.map(c=>`<div class="rp-ready-cat ${c.ok?'ok':''}">
+          ${c.ok ? ckIco : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>'}
+          ${c.label}
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
 }
 
 function renderPlacesToEat() {
