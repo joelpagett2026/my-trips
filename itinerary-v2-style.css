@@ -442,7 +442,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .tl-section-hdr:hover .tl-section-regen { opacity: 1; }
 .tl-section-regen:hover { color: var(--teal); background: var(--teal-xdim); }
-.tl-section-regen.spinning svg { animation: tl-regen-spin 0.5s linear; }
+.tl-section-regen.spinning svg { animation: tl-regen-spin 0.8s linear infinite; }
+.tl-section-regen.spinning { opacity: 1; pointer-events: none; }
 @keyframes tl-regen-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* ── TRANSPORT TYPE BUTTONS ── */

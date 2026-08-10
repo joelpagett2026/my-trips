@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=81">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=82">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1697,35 +1697,67 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Greedy nearest-neighbour route, tried from every possible starting point,
-// keeping whichever full route covers the least total distance.
-function nearestNeighbourOrder(points) {
+// Ask Google for real walking times between every pair of points in one call.
+// Returns an NxN matrix of seconds, or throws if the API is unavailable/denied.
+async function getWalkingDurationMatrix(points) {
+  await loadGoogleMaps();
+  if (!window.google || !google.maps || !google.maps.DistanceMatrixService) {
+    throw new Error('DistanceMatrixService unavailable');
+  }
+  const service = new google.maps.DistanceMatrixService();
+  const latLngs = points.map(p => new google.maps.LatLng(p.lat, p.lng));
+  const response = await new Promise((resolve, reject) => {
+    service.getDistanceMatrix({
+      origins: latLngs,
+      destinations: latLngs,
+      travelMode: google.maps.TravelMode.WALKING,
+      unitSystem: google.maps.UnitSystem.METRIC,
+    }, (res, status) => {
+      if (status === 'OK') resolve(res); else reject(new Error('DistanceMatrix status: ' + status));
+    });
+  });
   const n = points.length;
-  if (n <= 2) return points.map(p => p.idx);
-  let bestOrder = null, bestDist = Infinity;
+  const matrix = Array.from({ length: n }, () => new Array(n).fill(Infinity));
+  for (let i = 0; i < n; i++) {
+    const row = response.rows[i];
+    if (!row) continue;
+    for (let j = 0; j < n; j++) {
+      const el = row.elements[j];
+      if (el && el.status === 'OK') matrix[i][j] = el.duration.value; // seconds
+    }
+  }
+  return matrix;
+}
+
+// Greedy nearest-neighbour route over an arbitrary cost function, tried from
+// every possible starting point, keeping whichever full route costs least.
+function nearestNeighbourOrder(n, costFn) {
+  if (n <= 2) return Array.from({ length: n }, (_, i) => i);
+  let bestOrder = null, bestCost = Infinity;
   for (let start = 0; start < n; start++) {
     const visited = new Array(n).fill(false);
     visited[start] = true;
     const order = [start];
     let cur = start, total = 0;
     for (let step = 1; step < n; step++) {
-      let nearest = -1, nearestD = Infinity;
+      let nearest = -1, nearestC = Infinity;
       for (let j = 0; j < n; j++) {
         if (visited[j]) continue;
-        const dist = haversineKm(points[cur].lat, points[cur].lng, points[j].lat, points[j].lng);
-        if (dist < nearestD) { nearestD = dist; nearest = j; }
+        const c = costFn(cur, j);
+        if (c < nearestC) { nearestC = c; nearest = j; }
       }
       visited[nearest] = true;
       order.push(nearest);
-      total += nearestD;
+      total += nearestC;
       cur = nearest;
     }
-    if (total < bestDist) { bestDist = total; bestOrder = order; }
+    if (total < bestCost) { bestCost = total; bestOrder = order; }
   }
-  return bestOrder.map(i => points[i].idx);
+  return bestOrder;
 }
 
-function regeneratePeriod(periodKey, btnEl) {
+async function regeneratePeriod(periodKey, btnEl) {
+  if (btnEl && btnEl.classList.contains('spinning')) return; // already running
   const day = STATE.days[activeDay];
   if (!day) return;
   const items = day.items || [];
@@ -1751,7 +1783,17 @@ function regeneratePeriod(periodKey, btnEl) {
   if (btnEl) btnEl.classList.add('spinning');
 
   const points = withGeo.map(i => ({ idx: i, lat: items[i]._geo.lat, lng: items[i]._geo.lng }));
-  const orderedIdx = nearestNeighbourOrder(points);
+  let orderedLocal, usedRealWalkingTimes = true;
+  try {
+    const matrix = await getWalkingDurationMatrix(points);
+    orderedLocal = nearestNeighbourOrder(points.length, (a, b) => matrix[a][b]);
+  } catch (e) {
+    // Google walking times unavailable — fall back to straight-line distance
+    usedRealWalkingTimes = false;
+    orderedLocal = nearestNeighbourOrder(points.length, (a, b) =>
+      haversineKm(points[a].lat, points[a].lng, points[b].lat, points[b].lng));
+  }
+  const orderedIdx = orderedLocal.map(i => points[i].idx);
   const newOrderForSlots = orderedIdx.concat(withoutGeo); // unlocated stops keep their relative order, appended last
 
   takeSnapshot();
@@ -1761,13 +1803,14 @@ function regeneratePeriod(periodKey, btnEl) {
   scheduleSave();
   renderTimeline();
   renderRightPanel();
-  document.getElementById('snapshot-msg').textContent = 'Reordered ' + withGeo.length + ' stops';
+  document.getElementById('snapshot-msg').textContent =
+    'Reordered ' + withGeo.length + ' stops' + (usedRealWalkingTimes ? '' : ' (approx.)');
   showSnapshotBar(true);
   setTimeout(() => {
     showSnapshotBar(false);
     document.getElementById('snapshot-msg').textContent = 'Snapshot saved';
   }, 6000);
-  if (btnEl) setTimeout(() => btnEl.classList.remove('spinning'), 500);
+  if (btnEl) btnEl.classList.remove('spinning');
 }
 
 // ── HOTEL MODAL ──────────────────────────────────────────────────────
