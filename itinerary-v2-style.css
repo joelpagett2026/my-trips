@@ -1029,17 +1029,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rr-cat  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
            gap: 4px; }
 .rr-cat-ico {
-  width: 44px; height: 44px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: var(--bg); display: flex; align-items: center; justify-content: center;
   position: relative; color: var(--text3); flex-shrink: 0;
 }
-.rr-cat-ico svg:first-child { width: 22px; height: 22px; }
+.rr-cat-ico svg:first-child { width: 17px; height: 17px; }
 .rr-cat-ico.ok { background: rgba(14,122,135,0.1); color: var(--teal); }
 .rr-check {
-  position: absolute; top: 0px; right: 0px;
-  width: 18px; height: 18px; border-radius: 50%;
+  position: absolute; top: -1px; right: -1px;
+  width: 14px; height: 14px; border-radius: 50%;
   background: var(--teal); display: flex; align-items: center; justify-content: center;
 }
-.rr-check svg { width: 10px; height: 10px; }
-.rr-cat-name   { font-size: 10.5px; font-weight: 700; color: var(--text); text-align: center; }
+.rr-check svg { width: 8px; height: 8px; }
+.rr-cat-name   { font-size: 9px; font-weight: 700; color: var(--text); text-align: center; }
 .rr-cat-status { display: none; }
