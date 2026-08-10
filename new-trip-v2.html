@@ -848,18 +848,12 @@ function renderSidebar() {
       if (photo) hero.style.backgroundImage = `url('${photo}')`;
     }).catch(()=>{});
   }
-  document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
-  document.getElementById('sb-name').textContent = m.dest || dest;
-  const depFmt = m.dep || dep;
-  const retFmt = m.ret || ret;
-  document.getElementById('sb-meta').textContent = formatDateRangeNice(depFmt, retFmt) + (depFmt && retFmt ? '\n' : '') + (m.trav||trav) + ' traveller' + ((m.trav||trav)!=='1'?'s':'');
-  ensureCoverPhoto();
-
-  const d = STATE.days[activeDay];
+  // Sidebar days list
   document.getElementById('sb-days').innerHTML = STATE.days.map((dy,i) => {
+    const dt = (dy.date||'').split('/').slice(0,2).join('/');
     return `<button class="sb-day-item ${i===activeDay?'active':''}" onclick="setDay(${i})">
-      <span class="sb-day-dot-col"><span class="sb-day-dot"></span></span>
-      <span>Day ${i+1} • ${formatDayLabel(dy.date)}</span>
+      <span class="sb-day-num">Day ${i+1}</span>
+      <span class="sb-day-date-label">${dt}</span>
     </button>`;
   }).join('');
 
