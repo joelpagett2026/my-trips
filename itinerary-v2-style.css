@@ -31,9 +31,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* SIDEBAR */
 .v2-sidebar{width:var(--sb-w);min-width:var(--sb-w);background:var(--sidebar);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow:hidden;flex-shrink:0;}
-.sb-trip{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.sb-trip{padding:0 16px 16px;border-bottom:1px solid rgba(255,255,255,0.07);}
 .sb-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px;margin-bottom:3px;}
-.sb-photo{width:100%;height:84px;border-radius:12px;background:rgba(255,255,255,0.05);background-size:cover;background-position:center;margin-bottom:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.sb-photo{width:100%;height:84px;border-radius:0 0 12px 12px;background:rgba(255,255,255,0.05);background-size:cover;background-position:center;margin-bottom:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
 .sb-photo.loading{background:linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0.09),rgba(255,255,255,0.04));background-size:200% 100%;animation:sb-photo-shimmer 1.4s ease-in-out infinite;}
 .sb-photo.empty{background:linear-gradient(135deg,rgba(14,122,135,0.35),rgba(13,158,140,0.2));}
 .sb-photo.empty::after{content:'';width:22px;height:22px;background:rgba(255,255,255,0.35);-webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>') center/contain no-repeat;}
@@ -233,6 +233,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .hotel-img:hover .hotel-edit-btn { opacity: 1; }
 .hotel-edit-btn:hover { background: rgba(0,0,0,0.65); }
+.sb-trip-edit-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.4);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.15s;}
+.sb-trip-edit-btn svg{width:12px;height:12px;stroke:currentColor;}
+.sb-trip-edit-btn:hover{background:rgba(0,0,0,0.65);}
 .sb-readiness{padding:12px 10px 12px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:4px;display:flex;flex-direction:column;align-items:center;text-align:center;}
 .sbr-ring-wrap{position:relative;width:58px;height:58px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
 .sbr-ring-wrap svg{position:absolute;top:0;left:0;}

@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=91">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=92">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -16,7 +16,11 @@
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
   <div class="sb-trip">
-    <div class="sb-photo" id="sb-photo"></div>
+    <div class="sb-photo" id="sb-photo">
+      <button class="sb-trip-edit-btn" onclick="openTripSettings()" title="Trip settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+      </button>
+    </div>
     <div class="sb-name" id="sb-name">Loading…</div>
     <div class="sb-meta" id="sb-meta"></div>
   </div>
@@ -452,6 +456,63 @@
   </div>
 </div>
 
+<!-- TRIP SETTINGS MODAL -->
+<div class="modal-overlay" id="trip-settings-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Trip settings</div>
+      <button class="modal-close" onclick="closeTripSettings()">×</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;gap:13px;">
+      <div class="field-group">
+        <label class="field-label">Cover photo</label>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px;">Used for this trip's sidebar and its card on the homepage.</div>
+        <label class="hotel-upload-label" id="ts-upload-label" for="ts-photo-file">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="ts-upload-label-text">Upload photo</span>
+        </label>
+        <input type="file" id="ts-photo-file" accept="image/*" style="display:none;" onchange="onTripPhotoSelected(this)">
+      </div>
+      <div id="ts-photo-preview" style="display:none;">
+        <img id="ts-photo-img" src="" alt="" style="width:100%;height:130px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+        <div style="font-size:10px;color:var(--text3);margin-top:5px;display:flex;align-items:center;gap:8px;">
+          <span id="ts-photo-size"></span>
+          <button onclick="clearTripPhoto()" style="background:none;border:none;color:var(--amber);font-size:10px;cursor:pointer;font-family:inherit;padding:0;margin-left:auto;">✕ Remove</button>
+        </div>
+      </div>
+      <div id="ts-photo-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Departure date</label>
+          <input class="field-input" id="ts-dep" type="text" placeholder="dd/mm/yyyy">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Return date</label>
+          <input class="field-input" id="ts-ret" type="text" placeholder="dd/mm/yyyy">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:-6px;">Changing the departure date shifts every day in the itinerary by the same amount.</div>
+
+      <div class="field-group">
+        <label class="field-label">Travellers</label>
+        <input class="field-input" id="ts-trav" type="number" min="1" style="max-width:100px;">
+      </div>
+
+      <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
+        <label class="field-label">AI place information</label>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Generates "About this place" text and a photo for every place/attraction in the itinerary that doesn't have it yet.</div>
+        <button class="modal-btn secondary" id="ts-ai-btn" style="width:100%;" onclick="generateAllAboutInfo()">✨ Generate all AI info for places</button>
+        <div id="ts-ai-status" style="font-size:10.5px;color:var(--text3);margin-top:8px;display:none;"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn secondary" onclick="closeTripSettings()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveTripSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- MOBILE BOTTOM NAV (hidden on desktop via CSS) -->
 <div class="mob-nav" id="mob-nav">
   <div class="mob-nav-days" id="mob-nav-days"></div>
@@ -724,6 +785,7 @@ function toggleDaysCollapse() {
 async function ensureCoverPhoto() {
   const m = STATE.meta;
   const el = document.getElementById('sb-photo');
+  if (m.coverPhoto) { el.style.backgroundImage = `url('${m.coverPhoto}')`; el.classList.remove('loading','empty'); return; }
   if (m._coverPhoto) { el.style.backgroundImage = `url('${m._coverPhoto}')`; el.classList.remove('loading','empty'); return; }
   if (m._coverPhoto === '') { el.classList.add('empty'); el.classList.remove('loading'); return; } // previously tried, none found
   el.classList.add('loading');
@@ -2103,6 +2165,157 @@ function deleteHotel() {
   closeHotelModal();
   scheduleSave();
   renderHotelPanel();
+}
+
+// ── TRIP SETTINGS MODAL ──────────────────────────────────────────────
+let _tsPendingPhoto = undefined; // undefined = no change, '' = removed, string = new photo
+
+function parseDMY(s) {
+  const [d,m,y] = (s||'').split('/').map(Number);
+  return (d && m && y) ? new Date(y, m-1, d) : null;
+}
+function formatDMY(dt) {
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  return dd + '/' + mm + '/' + dt.getFullYear();
+}
+
+function openTripSettings() {
+  _tsPendingPhoto = undefined;
+  const m = STATE.meta;
+  document.getElementById('ts-dep').value  = m.dep  || dep  || '';
+  document.getElementById('ts-ret').value  = m.ret  || ret  || '';
+  document.getElementById('ts-trav').value = m.trav || trav || '2';
+  const existingPhoto = m.coverPhoto || m._coverPhoto || '';
+  if (existingPhoto) {
+    document.getElementById('ts-photo-img').src = existingPhoto;
+    document.getElementById('ts-photo-preview').style.display = 'block';
+  } else {
+    document.getElementById('ts-photo-preview').style.display = 'none';
+  }
+  document.getElementById('ts-photo-status').style.display = 'none';
+  document.getElementById('ts-ai-status').style.display = 'none';
+  document.getElementById('ts-ai-btn').disabled = false;
+  document.getElementById('ts-ai-btn').textContent = '✨ Generate all AI info for places';
+  document.getElementById('trip-settings-overlay').classList.add('open');
+}
+
+function closeTripSettings() {
+  document.getElementById('trip-settings-overlay').classList.remove('open');
+}
+
+async function onTripPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('ts-photo-status');
+  status.textContent = 'Processing…'; status.style.display = 'block';
+  try {
+    const b64 = await resizeAndEncode(file, 900, 560);
+    _tsPendingPhoto = b64;
+    document.getElementById('ts-photo-img').src = b64;
+    document.getElementById('ts-photo-preview').style.display = 'block';
+    status.textContent = 'Ready — will be saved with this trip';
+  } catch (e) {
+    status.textContent = 'Could not process that image';
+  }
+}
+
+function clearTripPhoto() {
+  _tsPendingPhoto = '';
+  document.getElementById('ts-photo-preview').style.display = 'none';
+  document.getElementById('ts-photo-file').value = '';
+  document.getElementById('ts-photo-status').style.display = 'none';
+}
+
+async function saveTripSettings() {
+  const newDep  = document.getElementById('ts-dep').value.trim();
+  const newRet  = document.getElementById('ts-ret').value.trim();
+  const newTrav = document.getElementById('ts-trav').value.trim() || '2';
+  const m = STATE.meta;
+
+  // Shift every day's date by the same amount the departure date moved
+  const oldDepDt = parseDMY(m.dep || dep);
+  const newDepDt = parseDMY(newDep);
+  if (oldDepDt && newDepDt) {
+    const deltaDays = Math.round((newDepDt - oldDepDt) / 86400000);
+    if (deltaDays !== 0) {
+      STATE.days.forEach(day => {
+        const dDt = parseDMY(day.date);
+        if (dDt) { dDt.setDate(dDt.getDate() + deltaDays); day.date = formatDMY(dDt); }
+      });
+    }
+  }
+  m.dep  = newDep;
+  m.ret  = newRet;
+  m.trav = newTrav;
+
+  if (_tsPendingPhoto !== undefined) {
+    m.coverPhoto = _tsPendingPhoto || '';
+  }
+
+  takeSnapshot();
+  scheduleSave();
+  closeTripSettings();
+  render();
+
+  // Keep the homepage trip-registry card in sync
+  try {
+    const registry = await dbLoadRegistry();
+    const entry = registry.find(r => r.slug === RECORD_ID);
+    if (entry) {
+      entry.dep = m.dep; entry.ret = m.ret;
+      if (_tsPendingPhoto !== undefined) entry.photo = m.coverPhoto || '';
+      await dbSaveRegistry(registry);
+    }
+  } catch (e) { /* registry sync is best-effort */ }
+}
+
+async function generateAllAboutInfo() {
+  const btn = document.getElementById('ts-ai-btn');
+  const status = document.getElementById('ts-ai-status');
+  const isEligible = it => it && ['place','attraction','act','ticket'].includes(it.type) && it.title && !it._about;
+
+  const targets = [];
+  STATE.days.forEach((d, di) => (d.items||[]).forEach((it, ii) => {
+    if (isEligible(it)) targets.push({ dayIdx: di, itemIdx: ii, title: it.title, city: d.loc || STATE.meta.dest || dest });
+  }));
+
+  if (!targets.length) {
+    status.style.display = 'block';
+    status.textContent = 'Everything already has AI info generated.';
+    return;
+  }
+
+  btn.disabled = true;
+  status.style.display = 'block';
+  let done = 0;
+  for (const t of targets) {
+    const item = STATE.days[t.dayIdx]?.items?.[t.itemIdx];
+    if (!item) { done++; continue; }
+    status.innerHTML = `Generating info… ${done}/${targets.length}<br><small style="opacity:.6">${t.title}</small>`;
+    try {
+      const [aboutResp, photoResp] = await Promise.all([
+        fetch('/api.php?action=generate_about', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
+          body: JSON.stringify({ place: t.title, city: t.city }),
+        }),
+        fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(t.title) + '&city=' + encodeURIComponent(t.city), {
+          headers: { 'X-Auth-Token': AUTH_TOKEN },
+        }).then(r => r.json()).catch(() => ({ photo: null })),
+      ]);
+      const j = await aboutResp.json();
+      if (j.ok && j.data?.about) {
+        item._about = j.data.about;
+        item._about.photo = photoResp.data?.photo || photoResp.photo || null;
+        scheduleSave();
+      }
+    } catch (e) { /* skip failed, continue with the rest */ }
+    done++;
+    await new Promise(r => setTimeout(r, 200)); // brief pause between calls
+  }
+  status.textContent = `Done — generated info for ${done} place${done===1?'':'s'}.`;
+  btn.disabled = false;
 }
 
 // ── ABOUT THIS PLACE ─────────────────────────────────────────────────
