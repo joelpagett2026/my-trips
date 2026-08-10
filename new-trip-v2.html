@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=74">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=75">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -15,37 +15,48 @@
 
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside class="v2-sidebar">
-  <div class="sb-trip">
-    <div class="sb-flag" id="sb-flag">🌍</div>
-    <div class="sb-name" id="sb-name">Loading…</div>
-    <div class="sb-meta" id="sb-meta"></div>
+  <!-- Hero photo + trip name -->
+  <div class="sb-hero" id="sb-hero">
+    <div class="sb-hero-overlay"></div>
+    <div class="sb-hero-text" id="sb-name">Loading…</div>
   </div>
+  <!-- Trip meta -->
+  <div class="sb-trip-meta">
+    <div class="sb-meta-row">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span id="sb-dates">—</span>
+    </div>
+    <div class="sb-meta-row">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span id="sb-travellers">—</span>
+    </div>
+  </div>
+  <!-- Nav rows -->
   <nav class="sb-nav">
-    <button class="sb-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      Itinerary
+    <button class="sb-hub-btn active" id="sb-btn-itinerary" onclick="setView('itinerary')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Itinerary</span>
+      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-    <div class="sb-section-label">Days</div>
+    <button class="sb-hub-btn" onclick="setView('bookings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      <span>Bookings</span>
+      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button class="sb-hub-btn" onclick="setView('map')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+      <span>Map</span>
+      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button class="sb-hub-btn" id="sb-btn-budget" onclick="setView('budget')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Budget</span>
+      <svg class="sb-hub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="sb-section-label" style="margin-top:8px;">Days</div>
     <div id="sb-days"></div>
-    <div class="sb-divider"></div>
-    <button class="sb-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-      Bookings
-    </button>
-    <button class="sb-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
-      Map
-    </button>
-    <button class="sb-btn" id="sb-btn-budget" onclick="setView('budget')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Budget
-    </button>
   </nav>
   <div class="sb-bottom">
-    <button class="sb-btn" onclick="location.href='/settings.html'">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-      Settings
-    </button>
     <button class="sb-btn" onclick="location.href='/trips/'">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       All trips
@@ -677,6 +688,37 @@ function renderSidebar() {
   const mmTrip = document.getElementById('mob-menu-trip');
   if (mmTrip) mmTrip.textContent = STATE.meta?.dest || dest;
   const m = STATE.meta;
+
+  // Update hero
+  document.getElementById('sb-name').textContent = m?.dest || dest;
+
+  // Dates
+  const depFmt = (m?.dep||dep||'').replace(/(\d+)\/(\d+)\/(\d+)/, (_, d, mo, y) => {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(d)} ${months[parseInt(mo)-1]} ${y}`;
+  });
+  const retFmt = (m?.ret||ret||'').replace(/(\d+)\/(\d+)\/(\d+)/, (_, d, mo, y) => {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(d)} ${months[parseInt(mo)-1]} ${y}`;
+  });
+  const sbDates = document.getElementById('sb-dates');
+  if (sbDates) sbDates.textContent = depFmt && retFmt ? `${depFmt} – ${retFmt}` : depFmt || '—';
+
+  const sbTrav = document.getElementById('sb-travellers');
+  if (sbTrav) { const n = parseInt(m?.trav||trav)||2; sbTrav.textContent = `${n} traveller${n!==1?'s':''}`; }
+
+  // Hero photo — fetch from Wikimedia for the destination
+  const hero = document.getElementById('sb-hero');
+  if (hero && !hero.dataset.loaded) {
+    hero.dataset.loaded = '1';
+    const destName = m?.dest || dest;
+    fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(destName) + '&city=', {
+      headers: { 'X-Auth-Token': AUTH_TOKEN }
+    }).then(r=>r.json()).then(j => {
+      const photo = j.data?.photo || j.photo;
+      if (photo) hero.style.backgroundImage = `url('${photo}')`;
+    }).catch(()=>{});
+  }
   document.getElementById('sb-flag').textContent = flagFor(m.dest || dest);
   document.getElementById('sb-name').textContent = m.dest || dest;
   const depFmt = m.dep || dep;
@@ -1830,8 +1872,9 @@ function setView(view) {
   document.getElementById('view-budget').style.display    = isBudget ? '' : 'none';
   document.getElementById('view-bookings').style.display  = isBookings ? '' : 'none';
   document.getElementById('view-map').style.display       = isMap ? '' : 'none';
-  document.getElementById('sb-btn-itinerary').classList.toggle('active', !isBudget);
-  document.getElementById('sb-btn-budget').classList.toggle('active', isBudget);
+  document.querySelectorAll('.sb-hub-btn').forEach(b => b.classList.remove('active'));
+  if (!isBudget && view!=='bookings' && view!=='map') document.getElementById('sb-btn-itinerary').classList.add('active');
+  if (isBudget) document.getElementById('sb-btn-budget').classList.add('active');
 
   // Hide/show day selector and itinerary-specific topbar controls
   const hideChrome = isBudget || view === 'bookings' || view === 'map';
