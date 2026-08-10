@@ -1161,7 +1161,10 @@ function dragCleanup() {
 }
 
 function renderRightPanel() {
-  renderSidebarReadiness();
+  try { renderSidebarReadiness(); } catch(e) {
+    const rpEl = document.getElementById('rp-readiness');
+    if (rpEl) rpEl.innerHTML = '<div style="font-size:10px;color:red">'+e.message+'</div>';
+  }
   renderHotelPanel();
   renderPlacesToEat();
 }
