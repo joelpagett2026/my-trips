@@ -102,7 +102,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .v2-topbar{background:linear-gradient(135deg,var(--teal) 0%,var(--teal2) 100%);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 12px rgba(10,122,100,0.2);}
 .tb-left{display:flex;flex-direction:column;gap:1px;}
 .tb-kicker{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.55);}
-.tb-title{font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
+.tb-title{font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.3px;cursor:pointer;}
+.tb-title-input{font:inherit;font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.3px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.4);border-radius:5px;padding:1px 6px;margin:-2px -6px;width:min(320px,60vw);outline:none;}
 .tb-right{display:flex;align-items:center;gap:7px;}
 .mode-toggle{display:flex;background:rgba(0,0,0,0.2);border-radius:7px;padding:3px;gap:2px;}
 .mode-btn{padding:4px 13px;border-radius:5px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);border:none;background:none;cursor:pointer;font-family:var(--font);transition:all 0.14s;letter-spacing:0.02em;}

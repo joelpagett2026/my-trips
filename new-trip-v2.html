@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=111">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=112">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -69,7 +69,7 @@
   <div class="v2-topbar">
     <div class="tb-left">
       <div class="tb-kicker" id="tb-kicker">Loading…</div>
-      <div class="tb-title" id="tb-title"></div>
+      <div class="tb-title" id="tb-title" ondblclick="editDayTitle()" title="Double-click to rename"></div>
     </div>
     <div class="tb-right">
       <span class="tb-status" id="tb-status"></span>
@@ -845,6 +845,43 @@ function renderDaySummary() {
   // Update topbar kicker and title
   document.getElementById('tb-kicker').textContent = `Day ${activeDay+1} of ${STATE.days.length} · ${d.date||''}`;
   document.getElementById('tb-title').textContent  = d.loc || d.title || dest;
+}
+
+// ── EDIT DAY LOCATION (double-click the title) ─────────────────────────
+function editDayTitle() {
+  if (currentView !== 'itinerary') return; // only meaningful on the itinerary view
+  const titleEl = document.getElementById('tb-title');
+  if (!titleEl || titleEl.querySelector('input')) return; // already editing
+  const d = STATE.days[activeDay];
+  if (!d) return;
+  const current = d.loc || d.title || '';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'tb-title-input';
+  input.value = current;
+  input.maxLength = 60;
+  titleEl.textContent = '';
+  titleEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  let cancelled = false;
+  const commit = () => {
+    if (cancelled) return;
+    const val = input.value.trim();
+    d.loc = val;
+    renderDaySummary();
+    renderSidebar();
+    scheduleSave();
+  };
+  const cancel = () => { cancelled = true; renderDaySummary(); };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit, { once: true });
 }
 
 // Infer a period from an item that has no explicit period set
