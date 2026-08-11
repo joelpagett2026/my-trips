@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=109">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=110">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1497,8 +1497,8 @@ function renderSidebarReadiness() {
       ? `<span class="rp2-pill ok">Booked</span>`
       : `<span class="rp2-pill pending">Planned</span>`;
 
-    const circ2 = (2 * Math.PI * 33).toFixed(1);
-    const off2  = (2 * Math.PI * 33 * (1 - pct/100)).toFixed(1);
+    const circ2 = (2 * Math.PI * 17).toFixed(1);
+    const off2  = (2 * Math.PI * 17 * (1 - pct/100)).toFixed(1);
 
     rpEl.innerHTML = `
       <div class="rp2-overview-grid">
@@ -1511,11 +1511,11 @@ function renderSidebarReadiness() {
       </div>
       <div class="rp2-donut-row">
         <div class="rp2-mini-donut">
-          <svg width="60" height="60" viewBox="0 0 60 60">
-            <circle cx="30" cy="30" r="24" fill="none" stroke="var(--line)" stroke-width="5"/>
-            <circle cx="30" cy="30" r="24" fill="none" stroke="var(--teal)" stroke-width="5"
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle cx="22" cy="22" r="17" fill="none" stroke="var(--line)" stroke-width="4"/>
+            <circle cx="22" cy="22" r="17" fill="none" stroke="var(--teal)" stroke-width="4"
               stroke-dasharray="${circ2}" stroke-dashoffset="${off2}"
-              stroke-linecap="round" transform="rotate(-90 30 30)"/>
+              stroke-linecap="round" transform="rotate(-90 22 22)"/>
           </svg>
           <div class="rp2-mini-donut-pct">${pct}%</div>
         </div>
