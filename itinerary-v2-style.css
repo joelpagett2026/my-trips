@@ -163,8 +163,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-dot.meal{background:#d97b0a;}
 .tl-dot.move{background:var(--surface);border-color:var(--teal);}
 .tl-dot.hotel{background:var(--text3);}
-.tl-ico{width:30px;height:30px;border-radius:8px;background:var(--teal-xdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:13px;margin-top:1px;color:var(--teal);}
-.tl-ico svg{width:14px;height:14px;stroke:currentColor;fill:currentColor;}
+.tl-ico{width:45px;height:45px;border-radius:10px;background:var(--teal-xdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:13px;margin-top:1px;color:var(--teal);}
+.tl-ico svg{width:21px;height:21px;stroke:currentColor;fill:currentColor;}
 .tl-ico.meal{background:rgba(217,123,10,0.10);color:#d97b0a;}
 .tl-ico.move{background:rgba(90,106,112,0.10);color:var(--text2);}
 .tl-ico.ticket{background:rgba(99,102,241,0.10);color:#6366f1;}
