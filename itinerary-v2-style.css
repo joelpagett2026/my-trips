@@ -1092,8 +1092,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Hotel card */
 .rp2-hotel-photo {
-  width: 100%; height: 90px; background: var(--bg);
-  background-size: cover; background-position: center; margin-bottom: 6px;
+  width: 100%; height: 140px; background: var(--bg);
+  background-size: cover; background-position: center; margin-bottom: 8px;
 }
 .rp2-hotel-name {
   font-size: 11px; font-weight: 700; color: var(--text);
