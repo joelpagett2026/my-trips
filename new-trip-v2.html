@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=113">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=114">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -203,8 +203,7 @@
       </div>
       <div class="field-group">
         <label class="field-label">Activities — one per line</label>
-        <textarea class="field-textarea" id="f-bulk-list" rows="10"
-          placeholder="São Bento Station&#10;Porto Cathedral&#10;Dom Luís I Bridge&#10;Lunch — Nata Lisboa"></textarea>
+        <textarea class="field-textarea" id="f-bulk-list" rows="10"></textarea>
         <div style="font-size:10.5px;color:var(--text3);margin-top:5px;">Each line becomes a separate activity. Blank lines are skipped.</div>
       </div>
       <div class="field-group">
@@ -234,7 +233,7 @@
       <div id="fields-place" style="display:flex;flex-direction:column;gap:13px;">
         <div class="field-group">
           <label class="field-label">Location</label>
-          <input class="field-input" id="f-place-location" type="text" placeholder="e.g. São Bento Station">
+          <input class="field-input" id="f-place-location" type="text">
         </div>
         <div class="field-group">
           <label class="field-label">Time (optional)</label>
@@ -242,7 +241,7 @@
         </div>
         <div class="field-group">
           <label class="field-label">Notes</label>
-          <textarea class="field-textarea" id="f-place-notes" placeholder="Any extra details…"></textarea>
+          <textarea class="field-textarea" id="f-place-notes"></textarea>
         </div>
       </div>
 
@@ -250,7 +249,7 @@
       <div id="fields-attraction" style="display:none;flex-direction:column;gap:13px;">
         <div class="field-group">
           <label class="field-label">Name</label>
-          <input class="field-input" id="f-att-name" type="text" placeholder="e.g. Teleférico de Gaia">
+          <input class="field-input" id="f-att-name" type="text">
         </div>
         <div class="field-row">
           <div class="field-group">
@@ -259,12 +258,12 @@
           </div>
           <div class="field-group">
             <label class="field-label">Cost (optional)</label>
-            <input class="field-input" id="f-att-cost" type="text" placeholder="e.g. £6.00 pp">
+            <input class="field-input" id="f-att-cost" type="text">
           </div>
         </div>
         <div class="field-group">
           <label class="field-label">Ticket link</label>
-          <input class="field-input" id="f-att-link" type="url" placeholder="https://…">
+          <input class="field-input" id="f-att-link" type="url">
         </div>
         <div class="field-group">
           <label class="field-label">Booked</label>
@@ -278,7 +277,7 @@
         </div>
         <div class="field-group">
           <label class="field-label">Notes</label>
-          <textarea class="field-textarea" id="f-att-notes" placeholder="Any extra details…"></textarea>
+          <textarea class="field-textarea" id="f-att-notes"></textarea>
         </div>
       </div>
 
@@ -286,7 +285,19 @@
       <div id="fields-meal" style="display:none;flex-direction:column;gap:13px;">
         <div class="field-group">
           <label class="field-label">Restaurant name</label>
-          <input class="field-input" id="f-meal-name" type="text" placeholder="e.g. Duello Porto">
+          <input class="field-input" id="f-meal-name" type="text">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Meal type</label>
+          <div class="transport-type-row" id="f-meal-kind-row">
+            <button type="button" class="tt-btn" data-val="Breakfast">Breakfast</button>
+            <button type="button" class="tt-btn" data-val="Lunch">Lunch</button>
+            <button type="button" class="tt-btn" data-val="Dinner">Dinner</button>
+            <button type="button" class="tt-btn" data-val="Coffee">Coffee</button>
+            <button type="button" class="tt-btn" data-val="Snacks">Snacks</button>
+            <button type="button" class="tt-btn" data-val="Cocktails">Cocktails</button>
+          </div>
+          <input class="field-input" id="f-meal-kind" type="hidden" value="">
         </div>
         <div class="field-group">
           <label class="field-label">Status</label>
@@ -303,7 +314,7 @@
           </div>
           <div class="field-group">
             <label class="field-label">Notes</label>
-            <textarea class="field-textarea" id="f-meal-notes" placeholder="Any extra details…"></textarea>
+            <textarea class="field-textarea" id="f-meal-notes"></textarea>
           </div>
         </div>
       </div>
@@ -325,12 +336,12 @@
         </div>
         <div class="field-group">
           <label class="field-label">Cost (optional)</label>
-          <input class="field-input" id="f-move-cost" type="text" placeholder="e.g. £40 pp">
+          <input class="field-input" id="f-move-cost" type="text">
         </div>
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Departure</label>
-            <input class="field-input" id="f-from" type="text" placeholder="e.g. London Gatwick">
+            <input class="field-input" id="f-from" type="text">
           </div>
           <div class="field-group">
             <label class="field-label">Departure time</label>
@@ -340,7 +351,7 @@
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Arrival</label>
-            <input class="field-input" id="f-to" type="text" placeholder="e.g. Porto">
+            <input class="field-input" id="f-to" type="text">
           </div>
           <div class="field-group">
             <label class="field-label">Arrival time</label>
@@ -366,15 +377,15 @@
       <div class="booking-fields" id="booking-fields" style="display:none;">
         <div class="field-group">
           <label class="field-label">Booking reference</label>
-          <input class="field-input" id="f-ref" type="text" placeholder="e.g. ZTQNBT">
+          <input class="field-input" id="f-ref" type="text">
         </div>
         <div class="field-group">
           <label class="field-label">Tickets / quantity</label>
-          <input class="field-input" id="f-tickets" type="text" placeholder="e.g. 2 tickets">
+          <input class="field-input" id="f-tickets" type="text">
         </div>
         <div class="field-group">
           <label class="field-label">Booking URL</label>
-          <input class="field-input" id="f-url" type="url" placeholder="https://…">
+          <input class="field-input" id="f-url" type="url">
         </div>
       </div>
     </div><!-- /modal-body-single -->
@@ -1580,6 +1591,7 @@ function openEditItem(dayIdx, itemIdx) {
     onAttBookedChange();
   } else if (cat === 'meal') {
     document.getElementById('f-meal-name').value = item.title || '';
+    setMealKind(item.kicker || '');
     const st = item.status === 'booked' ? 'booked' : 'walkin';
     setMealStatus(st);
     if (st === 'booked') {
@@ -1609,6 +1621,7 @@ function clearForm() {
   setTransportType('Flight');
   setMoveStatus('booked');
   setMealStatus('walkin');
+  setMealKind('');
   showBookingFields(false);
 }
 
@@ -1652,6 +1665,13 @@ function setMealStatus(val) {
   document.getElementById('fields-meal-booked').style.display = val === 'booked' ? 'flex' : 'none';
 }
 
+function setMealKind(val) {
+  document.getElementById('f-meal-kind').value = val || '';
+  document.querySelectorAll('#f-meal-kind-row .tt-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === val);
+  });
+}
+
 function onAttBookedChange() {
   const checked = document.getElementById('f-att-booked').checked;
   document.getElementById('f-att-booked-label').textContent = checked ? 'Yes' : 'No';
@@ -1670,6 +1690,9 @@ document.addEventListener('click', e => {
 
   const mlBtn = e.target.closest('#f-meal-status-row .tt-btn');
   if (mlBtn) { setMealStatus(mlBtn.dataset.val); return; }
+
+  const mkBtn = e.target.closest('#f-meal-kind-row .tt-btn');
+  if (mkBtn) { setMealKind(mkBtn.dataset.val); return; }
 
   const clearBtn = e.target.closest('[data-clear-period]');
   if (clearBtn) {
@@ -1748,10 +1771,12 @@ function saveItem() {
   } else if (type === 'meal') {
     title = document.getElementById('f-meal-name').value.trim();
     if (!title) { document.getElementById('f-meal-name').focus(); return; }
+    const kind   = document.getElementById('f-meal-kind').value || '';
     const statusV = document.getElementById('f-meal-status').value || 'walkin';
     time = statusV === 'booked' ? document.getElementById('f-meal-time').value : '';
     const notes = statusV === 'booked' ? document.getElementById('f-meal-notes').value.trim() : '';
     item = { time, type, period, title, sub:'', status: statusV };
+    if (kind) item.kicker = kind;
     if (notes) item.booking = { ref:'', price:'', tickets:'', url:'', note: notes };
   } else {
     title = document.getElementById('f-place-location').value.trim();
