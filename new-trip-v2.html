@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=112">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=113">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -494,6 +494,12 @@
       </div>
 
       <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
+        <label class="field-label">Days</label>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Rename, reorder, add or delete the days in this trip.</div>
+        <button class="modal-btn secondary" style="width:100%;" onclick="openEditDays()">Enable edit mode</button>
+      </div>
+
+      <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
         <label class="field-label">AI place information</label>
         <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Generates "About this place" text and a photo for every place/attraction in the itinerary that doesn't have it yet.</div>
         <button class="modal-btn secondary" id="ts-ai-btn" style="width:100%;" onclick="generateAllAboutInfo()">✨ Generate all AI info for places</button>
@@ -503,6 +509,25 @@
     <div class="modal-foot">
       <button class="modal-btn secondary" onclick="closeTripSettings()">Cancel</button>
       <button class="modal-btn primary" onclick="saveTripSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT DAYS MODAL ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="days-edit-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Edit days</div>
+      <button class="modal-close" onclick="closeEditDays()">×</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;gap:6px;">
+      <div style="font-size:10.5px;color:var(--text3);margin-bottom:4px;">Drag to reorder. Dates are recalculated automatically from the trip's departure date.</div>
+      <div id="ed-list" class="ed-list"></div>
+      <button class="modal-btn secondary" style="width:100%;margin-top:6px;" onclick="edAddDay()">+ Add day</button>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn secondary" onclick="closeEditDays()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveEditDays()">Save</button>
     </div>
   </div>
 </div>
@@ -2320,6 +2345,110 @@ async function saveTripSettings() {
       await dbSaveRegistry(registry);
     }
   } catch (e) { /* registry sync is best-effort */ }
+}
+
+// ── EDIT DAYS MODAL (rename / reorder / add / delete) ──────────────────
+let edDays = [];      // working copy while the modal is open
+let edDragIdx = null;
+
+function openEditDays() {
+  closeTripSettings();
+  edDays = STATE.days.map(d => ({ ...d })); // shallow clone, items array reference kept (not edited here)
+  edRenderList();
+  document.getElementById('days-edit-overlay').classList.add('open');
+}
+
+function closeEditDays() {
+  document.getElementById('days-edit-overlay').classList.remove('open');
+  edDays = [];
+}
+
+function edRenderList() {
+  const depDt = parseDMY(STATE.meta.dep || dep);
+  document.getElementById('ed-list').innerHTML = edDays.map((d, i) => {
+    let dateLabel = '—';
+    if (depDt) {
+      const dt = new Date(depDt); dt.setDate(dt.getDate() + i);
+      dateLabel = formatDMY(dt);
+    }
+    const itemCount = (d.items || []).length;
+    return `<div class="ed-row" draggable="true" data-idx="${i}"
+        ondragstart="edDragStart(event,${i})" ondragover="edDragOver(event,${i})"
+        ondrop="edDrop(event,${i})" ondragend="edDragEnd(event)">
+      <span class="ed-handle" title="Drag to reorder">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="8" cy="6" r="1.4"/><circle cx="8" cy="12" r="1.4"/><circle cx="8" cy="18" r="1.4"/><circle cx="16" cy="6" r="1.4"/><circle cx="16" cy="12" r="1.4"/><circle cx="16" cy="18" r="1.4"/></svg>
+      </span>
+      <div class="ed-info">
+        <div class="ed-daynum">Day ${i+1} · ${dateLabel}</div>
+        <input class="ed-loc-input" type="text" value="${(d.loc||'').replace(/"/g,'&quot;')}"
+          placeholder="Location name" oninput="edDays[${i}].loc=this.value">
+      </div>
+      <button class="ed-delete" title="Delete day${itemCount ? ' (' + itemCount + ' item' + (itemCount>1?'s':'') + ')' : ''}" onclick="edDeleteDay(${i})">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>`;
+  }).join('') || '<div style="font-size:11.5px;color:var(--text3);padding:12px 0;text-align:center;">No days yet — add one below.</div>';
+}
+
+function edAddDay() {
+  edDays.push({ date:'', loc:'', title:`Day ${edDays.length+1}`, items:[] });
+  edRenderList();
+}
+
+function edDeleteDay(i) {
+  const d = edDays[i];
+  const itemCount = (d.items||[]).length;
+  const label = d.loc || `Day ${i+1}`;
+  const msg = itemCount
+    ? `Delete "${label}"? This will also remove ${itemCount} item${itemCount>1?'s':''} on that day.`
+    : `Delete "${label}"?`;
+  if (!confirm(msg)) return;
+  edDays.splice(i, 1);
+  edRenderList();
+}
+
+function edDragStart(e, i) {
+  edDragIdx = i;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+
+function edDragOver(e, i) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function edDrop(e, i) {
+  e.preventDefault();
+  if (edDragIdx === null || edDragIdx === i) return;
+  const [moved] = edDays.splice(edDragIdx, 1);
+  edDays.splice(i, 0, moved);
+  edDragIdx = null;
+  edRenderList();
+}
+
+function edDragEnd(e) {
+  edDragIdx = null;
+  document.querySelectorAll('.ed-row.dragging').forEach(el => el.classList.remove('dragging'));
+}
+
+function saveEditDays() {
+  // Recompute each day's date sequentially from the trip departure date so
+  // the calendar stays contiguous regardless of add/delete/reorder.
+  const depDt = parseDMY(STATE.meta.dep || dep);
+  edDays.forEach((d, i) => {
+    d.title = `Day ${i+1}`;
+    if (depDt) {
+      const dt = new Date(depDt); dt.setDate(dt.getDate() + i);
+      d.date = formatDMY(dt);
+    }
+  });
+  STATE.days = edDays;
+  activeDay = Math.min(activeDay, Math.max(STATE.days.length - 1, 0));
+  takeSnapshot();
+  scheduleSave();
+  closeEditDays();
+  render();
 }
 
 async function generateAllAboutInfo() {
