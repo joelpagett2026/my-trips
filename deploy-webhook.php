@@ -51,6 +51,10 @@ $subdirFiles = [
     'icons/show-comedians.svg' => 'icons/show-comedians.svg',
     'icons/park-roller-coaster.svg' => 'icons/park-roller-coaster.svg',
     'icons/park-worldwide.svg' => 'icons/park-worldwide.svg',
+    'icons/nav-itinerary.png' => 'icons/nav-itinerary.png',
+    'icons/nav-bookings.png'  => 'icons/nav-bookings.png',
+    'icons/nav-map.png'       => 'icons/nav-map.png',
+    'icons/nav-budget.png'    => 'icons/nav-budget.png',
 ];
 
 foreach ($subdirFiles as $src => $dest) {
