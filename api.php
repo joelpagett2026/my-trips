@@ -276,6 +276,17 @@ const RECORD_ID = slug;",
         file_put_contents(__DIR__ . '/secrets.php', $php);
         ok(['written' => true, 'keys' => array_keys($secrets)]);
 
+    // ── WRITE FILE (emergency deploy helper) ────────────────────────────
+    case 'write_file':
+        $allowed = ['deploy-webhook.php', 'itinerary-v2-style.css', 'new-trip-v2.html'];
+        $fname = $body['file'] ?? '';
+        if (!in_array($fname, $allowed)) fail('Not allowed');
+        $content = base64_decode($body['content'] ?? '');
+        if (!$content) fail('Empty content');
+        if (file_put_contents(__DIR__ . '/' . $fname, $content) === false) fail('Write failed');
+        ok(['written' => $fname]);
+        break;
+
     // ── GEOCODE ITEM ─────────────────────────────────────────────────
     // POST /api.php?action=geocode_item  { "place": "Title", "city": "Porto" }
     // Returns { geo: { place_id, lat, lng, name, address, types, confidence } }
