@@ -1169,3 +1169,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-mini-donut-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--text); }
 .rp2-donut-title { font-size: 12px; font-weight: 800; color: var(--text); }
 .rp2-donut-sub   { font-size: 9.5px; color: var(--text3); margin-top: 1px; }
+
+/* ── HIDE SCROLLBAR CHROME (scrolling still works) ── */
+.tl-col, .rp-col, #budget-main, #bookings-main, .map-list {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* old Edge/IE */
+}
+.tl-col::-webkit-scrollbar,
+.rp-col::-webkit-scrollbar,
+#budget-main::-webkit-scrollbar,
+#bookings-main::-webkit-scrollbar,
+.map-list::-webkit-scrollbar { width: 0; height: 0; display: none; }
