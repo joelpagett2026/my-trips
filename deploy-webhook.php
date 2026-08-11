@@ -52,15 +52,9 @@ $subdirFiles = [
     'icons/park-roller-coaster.svg' => 'icons/park-roller-coaster.svg',
     'icons/park-worldwide.svg' => 'icons/park-worldwide.svg',
     'icons/nav-itinerary.png' => 'icons/nav-itinerary.png',
-<<<<<<< HEAD
     'icons/nav-bookings.png'  => 'icons/nav-bookings.png',
     'icons/nav-map.png'       => 'icons/nav-map.png',
     'icons/nav-budget.png'    => 'icons/nav-budget.png',
-=======
-    'icons/nav-bookings.png' => 'icons/nav-bookings.png',
-    'icons/nav-map.png' => 'icons/nav-map.png',
-    'icons/nav-budget.png' => 'icons/nav-budget.png',
->>>>>>> fc1a5d026af041b2814a5684f41b24156f47ff33
 ];
 
 foreach ($subdirFiles as $src => $dest) {
