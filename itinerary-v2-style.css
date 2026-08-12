@@ -1410,11 +1410,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-ov-card {
   display: flex; flex-direction: row; align-items: center;
   background: var(--surface);
-  margin: 0 10px 10px;
-  border-radius: 0 0 14px 14px;
+  margin: 0;
+  border-radius: 0 0 12px 12px;
   padding: 14px 10px 14px 12px;
   gap: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
 }
 
 /* Donut column (left) */
