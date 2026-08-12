@@ -1,0 +1,64 @@
+name: ChatGPT sidebar icon refinement
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  refine-icons:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Replace overview icon with existing itinerary icon
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('new-trip-v2.html')
+          text = path.read_text()
+          old = '''<div class="rp2-section-ico overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>'''
+          new = '''<div class="rp2-section-ico overview"><span class="rp2-existing-icon" aria-hidden="true"></span></div>'''
+          if old not in text:
+              raise SystemExit('Overview icon target not found; no change made.')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Add icon consistency override
+        run: |
+          cat >> itinerary-v2-style.css <<'CSS'
+
+          /* Sidebar section icons — use the site's existing icon language */
+          .rp2-section-ico {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .rp2-section-ico > svg {
+            width: 17px;
+            height: 17px;
+          }
+          .rp2-section-ico.overview .rp2-existing-icon {
+            width: 17px;
+            height: 17px;
+            display: block;
+            background: currentColor;
+            -webkit-mask: url('/icons/nav-itinerary.png?v=2') center / contain no-repeat;
+            mask: url('/icons/nav-itinerary.png?v=2') center / contain no-repeat;
+          }
+          CSS
+
+      - name: Commit changes and remove temporary workflow
+        run: |
+          git config user.name 'ChatGPT'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add new-trip-v2.html itinerary-v2-style.css .github/workflows/chatgpt-fix-sidebar-icons.yml
+          git rm .github/workflows/chatgpt-fix-sidebar-icons.yml
+          git commit -m 'Refine sidebar icons using existing site icons'
+          git push
