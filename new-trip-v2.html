@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=132">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=133">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1408,55 +1408,48 @@ function renderHotelPanel() {
 function renderSidebarReadiness() {
   const days = STATE.days || [];
   const N = days.length;
-  const isFlight = it => it && it.type === 'move' &&
-    ((it.transport && it.transport.mode === 'Flight') || it.kicker === 'Flight');
-  const isConfirmed = it => {
-    if (!it) return false;
-    const st = it.status, b = it.booking || {};
-    return st === 'confirmed' || st === 'booked' || !!b.ref || !!b.url || (!!b.tickets && !!b.price);
-  };
   const isActivity = it => it && ['place','attraction','act','ticket'].includes(it.type);
+  const hasBreakfast = hotel => {
+    if (!hotel) return false;
+    const b = (hotel.breakfast || '').toLowerCase();
+    return b && b !== 'not included' && b !== 'no' && b !== 'none';
+  };
 
-  // Flights to and from the destination — first flight found = outbound,
-  // last flight found = return (any flights between are internal/domestic legs).
-  let flights = [];
-  days.forEach(d => (d.items||[]).forEach(it => { if (isFlight(it)) flights.push(it); }));
-  const outboundOk = flights.length > 0 && isConfirmed(flights[0]);
-  const returnOk   = flights.length > 1 && isConfirmed(flights[flights.length - 1]);
+  // TRANSPORT: any move item on first day (outbound) and last day (return).
+  const hasTransport = d => (d?.items||[]).some(it => it && it.type === 'move');
+  const outboundOk = N > 0 && hasTransport(days[0]);
+  const returnOk   = N > 1 && hasTransport(days[N - 1]);
 
-  // Hotel booked for every night of the trip (every day except the last —
-  // no night's stay is needed after departure day).
+  // HOTELS: one per night, every night except the last.
   const nights = Math.max(N - 1, 0);
   let hotelDone = 0;
   for (let i = 0; i < nights; i++) if (hotelForDay(i)) hotelDone++;
 
-  // Dinner booked, for days that already have a meal planned in the
-  // afternoon or evening — skipping the first and last night of the trip,
-  // and skipping days with no such module at all.
-  let dinnerTotal = 0, dinnerDone = 0;
+  // MEALS: at least one meal per day across ALL days.
+  // A hotel breakfast counts as the meal for that day if breakfast is included.
+  let mealDone = 0;
   days.forEach((d, i) => {
-    if (i === 0 || i === N - 1) return;
-    const meal = (d.items||[]).find(it => it && it.type === 'meal' && (it.period === 'evening' || it.period === 'afternoon'));
-    if (meal) {
-      dinnerTotal++;
-      if (isConfirmed(meal)) dinnerDone++;
-    }
+    const hasMealItem = (d.items||[]).some(it => it && it.type === 'meal');
+    const hotel = hotelForDay(i);
+    const hotelBreakfast = hasBreakfast(hotel);
+    if (hasMealItem || hotelBreakfast) mealDone++;
   });
+  const mealTotal = N;
 
-  // At least one activity on every day except the first and last.
+  // ACTIVITIES: at least one per day, excluding arrival (day 0) and departure (last day).
   const middleDays = Math.max(N - 2, 0);
   let activityDone = 0;
   for (let i = 1; i < N - 1; i++) if ((days[i].items||[]).some(isActivity)) activityDone++;
 
-  const total = 2 + nights + dinnerTotal + middleDays;
-  const done  = (outboundOk?1:0) + (returnOk?1:0) + hotelDone + dinnerDone + activityDone;
+  const total = 2 + nights + mealTotal + middleDays;
+  const done  = (outboundOk?1:0) + (returnOk?1:0) + hotelDone + mealDone + activityDone;
   const pct   = total ? Math.round((done/total)*100) : 100;
   const label = pct>=100?'All set!':pct>=80?'Almost there!':'In progress';
 
   const flightsOk     = outboundOk && returnOk;
-  const hotelsOk       = hotelDone === nights;
-  const restaurantsOk  = dinnerDone === dinnerTotal;
-  const activitiesOk   = activityDone === middleDays;
+  const hotelsOk      = hotelDone === nights;
+  const restaurantsOk = mealDone === mealTotal;
+  const activitiesOk  = activityDone === middleDays;
   const catRow = (ok, label) =>
     `<div class="sb-rc-row ${ok?'ok':''}">${ok?ICO.check:ICO.circle}<span>${label}</span></div>`;
 
@@ -1478,22 +1471,21 @@ function renderSidebarReadiness() {
       { ok: activitiesOk,  label: 'To Do',  ico: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 12c0-1.1-.9-2-2-2V7c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3c1.1 0 2-.9 2-2zM4 7h12v10H4V7z"/><circle cx="9" cy="12" r="2"/></svg>' },
     ];
 
-    // Count stats for overview
-    let flightCount = 0;
-    days.forEach(d => (d.items||[]).forEach(it => { if (it && it.type==='move' && (it.kicker==='Flight'||(it.transport&&it.transport.mode==='Flight'))) flightCount++; }));
+    // Count stats for overview tiles
+    let transportCount = 0;
+    days.forEach(d => (d.items||[]).forEach(it => { if (it && it.type==='move') transportCount++; }));
     const hotelCount = (STATE.meta?.hotels||[]).length;
-    let mealCount = 0, actCount = 0;
-    days.forEach(d => (d.items||[]).forEach(it => {
-      if (!it) return;
-      if (it.type==='meal') mealCount++;
-      if (['act','ticket','place','attraction'].includes(it.type)) actCount++;
-    }));
+    let totalMealCount = 0, actCount = 0;
+    days.forEach((d, i) => {
+      if ((d.items||[]).some(it => it && it.type==='meal') || hasBreakfast(hotelForDay(i))) totalMealCount++;
+      (d.items||[]).forEach(it => { if (it && ['act','ticket','place','attraction'].includes(it.type)) actCount++; });
+    });
 
     const overviewCats = [
-      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2h0A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>', count:flightCount, label:'FLIGHT'+(flightCount!==1?'S':''), ok:flightsOk, color:'teal' },
-      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>', count:hotelCount, label:'HOTEL'+(hotelCount!==1?'S':''), ok:hotelsOk, color:'teal' },
-      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>', count:mealCount, label:'TO EAT', ok:restaurantsOk, color:'amber' },
-      { ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', count:actCount, label:'THINGS TO DO', ok:activitiesOk, color:'purple' },
+      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2h0A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>', count:transportCount, label:'FLIGHTS', ok:flightsOk },
+      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>', count:hotelCount, label:'HOTELS', ok:hotelsOk },
+      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>', count:totalMealCount, label:'TO EAT', ok:restaurantsOk },
+      { ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', count:actCount, label:'THINGS TO DO', ok:activitiesOk },
     ];
 
     const statusPill = (ok, label) => ok
