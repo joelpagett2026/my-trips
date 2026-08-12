@@ -171,6 +171,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-ico svg{width:21px;height:21px;stroke:currentColor;fill:currentColor;}
 .tl-ico.meal{background:rgba(217,123,10,0.10);color:#d97b0a;}
 .tl-ico.move{background:var(--transport-bg);color:var(--transport);}
+.tl-ico.move-bus svg{width:25px;height:25px;}
 .tl-ico.ticket{background:var(--activity-bg);color:var(--activity);}
 .tl-dot.attraction{background:var(--activity);}
 .tl-text{flex:1;min-width:0;}
