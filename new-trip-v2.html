@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=113">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=114">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1545,7 +1545,7 @@ function renderPlacesToEat() {
     el.innerHTML = `<div class="rp2-empty">No meals added for this day.</div>`;
     return;
   }
-  const MAX_MEALS = 5;
+  const MAX_MEALS = 4;
   const shown = meals.slice(0, MAX_MEALS);
   const chevron = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
   const isBooked = it => it.status === 'confirmed' || it.status === 'booked' || it.booking?.ref || it.booking?.url;
