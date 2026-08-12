@@ -1077,7 +1077,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .rp2-section-ico svg { width: 13px; height: 13px; }
-.rp2-hotel-head { background: var(--teal); border-radius: 12px 12px 0 0; padding: 11px 12px; }
+.rp2-hotel-head { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
 .rp2-hotel-head .rp2-section-ico.hotel { background: rgba(255,255,255,0.2); color: #fff; }
 .rp2-hotel-head .rp2-section-title { color: #fff; }
 .rp2-section-ico.hotel    { background: rgba(14,122,135,0.12); color: var(--teal); }
