@@ -1426,7 +1426,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-ov-donut-wrap { position: relative; width: 90px; height: 90px; }
 .rp2-ov-donut-wrap svg { position: absolute; inset: 0; }
 .rp2-ov-donut-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-.rp2-ov-donut-pct { font-size: 18px; font-weight: 800; color: var(--teal); }
+.rp2-ov-donut-pct { font-size: 18px; font-weight: 800; background: linear-gradient(135deg, var(--teal) 0%, var(--teal2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .rp2-ov-donut-label { font-size: 9px; font-weight: 700; color: var(--text3); text-align: center; }
 
 /* Category tiles (right) */

@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=144">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=145">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -113,7 +113,7 @@
       <div class="rp2-section">
         <div class="rp2-section-head rp2-ov-head">
           <div class="rp2-section-ico overview"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
-          <span class="rp2-section-title">TRIP OVERVIEW</span>
+          <span class="rp2-section-title">TRIP PLANNING OVERVIEW</span>
         </div>
         <div id="rp-readiness"></div>
       </div>
@@ -1503,8 +1503,14 @@ function renderSidebarReadiness() {
         <div class="rp2-ov-donut-col">
           <div class="rp2-ov-donut-wrap">
             <svg width="90" height="90" viewBox="0 0 90 90">
-              <circle cx="45" cy="45" r="38" fill="none" stroke="#e0f2f4" stroke-width="7"/>
-              <circle cx="45" cy="45" r="38" fill="none" stroke="var(--teal)" stroke-width="7"
+              <defs>
+                <linearGradient id="donut-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0e7a87"/>
+                  <stop offset="100%" stop-color="#0d9e8c"/>
+                </linearGradient>
+              </defs>
+              <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(13,158,140,0.15)" stroke-width="7"/>
+              <circle cx="45" cy="45" r="38" fill="none" stroke="url(#donut-grad)" stroke-width="7"
                 stroke-dasharray="${(2*Math.PI*38).toFixed(1)}" stroke-dashoffset="${(2*Math.PI*38*(1-pct/100)).toFixed(1)}"
                 stroke-linecap="round" transform="rotate(-90 45 45)"/>
             </svg>
