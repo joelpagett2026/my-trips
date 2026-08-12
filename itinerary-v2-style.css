@@ -1457,6 +1457,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   border: 1.5px solid #fff;
 }
 .rp2-ov-check svg { fill: #fff; }
+.rp2-ov-tile-text { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .rp2-ov-tile-name { font-size: 8px; font-weight: 800; color: var(--text); text-align: center; line-height: 1.2; }
 .rp2-ov-tile-status { font-size: 8px; font-weight: 700; color: var(--text3); }
 .rp2-ov-tile-status.ok { color: var(--teal); }
