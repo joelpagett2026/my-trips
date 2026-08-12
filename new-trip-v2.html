@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=136">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=137">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -2878,9 +2878,9 @@ function renderBookingsView() {
   const total = all.length;
   const cats = [
     {key:'hotel',label:'Hotels',count:hotels.length,color:'#0e7a87'},
-    {key:'flight',label:'Flights',count:flights.length,color:'#6366f1'},
+    {key:'flight',label:'Flights',count:flights.length,color:'#526B82'},
     {key:'transport',label:'Travel',count:transport.length,color:'#d97b0a'},
-    {key:'attraction',label:'Attractions',count:attractions.length,color:'#1a8a52'},
+    {key:'attraction',label:'Attractions',count:attractions.length,color:'#5A8968'},
     {key:'dining',label:'Dining',count:dining.length,color:'#9333ea'},
   ].filter(c=>c.count>0);
 
@@ -2930,9 +2930,9 @@ function renderBookingsView() {
 
   const sections = [
     { key:'hotel',      label:'Hotels',      items:hotels,     color:'#0e7a87' },
-    { key:'flight',     label:'Flights',     items:flights,    color:'#6366f1' },
+    { key:'flight',     label:'Flights',     items:flights,    color:'#526B82' },
     { key:'transport',  label:'Travel',      items:transport,  color:'#d97b0a' },
-    { key:'attraction', label:'Attractions', items:attractions,color:'#1a8a52' },
+    { key:'attraction', label:'Attractions', items:attractions,color:'#5A8968' },
     { key:'dining',     label:'Dining',      items:dining,     color:'#9333ea' },
   ].filter(sec => sec.items.length > 0);
 
@@ -2978,8 +2978,8 @@ let _mapGeocoding = false;
 const MAP_CAT_COLORS = {
   act:    '#0e7a87',
   place:  '#0e7a87',
-  ticket: '#6366f1',
-  attraction: '#6366f1',
+  ticket: '#5A8968',
+  attraction: '#5A8968',
   meal:   '#d97b0a',
   hotel:  '#1a8a52',
   move:   '#888888',
@@ -3201,9 +3201,9 @@ function renderBudgetView() {
 
   const cats = [
     {label:'Hotel', val:hotelTotal, color:'#0e7a87'},
-    {label:'Flights', val:flightTotal, color:'#6366f1'},
+    {label:'Flights', val:flightTotal, color:'#526B82'},
     {label:'Transport', val:transTotal, color:'#d97b0a'},
-    {label:'Activities', val:actTotal, color:'#1a8a52'},
+    {label:'Activities', val:actTotal, color:'#5A8968'},
   ];
 
   const summaryHtml = `<div class="bv-summary">
@@ -3249,7 +3249,7 @@ function renderBudgetView() {
 
   el.innerHTML = summaryHtml + `<div class="bv-grid">
     ${mkPanel('Accommodation', '#0e7a87', hotelRows, hotelTotal?`<div class="bv-foot-row"><span>Total stay</span><span>${fmt(hotelTotal)}</span></div>`:'')}
-    ${mkPanel('Flights', '#6366f1', flightRows, [flightTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(flightTotal)}</span></div>`:'', totalAvios?`<div class="bv-foot-row"><span>Avios</span><span style="color:#6366f1">${totalAvios.toLocaleString()}</span></div>`:''].filter(Boolean).join(''))}
+    ${mkPanel('Flights', '#526B82', flightRows, [flightTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(flightTotal)}</span></div>`:'', totalAvios?`<div class="bv-foot-row"><span>Avios</span><span style="color:#526B82">${totalAvios.toLocaleString()}</span></div>`:''].filter(Boolean).join(''))}
     ${mkPanel('Transport', '#d97b0a', transRows, transTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(transTotal)}</span></div>`:'')}
     ${mkPanel('Activities', '#1a8a52', actRows, [actTotal?`<div class="bv-foot-row"><span>Total</span><span>${fmt(actTotal)}</span></div>`:'', perPerson?`<div class="bv-foot-row"><span>Per person</span><span>${fmt(perPerson)}</span></div>`:''].filter(Boolean).join(''))}
   </div>`;
