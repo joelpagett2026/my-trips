@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=141">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=143">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1485,7 +1485,7 @@ function renderSidebarReadiness() {
     const overviewCats = [
       { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2h0A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>', count:transportCount, label:'FLIGHTS', ok:flightsOk,     color:'#526B82', bg:'rgba(82,107,130,0.12)' },
       { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>',   count:hotelCount,     label:'HOTELS',      ok:hotelsOk,      color:'#0e7a87', bg:'rgba(14,122,135,0.12)' },
-      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>',                                    count:totalMealCount, label:'TO EAT',      ok:restaurantsOk, color:'#d97b0a', bg:'rgba(217,123,10,0.12)' },
+      { ico:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>',                                    count:totalMealCount, label:'MEALS',       ok:restaurantsOk, color:'#d97b0a', bg:'rgba(217,123,10,0.12)' },
       { ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', count:actCount,       label:'THINGS TO DO',ok:activitiesOk,  color:'#5A8968', bg:'rgba(90,137,104,0.12)' },
     ];
 
@@ -1553,7 +1553,7 @@ function renderPlacesToEat() {
     return `<div class="rp2-meal-row" onclick="openDrawerItem(${activeDay}, ${STATE.days[activeDay].items.indexOf(it)})">
       <div class="rp2-meal-ico">${ico.html}</div>
       <div class="rp2-meal-body">
-        <div class="rp2-meal-name">${it.title}</div>
+        <div class="rp2-meal-name">${it._hotelBreakfast ? 'Breakfast Inclusive' : it.title}</div>
         <div class="rp2-meal-meta">${it.time?'<span>'+it.time+'</span>':''}<span class="rp2-meal-badge ${badgeCls}">${badgeTxt}</span></div>
       </div>
       <div class="rp2-meal-chev">${chevron}</div>
@@ -2359,7 +2359,7 @@ function addHotelBreakfasts(hotel) {
       icoType:  'coffee',
       kicker:   'Breakfast',
       title:    'Breakfast — ' + hotel.name,
-      sub:      'Included with stay',
+      sub:      'Breakfast Inclusive',
       status:   'confirmed',
       booking:  null,
       _hotelBreakfast: hotel.name,  // tag so we can remove it later
