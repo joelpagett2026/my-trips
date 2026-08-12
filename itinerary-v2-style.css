@@ -1158,7 +1158,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .rp2-hotel-edit-head:hover { background: rgba(255,255,255,0.28); }
 .rp2-detail-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 1fr;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 58px;
   border-top: 1px solid var(--line); border-left: 1px solid var(--line);
   margin: 0;
 }
@@ -1300,7 +1300,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-detail-grid {
   border-top: 1px solid var(--line);
   background: var(--surface);
-  grid-auto-rows: 1fr;
+  grid-auto-rows: 58px;
 }
 .rp2-detail-cell {
   display: flex; flex-direction: row; align-items: center; gap: 8px;
