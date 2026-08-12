@@ -1400,12 +1400,12 @@ function renderHotelPanel() {
         <a href="${mapsUrl}" target="_blank" class="rp2-hotel-maps-chip">${icoPin} Open in Maps</a>
       </div>
       <div class="rp2-detail-grid">
-        <div class="rp2-detail-cell">${icoCalIn}<div class="rp2-detail-label">Check In</div><div class="rp2-detail-val">${fmt(h.checkin)}</div></div>
-        <div class="rp2-detail-cell">${icoCalIn}<div class="rp2-detail-label">Check Out</div><div class="rp2-detail-val">${fmt(h.checkout)}</div></div>
-        <div class="rp2-detail-cell">${icoNight}<div class="rp2-detail-label">Nights</div><div class="rp2-detail-val">${nights}</div></div>
-        <div class="rp2-detail-cell">${icoTag}<div class="rp2-detail-label">Rate</div>${rateVal}</div>
-        <div class="rp2-detail-cell">${icoHash}<div class="rp2-detail-label">Reference</div><div class="rp2-detail-val">${h.ref||'—'}</div></div>
-        <div class="rp2-detail-cell">${icoCup}<div class="rp2-detail-label">Breakfast</div><div class="rp2-detail-val ${h.breakfast==='included'?'bf-yes':'bf-no'}">${bfast}</div></div>
+        <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoCalIn}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Check In</div><div class="rp2-detail-val">${fmt(h.checkin)}</div></div></div>
+        <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoCalIn}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Check Out</div><div class="rp2-detail-val">${fmt(h.checkout)}</div></div></div>
+        <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoNight}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Nights</div><div class="rp2-detail-val">${nights}</div></div></div>
+        <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoTag}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Rate</div>${rateVal}</div></div>
+        <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoHash}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Reference</div><div class="rp2-detail-val">${h.ref||'—'}</div></div></div>
+        <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoCup}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Breakfast</div><div class="rp2-detail-val ${h.breakfast==='included'?'bf-yes':'bf-no'}">${bfast}</div></div></div>
       </div>
     </div>`;
 }
