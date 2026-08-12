@@ -1077,10 +1077,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .rp2-section-ico svg { width: 13px; height: 13px; }
-.rp2-hotel-head { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
+.rp2-hotel-head  { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
+.rp2-eat-head    { background: #d97b0a !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
 .rp2-hotel-head .rp2-section-ico.hotel { background: none !important; color: #fff !important; width: 24px !important; height: 24px !important; border-radius: 0; flex-shrink: 0; }
 .rp2-hotel-head .rp2-section-ico.hotel svg { width: 24px !important; height: 24px !important; fill: #fff; }
 .rp2-hotel-head .rp2-section-title { color: #fff; font-size: 13px; }
+.rp2-eat-head .rp2-section-ico.eat { background: none !important; color: #fff !important; width: 24px !important; height: 24px !important; border-radius: 0; flex-shrink: 0; }
+.rp2-eat-head .rp2-section-ico.eat svg { width: 24px !important; height: 24px !important; fill: #fff; }
+.rp2-eat-head .rp2-section-title { color: #fff; font-size: 13px; }
+.rp2-eat-viewall {
+  margin-left: auto; flex-shrink: 0;
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.18); color: #fff;
+  border: 1px solid rgba(255,255,255,0.35); border-radius: 20px;
+  padding: 5px 11px; font-family: var(--font); font-size: 10px; font-weight: 700;
+  text-decoration: none; cursor: pointer; transition: background 0.12s;
+}
+.rp2-eat-viewall:hover { background: rgba(255,255,255,0.28); color: #fff; }
+.rp2-eat-viewall svg { fill: #fff; }
 .rp2-section-ico.hotel    { background: rgba(14,122,135,0.12); color: var(--teal); }
 .rp2-section-ico.eat      { background: rgba(217,123,10,0.12); color: #d97b0a; }
 .rp2-section-ico.overview { background: rgba(14,122,135,0.12); color: var(--teal); }
