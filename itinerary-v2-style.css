@@ -1344,3 +1344,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 @media (max-width: 1100px) {
   .rp-col { padding: 8px; gap: 8px; }
 }
+
+/* Sidebar section icons — use the site's existing icon language */
+.rp2-section-ico {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rp2-section-ico > svg {
+  width: 17px;
+  height: 17px;
+}
+.rp2-section-ico.overview .rp2-existing-icon {
+  width: 17px;
+  height: 17px;
+  display: block;
+  background: currentColor;
+  -webkit-mask: url('/icons/nav-itinerary.png?v=2') center / contain no-repeat;
+  mask: url('/icons/nav-itinerary.png?v=2') center / contain no-repeat;
+}
