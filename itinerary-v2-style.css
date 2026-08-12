@@ -1077,8 +1077,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .rp2-section-ico svg { width: 13px; height: 13px; }
-.rp2-hotel-head  { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
-.rp2-eat-head    { background: #d97b0a !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
+.rp2-hotel-head  { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 9px 12px; }
+.rp2-eat-head    { background: #d97b0a !important; border-radius: 12px 12px 0 0; padding: 9px 12px; }
 .rp2-hotel-head .rp2-section-ico.hotel { background: none !important; color: #fff !important; width: 24px !important; height: 24px !important; border-radius: 0; flex-shrink: 0; }
 .rp2-hotel-head .rp2-section-ico.hotel svg { width: 24px !important; height: 24px !important; fill: #fff; }
 .rp2-hotel-head .rp2-section-title { color: #fff; font-size: 13px; }
@@ -1401,7 +1401,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 
 /* ── Trip Overview: dark grey header ─────────────────────────── */
-.rp2-ov-head { background: #444 !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
+.rp2-ov-head { background: #444 !important; border-radius: 12px 12px 0 0; padding: 9px 12px; }
 .rp2-ov-head .rp2-section-ico.overview { background: none !important; color: #fff !important; width: 24px !important; height: 24px !important; border-radius: 0; flex-shrink: 0; }
 .rp2-ov-head .rp2-section-ico.overview svg { width: 22px !important; height: 22px !important; fill: #fff; }
 .rp2-ov-head .rp2-section-title { color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; }
