@@ -1145,6 +1145,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   border: none; transition: background 0.12s;
 }
 .rp2-hotel-edit-chip:hover { background: #fff; }
+.rp2-hotel-edit-head {
+  position: static; margin-left: auto; flex-shrink: 0;
+  background: var(--surface); color: var(--teal);
+  border: 1px solid var(--line); box-shadow: none;
+  padding: 5px 9px;
+}
+.rp2-hotel-edit-head:hover { background: var(--teal-xdim); }
 .rp2-detail-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr;
   border-top: 1px solid var(--line); border-left: 1px solid var(--line);
