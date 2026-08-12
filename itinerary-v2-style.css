@@ -1078,8 +1078,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .rp2-section-ico svg { width: 13px; height: 13px; }
 .rp2-hotel-head { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
-.rp2-hotel-head .rp2-section-ico.hotel { background: rgba(255,255,255,0.2); color: #fff; }
-.rp2-hotel-head .rp2-section-title { color: #fff; }
+.rp2-hotel-head .rp2-section-ico.hotel { background: none; color: #fff; width: auto; height: auto; border-radius: 0; }
+.rp2-hotel-head .rp2-section-ico.hotel svg { width: 22px; height: 22px; }
+.rp2-hotel-head .rp2-section-title { color: #fff; font-size: 13px; }
 .rp2-section-ico.hotel    { background: rgba(14,122,135,0.12); color: var(--teal); }
 .rp2-section-ico.eat      { background: rgba(217,123,10,0.12); color: #d97b0a; }
 .rp2-section-ico.overview { background: rgba(14,122,135,0.12); color: var(--teal); }
