@@ -99,10 +99,6 @@
         <div class="rp2-section-head">
           <div class="rp2-section-ico hotel"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg></div>
           <span class="rp2-section-title">Hotel</span>
-          <button class="rp2-edit-btn" onclick="openHotelModal()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Add / Edit
-          </button>
         </div>
         <div id="rp-hotel"></div>
       </div>
@@ -110,6 +106,7 @@
         <div class="rp2-section-head">
           <div class="rp2-section-ico eat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg></div>
           <span class="rp2-section-title">Places to Eat</span>
+          <a class="rp2-section-viewall" href="#" onclick="setView('bookings');return false;">View all <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
         </div>
         <div id="rp-bookings"></div>
       </div>
@@ -1384,22 +1381,33 @@ function renderHotelPanel() {
   const icoTag    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>';
   const icoHash   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>';
   const icoCup    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>';
+  const icoPin    = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>';
+  const icoEdit   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+
+  const photoHtml = h.photo
+    ? `<div class="rp2-hotel-photo" style="background-image:url('${h.photo}')"></div>`
+    : `<div class="rp2-hotel-photo-placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="white"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg></div>`;
+
+  const rateVal = h.nightly ? `<div class="rp2-detail-val">£${h.nightly.replace('£','')}</div><div class="rp2-detail-sub">per night</div>` : `<div class="rp2-detail-val">—</div>`;
 
   el.innerHTML = `
-    ${h.photo ? `<div class="rp2-hotel-photo" style="background-image:url('${h.photo}')"></div>` : ''}
-    <div class="rp2-hotel-name">${h.name||'Hotel'}</div>
-    <div class="rp2-detail-grid">
-      ${cell(icoCalIn, 'CHECK IN',  fmt(h.checkin))}
-      ${cell(icoCalIn, 'CHECK OUT', fmt(h.checkout))}
-      ${cell(icoNight, 'NIGHTS',    nights)}
-      ${cell(icoTag,   'RATE',      h.nightly ? '£'+h.nightly.replace('£','') : '—')}
-      ${cell(icoHash,  'REFERENCE', h.ref||'—')}
-      ${cell(icoCup,   'BREAKFAST', bfast)}
-    </div>
-    <a href="${mapsUrl}" target="_blank" class="rp2-maps-btn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
-      Open in Maps
-    </a>`;
+    <div class="rp2-hotel-card">
+      <div class="rp2-hotel-photo-wrap">
+        ${photoHtml}
+        <div class="rp2-hotel-photo-overlay"></div>
+        <div class="rp2-hotel-name">${h.name||'Hotel'}</div>
+        <a href="${mapsUrl}" target="_blank" class="rp2-hotel-maps-chip">${icoPin} Open in Maps</a>
+        <button class="rp2-hotel-edit-chip" onclick="openHotelModal()">${icoEdit} Add / Edit</button>
+      </div>
+      <div class="rp2-detail-grid">
+        <div class="rp2-detail-cell">${icoCalIn}<div class="rp2-detail-label">Check In</div><div class="rp2-detail-val">${fmt(h.checkin)}</div></div>
+        <div class="rp2-detail-cell">${icoCalIn}<div class="rp2-detail-label">Check Out</div><div class="rp2-detail-val">${fmt(h.checkout)}</div></div>
+        <div class="rp2-detail-cell">${icoNight}<div class="rp2-detail-label">Nights</div><div class="rp2-detail-val">${nights}</div></div>
+        <div class="rp2-detail-cell">${icoTag}<div class="rp2-detail-label">Rate</div>${rateVal}</div>
+        <div class="rp2-detail-cell">${icoHash}<div class="rp2-detail-label">Reference</div><div class="rp2-detail-val">${h.ref||'—'}</div></div>
+        <div class="rp2-detail-cell">${icoCup}<div class="rp2-detail-label">Breakfast</div><div class="rp2-detail-val ${h.breakfast==='included'?'bf-yes':'bf-no'}">${bfast}</div></div>
+      </div>
+    </div>`;
 }
 
 function renderSidebarReadiness() {
@@ -1501,27 +1509,29 @@ function renderSidebarReadiness() {
     const off2  = (2 * Math.PI * 17 * (1 - pct/100)).toFixed(1);
 
     rpEl.innerHTML = `
-      <div class="rp2-overview-grid">
-        ${overviewCats.map(c => `<div class="rp2-ov-cell">
-          <div class="rp2-ov-ico ${c.color}">${c.ico}</div>
-          <div class="rp2-ov-count">${c.count}</div>
-          <div class="rp2-ov-label">${c.label}</div>
-          ${statusPill(c.ok)}
-        </div>`).join('')}
-      </div>
-      <div class="rp2-donut-row">
-        <div class="rp2-mini-donut">
-          <svg width="44" height="44" viewBox="0 0 44 44">
-            <circle cx="22" cy="22" r="17" fill="none" stroke="var(--line)" stroke-width="4"/>
-            <circle cx="22" cy="22" r="17" fill="none" stroke="var(--teal)" stroke-width="4"
-              stroke-dasharray="${circ2}" stroke-dashoffset="${off2}"
-              stroke-linecap="round" transform="rotate(-90 22 22)"/>
-          </svg>
-          <div class="rp2-mini-donut-pct">${pct}%</div>
+      <div class="rp2-ov-bubble">
+        <div class="rp2-overview-grid">
+          ${overviewCats.map(c => `<div class="rp2-ov-cell">
+            <div class="rp2-ov-ico">${c.ico}</div>
+            <div class="rp2-ov-count">${c.count}</div>
+            <div class="rp2-ov-label">${c.label}</div>
+            ${statusPill(c.ok)}
+          </div>`).join('')}
         </div>
-        <div class="rp2-donut-text">
-          <div class="rp2-donut-title">${pct>=100?'All set! 🎉':pct>=80?'Almost there!':'In progress'}</div>
-          <div class="rp2-donut-sub">${pct>=100?'Everything in your trip is organised.':`${done} of ${total} items confirmed`}</div>
+        <div class="rp2-donut-row">
+          <div class="rp2-mini-donut">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4.5"/>
+              <circle cx="26" cy="26" r="20" fill="none" stroke="#ffffff" stroke-width="4.5"
+                stroke-dasharray="${(2*Math.PI*20).toFixed(1)}" stroke-dashoffset="${(2*Math.PI*20*(1-pct/100)).toFixed(1)}"
+                stroke-linecap="round" transform="rotate(-90 26 26)"/>
+            </svg>
+            <div class="rp2-mini-donut-pct">${pct}%</div>
+          </div>
+          <div class="rp2-donut-text">
+            <div class="rp2-donut-title">${pct>=100?'All set! 🎉':pct>=80?'Almost there!':'In progress'}</div>
+            <div class="rp2-donut-sub">${pct>=100?'Everything in your trip is organised.':`${done} of ${total} items confirmed`}</div>
+          </div>
         </div>
       </div>`;
   }
@@ -1532,17 +1542,26 @@ function renderPlacesToEat() {
   const meals = (day?.items || []).filter(it => it && it.type === 'meal');
   const el = document.getElementById('rp-bookings');
   if (!meals.length) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0;">No meals added for this day.</div>`;
+    el.innerHTML = `<div class="rp2-empty">No meals added for this day.</div>`;
     return;
   }
-  el.innerHTML = meals.map(it => {
+  const MAX_MEALS = 5;
+  const shown = meals.slice(0, MAX_MEALS);
+  const chevron = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+  const isBooked = it => it.status === 'confirmed' || it.status === 'booked' || it.booking?.ref || it.booking?.url;
+  el.innerHTML = shown.map(it => {
     const ico = icoForType(it.type, it.title, it);
-    const chevron = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    const booked = isBooked(it);
+    const walkIn = !booked && !it.time;
+    const badgeCls = booked ? 'booked' : 'walk-in';
+    const badgeTxt = booked
+      ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Booked`
+      : 'Walk in only';
     return `<div class="rp2-meal-row" onclick="openDrawerItem(${activeDay}, ${STATE.days[activeDay].items.indexOf(it)})">
       <div class="rp2-meal-ico">${ico.html}</div>
       <div class="rp2-meal-body">
         <div class="rp2-meal-name">${it.title}</div>
-        <div class="rp2-meal-meta">${it.time?'<span>'+it.time+'</span>':''} ${badgeHtml(it.status)}</div>
+        <div class="rp2-meal-meta">${it.time?'<span>'+it.time+'</span>':''}<span class="rp2-meal-badge ${badgeCls}">${badgeTxt}</span></div>
       </div>
       <div class="rp2-meal-chev">${chevron}</div>
     </div>`;
