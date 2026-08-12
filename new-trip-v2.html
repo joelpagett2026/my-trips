@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=116">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=117">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1395,10 +1395,10 @@ function renderHotelPanel() {
     <div class="rp2-hotel-card">
       <div class="rp2-hotel-photo-wrap">
         ${photoHtml}
+        <a href="${mapsUrl}" target="_blank" class="rp2-hotel-maps-chip">${icoPin} Open in Maps</a>
       </div>
       <div class="rp2-hotel-info">
         <div class="rp2-hotel-name">${h.name||'Hotel'}</div>
-        <a href="${mapsUrl}" target="_blank" class="rp2-hotel-maps-chip">${icoPin} Open in Maps</a>
       </div>
       <div class="rp2-detail-grid">
         <div class="rp2-detail-cell"><div class="rp2-detail-ico">${icoCalIn}</div><div class="rp2-detail-text"><div class="rp2-detail-label">Check In</div><div class="rp2-detail-val">${fmt(h.checkin)}</div></div></div>
