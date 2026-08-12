@@ -1118,13 +1118,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-hotel-photo-placeholder svg { opacity: 0.3; }
 .rp2-hotel-photo-overlay { display: none; }
 .rp2-hotel-info {
-  padding: 11px 12px;
+  padding: 13px 12px 10px;
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center;
 }
 .rp2-hotel-name {
-  font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.35;
-  margin: 0;
+  font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2;
+  margin: 0; padding: 0;
 }
 .rp2-hotel-maps-chip {
   position: absolute; bottom: 10px; right: 10px;
