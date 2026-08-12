@@ -1124,7 +1124,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .rp2-hotel-name {
   font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.35;
-  margin-bottom: 4px;
+  margin: 0;
 }
 .rp2-hotel-maps-chip {
   position: absolute; bottom: 10px; right: 10px;
