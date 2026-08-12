@@ -1423,7 +1423,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Donut column (left) */
 .rp2-ov-donut-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 4px; }
-.rp2-ov-donut-wrap { position: relative; width: 72px; height: 72px; }
+.rp2-ov-donut-wrap { position: relative; width: 90px; height: 90px; }
 .rp2-ov-donut-wrap svg { position: absolute; inset: 0; }
 .rp2-ov-donut-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .rp2-ov-donut-pct { font-size: 18px; font-weight: 800; color: var(--teal); }
