@@ -1118,7 +1118,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: var(--surface);
 }
 .rp2-hotel-photo-wrap {
-  position: relative; height: 205px; overflow: hidden;
+  position: relative; height: 190px; overflow: hidden;
   background: var(--bg);
 }
 .rp2-hotel-photo {
