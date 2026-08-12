@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=127">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=128">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -111,12 +111,9 @@
         <div id="rp-bookings"></div>
       </div>
       <div class="rp2-section">
-        <div class="rp2-section-head">
-          <div class="rp2-section-ico overview"><span class="rp2-existing-icon" aria-hidden="true"></span></div>
-          <div>
-            <span class="rp2-section-title">Trip Overview</span>
-            <div class="rp2-section-sub">Your trip at a glance</div>
-          </div>
+        <div class="rp2-section-head rp2-ov-head">
+          <div class="rp2-section-ico overview"><svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+          <span class="rp2-section-title">TRIP OVERVIEW</span>
         </div>
         <div id="rp-readiness"></div>
       </div>
@@ -1508,30 +1505,35 @@ function renderSidebarReadiness() {
     const circ2 = (2 * Math.PI * 17).toFixed(1);
     const off2  = (2 * Math.PI * 17 * (1 - pct/100)).toFixed(1);
 
+    const checkBadge = `<div class="rp2-ov-check"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>`;
+
     rpEl.innerHTML = `
-      <div class="rp2-ov-bubble">
-        <div class="rp2-overview-grid">
-          ${overviewCats.map(c => `<div class="rp2-ov-cell">
-            <div class="rp2-ov-ico">${c.ico}</div>
-            <div class="rp2-ov-count">${c.count}</div>
-            <div class="rp2-ov-label">${c.label}</div>
-            ${statusPill(c.ok)}
-          </div>`).join('')}
-        </div>
-        <div class="rp2-donut-row">
-          <div class="rp2-mini-donut">
-            <svg width="52" height="52" viewBox="0 0 52 52">
-              <circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4.5"/>
-              <circle cx="26" cy="26" r="20" fill="none" stroke="#ffffff" stroke-width="4.5"
-                stroke-dasharray="${(2*Math.PI*20).toFixed(1)}" stroke-dashoffset="${(2*Math.PI*20*(1-pct/100)).toFixed(1)}"
-                stroke-linecap="round" transform="rotate(-90 26 26)"/>
+      <div class="rp2-ov-card">
+        <div class="rp2-ov-donut-col">
+          <div class="rp2-ov-donut-wrap">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="28" fill="none" stroke="#e0f2f4" stroke-width="6"/>
+              <circle cx="36" cy="36" r="28" fill="none" stroke="var(--teal)" stroke-width="6"
+                stroke-dasharray="${(2*Math.PI*28).toFixed(1)}" stroke-dashoffset="${(2*Math.PI*28*(1-pct/100)).toFixed(1)}"
+                stroke-linecap="round" transform="rotate(-90 36 36)"/>
             </svg>
-            <div class="rp2-mini-donut-pct">${pct}%</div>
+            <div class="rp2-ov-donut-inner">
+              <div class="rp2-ov-donut-pct">${pct}%</div>
+            </div>
           </div>
-          <div class="rp2-donut-text">
-            <div class="rp2-donut-title">${pct>=100?'All set! 🎉':pct>=80?'Almost there!':'In progress'}</div>
-            <div class="rp2-donut-sub">${pct>=100?'Everything in your trip is organised.':`${done} of ${total} items confirmed`}</div>
-          </div>
+          <div class="rp2-ov-donut-label">${pct>=100?'All set! 🎉':pct>=80?'Almost!':'In progress'}</div>
+        </div>
+        <div class="rp2-ov-cats">
+          ${overviewCats.map(c => `
+          <div class="rp2-ov-tile">
+            <div class="rp2-ov-tile-ico-wrap">
+              <div class="rp2-ov-tile-ico">${c.ico}</div>
+              ${c.ok ? checkBadge : ''}
+            </div>
+            <div class="rp2-ov-tile-name">${c.label}</div>
+            <div class="rp2-ov-tile-status ${c.ok?'ok':''}">${c.ok?'Complete':'Planned'}</div>
+            <div class="rp2-ov-tile-count">${c.count}</div>
+          </div>`).join('')}
         </div>
       </div>`;
   }

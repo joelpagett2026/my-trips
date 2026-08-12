@@ -1399,3 +1399,61 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   -webkit-mask: url('/icons/nav-itinerary.png?v=2') center / contain no-repeat;
   mask: url('/icons/nav-itinerary.png?v=2') center / contain no-repeat;
 }
+
+/* ── Trip Overview: dark grey header ─────────────────────────── */
+.rp2-ov-head { background: #444 !important; border-radius: 12px 12px 0 0; padding: 11px 12px; }
+.rp2-ov-head .rp2-section-ico.overview { background: none !important; color: #fff !important; width: 24px !important; height: 24px !important; border-radius: 0; flex-shrink: 0; }
+.rp2-ov-head .rp2-section-ico.overview svg { width: 22px !important; height: 22px !important; fill: #fff; }
+.rp2-ov-head .rp2-section-title { color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; }
+
+/* ── Trip Overview: card layout ─────────────────────────────── */
+.rp2-ov-card {
+  display: flex; flex-direction: row; align-items: center;
+  background: var(--surface);
+  margin: 0 10px 10px;
+  border-radius: 0 0 14px 14px;
+  padding: 14px 10px 14px 12px;
+  gap: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+
+/* Donut column (left) */
+.rp2-ov-donut-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 4px; }
+.rp2-ov-donut-wrap { position: relative; width: 72px; height: 72px; }
+.rp2-ov-donut-wrap svg { position: absolute; inset: 0; }
+.rp2-ov-donut-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.rp2-ov-donut-pct { font-size: 14px; font-weight: 800; color: var(--teal); }
+.rp2-ov-donut-label { font-size: 9px; font-weight: 700; color: var(--text3); text-align: center; }
+
+/* Category tiles (right) */
+.rp2-ov-cats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  flex: 1; gap: 0;
+}
+.rp2-ov-tile {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 2px; gap: 3px;
+  border-left: 1px solid var(--line);
+}
+.rp2-ov-tile:first-child { border-left: none; }
+
+/* Icon circle with optional check badge */
+.rp2-ov-tile-ico-wrap { position: relative; width: 38px; height: 38px; }
+.rp2-ov-tile-ico {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(14,122,135,0.10);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--teal);
+}
+.rp2-ov-tile-ico svg { width: 18px; height: 18px; }
+.rp2-ov-check {
+  position: absolute; top: -2px; right: -2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #27ae60; display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid #fff;
+}
+.rp2-ov-check svg { fill: #fff; }
+.rp2-ov-tile-name { font-size: 8px; font-weight: 800; color: var(--text); text-align: center; line-height: 1.2; }
+.rp2-ov-tile-status { font-size: 8px; font-weight: 700; color: var(--text3); }
+.rp2-ov-tile-status.ok { color: var(--teal); }
+.rp2-ov-tile-count { font-size: 11px; font-weight: 800; color: var(--text); }
