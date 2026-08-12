@@ -1297,7 +1297,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: var(--surface);
 }
 .rp2-detail-cell {
-  min-height: 58px;
+  display: flex; flex-direction: row; align-items: center; gap: 8px;
+  min-height: 52px;
   padding: 9px 10px;
 }
 .rp2-detail-label { font-size: 8.5px; }
