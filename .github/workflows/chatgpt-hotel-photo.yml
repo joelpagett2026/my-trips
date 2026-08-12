@@ -19,13 +19,14 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           path = Path('itinerary-v2-style.css')
           text = path.read_text()
-          old = '.rp2-hotel-photo-wrap {\n  position: relative;\n  height: 155px;'
-          new = '.rp2-hotel-photo-wrap {\n  position: relative;\n  height: 205px;'
-          if old not in text:
+          pattern = r'(\.rp2-hotel-photo-wrap\s*\{.*?height:\s*)155px'
+          new_text, count = re.subn(pattern, r'\g<1>205px', text, count=1, flags=re.S)
+          if count != 1:
               raise SystemExit('Target CSS rule not found; no change made.')
-          path.write_text(text.replace(old, new, 1))
+          path.write_text(new_text)
           PY
 
       - name: Commit change
