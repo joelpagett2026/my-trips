@@ -167,7 +167,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-dot.meal{background:#d97b0a;}
 .tl-dot.move{background:var(--transport);}
 .tl-dot.hotel{background:var(--teal);}
-.tl-ico{width:45px;height:45px;border-radius:10px;background:var(--teal-xdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:13px;margin-top:1px;color:var(--teal);}
+.tl-ico{width:45px;height:45px;border-radius:10px;background:var(--teal-xdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:20px;margin-top:1px;color:var(--teal);}
 .tl-ico svg{width:21px;height:21px;stroke:currentColor;fill:currentColor;}
 .tl-ico.meal{background:rgba(217,123,10,0.10);color:#d97b0a;}
 .tl-ico.move{background:var(--transport-bg);color:var(--transport);}
