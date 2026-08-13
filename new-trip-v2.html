@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=164">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=165">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1649,7 +1649,7 @@ function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('dr-about-body').innerHTML = '';
   document.getElementById('dr-photo-slot').style.display = 'none';
-  document.getElementById('dr-body').style.padding = '';
+  document.getElementById('dr-body').classList.remove('dr-body--about');
   const rb2 = document.getElementById('dr-btn-regen'); if (rb2) rb2.style.display = 'none';
   const regenBtn = document.getElementById('dr-btn-regen'); if (regenBtn) regenBtn.style.display = 'none';
 }
@@ -2772,7 +2772,7 @@ function renderAbout(about) {
   `;
 
   document.getElementById('dr-about-wrap').style.display = 'block';
-  document.getElementById('dr-body').style.padding = '0';
+  document.getElementById('dr-body').classList.add('dr-body--about');
   const regenBtn = document.getElementById('dr-btn-regen');
   if (regenBtn) regenBtn.style.display = '';
 }
