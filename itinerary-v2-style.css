@@ -191,7 +191,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-add-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-xdim);}
 
 /* BADGES */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.02em;flex-shrink:0;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.07em;flex-shrink:0;text-transform:uppercase;}
 .badge svg{width:9px;height:9px;stroke:currentColor;}
 .badge.booked,.badge.confirmed{background:var(--green-bg);color:var(--green);}
 .badge.walkin{background:rgba(90,106,112,0.1);color:var(--text2);}
@@ -710,7 +710,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
   /* Meta row wraps if needed */
   .tl-meta { gap: 5px; margin-top: 4px; }
-  .badge { font-size: 9.5px; padding: 2px 7px; }
+  .badge, .tl-ticket-status { font-size: 10px; padding: 2px 8px; }
 
   /* Hide ··· button on mobile — use tap to open drawer instead */
   .tl-more-btn { display: none; }
@@ -908,8 +908,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-ticket-status {
   display: inline-flex; align-items: center;
   font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
-  padding: 2px 7px; border-radius: 20px;
-  background: var(--bg); color: var(--text3);
+  padding: 2px 8px; border-radius: 20px;
+  background: rgba(90,106,112,0.1); color: var(--text2);
 }
 .tl-ticket-status--booked {
   background: var(--activity-bg); color: var(--activity);
