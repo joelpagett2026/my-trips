@@ -163,7 +163,7 @@
     <button class="dr-primary-btn" id="dr-open-btn" style="display:none">Open booking →</button>
 
     <!-- ABOUT THIS PLACE -->
-    <div id="dr-about-wrap" style="display:none; margin-top:-18px; margin-left:-18px; margin-right:-18px; margin-bottom:-18px;">
+    <div id="dr-about-wrap" style="display:none;">
       <div id="dr-about-body"></div>
     </div>
     <div id="dr-about-loading" style="display:none; margin-top:16px; text-align:center; padding:20px 0;">
@@ -1649,6 +1649,7 @@ function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('dr-about-body').innerHTML = '';
   document.getElementById('dr-photo-slot').style.display = 'none';
+  document.getElementById('dr-body').style.padding = '';
   const rb2 = document.getElementById('dr-btn-regen'); if (rb2) rb2.style.display = 'none';
   const regenBtn = document.getElementById('dr-btn-regen'); if (regenBtn) regenBtn.style.display = 'none';
 }
@@ -2771,6 +2772,7 @@ function renderAbout(about) {
   `;
 
   document.getElementById('dr-about-wrap').style.display = 'block';
+  document.getElementById('dr-body').style.padding = '0';
   const regenBtn = document.getElementById('dr-btn-regen');
   if (regenBtn) regenBtn.style.display = '';
 }
