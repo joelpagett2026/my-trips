@@ -274,7 +274,7 @@
             <input class="field-input" id="f-att-time" type="time">
           </div>
           <div class="field-group">
-            <label class="field-label">Cost (optional)</label>
+            <label class="field-label">Cost per person (optional)</label>
             <input class="field-input" id="f-att-cost" type="text">
           </div>
         </div>
@@ -283,14 +283,13 @@
           <input class="field-input" id="f-att-link" type="url">
         </div>
         <div class="field-group">
-          <label class="field-label">Booked</label>
-          <div class="f-slider-row">
-            <label class="f-slider">
-              <input type="checkbox" id="f-att-booked" onchange="onAttBookedChange()">
-              <span class="f-slider-track"></span>
-            </label>
-            <span class="f-slider-label" id="f-att-booked-label">No</span>
+          <label class="field-label">Booking status</label>
+          <div class="transport-type-row" id="f-att-booked-row">
+            <button type="button" class="tt-btn" data-val="booked" onclick="setAttBooked('booked')">Booked</button>
+            <button type="button" class="tt-btn active" data-val="notbooked" onclick="setAttBooked('notbooked')">Not Booked</button>
+            <button type="button" class="tt-btn" data-val="prebookable" onclick="setAttBooked('prebookable')">Not Pre-Bookable</button>
           </div>
+          <input type="hidden" id="f-att-booked" value="notbooked">
         </div>
         <div class="field-group">
           <label class="field-label">Notes</label>
@@ -709,7 +708,7 @@ function badgeHtml(status, label) {
   if (!status) return '';
   const icons = { booked: ICO.check, confirmed: ICO.check, attention: ICO.warn };
   const ic = icons[status] ? `<span style="display:inline-flex;width:9px;height:9px;align-items:center;">${icons[status]}</span>` : '';
-  const txt = label || { booked:'Booked', confirmed:'Confirmed', walkin:'Walk in only', attention:'Needs attention' }[status] || status;
+  const txt = label || { booked:'Booked', confirmed:'Confirmed', walkin:'Walk in only', attention:'Needs attention', prebookable:'Not Pre-Bookable' }[status] || status;
   return `<span class="badge ${status}">${ic}${txt}</span>`;
 }
 
@@ -1754,8 +1753,9 @@ function openEditItem(dayIdx, itemIdx) {
     document.getElementById('f-att-link').value  = (item.booking && item.booking.url) || '';
     document.getElementById('f-att-cost').value  = (item.booking && item.booking.price) || '';
     document.getElementById('f-att-notes').value = (item.booking && item.booking.note) || '';
-    document.getElementById('f-att-booked').checked = item.status === 'booked' || item.status === 'confirmed';
-    onAttBookedChange();
+    const attStatus = item.status === 'booked' || item.status === 'confirmed' ? 'booked'
+      : item.status === 'prebookable' ? 'prebookable' : 'notbooked';
+    setAttBooked(attStatus);
   } else if (cat === 'meal') {
     document.getElementById('f-meal-name').value = item.title || '';
     setMealKind(item.kicker || '');
@@ -1781,8 +1781,7 @@ function clearForm() {
    'f-ref','f-tickets','f-url'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('f-att-booked').checked = false;
-  onAttBookedChange();
+  setAttBooked('notbooked');
   document.getElementById('f-period').value = 'morning';
   setCategory('place');
   setTransportType('Flight');
@@ -1839,9 +1838,9 @@ function setMealKind(val) {
   });
 }
 
-function onAttBookedChange() {
-  const checked = document.getElementById('f-att-booked').checked;
-  document.getElementById('f-att-booked-label').textContent = checked ? 'Yes' : 'No';
+function setAttBooked(val) {
+  document.getElementById('f-att-booked').value = val;
+  document.querySelectorAll('#f-att-booked-row .tt-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
 }
 
 // Wire category / method / status bubble clicks + section clear
@@ -1932,8 +1931,9 @@ function saveItem() {
     const link   = document.getElementById('f-att-link').value.trim();
     const cost   = document.getElementById('f-att-cost').value.trim();
     const notes  = document.getElementById('f-att-notes').value.trim();
-    const booked = document.getElementById('f-att-booked').checked;
-    item = { time, type, period, title, sub:'', status: booked ? 'booked' : null };
+    const bookedVal = document.getElementById('f-att-booked').value;
+    const statusMap = { booked:'booked', notbooked:null, prebookable:'prebookable' };
+    item = { time, type, period, title, sub:'', status: statusMap[bookedVal] };
     if (link || cost || notes) item.booking = { ref:'', price: cost, tickets:'', url: link, note: notes };
   } else if (type === 'meal') {
     title = document.getElementById('f-meal-name').value.trim();
