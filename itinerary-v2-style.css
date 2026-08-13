@@ -160,7 +160,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-item{display:grid;grid-template-columns:65px 1fr;cursor:pointer;border-radius:9px;transition:background 0.12s;}
 .tl-item:hover{background:rgba(0,0,0,0.025);}
 .tl-item:hover .tl-more-btn{opacity:1;}
-.tl-time{font-size:13px;font-weight:700;color:var(--text3);text-align:right;padding:0 18px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1;align-self:center;}
+.tl-time{font-size:13px;font-weight:700;color:var(--text3);text-align:center;padding:0;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1;align-self:center;}
 .tl-body-wrap{display:flex;align-items:center;gap:14px;padding:11px 8px 11px 0;border-left:2px solid var(--line);position:relative;}
 /* line runs through all items including last */
 .tl-dot{position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;background:var(--teal);border:2px solid var(--bg);flex-shrink:0;}
@@ -387,7 +387,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-grip:active { cursor: grabbing; }
 
 /* Adjust time column to account for grip */
-.tl-time { padding-right: 11px; }
+.tl-time { padding: 0; text-align: center; }
 
 /* Desktop: wider horizontal spacing */
 .tl-item { grid-template-columns: 20px 65px 1fr; }
