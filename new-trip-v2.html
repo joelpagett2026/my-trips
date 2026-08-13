@@ -1626,7 +1626,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   // Build booking section for about-wrap panel
   const bkEl = document.getElementById('dr-booking-section');
   if (b && isBookableType) {
-    const statusColor = item.status === 'booked' || item.status === 'confirmed' ? 'var(--activity)' : item.status === 'prebookable' ? 'var(--amber)' : 'var(--text3)';
+    const statusColor = item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ? 'var(--activity)' : 'var(--text3)';
     const statusTxt   = { booked:'Booked', confirmed:'Booked', prebookable:'Not Pre-Bookable', notbooked:'Not Booked' }[item.status] || 'Not Booked';
     let bkRows = '';
     if (item.status) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${statusColor};font-weight:700;">${statusTxt}</span></div>`;
