@@ -1167,7 +1167,15 @@ function makeItemNode(item, idx) {
     ? '<span class="badge attention" style="font-size:10px;padding:2px 7px;">Breakfast Inclusive</span>'
     : isFlightItem
       ? flightMeta
-      : [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble, price].filter(Boolean).join('');
+      : (function() {
+          const isMealBooked = item.type === 'meal' && (item.status === 'booked' || item.status === 'confirmed');
+          if (isMealBooked) {
+            const t = item.time ? item.time.replace(/^(\d{1,2}):(\d{2})$/, function(_,h,m){const hr=+h%12||12;return hr+':'+m+(+h<12?'am':'pm');}) : '';
+            const label = t ? 'Booked at ' + t : 'Booked';
+            return '<span class="badge attention" style="font-size:10px;padding:2px 7px;">' + label + '</span>' + (price ? price : '');
+          }
+          return [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble, price].filter(Boolean).join('');
+        })()
   const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
 
   const row = document.createElement('div');
