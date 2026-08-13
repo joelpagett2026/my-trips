@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=196">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=197">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1137,19 +1137,22 @@ function makeItemNode(item, idx) {
     ticketStatusBubble = '<span class="tl-ticket-status' + (isBooked ? ' tl-ticket-status--booked' : '') + '">' + statusLabel + '</span>';
   }
 
-  // Flight info chips: departure, arrival, duration (replaces booked badge)
+  // Flight info lines: departure, arrival, duration (replaces booked badge)
   let flightMeta = '';
   if (isFlightItem) {
     const tr = item.transport || {};
     const dep = tr.depart || '', arr = tr.arrive || '';
+    const fromLoc = tr.from || '', toLoc = tr.to || '';
     const dur = flightDuration(dep, arr);
-    const parts = [
-      dep ? '<span class="tl-flight-chip">Dep&nbsp;' + dep + '</span>' : '',
-      arr ? '<span class="tl-flight-chip">Arr&nbsp;' + arr + '</span>' : '',
-      dur ? '<span class="tl-flight-chip tl-flight-chip--dur">' + dur + '</span>' : '',
-      price,
+    const depLine = [fromLoc, dep].filter(Boolean).join(' · ');
+    const arrLine = [toLoc,   arr].filter(Boolean).join(' · ');
+    const lines = [
+      depLine ? '<div class="tl-flight-line">' + depLine + '</div>' : '',
+      arrLine ? '<div class="tl-flight-line">' + arrLine + '</div>' : '',
+      dur     ? '<div class="tl-flight-line tl-flight-line--dur">' + dur + '</div>' : '',
+      price   ? '<div class="tl-flight-line">' + price + '</div>' : '',
     ].filter(Boolean);
-    flightMeta = parts.join('');
+    flightMeta = lines.join('');
   }
 
   // Hotel breakfast items: show only "Breakfast Inclusive" badge, no other meta
