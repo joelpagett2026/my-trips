@@ -923,6 +923,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: var(--activity-bg); color: var(--activity);
 }
 
+/* ── TRANSPORT — swap teal → transport blue ── */
+.drawer--transport .dr-kicker { color: var(--transport); }
+.drawer--transport .ab-significant { background: var(--transport); }
+.drawer--transport .dr-text-btn:not(.dr-text-btn--danger) { color: var(--transport); }
+.drawer--transport .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--transport-bg); }
+
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
 .drawer--ticket .ab-significant { background: var(--activity); }
 .drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
