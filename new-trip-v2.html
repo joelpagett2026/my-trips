@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=197">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=198">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1137,20 +1137,18 @@ function makeItemNode(item, idx) {
     ticketStatusBubble = '<span class="tl-ticket-status' + (isBooked ? ' tl-ticket-status--booked' : '') + '">' + statusLabel + '</span>';
   }
 
-  // Flight info lines: departure, arrival, duration (replaces booked badge)
+  // Flight info lines: departure → time, arrival → time, duration
   let flightMeta = '';
   if (isFlightItem) {
     const tr = item.transport || {};
     const dep = tr.depart || '', arr = tr.arrive || '';
     const fromLoc = tr.from || '', toLoc = tr.to || '';
     const dur = flightDuration(dep, arr);
-    const depLine = [fromLoc, dep].filter(Boolean).join(' · ');
-    const arrLine = [toLoc,   arr].filter(Boolean).join(' · ');
+    const ARR = ' <span class="tl-flight-arrow">→</span> ';
     const lines = [
-      depLine ? '<div class="tl-flight-line">' + depLine + '</div>' : '',
-      arrLine ? '<div class="tl-flight-line">' + arrLine + '</div>' : '',
-      dur     ? '<div class="tl-flight-line tl-flight-line--dur">' + dur + '</div>' : '',
-      price   ? '<div class="tl-flight-line">' + price + '</div>' : '',
+      (fromLoc || dep) ? '<div class="tl-flight-line">' + (fromLoc || '') + (dep ? ARR + dep : '') + '</div>' : '',
+      (toLoc   || arr) ? '<div class="tl-flight-line">' + (toLoc   || '') + (arr ? ARR + arr : '') + '</div>' : '',
+      dur              ? '<div class="tl-flight-line tl-flight-line--dur">' + dur + '</div>' : '',
     ].filter(Boolean);
     flightMeta = lines.join('');
   }
