@@ -874,6 +874,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .dr-map-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
 .dr-map-btn:hover { background: #0a6570; }
+/* Attraction website button — secondary style */
+.dr-website-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px; border-radius: 12px;
+  border: 1.5px solid var(--teal); background: transparent; color: var(--teal);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.13s, color 0.13s; letter-spacing: 0.03em;
+}
+.dr-website-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+.dr-website-btn:hover { background: var(--teal-xdim); }
 /* Row of text action buttons */
 .dr-text-actions {
   display: flex; align-items: center; justify-content: space-around;
@@ -897,6 +907,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer--ticket .ab-fact .ab-icon-h { color: var(--activity); }
 .drawer--ticket .dr-map-btn { background: var(--activity); }
 .drawer--ticket .dr-map-btn:hover { background: #4a7458; }
+.drawer--ticket .dr-website-btn { border-color: var(--activity); color: var(--activity); }
+.drawer--ticket .dr-website-btn:hover { background: rgba(90,137,104,0.08); }
 .drawer--ticket .dr-text-btn:not(.dr-text-btn--danger) { color: var(--activity); }
 .drawer--ticket .dr-text-btn:not(.dr-text-btn--danger):hover { background: rgba(90,137,104,0.08); }
 
