@@ -1675,7 +1675,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   const mapBtn = document.querySelector('.dr-map-btn');
   if (mapBtn) mapBtn.style.display = isTransport ? 'none' : '';
   document.getElementById('dr-title').textContent  = item.title || '';
-  document.getElementById('dr-sub').textContent    = item.sub || '';
+  document.getElementById('dr-sub').textContent    = isTransport ? '' : (item.sub || '');
   const srEl = document.getElementById('dr-status-row');
   srEl.innerHTML = badgeHtml(item.status, item.statusLabel);
   srEl.style.marginBottom = srEl.innerHTML ? '12px' : '0';
