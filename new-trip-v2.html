@@ -1189,7 +1189,7 @@ function makeItemNode(item, idx) {
       '<div class="tl-ico ' + ico.cls + '">' + ico.html + '</div>' +
       '<div class="tl-text">' +
         '<div class="tl-title">' + (item._hotelBreakfast ? item._hotelBreakfast : (item.title||'')) + '</div>' +
-        (!isHBF && !isFlightItem && item.sub ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
+        (!isHBF && !isFlightItem && item.sub && item.sub !== item.title ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
         (!isHBF && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
         (meta     ? '<div class="' + (isFlightItem ? 'tl-meta--flight' : 'tl-meta') + '">' + meta + '</div>' : '') +
       '</div>' +
