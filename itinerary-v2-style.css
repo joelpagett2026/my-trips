@@ -389,6 +389,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 /* Adjust time column to account for grip */
 .tl-time { padding-right: 11px; }
 
+/* Desktop: more vertical breathing room */
+.tl-body-wrap { padding: 22px 8px 22px 0; }
+
 /* ── MODAL TABS ── */
 .modal-head { flex-wrap: wrap; gap: 6px; }
 .modal-tabs {
