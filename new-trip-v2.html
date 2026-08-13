@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=178">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=179">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -164,7 +164,6 @@
 
   <!-- ABOUT THIS PLACE — outside dr-body so no inherited padding -->
   <div id="dr-about-wrap" style="display:none; flex:1; overflow-y:auto;">
-    <div id="dr-booking-section" style="display:none;"></div>
     <div id="dr-about-body"></div>
   </div>
   <div id="dr-about-loading" style="display:none; text-align:center; padding:20px 0;">
@@ -174,6 +173,9 @@
   <button id="dr-about-retry" style="display:none; margin:12px 16px; background:none; border:1px solid var(--line); color:var(--text2); font-family:var(--font); font-size:11px; font-weight:700; padding:8px; border-radius:8px; cursor:pointer;" onclick="generateAbout(true)">
     ↻ Generate visitor info
   </button>
+
+  <!-- BOOKING INFO — sits above action bar -->
+  <div id="dr-booking-section" style="display:none; flex-shrink:0; border-top:1px solid var(--line);"></div>
 
   <!-- BOTTOM ACTION BAR -->
   <div class="dr-action-bar">
