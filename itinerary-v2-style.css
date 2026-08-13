@@ -294,8 +294,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer.open{transform:translateX(0);}
 .dr-head{padding:16px 18px 13px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:10px;}
 .dr-head-text{flex:1;min-width:0;}
-.dr-kicker{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--teal);margin-bottom:4px;}
-.dr-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.25;margin-bottom:3px;}
+.dr-kicker{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--teal);margin-bottom:5px;}
+.dr-title{font-size:20px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:3px;}
 .dr-sub{font-size:12px;color:var(--text2);}
 .dr-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:2px 4px;border-radius:5px;transition:all 0.12s;flex-shrink:0;}
 .dr-close:hover{background:var(--line);color:var(--text);}
@@ -548,14 +548,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   overflow: hidden;
 }
 .ab-section {
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--line);
 }
 .ab-section:last-of-type { border-bottom: none; }
-.ab-fact { background: var(--teal-xdim); }
+
+/* Why it's significant — teal background block */
+.ab-significant {
+  background: var(--teal);
+  border-bottom: none;
+}
+.ab-significant .ab-icon-h {
+  color: rgba(255,255,255,0.75);
+}
+.ab-significant .ab-p {
+  color: #ffffff;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* Key facts — white card */
+.ab-keyfacts {
+  background: var(--surface);
+}
+.ab-keyfacts .ab-icon-h {
+  color: var(--teal);
+}
+
+/* Interesting fact — light background */
+.ab-fact {
+  background: var(--bg);
+}
+.ab-fact .ab-icon-h {
+  color: var(--teal);
+}
+
 .ab-icon-h {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.07em; color: var(--text3); margin-bottom: 6px;
+  letter-spacing: 0.07em; color: var(--text3); margin-bottom: 8px;
 }
 .ab-p {
   font-size: 12.5px; color: var(--text); line-height: 1.55;
@@ -564,7 +594,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   font-weight: 700; color: var(--teal);
 }
 .ab-list {
-  padding-left: 16px; display: flex; flex-direction: column; gap: 5px;
+  padding-left: 16px; display: flex; flex-direction: column; gap: 6px;
 }
 .ab-list li {
   font-size: 12px; color: var(--text); line-height: 1.5;
@@ -589,8 +619,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── ABOUT PLACE PHOTO ── */
 .ab-photo {
-  width: 100%; height: 160px; object-fit: cover;
-  border-radius: 9px 9px 0 0; display: block;
+  width: 100%; height: 180px; object-fit: cover;
+  border-radius: 0; display: block;
   border-bottom: 1px solid var(--line);
 }
 
@@ -808,21 +838,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── DRAWER BOTTOM ACTION BAR ── */
 .dr-action-bar {
-  display: flex; align-items: center; justify-content: space-around;
+  display: flex; flex-direction: column; gap: 8px;
   padding: 12px 16px; border-top: 1px solid var(--line);
   background: var(--surface); flex-shrink: 0;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
-.dr-icon-btn {
-  display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; border-radius: 12px;
-  border: none; background: var(--teal-xdim); color: var(--teal);
-  cursor: pointer; transition: all 0.13s; flex-shrink: 0;
+/* Full-width map button */
+.dr-map-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px; border-radius: 12px;
+  border: none; background: var(--teal); color: #fff;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.13s; letter-spacing: 0.03em;
 }
-.dr-icon-btn svg { width: 20px; height: 20px; stroke: currentColor; }
-.dr-icon-btn:hover { background: var(--teal-dim); }
-.dr-icon-btn--danger { background: rgba(229,62,62,0.08); color: #e53e3e; }
-.dr-icon-btn--danger:hover { background: rgba(229,62,62,0.16); }
+.dr-map-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+.dr-map-btn:hover { background: #0a6570; }
+/* Row of text action buttons */
+.dr-text-actions {
+  display: flex; align-items: center; justify-content: space-around;
+}
+.dr-text-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 11px; font-weight: 700;
+  color: var(--teal); padding: 6px 10px; border-radius: 8px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  transition: background 0.12s;
+}
+.dr-text-btn svg { width: 14px; height: 14px; stroke: currentColor; flex-shrink: 0; }
+.dr-text-btn:hover { background: var(--teal-xdim); }
+.dr-text-btn--danger { color: #e53e3e; }
+.dr-text-btn--danger:hover { background: rgba(229,62,62,0.08); }
 
 /* ── MOBILE HAMBURGER + SLIDE-IN MENU ── */
 .tb-hamburger {

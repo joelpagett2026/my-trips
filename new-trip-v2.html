@@ -159,7 +159,7 @@
     <button class="dr-primary-btn" id="dr-open-btn" style="display:none">Open booking →</button>
 
     <!-- ABOUT THIS PLACE -->
-    <div id="dr-about-wrap" style="display:none; margin-top:16px;">
+    <div id="dr-about-wrap" style="display:none; margin-top:16px; margin-left:-18px; margin-right:-18px; margin-bottom:-18px;">
       <div id="dr-about-body"></div>
     </div>
     <div id="dr-about-loading" style="display:none; margin-top:16px; text-align:center; padding:20px 0;">
@@ -171,20 +171,26 @@
     </button>
   </div>
 
-  <!-- BOTTOM ICON ACTION BAR -->
+  <!-- BOTTOM ACTION BAR -->
   <div class="dr-action-bar">
-    <button class="dr-icon-btn" onclick="openMapsForItem()" title="Open in Maps">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+    <button class="dr-map-btn" onclick="openMapsForItem()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      View on Map
     </button>
-    <button class="dr-icon-btn" onclick="editCurrentItem()" title="Edit">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    </button>
-    <button class="dr-icon-btn" id="dr-btn-regen" onclick="generateAbout(true)" title="Regenerate info" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"/></svg>
-    </button>
-    <button class="dr-icon-btn dr-icon-btn--danger" onclick="deleteCurrentItem()" title="Delete">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-    </button>
+    <div class="dr-text-actions">
+      <button class="dr-text-btn" onclick="editCurrentItem()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      <button class="dr-text-btn" id="dr-btn-regen" onclick="generateAbout(true)" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="dr-text-btn dr-text-btn--danger" onclick="deleteCurrentItem()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        Remove
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1593,7 +1599,10 @@ function openDrawerItem(dayIdx, itemIdx) {
   const item = STATE.days[dayIdx]?.items?.[itemIdx];
   if (!item || item.conn !== undefined) return;
   drawerItem = { dayIdx, itemIdx };
-  document.getElementById('dr-kicker').textContent = item.kicker || item.type || 'Activity';
+  const dayLoc = STATE.days[dayIdx]?.loc || STATE.meta?.dest || dest || '';
+  const isAct = item.type === 'act' || (!item.type && item.icoType === 'pin');
+  const kickerLabel = isAct ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
+  document.getElementById('dr-kicker').textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
   document.getElementById('dr-title').textContent  = item.title || '';
   document.getElementById('dr-sub').textContent    = item.sub || '';
   document.getElementById('dr-status-row').innerHTML = badgeHtml(item.status, item.statusLabel);
@@ -2731,11 +2740,11 @@ function renderAbout(about) {
 
   document.getElementById('dr-about-body').innerHTML = `
     ${about.photo ? `<img src="${about.photo}" alt="" class="ab-photo">` : ''}
-    <div class="ab-section">
+    ${about.significant ? `<div class="ab-section ab-significant">
       <div class="ab-icon-h">Why it's significant</div>
-      <p class="ab-p">${about.significant || ''}</p>
-    </div>
-    ${(historyHtml || lookoutHtml) ? `<div class="ab-section">
+      <p class="ab-p">${about.significant}</p>
+    </div>` : ''}
+    ${(historyHtml || lookoutHtml) ? `<div class="ab-section ab-keyfacts">
       <div class="ab-icon-h">Key facts &amp; what to look out for</div>
       <ul class="ab-list">${historyHtml}${lookoutHtml}</ul>
     </div>` : ''}
