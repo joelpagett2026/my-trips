@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=175">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=176">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1609,6 +1609,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   const kickerEl = document.getElementById('dr-kicker');
   kickerEl.textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
   kickerEl.style.color = isTicket ? 'var(--activity)' : '';
+  document.getElementById('drawer').classList.toggle('drawer--ticket', isTicket);
   document.getElementById('dr-title').textContent  = item.title || '';
   document.getElementById('dr-sub').textContent    = item.sub || '';
   const srEl = document.getElementById('dr-status-row');
@@ -1657,6 +1658,7 @@ function closeDrawer() {
   document.getElementById('dr-body').style.display = '';
   const rb2 = document.getElementById('dr-btn-regen'); if (rb2) rb2.style.display = 'none';
   document.getElementById('dr-kicker').style.color = '';
+  document.getElementById('drawer').classList.remove('drawer--ticket');
 }
 
 function editCurrentItem() {

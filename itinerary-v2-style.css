@@ -874,6 +874,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .dr-text-btn--danger { color: #e53e3e; }
 .dr-text-btn--danger:hover { background: rgba(229,62,62,0.08); }
 
+/* ── TICKET / ATTRACTION — swap teal → activity green ── */
+.drawer--ticket .ab-significant { background: var(--activity); }
+.drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
+.drawer--ticket .ab-fact .ab-icon-h { color: var(--activity); }
+.drawer--ticket .dr-map-btn { background: var(--activity); }
+.drawer--ticket .dr-map-btn:hover { background: #4a7458; }
+.drawer--ticket .dr-text-btn:not(.dr-text-btn--danger) { color: var(--activity); }
+.drawer--ticket .dr-text-btn:not(.dr-text-btn--danger):hover { background: rgba(90,137,104,0.08); }
+
 /* ── MOBILE HAMBURGER + SLIDE-IN MENU ── */
 .tb-hamburger {
   display: none;
