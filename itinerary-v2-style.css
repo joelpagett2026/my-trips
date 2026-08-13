@@ -843,10 +843,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── DRAWER BOTTOM ACTION BAR ── */
 .dr-action-bar {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 12px 16px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 20px 16px; border-top: 1px solid var(--line);
   background: var(--surface); flex-shrink: 0;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 /* Full-width map button */
 .dr-map-btn {
