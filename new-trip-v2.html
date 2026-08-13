@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=181">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=182">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1104,10 +1104,18 @@ function makeItemNode(item, idx) {
   const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
   const noteText = (item.booking && item.booking.note) ? item.booking.note : '';
   const isHBF = isHotelBreakfastItem(item);
+  const isTicketType = item.type === 'ticket' || item.type === 'attraction';
+  // Booking status bubble for ticket/attraction items
+  let ticketStatusBubble = '';
+  if (isTicketType && item.status) {
+    const isBooked = item.status === 'booked' || item.status === 'confirmed';
+    const statusLabel = isBooked ? 'Booked' : (item.status === 'prebookable' ? 'Not Pre-Bookable' : 'Not Booked');
+    ticketStatusBubble = '<span class="tl-ticket-status' + (isBooked ? ' tl-ticket-status--booked' : '') + '">' + statusLabel + '</span>';
+  }
   // Hotel breakfast items: show only "Breakfast Inclusive" badge, no other meta
   const meta  = isHBF
     ? '<span class="badge confirmed" style="font-size:10px;padding:2px 7px;">Breakfast Inclusive</span>'
-    : [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
+    : [badgeHtml(item.status, item.statusLabel), ticketStatusBubble, price].filter(Boolean).join('');
   const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
 
   const row = document.createElement('div');

@@ -901,6 +901,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .dr-text-btn--danger { color: #e53e3e; }
 .dr-text-btn--danger:hover { background: rgba(229,62,62,0.08); }
 
+/* ── TICKET STATUS BUBBLE (itinerary list) ── */
+.tl-ticket-status {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 2px 7px; border-radius: 20px;
+  background: var(--bg); color: var(--text3);
+}
+.tl-ticket-status--booked {
+  background: var(--activity-bg); color: var(--activity);
+}
+
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
 .drawer--ticket .ab-significant { background: var(--activity); }
 .drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
