@@ -2738,15 +2738,10 @@ async function generateAbout(force) {
 }
 
 function renderAbout(about) {
-  // History bullets
-  const historyHtml = (about.history || []).map(f =>
-    `<li>${f}</li>`
-  ).join('');
-
-  // Lookout bullets
-  const lookoutHtml = (about.lookout || []).map(f =>
-    `<li>${f}</li>`
-  ).join('');
+  // Merge history + lookout, cap at 4 most important facts
+  const allFacts = [...(about.history || []), ...(about.lookout || [])].slice(0, 4);
+  const historyHtml = allFacts.map(f => `<li>${f}</li>`).join('');
+  const lookoutHtml = ''; // merged above
 
   // Photo in top slot
   const photoSlot = document.getElementById('dr-photo-slot');
