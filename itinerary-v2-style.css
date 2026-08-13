@@ -1284,8 +1284,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp-col {
   width: var(--rp-w);
   min-width: var(--rp-w);
-  padding: 10px;
-  gap: 4px;
+  padding: 20px;
+  gap: 20px;
   background: #f5f6f6;
   border-left: 1px solid var(--line);
 }
@@ -1381,7 +1381,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-donut-sub { color: var(--text3); }
 
 @media (max-width: 1100px) {
-  .rp-col { padding: 8px; gap: 8px; }
+  .rp-col { padding: 20px; gap: 20px; }
 }
 
 /* Sidebar section icons — use the site's existing icon language */
