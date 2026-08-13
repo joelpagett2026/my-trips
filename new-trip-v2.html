@@ -158,7 +158,7 @@
     <button class="dr-close" onclick="closeDrawer()">×</button>
   </div>
   <div class="dr-body">
-    <div id="dr-status-row" style="margin-bottom:12px;"></div>
+    <div id="dr-status-row"></div>
     <div id="dr-booking-body"></div>
     <button class="dr-primary-btn" id="dr-open-btn" style="display:none">Open booking →</button>
 
@@ -1609,7 +1609,9 @@ function openDrawerItem(dayIdx, itemIdx) {
   document.getElementById('dr-kicker').textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
   document.getElementById('dr-title').textContent  = item.title || '';
   document.getElementById('dr-sub').textContent    = item.sub || '';
-  document.getElementById('dr-status-row').innerHTML = badgeHtml(item.status, item.statusLabel);
+  const srEl = document.getElementById('dr-status-row');
+  srEl.innerHTML = badgeHtml(item.status, item.statusLabel);
+  srEl.style.marginBottom = srEl.innerHTML ? '12px' : '0';
   const b = item.booking;
   let bHtml = '';
   if (b) {
