@@ -407,6 +407,10 @@
           <label class="field-label">Tickets / quantity</label>
           <input class="field-input" id="f-tickets" type="text">
         </div>
+        <div class="field-group" id="f-avios-group" style="display:none;">
+          <label class="field-label">Avios</label>
+          <input class="field-input" id="f-avios" type="text" placeholder="e.g. 25000">
+        </div>
         <div class="field-group">
           <label class="field-label">Booking URL</label>
           <input class="field-input" id="f-url" type="url">
@@ -1794,6 +1798,7 @@ function openEditItem(dayIdx, itemIdx) {
       document.getElementById('f-url').value     = item.booking.url || '';
       showBookingFields(true);
     }
+    document.getElementById('f-avios').value = item._avios || '';
   } else if (cat === 'attraction') {
     document.getElementById('f-att-name').value  = item.title || '';
     document.getElementById('f-att-time').value  = item.time || '';
@@ -1825,7 +1830,7 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost',
-   'f-ref','f-tickets','f-url'].forEach(id => {
+   'f-ref','f-tickets','f-url','f-avios'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   setAttBooked('notbooked');
@@ -1858,6 +1863,8 @@ function onCategoryChange() {
 
 function setTransportType(val) {
   document.getElementById('f-transport-type').value = val;
+  const aviosGroup = document.getElementById('f-avios-group');
+  if (aviosGroup) aviosGroup.style.display = val === 'Flight' ? '' : 'none';
   document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
@@ -1971,6 +1978,8 @@ function saveItem() {
     if (cost || ref || tickets || url) {
       item.booking = { ref, price: cost, tickets, url, note: (orig && orig.booking && orig.booking.note) || '' };
     }
+    const avios = document.getElementById('f-avios').value.trim();
+    if (tType === 'Flight') item._avios = avios || null;
   } else if (type === 'attraction') {
     title = document.getElementById('f-att-name').value.trim();
     if (!title) { document.getElementById('f-att-name').focus(); return; }
