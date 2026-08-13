@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=149">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=150">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1075,12 +1075,22 @@ function makeConnectorNode(item) {
   return wrap;
 }
 
+function isHotelBreakfastItem(item) {
+  // New format: has _hotelBreakfast tag
+  if (item._hotelBreakfast) return true;
+  // Old format: kicker is Breakfast and sub is 'Included with stay' or title is 'Breakfast Inclusive'
+  if (item.kicker === 'Breakfast' && item.type === 'meal' &&
+      (item.sub === 'Included with stay' || item.title === 'Breakfast Inclusive')) return true;
+  return false;
+}
+
 function makeItemNode(item, idx) {
   const ico   = icoForType(item.type, item.title, item);
   const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
   const noteText = (item.booking && item.booking.note) ? item.booking.note : '';
+  const isHBF = isHotelBreakfastItem(item);
   // Hotel breakfast items: show only "Breakfast Inclusive" badge, no other meta
-  const meta  = item._hotelBreakfast
+  const meta  = isHBF
     ? '<span class="badge confirmed" style="font-size:10px;padding:2px 7px;">Breakfast Inclusive</span>'
     : [badgeHtml(item.status, item.statusLabel), price].filter(Boolean).join('');
   const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
@@ -1104,21 +1114,21 @@ function makeItemNode(item, idx) {
       '<div class="tl-ico ' + ico.cls + '">' + ico.html + '</div>' +
       '<div class="tl-text">' +
         '<div class="tl-title">' + (item._hotelBreakfast ? item._hotelBreakfast : (item.title||'')) + '</div>' +
-        (!item._hotelBreakfast && item.sub ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
-        (!item._hotelBreakfast && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
+        (!isHBF && item.sub ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
+        (!isHBF && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
         (meta     ? '<div class="tl-meta">' + meta + '</div>' : '') +
       '</div>' +
-      (item._hotelBreakfast ? '' : '<button class="tl-more-btn">···</button>') +
-      (item._hotelBreakfast ? '' :
+      (isHBF ? '' : '<button class="tl-more-btn">···</button>') +
+      (isHBF ? '' :
         '<button class="tl-delete-btn" title="Remove from itinerary">' +
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
         '</button>') +
     '</div>';
 
   row.querySelector('.tl-body-wrap').addEventListener('click', () => {
-    if (!dragMoved && !item._hotelBreakfast) openDrawerItem(activeDay, idx);
+    if (!dragMoved && !isHBF) openDrawerItem(activeDay, idx);
   });
-  if (!item._hotelBreakfast) row.querySelector('.tl-more-btn').addEventListener('click', e => {
+  if (!isHBF) row.querySelector('.tl-more-btn').addEventListener('click', e => {
     e.stopPropagation();
     if (!dragMoved) openEditItem(activeDay, idx);
   });
@@ -1561,18 +1571,19 @@ function renderPlacesToEat() {
     const badgeTxt = booked
       ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Booked`
       : 'Walk in only';
+    const hbf = isHotelBreakfastItem(it);
     const itemIdx = STATE.days[activeDay].items.indexOf(it);
-    const clickHandler = it._hotelBreakfast ? '' : `onclick="openDrawerItem(${activeDay}, ${itemIdx})"`;
+    const clickHandler = hbf ? '' : `onclick="openDrawerItem(${activeDay}, ${itemIdx})"`;
     return `<div class="rp2-meal-row" ${clickHandler}>
       <div class="rp2-meal-ico">${ico.html}</div>
       <div class="rp2-meal-body">
-        <div class="rp2-meal-name">${it._hotelBreakfast ? it._hotelBreakfast : it.title}</div>
-        <div class="rp2-meal-meta">${it._hotelBreakfast
+        <div class="rp2-meal-name">${hbf ? (it._hotelBreakfast || it.title) : it.title}</div>
+        <div class="rp2-meal-meta">${hbf
           ? '<span class="rp2-meal-badge booked">Breakfast Inclusive</span>'
           : (it.time?'<span>'+it.time+'</span>':'') + '<span class="rp2-meal-badge ' + badgeCls + '">' + badgeTxt + '</span>'
         }</div>
       </div>
-      ${it._hotelBreakfast ? '' : `<div class="rp2-meal-chev">${chevron}</div>`}
+      ${hbf ? '' : `<div class="rp2-meal-chev">${chevron}</div>`}
     </div>`;
   }).join('');
 }
