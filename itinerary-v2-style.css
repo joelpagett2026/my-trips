@@ -904,6 +904,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .dr-text-btn--danger { color: #e53e3e; }
 .dr-text-btn--danger:hover { background: rgba(229,62,62,0.08); }
 
+/* ── FLIGHT INFO CHIPS (itinerary list) ── */
+.tl-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
+.tl-flight-chip {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text2); background: var(--bg); padding: 2px 7px; border-radius: 20px;
+}
+.tl-flight-chip--dur { color: var(--transport); background: var(--transport-bg); }
+
 /* ── TICKET STATUS BUBBLE (itinerary list) ── */
 .tl-ticket-status {
   display: inline-flex; align-items: center;
