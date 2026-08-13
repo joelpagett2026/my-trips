@@ -165,7 +165,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 /* line runs through all items including last */
 .tl-dot{position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;background:var(--teal);border:2px solid var(--bg);flex-shrink:0;}
 .tl-dot.meal{background:#d97b0a;}
-.tl-dot.move{background:var(--transport);border-color:var(--transport);}
+.tl-dot.move{background:var(--transport);}
 .tl-dot.hotel{background:var(--teal);}
 .tl-ico{width:45px;height:45px;border-radius:10px;background:var(--teal-xdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:13px;margin-top:1px;color:var(--teal);}
 .tl-ico svg{width:21px;height:21px;stroke:currentColor;fill:currentColor;}
