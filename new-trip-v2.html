@@ -1164,7 +1164,7 @@ function makeItemNode(item, idx) {
 
   // Hotel breakfast items: show only "Breakfast Inclusive" badge, no other meta
   const meta  = isHBF
-    ? '<span class="badge confirmed" style="font-size:10px;padding:2px 7px;">Breakfast Inclusive</span>'
+    ? '<span class="badge attention" style="font-size:10px;padding:2px 7px;">Breakfast Inclusive</span>'
     : isFlightItem
       ? flightMeta
       : [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble, price].filter(Boolean).join('');
