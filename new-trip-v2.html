@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=151">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=152">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1574,15 +1574,15 @@ function renderPlacesToEat() {
     const hbf = isHotelBreakfastItem(it);
     const itemIdx = STATE.days[activeDay].items.indexOf(it);
     const clickHandler = hbf ? '' : `onclick="openDrawerItem(${activeDay}, ${itemIdx})"`;
+    const badgeHtml2 = hbf
+      ? '<span class="rp2-meal-badge booked">Breakfast Inclusive</span>'
+      : (it.time?'<span class="rp2-meal-time">'+it.time+'</span>':'') + '<span class="rp2-meal-badge ' + badgeCls + '">' + badgeTxt + '</span>';
     return `<div class="rp2-meal-row" ${clickHandler}>
       <div class="rp2-meal-ico">${ico.html}</div>
       <div class="rp2-meal-body">
         <div class="rp2-meal-name">${hbf ? (it._hotelBreakfast || it.title) : it.title}</div>
-        <div class="rp2-meal-meta">${hbf
-          ? '<span class="rp2-meal-badge booked">Breakfast Inclusive</span>'
-          : (it.time?'<span>'+it.time+'</span>':'') + '<span class="rp2-meal-badge ' + badgeCls + '">' + badgeTxt + '</span>'
-        }</div>
       </div>
+      <div class="rp2-meal-right">${badgeHtml2}</div>
       ${hbf ? '' : `<div class="rp2-meal-chev">${chevron}</div>`}
     </div>`;
   }).join('');
