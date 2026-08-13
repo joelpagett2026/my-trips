@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=177">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=178">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -2767,6 +2767,9 @@ async function generateAbout(force) {
 }
 
 function renderAbout(about) {
+  const item = drawerItem ? STATE.days[drawerItem.dayIdx]?.items?.[drawerItem.itemIdx] : null;
+  const isTicket = item && (item.type === 'ticket' || item.type === 'attraction');
+
   // Merge history + lookout, cap at 4 most important facts
   const allFacts = [...(about.history || []), ...(about.lookout || [])].slice(0, 4);
   const historyHtml = allFacts.map(f => `<li>${f}</li>`).join('');
@@ -2791,7 +2794,7 @@ function renderAbout(about) {
       <div class="ab-icon-h">Key Facts</div>
       <ul class="ab-list">${historyHtml}${lookoutHtml}</ul>
     </div>` : ''}
-    ${about.fact ? `<div class="ab-section ab-fact">
+    ${about.fact && !isTicket ? `<div class="ab-section ab-fact">
       <div class="ab-icon-h">Interesting fact</div>
       <p class="ab-p">${about.fact}</p>
     </div>` : ''}
