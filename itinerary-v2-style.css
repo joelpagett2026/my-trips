@@ -874,7 +874,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   width: 100%; padding: 12px; border-radius: 12px;
   border: none; background: var(--teal); color: #fff;
   font-family: var(--font); font-size: 13px; font-weight: 700;
-  cursor: pointer; transition: background 0.13s; letter-spacing: 0.03em;
+  cursor: pointer; transition: background 0.13s; letter-spacing: 0.01em; text-transform: capitalize;
 }
 .dr-map-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
 .dr-map-btn:hover { background: #0a6570; }
@@ -884,7 +884,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   width: 100%; padding: 12px; border-radius: 12px;
   border: 1.5px solid var(--teal); background: transparent; color: var(--teal);
   font-family: var(--font); font-size: 13px; font-weight: 700;
-  cursor: pointer; transition: background 0.13s, color 0.13s; letter-spacing: 0.03em;
+  cursor: pointer; transition: background 0.13s, color 0.13s; letter-spacing: 0.01em; text-transform: capitalize;
 }
 .dr-website-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
 .dr-website-btn:hover { background: var(--teal-xdim); }
