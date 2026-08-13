@@ -1209,7 +1209,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 /* Meal rows */
 .rp2-meal-row {
   display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px; border-top: 1px solid var(--line);
+  padding: 3px 12px; border-top: 1px solid var(--line);
   cursor: pointer; transition: background 0.1s;
 }
 .rp2-meal-row:hover { background: var(--teal-xdim); }
@@ -1335,8 +1335,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Places to Eat: compact, consistent rows; never more than four. */
 .rp2-meal-row {
-  min-height: 54px;
-  padding: 8px 12px;
+  min-height: 44px;
+  padding: 3px 12px;
   border-top: 1px solid var(--line);
 }
 .rp2-meal-ico {
