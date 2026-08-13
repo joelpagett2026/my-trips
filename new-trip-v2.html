@@ -1603,9 +1603,12 @@ function openDrawerItem(dayIdx, itemIdx) {
   if (!item || item.conn !== undefined) return;
   drawerItem = { dayIdx, itemIdx };
   const dayLoc = STATE.days[dayIdx]?.loc || STATE.meta?.dest || dest || '';
-  const isAct = item.type === 'act' || (!item.type && item.icoType === 'pin');
+  const isAct    = item.type === 'act' || (!item.type && item.icoType === 'pin');
+  const isTicket = item.type === 'ticket' || item.type === 'attraction';
   const kickerLabel = isAct ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
-  document.getElementById('dr-kicker').textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
+  const kickerEl = document.getElementById('dr-kicker');
+  kickerEl.textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
+  kickerEl.style.color = isTicket ? 'var(--activity)' : '';
   document.getElementById('dr-title').textContent  = item.title || '';
   document.getElementById('dr-sub').textContent    = item.sub || '';
   const srEl = document.getElementById('dr-status-row');
@@ -1653,6 +1656,7 @@ function closeDrawer() {
   document.getElementById('dr-about-retry').style.display = 'none';
   document.getElementById('dr-body').style.display = '';
   const rb2 = document.getElementById('dr-btn-regen'); if (rb2) rb2.style.display = 'none';
+  document.getElementById('dr-kicker').style.color = '';
 }
 
 function editCurrentItem() {
