@@ -617,7 +617,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── ABOUT PLACE PHOTO ── */
+/* ── HERO PHOTO — flush at top of drawer, no rounding ── */
+.dr-hero-photo {
+  width: 100%; height: 180px; object-fit: cover;
+  display: block; border-radius: 0;
+  border-bottom: 1px solid var(--line);
+}
+/* ── ABOUT PLACE PHOTO (legacy, kept for safety) ── */
 .ab-photo {
   width: 100%; height: 180px; object-fit: cover;
   border-radius: 0; display: block;
