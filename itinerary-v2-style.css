@@ -1437,29 +1437,29 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .rp2-ov-tile {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 8px 4px; gap: 6px;
+  padding: 12px 4px; gap: 8px;
   border-left: 1px solid var(--line);
 }
 .rp2-ov-tile:first-child { border-left: none; }
 
 /* Icon circle with optional check badge */
-.rp2-ov-tile-ico-wrap { position: relative; width: 38px; height: 38px; }
+.rp2-ov-tile-ico-wrap { position: relative; width: 48px; height: 48px; }
 .rp2-ov-tile-ico {
-  width: 38px; height: 38px; border-radius: 50%;
+  width: 48px; height: 48px; border-radius: 50%;
   background: rgba(14,122,135,0.10);
   display: flex; align-items: center; justify-content: center;
   color: var(--teal);
 }
-.rp2-ov-tile-ico svg { width: 18px; height: 18px; }
+.rp2-ov-tile-ico svg { width: 22px; height: 22px; }
 .rp2-ov-check {
   position: absolute; top: -2px; right: -2px;
-  width: 16px; height: 16px; border-radius: 50%;
+  width: 18px; height: 18px; border-radius: 50%;
   background: #27ae60; display: flex; align-items: center; justify-content: center;
   border: 1.5px solid #fff;
 }
 .rp2-ov-check svg { fill: #fff; }
 .rp2-ov-tile-text { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-.rp2-ov-tile-name { font-size: 8px; font-weight: 800; color: var(--text); text-align: center; line-height: 1.2; }
-.rp2-ov-tile-status { font-size: 8px; font-weight: 700; color: var(--text3); }
+.rp2-ov-tile-name { font-size: 9.5px; font-weight: 800; color: var(--text); text-align: center; line-height: 1.2; }
+.rp2-ov-tile-status { font-size: 9px; font-weight: 700; color: var(--text3); }
 .rp2-ov-tile-status.ok { color: var(--teal); }
-.rp2-ov-tile-count { font-size: 11px; font-weight: 800; color: var(--text); }
+.rp2-ov-tile-count { font-size: 13px; font-weight: 800; color: var(--text); }
