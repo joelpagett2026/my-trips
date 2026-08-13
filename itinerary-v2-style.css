@@ -562,8 +562,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .ab-significant .ab-p {
   color: #ffffff;
-  font-size: 13.5px;
-  line-height: 1.55;
 }
 
 /* Key facts — white card */
