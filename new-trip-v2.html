@@ -393,7 +393,19 @@
         </div>
       </div>
 
-      <!-- Booking reference toggle (transport only) -->
+      <!-- Flight booking fields (always visible for flights) -->
+      <div id="flight-booking-fields" style="display:none;flex-direction:column;gap:13px;">
+        <div class="field-group">
+          <label class="field-label">Booking reference</label>
+          <input class="field-input" id="f-ref" type="text">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Avios</label>
+          <input class="field-input" id="f-avios" type="text" placeholder="e.g. 25000">
+        </div>
+      </div>
+
+      <!-- Non-flight transport booking toggle -->
       <button class="booking-toggle" id="booking-toggle-btn" style="display:none;" onclick="toggleBooking()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
         Add booking reference
@@ -401,15 +413,11 @@
       <div class="booking-fields" id="booking-fields" style="display:none;">
         <div class="field-group">
           <label class="field-label">Booking reference</label>
-          <input class="field-input" id="f-ref" type="text">
+          <input class="field-input" id="f-ref-other" type="text">
         </div>
         <div class="field-group">
           <label class="field-label">Tickets / quantity</label>
           <input class="field-input" id="f-tickets" type="text">
-        </div>
-        <div class="field-group" id="f-avios-group" style="display:none;">
-          <label class="field-label">Avios</label>
-          <input class="field-input" id="f-avios" type="text" placeholder="e.g. 25000">
         </div>
         <div class="field-group">
           <label class="field-label">Booking URL</label>
@@ -1792,13 +1800,16 @@ function openEditItem(dayIdx, itemIdx) {
     document.getElementById('f-move-cost').value = (item.booking && item.booking.price) || '';
     const moveStatusMap = { booked:'booked', confirmed:'booked', payonuse:'payonuse', na:'na' };
     setMoveStatus(moveStatusMap[item.status] || 'na');
-    if (item.booking && (item.booking.ref || item.booking.tickets || item.booking.url)) {
-      document.getElementById('f-ref').value     = item.booking.ref || '';
-      document.getElementById('f-tickets').value = item.booking.tickets || '';
-      document.getElementById('f-url').value     = item.booking.url || '';
+    const isFlight = (tr.mode || item.kicker) === 'Flight';
+    if (isFlight) {
+      document.getElementById('f-ref').value   = (item.booking && item.booking.ref) || '';
+      document.getElementById('f-avios').value = item._avios || '';
+    } else if (item.booking && (item.booking.ref || item.booking.tickets || item.booking.url)) {
+      document.getElementById('f-ref-other').value = item.booking.ref || '';
+      document.getElementById('f-tickets').value   = item.booking.tickets || '';
+      document.getElementById('f-url').value       = item.booking.url || '';
       showBookingFields(true);
     }
-    document.getElementById('f-avios').value = item._avios || '';
   } else if (cat === 'attraction') {
     document.getElementById('f-att-name').value  = item.title || '';
     document.getElementById('f-att-time').value  = item.time || '';
@@ -1830,7 +1841,7 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost',
-   'f-ref','f-tickets','f-url','f-avios'].forEach(id => {
+   'f-ref','f-ref-other','f-tickets','f-url','f-avios'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   setAttBooked('notbooked');
@@ -1857,14 +1868,16 @@ function onCategoryChange() {
   document.getElementById('fields-attraction').style.display  = type === 'attraction' ? 'flex' : 'none';
   document.getElementById('fields-meal').style.display        = type === 'meal'       ? 'flex' : 'none';
   document.getElementById('fields-transport').style.display   = type === 'move'       ? 'flex' : 'none';
-  document.getElementById('booking-toggle-btn').style.display = type === 'move'       ? ''     : 'none';
-  if (type !== 'move') showBookingFields(false);
+  // booking-toggle-btn visibility is handled by setTransportType for move items
+  if (type !== 'move') { showBookingFields(false); document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
 }
 
 function setTransportType(val) {
   document.getElementById('f-transport-type').value = val;
-  const aviosGroup = document.getElementById('f-avios-group');
-  if (aviosGroup) aviosGroup.style.display = val === 'Flight' ? '' : 'none';
+  const isFlight = val === 'Flight';
+  document.getElementById('flight-booking-fields').style.display = isFlight ? 'flex' : 'none';
+  document.getElementById('booking-toggle-btn').style.display = isFlight ? 'none' : '';
+  if (isFlight) showBookingFields(false);
   document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
@@ -1972,14 +1985,19 @@ function saveItem() {
     item = { time, type, period, title, sub, status: statusV,
              transport: { mode: tType, from, to, depart, arrive },
              icoType: icoMap[tType] || 'move', kicker: tType };
-    const ref     = document.getElementById('f-ref').value.trim();
-    const tickets = document.getElementById('f-tickets').value.trim();
-    const url     = document.getElementById('f-url').value.trim();
-    if (cost || ref || tickets || url) {
-      item.booking = { ref, price: cost, tickets, url, note: (orig && orig.booking && orig.booking.note) || '' };
+    if (tType === 'Flight') {
+      const ref   = document.getElementById('f-ref').value.trim();
+      const avios = document.getElementById('f-avios').value.trim();
+      if (cost || ref) item.booking = { ref, price: cost, tickets: '', url: '', note: (orig && orig.booking && orig.booking.note) || '' };
+      item._avios = avios || null;
+    } else {
+      const ref     = document.getElementById('f-ref-other').value.trim();
+      const tickets = document.getElementById('f-tickets').value.trim();
+      const url     = document.getElementById('f-url').value.trim();
+      if (cost || ref || tickets || url) {
+        item.booking = { ref, price: cost, tickets, url, note: (orig && orig.booking && orig.booking.note) || '' };
+      }
     }
-    const avios = document.getElementById('f-avios').value.trim();
-    if (tType === 'Flight') item._avios = avios || null;
   } else if (type === 'attraction') {
     title = document.getElementById('f-att-name').value.trim();
     if (!title) { document.getElementById('f-att-name').focus(); return; }
