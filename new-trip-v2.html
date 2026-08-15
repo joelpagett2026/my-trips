@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=205">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=206">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1654,16 +1654,19 @@ function renderPlacesToEat() {
   el.innerHTML = shown.map(it => {
     const ico = icoForType(it.type, it.title, it);
     const booked = isBooked(it);
-    const badgeCls = booked ? 'booked' : 'walk-in';
-    const badgeTxt = booked
-      ? `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Booked`
-      : 'Walk in only';
     const hbf = isHotelBreakfastItem(it);
     const itemIdx = STATE.days[activeDay].items.indexOf(it);
     const clickHandler = hbf ? '' : `onclick="openDrawerItem(${activeDay}, ${itemIdx})"`;
-    const badgeHtml2 = hbf
-      ? '<span class="rp2-meal-badge booked">Breakfast Inclusive</span>'
-      : (it.time?'<span class="rp2-meal-time">'+it.time+'</span>':'') + '<span class="rp2-meal-badge ' + badgeCls + '">' + badgeTxt + '</span>';
+    let badgeHtml2;
+    if (hbf) {
+      badgeHtml2 = '<span class="rp2-meal-badge rp2-meal-badge--amber">Breakfast Inclusive</span>';
+    } else if (booked) {
+      const t = it.time ? it.time.replace(/^(\d{1,2}):(\d{2})$/, function(_,h,m){const hr=+h%12||12;return hr+':'+m+(+h<12?'am':'pm');}) : '';
+      const label = t ? 'Booked at ' + t : 'Booked';
+      badgeHtml2 = '<span class="rp2-meal-badge rp2-meal-badge--amber">' + label + '</span>';
+    } else {
+      badgeHtml2 = '<span class="rp2-meal-badge rp2-meal-badge--walkin">Walk in only</span>';
+    }
     return `<div class="rp2-meal-row" ${clickHandler}>
       <div class="rp2-meal-ico">${ico.html}</div>
       <div class="rp2-meal-body">
