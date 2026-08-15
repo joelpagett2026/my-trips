@@ -1163,8 +1163,8 @@ function makeItemNode(item, idx) {
     let lines = [];
     if (useStation) {
       const ARR2 = ' <span class="tl-flight-arrow">→</span> ';
-      if (fromLoc || dep) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Dep:</span> ' + (fromLoc || '') + (dep ? ARR2 + dep : '') + '</div>');
-      if (toLoc   || arr) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Arr:</span> ' + (toLoc   || '') + (arr ? ARR2 + arr : '') + '</div>');
+      if (fromLoc || dep) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Departure:</span> ' + (fromLoc || '') + (dep ? ARR2 + dep : '') + '</div>');
+      if (toLoc   || arr) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Arrival:</span> ' + (toLoc   || '') + (arr ? ARR2 + arr : '') + '</div>');
     } else {
       // Flight/Ferry style: location → time
       if (fromLoc || dep) lines.push('<div class="tl-flight-line">' + (fromLoc || '') + (dep ? ARR + dep : '') + '</div>');
