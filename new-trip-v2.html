@@ -1170,7 +1170,7 @@ function makeItemNode(item, idx) {
       if (fromLoc || dep) lines.push('<div class="tl-flight-line">' + (fromLoc || '') + (dep ? ARR + dep : '') + '</div>');
       if (toLoc   || arr) lines.push('<div class="tl-flight-line">' + (toLoc   || '') + (arr ? ARR + arr : '') + '</div>');
     }
-    if (dur) lines.push('<div class="tl-flight-line">Duration: ' + dur + '</div>');
+    if (dur) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Duration:</span> ' + dur + '</div>');
     transportMeta = lines.join('');
   }
 
