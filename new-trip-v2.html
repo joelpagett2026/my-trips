@@ -1144,7 +1144,7 @@ function makeItemNode(item, idx) {
   if (isTransportItem) {
     const tr = item.transport || {};
     const mode = tr.mode || item.kicker || 'Flight';
-    const useStation = !['Flight','Ferry'].includes(mode); // station labels for non-flight, non-ferry
+    const useStation = mode !== 'Flight'; // station/stop labels for all non-flight transport
     let dep = tr.depart || '', arr = tr.arrive || '';
     let fromLoc = tr.from || '', toLoc = tr.to || '';
     // Fallback: parse from title ("A → B") and sub ("Mode · HH:MM – HH:MM") if transport fields empty
@@ -1166,9 +1166,10 @@ function makeItemNode(item, idx) {
       if (fromLoc || dep) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Departure:</span> ' + (fromLoc || '') + (dep ? ARR2 + dep : '') + '</div>');
       if (toLoc   || arr) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Arrival:</span> ' + (toLoc   || '') + (arr ? ARR2 + arr : '') + '</div>');
     } else {
-      // Flight/Ferry style: location → time
-      if (fromLoc || dep) lines.push('<div class="tl-flight-line">' + (fromLoc || '') + (dep ? ARR + dep : '') + '</div>');
-      if (toLoc   || arr) lines.push('<div class="tl-flight-line">' + (toLoc   || '') + (arr ? ARR + arr : '') + '</div>');
+      // Ferry: same label style as station types
+      const ARR2 = ' <span class="tl-flight-arrow">→</span> ';
+      if (fromLoc || dep) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Departure:</span> ' + (fromLoc || '') + (dep ? ARR2 + dep : '') + '</div>');
+      if (toLoc   || arr) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Arrival:</span> ' + (toLoc   || '') + (arr ? ARR2 + arr : '') + '</div>');
     }
     if (dur) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Duration:</span> ' + dur + '</div>');
     transportMeta = lines.join('');
