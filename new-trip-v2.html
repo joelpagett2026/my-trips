@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=204">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=205">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1680,12 +1680,14 @@ function openDrawerItem(dayIdx, itemIdx) {
   const isAct       = item.type === 'act' || (!item.type && item.icoType === 'pin');
   const isTicket    = item.type === 'ticket' || item.type === 'attraction';
   const isTransport = item.type === 'move';
+  const isMeal      = item.type === 'meal';
   const kickerLabel = isAct ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
   const kickerEl = document.getElementById('dr-kicker');
   kickerEl.textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
-  kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : '';
+  kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : isMeal ? 'var(--amber)' : '';
   document.getElementById('drawer').classList.toggle('drawer--ticket', isTicket);
   document.getElementById('drawer').classList.toggle('drawer--transport', isTransport);
+  document.getElementById('drawer').classList.toggle('drawer--meal', isMeal);
   // Hide map button for transport items — they're not a single map point
   const mapBtn = document.querySelector('.dr-map-btn');
   if (mapBtn) mapBtn.style.display = isTransport ? 'none' : '';
@@ -1695,18 +1697,26 @@ function openDrawerItem(dayIdx, itemIdx) {
   srEl.innerHTML = badgeHtml(item.status, item.statusLabel);
   srEl.style.marginBottom = srEl.innerHTML ? '12px' : '0';
   const b = item.booking;
-  const isBookableType = item.type === 'act' || item.type === 'ticket' || item.type === 'place' || item.type === 'attraction';
+  const isBookableType = item.type === 'act' || item.type === 'ticket' || item.type === 'place' || item.type === 'attraction' || item.type === 'meal';
   // Build booking section for about-wrap panel
   const bkEl = document.getElementById('dr-booking-section');
-  if (b && isBookableType) {
-    const statusColor = item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ? 'var(--activity)' : 'var(--text3)';
-    const statusTxt   = { booked:'Booked', confirmed:'Booked', prebookable:'Not Pre-Bookable', notbooked:'Not Booked' }[item.status] || 'Not Booked';
+  if (isBookableType && (b || isMeal)) {
     let bkRows = '';
-    if (item.status) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${statusColor};font-weight:700;">${statusTxt}</span></div>`;
-    if (b.price)     bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Cost per person</span><span class="dr-bk-val">${b.price}</span></div>`;
-    if (b.tickets)   bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Tickets</span><span class="dr-bk-val">${b.tickets}</span></div>`;
-    if (b.ref)       bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Reference</span><span class="dr-bk-val ref">${b.ref}</span></div>`;
-    if (b.note)      bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
+    if (isMeal) {
+      const mealStatusColor = item.status === 'booked' || item.status === 'confirmed' ? 'var(--amber)' : 'var(--text3)';
+      const mealStatusTxt   = { booked:'Booked', confirmed:'Booked', walkin:'Walk In Only' }[item.status] || 'Walk In Only';
+      bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${mealStatusColor};font-weight:700;">${mealStatusTxt}</span></div>`;
+      if (item.time) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Time</span><span class="dr-bk-val">${item.time}</span></div>`;
+      if (b && b.note) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
+    } else {
+      const statusColor = item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ? 'var(--activity)' : 'var(--text3)';
+      const statusTxt   = { booked:'Booked', confirmed:'Booked', prebookable:'Not Pre-Bookable', notbooked:'Not Booked' }[item.status] || 'Not Booked';
+      if (item.status) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${statusColor};font-weight:700;">${statusTxt}</span></div>`;
+      if (b && b.price)   bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Cost per person</span><span class="dr-bk-val">${b.price}</span></div>`;
+      if (b && b.tickets) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Tickets</span><span class="dr-bk-val">${b.tickets}</span></div>`;
+      if (b && b.ref)     bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Reference</span><span class="dr-bk-val ref">${b.ref}</span></div>`;
+      if (b && b.note)    bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
+    }
     bkEl.innerHTML = bkRows ? `<div class="ab-section ab-booking">${bkRows}</div>` : '';
     bkEl.style.display = bkRows ? 'block' : 'none';
     document.getElementById('dr-open-btn').style.display = 'none';
@@ -1765,6 +1775,7 @@ function closeDrawer() {
   document.getElementById('dr-kicker').style.color = '';
   document.getElementById('drawer').classList.remove('drawer--ticket');
   document.getElementById('drawer').classList.remove('drawer--transport');
+  document.getElementById('drawer').classList.remove('drawer--meal');
   const wb = document.getElementById('dr-website-btn'); if (wb) wb.style.display = 'none';
   const mapBtn = document.querySelector('.dr-map-btn'); if (mapBtn) mapBtn.style.display = '';
 }

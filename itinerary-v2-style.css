@@ -928,6 +928,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer--transport .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--transport-bg); }
 
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
+/* ── MEAL drawer — amber theme ── */
+.drawer--meal .dr-kicker { color: var(--amber); }
+.drawer--meal .dr-map-btn { background: var(--amber); }
+.drawer--meal .dr-map-btn:hover { background: #9e5a00; }
+.drawer--meal .dr-website-btn { border-color: var(--amber); color: var(--amber); }
+.drawer--meal .dr-website-btn:hover { background: var(--amber-bg); }
+.drawer--meal .dr-text-btn:not(.dr-text-btn--danger) { color: var(--amber); }
+.drawer--meal .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--amber-bg); }
+
 .drawer--ticket .ab-significant { background: var(--activity); }
 .drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
 .drawer--ticket .ab-fact .ab-icon-h { color: var(--activity); }
