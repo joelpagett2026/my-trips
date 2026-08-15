@@ -1722,8 +1722,8 @@ function openDrawerItem(dayIdx, itemIdx) {
     document.getElementById('dr-open-btn').style.display = 'none';
     const websiteBtn = document.getElementById('dr-website-btn');
     if (websiteBtn) {
-      websiteBtn.style.display = b.url ? '' : 'none';
-      websiteBtn._url = b.url || '';
+      websiteBtn.style.display = (b && b.url) ? '' : 'none';
+      websiteBtn._url = (b && b.url) || '';
     }
   } else {
     bkEl.innerHTML = '';
