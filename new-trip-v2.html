@@ -1692,9 +1692,10 @@ function openDrawerItem(dayIdx, itemIdx) {
   const mapBtn = document.querySelector('.dr-map-btn');
   if (mapBtn) mapBtn.style.display = isTransport ? 'none' : '';
   document.getElementById('dr-title').textContent  = item.title || '';
-  document.getElementById('dr-sub').textContent    = isTransport ? '' : (item.sub || '');
+  const subVal = (isTransport || isMeal) ? '' : (item.sub && item.sub !== item.title ? item.sub : '');
+  document.getElementById('dr-sub').textContent    = subVal;
   const srEl = document.getElementById('dr-status-row');
-  srEl.innerHTML = badgeHtml(item.status, item.statusLabel);
+  srEl.innerHTML = isMeal ? '' : badgeHtml(item.status, item.statusLabel);
   srEl.style.marginBottom = srEl.innerHTML ? '12px' : '0';
   const b = item.booking;
   const isBookableType = item.type === 'act' || item.type === 'ticket' || item.type === 'place' || item.type === 'attraction' || item.type === 'meal';
@@ -1753,6 +1754,12 @@ function openDrawerItem(dayIdx, itemIdx) {
     } else {
       generateAbout(false);
     }
+  } else if (isMeal) {
+    document.getElementById('dr-about-wrap').style.display    = 'none';
+    document.getElementById('dr-about-loading').style.display = 'none';
+    document.getElementById('dr-about-retry').style.display   = 'none';
+    // Fetch photo only for meals
+    fetchMealPhoto(item);
   } else {
     document.getElementById('dr-about-wrap').style.display    = 'none';
     document.getElementById('dr-about-loading').style.display = 'none';
@@ -2829,6 +2836,33 @@ async function generateAllAboutInfo() {
   }
   status.textContent = `Done — generated info for ${done} place${done===1?'':'s'}.`;
   btn.disabled = false;
+}
+
+// ── MEAL PHOTO ────────────────────────────────────────────────────────
+async function fetchMealPhoto(item) {
+  if (!item || !item.title) return;
+  const photoSlot = document.getElementById('dr-photo-slot');
+  const photoImg  = document.getElementById('dr-photo-img');
+  if (item._photo) {
+    photoImg.src = item._photo;
+    photoSlot.style.display = 'block';
+    return;
+  }
+  photoSlot.style.display = 'none';
+  try {
+    const city = drawerItem ? (STATE.days[drawerItem.dayIdx]?.loc || STATE.meta?.dest || '') : '';
+    const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(item.title) + '&city=' + encodeURIComponent(city), {
+      headers: { 'X-Auth-Token': AUTH_TOKEN },
+    });
+    const j = await r.json();
+    const photo = j.data?.photo || j.photo || null;
+    if (photo) {
+      item._photo = photo;
+      scheduleSave();
+      photoImg.src = photo;
+      photoSlot.style.display = 'block';
+    }
+  } catch(e) { /* silent — no photo */ }
 }
 
 // ── ABOUT THIS PLACE ─────────────────────────────────────────────────
