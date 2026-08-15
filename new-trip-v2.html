@@ -1682,8 +1682,9 @@ function openDrawerItem(dayIdx, itemIdx) {
   const isTransport = item.type === 'move';
   const isMeal      = item.type === 'meal';
   const kickerLabel = isAct ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
+  const isLounge = isMeal && (item.kicker || '').toLowerCase().includes('lounge');
   const kickerEl = document.getElementById('dr-kicker');
-  kickerEl.textContent = dayLoc ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
+  kickerEl.textContent = (dayLoc && !isLounge) ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
   kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : isMeal ? 'var(--amber)' : '';
   document.getElementById('drawer').classList.toggle('drawer--ticket', isTicket);
   document.getElementById('drawer').classList.toggle('drawer--transport', isTransport);
