@@ -1740,18 +1740,16 @@ function openDrawerItem(dayIdx, itemIdx) {
   } else {
     bkEl.innerHTML = '';
     bkEl.style.display = 'none';
-    // Legacy: show in dr-body for non-about types
+    // Legacy: show in dr-body for non-about types (not for meals — already shown above title)
+    document.getElementById('dr-open-btn').style.display = 'none';
     let bHtml = '';
-    if (b) {
+    if (!isMeal && b) {
       bHtml = `<div class="dr-section-h">Booking details</div>`;
-      if (b.ref)     bHtml += `<div class="dr-field"><div class="dr-field-k">Reference</div><div class="dr-field-v ref">${b.ref}</div></div>`;
-      if (b.price)   bHtml += `<div class="dr-field"><div class="dr-field-k">Price</div><div class="dr-field-v">${b.price}</div></div>`;
-      if (b.url)     bHtml += `<div class="dr-field"><div class="dr-field-k">Link</div><div class="dr-field-v link" onclick="window.open('${b.url}','_blank')">${b.url}</div></div>`;
-      if (b.note)    bHtml += `<div class="dr-field"><div class="dr-field-k">Notes</div><div class="dr-field-v">${b.note}</div></div>`;
-      document.getElementById('dr-open-btn').style.display = b.url ? 'block' : 'none';
-      document.getElementById('dr-open-btn').onclick = () => window.open(b.url,'_blank');
-    } else {
-      document.getElementById('dr-open-btn').style.display = 'none';
+      if (b.ref)   bHtml += `<div class="dr-field"><div class="dr-field-k">Reference</div><div class="dr-field-v ref">${b.ref}</div></div>`;
+      if (b.price) bHtml += `<div class="dr-field"><div class="dr-field-k">Price</div><div class="dr-field-v">${b.price}</div></div>`;
+      if (b.url)   bHtml += `<div class="dr-field"><div class="dr-field-k">Link</div><div class="dr-field-v link" onclick="window.open('${b.url}','_blank')">${b.url}</div></div>`;
+      if (b.note)  bHtml += `<div class="dr-field"><div class="dr-field-k">Notes</div><div class="dr-field-v">${b.note}</div></div>`;
+      if (b.url) { document.getElementById('dr-open-btn').style.display = 'block'; document.getElementById('dr-open-btn').onclick = () => window.open(b.url,'_blank'); }
     }
     document.getElementById('dr-booking-body').innerHTML = bHtml;
   }
