@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=234">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=235">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1696,7 +1696,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   const kickerLabel = (isAct || item.type === 'place') ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
   const kickerEl = document.getElementById('dr-kicker');
   kickerEl.textContent = (dayLoc && !isMeal && !isTransport) ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
-  kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : isMeal ? 'var(--amber)' : '';
+  kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : isMeal ? '' : '';
   document.getElementById('drawer').classList.toggle('drawer--ticket', isTicket);
   document.getElementById('drawer').classList.toggle('drawer--transport', isTransport);
   document.getElementById('drawer').classList.toggle('drawer--meal', isMeal);
