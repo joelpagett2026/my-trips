@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=253">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=254">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -397,6 +397,10 @@
         <div class="field-group" id="f-move-cost-standalone">
           <label class="field-label">Cost</label>
           <input class="field-input" id="f-move-cost" type="text">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-move-notes"></textarea>
         </div>
       </div>
 
@@ -1769,7 +1773,7 @@ function openDrawerItem(dayIdx, itemIdx) {
       if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
       if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
       if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
-      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Additional Information</span><span class="tr-bk-row-val">${b.note}</span></div>`;
+      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
       if (bkRows) bkCardHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
     }
     const hasJourney = fromLoc || toLoc || dep || arr;
@@ -1982,6 +1986,7 @@ function openEditItem(dayIdx, itemIdx) {
     const editCost = (item.booking && item.booking.price) || '';
     document.getElementById('f-move-cost').value = editCost;
     document.getElementById('f-move-cost-flight').value = editCost;
+    document.getElementById('f-move-notes').value = (item.booking && item.booking.note) || '';
     const moveStatusMap = { booked:'booked', confirmed:'booked', payonuse:'payonuse', na:'na' };
     setMoveStatus(moveStatusMap[item.status] || 'na');
     const isFlight = (tr.mode || item.kicker) === 'Flight';
@@ -2026,7 +2031,7 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
-   'f-ref','f-ref-other','f-url','f-avios'].forEach(id => {
+   'f-ref','f-ref-other','f-url','f-avios','f-move-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   setAttBooked('notbooked');
@@ -2180,6 +2185,7 @@ function saveItem() {
     const arrive = document.getElementById('f-arrive').value;
     const isFlight = tType === 'Flight';
     const cost   = isFlight ? document.getElementById('f-move-cost-flight').value.trim() : document.getElementById('f-move-cost').value.trim();
+    const moveNote = document.getElementById('f-move-notes').value.trim();
     const statusV = document.getElementById('f-status-move').value || 'na';
     if (!from && !to) { document.getElementById('f-from').focus(); return; }
     const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Tram:'move', Taxi:'move' };
@@ -2192,13 +2198,13 @@ function saveItem() {
     if (isFlight) {
       const ref   = document.getElementById('f-ref').value.trim();
       const avios = document.getElementById('f-avios').value.trim();
-      if (cost || ref) item.booking = { ref, price: cost, tickets: '', url: '', note: (orig && orig.booking && orig.booking.note) || '' };
+      if (cost || ref || moveNote) item.booking = { ref, price: cost, tickets: '', url: '', note: moveNote };
       item._avios = avios || null;
     } else {
       const ref = document.getElementById('f-ref-other').value.trim();
       const url = document.getElementById('f-url').value.trim();
-      if (cost || ref || url) {
-        item.booking = { ref, price: cost, tickets: '', url, note: (orig && orig.booking && orig.booking.note) || '' };
+      if (cost || ref || url || moveNote) {
+        item.booking = { ref, price: cost, tickets: '', url, note: moveNote };
       }
     }
   } else if (type === 'attraction') {
