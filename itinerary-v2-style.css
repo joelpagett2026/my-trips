@@ -1057,9 +1057,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #dr-about-wrap, #dr-about-wrap *, #dr-booking-section, #dr-booking-section * {
   font-family: 'Montserrat', sans-serif !important;
 }
-#dr-booking-section .tr-bk-card { background: var(--bg); border-bottom: none; }
+#dr-booking-section .tr-bk-card { background: var(--bg); border-bottom: none; padding: 16px; }
+#dr-booking-section .ab-section { padding: 0; }
 #dr-booking-section .tr-bk-row-item { padding: 11px 0; }
-#dr-booking-section .tr-section-title { margin-bottom: 10px !important; }
+#dr-booking-section .tr-section-title { margin-bottom: 12px !important; }
 .drawer--ticket .dr-map-btn { background: var(--activity); }
 .drawer--ticket .dr-map-btn:hover { background: #4a7458; }
 .drawer--ticket .dr-website-btn { border-color: var(--activity); color: var(--activity); }
