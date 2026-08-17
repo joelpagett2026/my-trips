@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=228">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=229">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1757,11 +1757,11 @@ function openDrawerItem(dayIdx, itemIdx) {
     if (item._avios || (b && (b.price || b.ref || b.note)) || item.status) {
       const statusTxt = { booked:'Booked', confirmed:'Booked', payonuse:'Pay On Use', na:'N/A', notbooked:'Not Booked' }[item.status] || '';
       let bkRows = '';
-      if (statusTxt) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoCheck}</span><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val tr-bk-row-val--status">${statusTxt}</span></div>`;
-      if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoPrice}</span><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
-      if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoRef}</span><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
-      if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoAvios}</span><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
-      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoNotes}</span><span class="tr-bk-row-key">Additional Information</span><span class="tr-bk-row-val">${b.note}</span></div>`;
+      if (statusTxt) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val tr-bk-row-val--status">${statusTxt}</span></div>`;
+      if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
+      if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
+      if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
+      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Additional Information</span><span class="tr-bk-row-val">${b.note}</span></div>`;
       if (bkRows) bkCardHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
     }
     const hasJourney = fromLoc || toLoc || dep || arr;
