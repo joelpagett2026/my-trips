@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=254">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=255">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1993,11 +1993,9 @@ function openEditItem(dayIdx, itemIdx) {
     if (isFlight) {
       document.getElementById('f-ref').value   = (item.booking && item.booking.ref) || '';
       document.getElementById('f-avios').value = item._avios || '';
-    } else if (item.booking && (item.booking.ref || item.booking.tickets || item.booking.url)) {
+    } else if (item.booking && (item.booking.ref || item.booking.url)) {
       document.getElementById('f-ref-other').value = item.booking.ref || '';
-      document.getElementById('f-tickets').value   = item.booking.tickets || '';
       document.getElementById('f-url').value       = item.booking.url || '';
-      showBookingFields(true);
     }
   } else if (cat === 'attraction') {
     document.getElementById('f-att-name').value  = item.title || '';
@@ -2041,7 +2039,6 @@ function clearForm() {
   setMoveStatus('booked');
   setMealStatus('walkin');
   setMealKind('');
-  showBookingFields(false);
 }
 
 function setCategory(cat) {
