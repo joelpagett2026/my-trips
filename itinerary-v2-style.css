@@ -513,6 +513,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .tt-btn:hover { border-color: var(--teal); color: var(--teal); }
 .tt-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+/* Meal/Restaurant modal — amber theming */
+#fields-meal .field-label { color: var(--amber); }
+#fields-meal .field-input:focus,
+#fields-meal .field-select:focus,
+#fields-meal .field-textarea:focus { border-color: var(--amber); }
+#fields-meal .tt-btn:hover { border-color: var(--amber); color: var(--amber); }
+#fields-meal .tt-btn.active { background: var(--amber); border-color: var(--amber); color: #fff; }
 /* Attraction modal — green theming */
 #fields-attraction .field-label { color: var(--activity); }
 #fields-attraction .field-input:focus,
