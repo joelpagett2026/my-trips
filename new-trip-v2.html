@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=252">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=253">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -2026,7 +2026,7 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
-   'f-ref','f-ref-other','f-tickets','f-url','f-avios'].forEach(id => {
+   'f-ref','f-ref-other','f-url','f-avios'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   setAttBooked('notbooked');
@@ -2195,11 +2195,10 @@ function saveItem() {
       if (cost || ref) item.booking = { ref, price: cost, tickets: '', url: '', note: (orig && orig.booking && orig.booking.note) || '' };
       item._avios = avios || null;
     } else {
-      const ref     = document.getElementById('f-ref-other').value.trim();
-      const tickets = document.getElementById('f-tickets').value.trim();
-      const url     = document.getElementById('f-url').value.trim();
-      if (cost || ref || tickets || url) {
-        item.booking = { ref, price: cost, tickets, url, note: (orig && orig.booking && orig.booking.note) || '' };
+      const ref = document.getElementById('f-ref-other').value.trim();
+      const url = document.getElementById('f-url').value.trim();
+      if (cost || ref || url) {
+        item.booking = { ref, price: cost, tickets: '', url, note: (orig && orig.booking && orig.booking.note) || '' };
       }
     }
   } else if (type === 'attraction') {
