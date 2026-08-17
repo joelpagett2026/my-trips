@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=215">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=216">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1792,7 +1792,7 @@ function openDrawerItem(dayIdx, itemIdx) {
             ${arr ? `<span class="tr-ep-time">${arr}</span>` : ''}
           </div>
         </div>` : '';
-      transportInfoEl.innerHTML = bkCardHtml + journeyHtml;
+      transportInfoEl.innerHTML = journeyHtml + bkCardHtml;
       transportInfoEl.style.display = 'block';
     } else {
       transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
