@@ -930,129 +930,98 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer--transport .dr-website-btn { border-color: var(--transport); color: var(--transport); }
 .drawer--transport .dr-website-btn:hover { background: var(--transport-bg); }
 
-/* ── TRANSPORT JOURNEY CARD ── */
-.tr-journey-card {
-  margin-top: 14px;
-  background: var(--surface);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-}
+/* ── TRANSPORT PANEL — flat attraction-style layout ── */
+
+/* Mode header band (like ab-significant) */
 .tr-mode-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: var(--transport-bg);
-  border-bottom: 1px solid rgba(82,107,130,0.12);
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--transport);
+  margin-top: 14px;
 }
-.tr-mode-icon {
-  display: flex;
-  align-items: center;
-  color: var(--transport);
-  opacity: 0.85;
-}
+.tr-mode-icon { display: flex; align-items: center; color: #fff; opacity: 0.9; }
 .tr-mode-icon svg { display: block; }
 .tr-mode-label {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--transport);
-}
-.tr-endpoint {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 14px;
-}
-.tr-ep-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--transport);
-  flex-shrink: 0;
-  box-shadow: 0 0 0 3px var(--transport-bg);
-}
-.tr-endpoint--arr .tr-ep-dot {
-  background: var(--surface);
-  border: 2.5px solid var(--transport);
-  box-shadow: 0 0 0 3px var(--transport-bg);
-}
-.tr-ep-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
-}
-.tr-ep-label {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--transport);
-}
-.tr-ep-place {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tr-ep-time {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--transport);
-  flex-shrink: 0;
-  letter-spacing: -0.01em;
-}
-/* connecting strip between departure and arrival */
-.tr-mid {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 14px 0 17px; /* align line with dot centre */
-}
-.tr-mid-line {
-  flex: 1;
-  height: 1.5px;
-  background: var(--transport);
-  opacity: 0.2;
-}
-.tr-mid-line--full { opacity: 0.2; }
-.tr-mid-dur {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--transport);
-  opacity: 0.75;
-  white-space: nowrap;
-  padding: 3px 8px;
-  background: var(--transport-bg);
-  border-radius: 20px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #fff;
 }
 
-/* ── TRANSPORT BOOKING SECTION ── */
-.tr-bk-section {
+/* Departure / Arrival sections — flat, separated by a thin rule */
+.tr-journey-card { margin-top: 0; }
+.tr-endpoint {
+  display: flex; align-items: center; gap: 12px;
   padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
 }
+.tr-endpoint:last-child { border-bottom: none; }
+.tr-ep-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--transport); flex-shrink: 0;
+}
+.tr-endpoint--arr .tr-ep-dot {
+  background: transparent;
+  border: 2px solid var(--transport);
+}
+.tr-ep-content { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.tr-ep-label {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--transport);
+}
+.tr-ep-place {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tr-ep-time {
+  font-size: 18px; font-weight: 800; color: var(--transport);
+  flex-shrink: 0; letter-spacing: -0.01em;
+}
+
+/* Duration strip between departure and arrival */
+.tr-mid {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(82,107,130,0.04);
+}
+.tr-mid-line { flex: 1; height: 1px; background: var(--transport); opacity: 0.18; }
+.tr-mid-line--full { opacity: 0.18; }
+.tr-mid-dur {
+  font-size: 10px; font-weight: 700; color: var(--transport);
+  opacity: 0.8; white-space: nowrap;
+}
+
+/* Booking info — flat section header + icon rows */
+.tr-bk-card { margin-top: 14px; }
 .tr-section-title {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--transport);
-  margin-bottom: 8px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--transport);
+  padding: 10px 16px 6px;
 }
-.tr-bk-section .ab-booking {
-  background: var(--bg);
-  border-radius: 10px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.tr-bk-rows { display: flex; flex-direction: column; }
+.tr-bk-row-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
 }
-.tr-bk-section .dr-bk-label { color: var(--transport); }
+.tr-bk-row-item:last-child { border-bottom: none; }
+.tr-bk-row-icon { display: flex; align-items: center; color: var(--transport); opacity: 0.7; flex-shrink: 0; }
+.tr-bk-row-key {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--transport); flex: 1;
+}
+.tr-bk-row-val {
+  font-size: 13px; font-weight: 600; color: var(--text2);
+  text-align: right;
+}
+.tr-bk-row-val--strong { font-weight: 700; color: var(--text); }
+.tr-bk-status-pill {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--transport);
+  background: var(--transport-bg);
+  padding: 3px 10px; border-radius: 20px;
+}
 
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
 /* ── MEAL drawer — amber theme ── */

@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=213">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=214">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -155,7 +155,7 @@
       <div class="dr-title" id="dr-title"></div>
       <div class="dr-sub" id="dr-sub"></div>
       <div id="dr-meal-info" style="display:none; margin-top:10px;"></div>
-      <div id="dr-transport-info" style="display:none; margin-top:10px;"></div>
+      <div id="dr-transport-info" style="display:none;"></div>
     </div>
   </div>
   <div class="dr-body" id="dr-body">
@@ -1744,12 +1744,31 @@ function openDrawerItem(dayIdx, itemIdx) {
     const dur = flightDuration(dep, arr) || tr.duration || '';
     const mode = tr.mode || item.kicker || 'Flight';
     const modeIcon = (TRANSPORT_ICONS[mode] || ICO.plane).replace('<svg', '<svg width="22" height="22"');
+    const isFlight = mode === 'Flight';
+    // Inline SVG icons for booking rows
+    const icoCheck  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+    const icoPrice  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
+    const icoRef    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="9" y1="12" x2="15" y2="12"/></svg>`;
+    const icoNotes  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
+    const icoAvios  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    // Build booking info card (shown above journey card)
+    let bkCardHtml = '';
+    if (b && (b.price || b.ref || b.note || item.status || item._avios)) {
+      const statusTxt = { booked:'Booked', confirmed:'Booked', payonuse:'Pay On Use', na:'N/A', notbooked:'Not Booked' }[item.status] || '';
+      let bkRows = '';
+      if (statusTxt) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoCheck}</span><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val"><span class="tr-bk-status-pill">${statusTxt}</span></span></div>`;
+      if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoPrice}</span><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
+      if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoRef}</span><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
+      if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoAvios}</span><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
+      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoNotes}</span><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
+      if (bkRows) bkCardHtml = `<div class="tr-bk-card"><div class="tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
+    }
     const hasJourney = fromLoc || toLoc || dep || arr;
-    if (hasJourney) {
+    if (hasJourney || bkCardHtml) {
       const midHtml = dur
         ? `<div class="tr-mid"><div class="tr-mid-line"></div><span class="tr-mid-dur">${dur}</span><div class="tr-mid-line"></div></div>`
         : `<div class="tr-mid"><div class="tr-mid-line tr-mid-line--full"></div></div>`;
-      transportInfoEl.innerHTML = `
+      const journeyHtml = hasJourney ? `
         <div class="tr-journey-card">
           <div class="tr-mode-bar">
             <span class="tr-mode-icon">${modeIcon}</span>
@@ -1772,7 +1791,8 @@ function openDrawerItem(dayIdx, itemIdx) {
             </div>
             ${arr ? `<span class="tr-ep-time">${arr}</span>` : ''}
           </div>
-        </div>`;
+        </div>` : '';
+      transportInfoEl.innerHTML = bkCardHtml + journeyHtml;
       transportInfoEl.style.display = 'block';
     } else {
       transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
@@ -1783,29 +1803,16 @@ function openDrawerItem(dayIdx, itemIdx) {
     transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
   }
 
-  if (isBookableType && b && !isMeal) {
+  if (isBookableType && b && !isMeal && !isTransport) {
     let bkRows = '';
-    if (isTransport) {
-      // Transport booking: show price, ref, notes (no status row — it's a move)
-      const transportStatusColor = item.status === 'booked' || item.status === 'confirmed' ? 'var(--transport)' : 'var(--text3)';
-      const transportStatusTxt   = { booked:'Booked', confirmed:'Booked', notbooked:'Not Booked' }[item.status] || '';
-      if (transportStatusTxt) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${transportStatusColor};font-weight:700;">${transportStatusTxt}</span></div>`;
-      if (b.price)   bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Price</span><span class="dr-bk-val">${b.price}</span></div>`;
-      if (b.tickets) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Tickets</span><span class="dr-bk-val">${b.tickets}</span></div>`;
-      if (b.ref)     bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Reference</span><span class="dr-bk-val ref">${b.ref}</span></div>`;
-      if (b.note)    bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
-    } else {
-      const statusColor = item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ? 'var(--activity)' : 'var(--text3)';
-      const statusTxt   = { booked:'Booked', confirmed:'Booked', prebookable:'Not Pre-Bookable', notbooked:'Not Booked' }[item.status] || 'Not Booked';
-      if (item.status) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${statusColor};font-weight:700;">${statusTxt}</span></div>`;
-      if (b.price)   bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Cost per person</span><span class="dr-bk-val">${b.price}</span></div>`;
-      if (b.tickets) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Tickets</span><span class="dr-bk-val">${b.tickets}</span></div>`;
-      if (b.ref)     bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Reference</span><span class="dr-bk-val ref">${b.ref}</span></div>`;
-      if (b.note)    bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
-    }
-    const bkWrapClass = isTransport ? 'tr-bk-section' : 'ab-section ab-booking';
-    const bkHeader = isTransport && bkRows ? `<div class="tr-section-title">Booking Information</div>` : '';
-    bkEl.innerHTML = bkRows ? `<div class="${bkWrapClass}">${bkHeader}<div class="ab-booking">${bkRows}</div></div>` : '';
+    const statusColor = item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ? 'var(--activity)' : 'var(--text3)';
+    const statusTxt   = { booked:'Booked', confirmed:'Booked', prebookable:'Not Pre-Bookable', notbooked:'Not Booked' }[item.status] || 'Not Booked';
+    if (item.status) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${statusColor};font-weight:700;">${statusTxt}</span></div>`;
+    if (b.price)   bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Cost per person</span><span class="dr-bk-val">${b.price}</span></div>`;
+    if (b.tickets) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Tickets</span><span class="dr-bk-val">${b.tickets}</span></div>`;
+    if (b.ref)     bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Reference</span><span class="dr-bk-val ref">${b.ref}</span></div>`;
+    if (b.note)    bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
+    bkEl.innerHTML = bkRows ? `<div class="ab-section ab-booking">${bkRows}</div>` : '';
     bkEl.style.display = bkRows ? 'block' : 'none';
     document.getElementById('dr-open-btn').style.display = 'none';
     const websiteBtn = document.getElementById('dr-website-btn');
