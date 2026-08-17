@@ -997,7 +997,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
 /* ── MEAL drawer — amber theme ── */
-.drawer--meal .dr-kicker { color: var(--amber); }
+.drawer--meal .dr-head { background: var(--amber); border-bottom-color: transparent; }
+.drawer--meal .dr-kicker { color: rgba(255,255,255,0.75); }
+.drawer--meal .dr-title { color: #fff; }
+.drawer--meal .dr-close { color: rgba(255,255,255,0.7); }
+.drawer--meal .dr-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
 .drawer--meal .dr-map-btn { background: var(--amber); }
 .drawer--meal .dr-map-btn:hover { background: #9e5a00; }
 .drawer--meal .dr-website-btn { border-color: var(--amber); color: var(--amber); }
