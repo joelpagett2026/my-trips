@@ -927,6 +927,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer--transport .ab-significant { background: var(--transport); }
 .drawer--transport .dr-text-btn:not(.dr-text-btn--danger) { color: var(--transport); }
 .drawer--transport .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--transport-bg); }
+.drawer--transport .dr-transport-block .dr-bk-label { color: var(--transport); }
+.drawer--transport .dr-website-btn { border-color: var(--transport); color: var(--transport); }
+.drawer--transport .dr-website-btn:hover { background: var(--transport-bg); }
 
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
 /* ── MEAL drawer — amber theme ── */
