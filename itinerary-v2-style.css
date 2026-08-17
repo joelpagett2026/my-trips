@@ -934,7 +934,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 /* ── TRANSPORT PANEL — POI-style layout with transport blue ── */
 
 #dr-transport-wrap, #dr-transport-wrap * {
-  font-family: var(--font) !important;
+  font-family: 'Montserrat', sans-serif !important;
 }
 
 .tr-journey-block { background: var(--transport) !important; }
