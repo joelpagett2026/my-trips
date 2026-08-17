@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=212">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=213">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1742,6 +1742,8 @@ function openDrawerItem(dayIdx, itemIdx) {
     }
     if (!dep && item.time) dep = item.time;
     const dur = flightDuration(dep, arr) || tr.duration || '';
+    const mode = tr.mode || item.kicker || 'Flight';
+    const modeIcon = (TRANSPORT_ICONS[mode] || ICO.plane).replace('<svg', '<svg width="22" height="22"');
     const hasJourney = fromLoc || toLoc || dep || arr;
     if (hasJourney) {
       const midHtml = dur
@@ -1749,6 +1751,10 @@ function openDrawerItem(dayIdx, itemIdx) {
         : `<div class="tr-mid"><div class="tr-mid-line tr-mid-line--full"></div></div>`;
       transportInfoEl.innerHTML = `
         <div class="tr-journey-card">
+          <div class="tr-mode-bar">
+            <span class="tr-mode-icon">${modeIcon}</span>
+            <span class="tr-mode-label">${mode}</span>
+          </div>
           <div class="tr-endpoint tr-endpoint--dep">
             <div class="tr-ep-dot"></div>
             <div class="tr-ep-content">
