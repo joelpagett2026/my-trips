@@ -187,7 +187,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-delete-btn svg{width:12px;height:12px;stroke:currentColor;}
 .tl-delete-btn:hover{background:#fee;color:#e53e3e;}
 .tl-item:hover .tl-delete-btn{opacity:1;}
-.tl-add-btn{display:flex;align-items:center;gap:8px;width:100%;padding:10px;margin-top:6px;background:none;border:1.5px dashed rgba(14,122,135,0.25);border-radius:9px;color:var(--text3);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.14s;justify-content:center;letter-spacing:0.02em;}
+.tl-add-btn{display:flex;align-items:center;gap:8px;width:100%;padding:10px;margin-top:6px;background:none;border:1.5px dashed rgba(14,122,135,0.25);border-radius:9px;color:var(--text3);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.14s;justify-content:center;letter-spacing:0.05em;text-transform:uppercase;}
 .tl-add-btn svg{width:14px;height:14px;stroke:currentColor;}
 .tl-add-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-xdim);}
 
