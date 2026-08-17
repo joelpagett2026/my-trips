@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=236">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=237">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1818,12 +1818,12 @@ function openDrawerItem(dayIdx, itemIdx) {
     let bkRows = '';
     const statusColor = item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ? 'var(--activity)' : 'var(--text3)';
     const statusTxt   = { booked:'Booked', confirmed:'Booked', prebookable:'Not Pre-Bookable', notbooked:'Not Booked' }[item.status] || 'Not Booked';
-    if (item.status) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${statusColor};font-weight:700;">${statusTxt}</span></div>`;
-    if (b.price)   bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Cost per person</span><span class="dr-bk-val">${b.price}</span></div>`;
-    if (b.tickets) bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Tickets</span><span class="dr-bk-val">${b.tickets}</span></div>`;
-    if (b.ref)     bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Reference</span><span class="dr-bk-val ref">${b.ref}</span></div>`;
-    if (b.note)    bkRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
-    bkEl.innerHTML = bkRows ? `<div class="ab-section ab-booking">${bkRows}</div>` : '';
+    if (item.status) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val" style="color:${statusColor};">${statusTxt}</span></div>`;
+    if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Cost per person</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
+    if (b.tickets) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Tickets</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.tickets}</span></div>`;
+    if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
+    if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
+    bkEl.innerHTML = bkRows ? `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title act-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>` : '';
     bkEl.style.display = bkRows ? 'block' : 'none';
     document.getElementById('dr-open-btn').style.display = 'none';
     const websiteBtn = document.getElementById('dr-website-btn');

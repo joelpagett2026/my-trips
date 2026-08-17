@@ -1016,6 +1016,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #dr-meal-wrap, #dr-meal-wrap * { font-family: 'Montserrat', sans-serif !important; }
 
 .drawer--ticket .ab-significant { background: var(--activity); }
+.drawer--ticket .tr-bk-row-key { color: var(--activity); }
+.act-section-title { color: var(--text) !important; }
 .drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
 .drawer--ticket .ab-fact .ab-icon-h { color: var(--activity); }
 .drawer--ticket .dr-map-btn { background: var(--activity); }
