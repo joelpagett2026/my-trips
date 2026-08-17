@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=257">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=258">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -431,9 +431,15 @@
             <input class="field-input" id="f-ref-other" type="text">
           </div>
         </div>
-        <div class="field-group" id="f-operator-group" style="display:none;">
-          <label class="field-label">Operator</label>
-          <input class="field-input" id="f-operator" type="text" placeholder="e.g. Flixbus, National Rail">
+        <div class="field-row" id="f-operator-group" style="display:none;">
+          <div class="field-group">
+            <label class="field-label">Operator</label>
+            <input class="field-input" id="f-operator" type="text" placeholder="e.g. Flixbus, National Rail">
+          </div>
+          <div class="field-group" id="f-route-group" style="display:none;">
+            <label class="field-label">Route number</label>
+            <input class="field-input" id="f-route" type="text" placeholder="e.g. 302">
+          </div>
         </div>
         <div class="field-group">
           <label class="field-label">Timetable URL</label>
@@ -1782,6 +1788,8 @@ function openDrawerItem(dayIdx, itemIdx) {
       if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
       const opName = tr.operator || '';
       if (!isFlight && opName) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Operator</span><span class="tr-bk-row-val">${opName}</span></div>`;
+      const routeNum = tr.route || '';
+      if (routeNum) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Route</span><span class="tr-bk-row-val">${routeNum}</span></div>`;
       if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
       if (bkRows) bkCardHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
     }
@@ -2007,6 +2015,7 @@ function openEditItem(dayIdx, itemIdx) {
       document.getElementById('f-url').value       = (item.booking && item.booking.url) || '';
       document.getElementById('f-move-notes').value = (item.booking && item.booking.note) || '';
       document.getElementById('f-operator').value  = (tr.operator) || '';
+      document.getElementById('f-route').value     = (tr.route) || '';
     }
   } else if (cat === 'attraction') {
     document.getElementById('f-att-name').value  = item.title || '';
@@ -2040,7 +2049,7 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
-   'f-ref','f-ref-other','f-url','f-avios','f-operator','f-move-notes','f-move-notes-flight'].forEach(id => {
+   'f-ref','f-ref-other','f-url','f-avios','f-operator','f-route','f-move-notes','f-move-notes-flight'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   setAttBooked('notbooked');
@@ -2093,6 +2102,9 @@ function setTransportType(val) {
   // Operator only for Bus, Coach, Ferry, Train
   const opGroup = document.getElementById('f-operator-group');
   if (opGroup) opGroup.style.display = hasOperator ? '' : 'none';
+  // Route number only for Bus, Coach
+  const routeGroup = document.getElementById('f-route-group');
+  if (routeGroup) routeGroup.style.display = ['Bus','Coach'].includes(val) ? '' : 'none';
   document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
@@ -2199,6 +2211,7 @@ function saveItem() {
     const cost   = isFlight ? document.getElementById('f-move-cost-flight').value.trim() : document.getElementById('f-move-cost').value.trim();
     const moveNote = isFlight ? document.getElementById('f-move-notes-flight').value.trim() : document.getElementById('f-move-notes').value.trim();
     const operator = hasOperator ? document.getElementById('f-operator').value.trim() : '';
+    const routeNum = ['Bus','Coach'].includes(tType) ? document.getElementById('f-route').value.trim() : '';
     const statusV = document.getElementById('f-status-move').value || 'na';
     if (!from && !to) { document.getElementById('f-from').focus(); return; }
     const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Tram:'move', Taxi:'move' };
@@ -2206,7 +2219,7 @@ function saveItem() {
     title = [from, to].filter(Boolean).join(' → ');
     const sub = [operator || tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
     item = { time, type, period, title, sub, status: statusV,
-             transport: { mode: tType, from, to, depart, arrive, operator },
+             transport: { mode: tType, from, to, depart, arrive, operator, route: routeNum },
              icoType: icoMap[tType] || 'move', kicker: tType };
     if (isFlight) {
       const ref   = document.getElementById('f-ref').value.trim();
