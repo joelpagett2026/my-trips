@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=210">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=211">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -183,7 +183,7 @@
   <div class="dr-action-bar">
     <button class="dr-website-btn" id="dr-website-btn" style="display:none" onclick="openAttractionWebsite()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      Attraction Website
+      <span id="dr-website-label">Attraction Website</span>
     </button>
     <button class="dr-map-btn" onclick="openMapsForItem()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
@@ -246,7 +246,7 @@
       <div class="field-group">
         <label class="field-label">Category</label>
         <div class="transport-type-row" id="f-category-row">
-          <button type="button" class="tt-btn active" data-cat="place">Place</button>
+          <button type="button" class="tt-btn active" data-cat="place">Point Of Interest</button>
           <button type="button" class="tt-btn" data-cat="attraction">Attraction</button>
           <button type="button" class="tt-btn" data-cat="meal">Meal</button>
           <button type="button" class="tt-btn" data-cat="move">Transport</button>
@@ -255,7 +255,7 @@
         <input type="hidden" id="f-period" value="morning">
       </div>
 
-      <!-- PLACE FIELDS -->
+      <!-- PLACE / POI FIELDS -->
       <div id="fields-place" style="display:flex;flex-direction:column;gap:13px;">
         <div class="field-group">
           <label class="field-label">Location</label>
@@ -268,6 +268,10 @@
         <div class="field-group">
           <label class="field-label">Notes</label>
           <textarea class="field-textarea" id="f-place-notes"></textarea>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Website (optional)</label>
+          <input class="field-input" id="f-place-website" type="url" placeholder="https://">
         </div>
       </div>
 
@@ -1687,7 +1691,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   const isTicket    = item.type === 'ticket' || item.type === 'attraction';
   const isTransport = item.type === 'move';
   const isMeal      = item.type === 'meal';
-  const kickerLabel = isAct ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
+  const kickerLabel = (isAct || item.type === 'place') ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
   const kickerEl = document.getElementById('dr-kicker');
   kickerEl.textContent = (dayLoc && !isMeal && !isTransport) ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
   kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : isMeal ? 'var(--amber)' : '';
@@ -1783,6 +1787,9 @@ function openDrawerItem(dayIdx, itemIdx) {
     if (websiteBtn) {
       websiteBtn.style.display = (b && b.url) ? '' : 'none';
       websiteBtn._url = (b && b.url) || '';
+      // Update button label based on item type
+      const wbLabelEl = document.getElementById('dr-website-label');
+      if (wbLabelEl) wbLabelEl.textContent = item.type === 'place' ? 'Visit Website' : isTransport ? 'View Booking' : 'Attraction Website';
     }
   } else {
     bkEl.innerHTML = '';
@@ -1963,12 +1970,13 @@ function openEditItem(dayIdx, itemIdx) {
     document.getElementById('f-place-location').value = item.title || '';
     document.getElementById('f-place-time').value      = item.time || '';
     document.getElementById('f-place-notes').value     = (item.booking && item.booking.note) || '';
+    document.getElementById('f-place-website').value   = (item.booking && item.booking.url)  || '';
   }
   openModal();
 }
 
 function clearForm() {
-  ['f-place-location','f-place-time','f-place-notes',
+  ['f-place-location','f-place-time','f-place-notes','f-place-website',
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost',
@@ -2155,8 +2163,9 @@ function saveItem() {
     if (!title) { document.getElementById('f-place-location').focus(); return; }
     time = document.getElementById('f-place-time').value;
     const notes = document.getElementById('f-place-notes').value.trim();
+    const website = document.getElementById('f-place-website').value.trim();
     item = { time, type, period, title, sub:'', status: null };
-    if (notes) item.booking = { ref:'', price:'', tickets:'', url:'', note: notes };
+    if (notes || website) item.booking = { ref:'', price:'', tickets:'', url: website, note: notes };
   }
 
   // Preserve data with no editable field in this modal when editing an existing item
