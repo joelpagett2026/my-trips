@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=246">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=247">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -2054,6 +2054,12 @@ function onCategoryChange() {
   const modalTabs = document.getElementById('modal-tabs');
   if (modalTabs) modalTabs.style.display = type === 'place' ? '' : 'none';
   if (type !== 'place' && document.getElementById('tab-bulk').classList.contains('active')) setModalTab('single');
+  // Save button colour follows category
+  const saveBtn = document.getElementById('modal-save-btn');
+  if (saveBtn) {
+    const colMap = { place: 'var(--teal)', attraction: 'var(--activity)', meal: 'var(--amber)', move: 'var(--transport)' };
+    saveBtn.style.background = colMap[type] || 'var(--teal)';
+  }
   // booking-toggle-btn visibility is handled by setTransportType for move items
   if (type !== 'move') { showBookingFields(false); document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
 }
@@ -2129,6 +2135,7 @@ document.addEventListener('click', e => {
 function openModal() {
   setModalTab('single');
   document.getElementById('modal-tabs').style.display = '';
+  document.getElementById('modal-save-btn').style.background = 'var(--teal)';
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-place-location').focus(), 100);
 }
