@@ -603,7 +603,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 
 .ab-icon-h {
-  font-family: var(--font); font-size: 11px; font-weight: 700; text-transform: uppercase;
+  font-family: 'Montserrat', sans-serif !important; font-size: 11px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.09em; color: var(--text3); margin-bottom: 8px;
 }
 .ab-p {
@@ -1020,6 +1020,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .act-section-title { color: var(--text) !important; }
 .drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
 .drawer--ticket .ab-fact .ab-icon-h { color: var(--activity); }
+#dr-about-wrap, #dr-about-wrap *, #dr-body .tr-bk-card, #dr-body .tr-bk-card * {
+  font-family: 'Montserrat', sans-serif !important;
+}
 .drawer--ticket .dr-map-btn { background: var(--activity); }
 .drawer--ticket .dr-map-btn:hover { background: #4a7458; }
 .drawer--ticket .dr-website-btn { border-color: var(--activity); color: var(--activity); }
