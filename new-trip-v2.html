@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=243">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=244">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -2050,9 +2050,9 @@ function onCategoryChange() {
   document.getElementById('fields-attraction').style.display  = type === 'attraction' ? 'flex' : 'none';
   document.getElementById('fields-meal').style.display        = type === 'meal'       ? 'flex' : 'none';
   document.getElementById('fields-transport').style.display   = type === 'move'       ? 'flex' : 'none';
-  // Bulk import tab only visible for Point of Interest
-  const bulkTab = document.getElementById('tab-bulk');
-  if (bulkTab) bulkTab.style.display = type === 'place' ? '' : 'none';
+  // Single/Bulk tabs only visible for Point of Interest
+  const modalTabs = document.getElementById('modal-tabs');
+  if (modalTabs) modalTabs.style.display = type === 'place' ? '' : 'none';
   if (type !== 'place' && document.getElementById('tab-bulk').classList.contains('active')) setModalTab('single');
   // booking-toggle-btn visibility is handled by setTransportType for move items
   if (type !== 'move') { showBookingFields(false); document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
