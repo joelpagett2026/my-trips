@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=217">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=218">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1751,45 +1751,47 @@ function openDrawerItem(dayIdx, itemIdx) {
     const icoRef    = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="9" y1="12" x2="15" y2="12"/></svg>`;
     const icoNotes  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
     const icoAvios  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-    // Build booking info card (shown above journey card)
+    // Build booking info card — POI keyfacts style (white section)
     let bkCardHtml = '';
     if (b && (b.price || b.ref || b.note || item.status || item._avios)) {
       const statusTxt = { booked:'Booked', confirmed:'Booked', payonuse:'Pay On Use', na:'N/A', notbooked:'Not Booked' }[item.status] || '';
       let bkRows = '';
-      if (statusTxt) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoCheck}</span><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val"><span class="tr-bk-status-pill">${statusTxt}</span></span></div>`;
+      if (statusTxt) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoCheck}</span><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val tr-bk-row-val--status">${statusTxt}</span></div>`;
       if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoPrice}</span><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
       if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoRef}</span><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
       if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoAvios}</span><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
-      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoNotes}</span><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
-      if (bkRows) bkCardHtml = `<div class="tr-bk-card"><div class="tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
+      if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-icon">${icoNotes}</span><span class="tr-bk-row-key">Additional Information</span><span class="tr-bk-row-val">${b.note}</span></div>`;
+      if (bkRows) bkCardHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
     }
     const hasJourney = fromLoc || toLoc || dep || arr;
     if (hasJourney || bkCardHtml) {
-      const midHtml = dur
-        ? `<div class="tr-mid"><div class="tr-mid-line"></div><span class="tr-mid-dur">${dur}</span><div class="tr-mid-line"></div></div>`
-        : `<div class="tr-mid"><div class="tr-mid-line tr-mid-line--full"></div></div>`;
+      // Journey block — styled like ab-significant (solid transport blue, white text)
+      const durHtml = dur ? `
+        <div class="tr-dur-row">
+          <div class="tr-dur-line"></div>
+          <span class="tr-dur-text">${dur}</span>
+          <div class="tr-dur-line"></div>
+        </div>` : `<div class="tr-dur-row"><div class="tr-dur-line"></div></div>`;
       const journeyHtml = hasJourney ? `
-        <div class="tr-journey-card">
-          <div class="tr-mode-bar">
+        <div class="ab-section ab-significant tr-journey-block">
+          <div class="tr-mode-header">
             <span class="tr-mode-icon">${modeIcon}</span>
             <span class="tr-mode-label">${mode}</span>
           </div>
-          <div class="tr-endpoint tr-endpoint--dep">
-            <div class="tr-ep-dot"></div>
-            <div class="tr-ep-content">
-              <span class="tr-ep-label">Departure</span>
-              <span class="tr-ep-place">${fromLoc || '—'}</span>
+          <div class="tr-station tr-station--dep">
+            <div class="tr-station-meta">
+              <span class="tr-station-label">Departure</span>
+              <span class="tr-station-name">${fromLoc || '—'}</span>
             </div>
-            ${dep ? `<span class="tr-ep-time">${dep}</span>` : ''}
+            ${dep ? `<span class="tr-station-time">${dep}</span>` : ''}
           </div>
-          ${midHtml}
-          <div class="tr-endpoint tr-endpoint--arr">
-            <div class="tr-ep-dot"></div>
-            <div class="tr-ep-content">
-              <span class="tr-ep-label">Arrival</span>
-              <span class="tr-ep-place">${toLoc || '—'}</span>
+          ${durHtml}
+          <div class="tr-station tr-station--arr">
+            <div class="tr-station-meta">
+              <span class="tr-station-label">Arrival</span>
+              <span class="tr-station-name">${toLoc || '—'}</span>
             </div>
-            ${arr ? `<span class="tr-ep-time">${arr}</span>` : ''}
+            ${arr ? `<span class="tr-station-time">${arr}</span>` : ''}
           </div>
         </div>` : '';
       transportInfoEl.innerHTML = journeyHtml + bkCardHtml;
