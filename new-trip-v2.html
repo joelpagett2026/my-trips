@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=250">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=251">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -374,10 +374,6 @@
           </div>
           <input class="field-input" id="f-status-move" type="hidden" value="booked">
         </div>
-        <div class="field-group" id="f-move-cost-standalone">
-          <label class="field-label">Cost</label>
-          <input class="field-input" id="f-move-cost" type="text">
-        </div>
         <div class="field-row">
           <div class="field-group">
             <label class="field-label">Departure</label>
@@ -397,6 +393,10 @@
             <label class="field-label">Arrival time</label>
             <input class="field-input" id="f-arrive" type="time">
           </div>
+        </div>
+        <div class="field-group" id="f-move-cost-standalone">
+          <label class="field-label">Cost</label>
+          <input class="field-input" id="f-move-cost" type="text">
         </div>
       </div>
 
@@ -424,13 +424,9 @@
         Add booking reference
       </button>
       <div class="booking-fields" id="booking-fields" style="display:none;">
-        <div class="field-group">
+        <div class="field-group" id="f-ref-other-group">
           <label class="field-label">Booking reference</label>
           <input class="field-input" id="f-ref-other" type="text">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Tickets / quantity</label>
-          <input class="field-input" id="f-tickets" type="text">
         </div>
         <div class="field-group">
           <label class="field-label">Timetable URL</label>
@@ -2089,6 +2085,9 @@ function setMoveStatus(val) {
   document.querySelectorAll('#f-status-move-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
+  // Hide booking reference for Pay on use (no ref to record)
+  const refGroup = document.getElementById('f-ref-other-group');
+  if (refGroup) refGroup.style.display = val === 'payonuse' ? 'none' : '';
 }
 
 function setMealStatus(val) {
