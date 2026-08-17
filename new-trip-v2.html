@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=214">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=215">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1829,7 +1829,7 @@ function openDrawerItem(dayIdx, itemIdx) {
     // Legacy: show in dr-body for non-about types (not for meals — already shown above title)
     document.getElementById('dr-open-btn').style.display = 'none';
     let bHtml = '';
-    if (!isMeal && b) {
+    if (!isMeal && !isTransport && b) {
       bHtml = `<div class="dr-section-h">Booking details</div>`;
       if (b.ref)   bHtml += `<div class="dr-field"><div class="dr-field-k">Reference</div><div class="dr-field-v ref">${b.ref}</div></div>`;
       if (b.price) bHtml += `<div class="dr-field"><div class="dr-field-k">Price</div><div class="dr-field-v">${b.price}</div></div>`;
