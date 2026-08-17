@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=230">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=231">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -154,11 +154,12 @@
       <div class="dr-kicker" id="dr-kicker"></div>
       <div class="dr-title" id="dr-title"></div>
       <div class="dr-sub" id="dr-sub"></div>
-      <div id="dr-meal-info" style="display:none; margin-top:10px;"></div>
     </div>
   </div>
   <!-- TRANSPORT PANEL — outside dr-head so sections go edge-to-edge -->
   <div id="dr-transport-wrap" style="display:none; flex-shrink:0; overflow-y:auto; flex:1;"></div>
+  <!-- MEAL PANEL — outside dr-head so sections go edge-to-edge -->
+  <div id="dr-meal-wrap" style="display:none; flex-shrink:0; overflow-y:auto; flex:1;"></div>
   <div class="dr-body" id="dr-body">
     <div id="dr-status-row"></div>
     <div id="dr-booking-body"></div>
@@ -1713,17 +1714,41 @@ function openDrawerItem(dayIdx, itemIdx) {
   // Build booking section for about-wrap panel
   const bkEl = document.getElementById('dr-booking-section');
   // Meal info goes directly under the title
-  const mealInfoEl = document.getElementById('dr-meal-info');
+  const mealInfoEl = document.getElementById('dr-meal-wrap');
   // Transport info goes directly under the title
   const transportInfoEl = document.getElementById('dr-transport-wrap');
   if (isMeal) {
-    const mealStatusColor = item.status === 'booked' || item.status === 'confirmed' ? 'var(--amber)' : 'var(--text3)';
-    const mealStatusTxt   = { booked:'Booked', confirmed:'Booked', walkin:'Walk In Only' }[item.status] || 'Walk In Only';
-    let mealRows = `<div class="dr-bk-row"><span class="dr-bk-label">Status</span><span class="dr-bk-val" style="color:${mealStatusColor};font-weight:700;">${mealStatusTxt}</span></div>`;
-    if (item.time) mealRows += `<div class="dr-bk-row"><span class="dr-bk-label">Time</span><span class="dr-bk-val">${item.time}</span></div>`;
-    if (b && b.note) mealRows += `<div class="dr-bk-row"><span class="dr-bk-label">Notes</span><span class="dr-bk-val">${b.note}</span></div>`;
-    mealInfoEl.innerHTML = `<div class="ab-booking" style="background:var(--bg);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;">${mealRows}</div>`;
+    const mealKicker = item.kicker || 'Restaurant';
+    const mealIcon = ICO.utensils.replace('<svg', '<svg width="22" height="22"');
+    const mealStatusTxt = { booked:'Booked', confirmed:'Booked', walkin:'Walk In Only' }[item.status] || 'Walk In Only';
+    // Header block — amber background, like transport blue block
+    const headerHtml = `
+      <div class="ab-section ab-significant tr-journey-block ml-header-block">
+        <div class="tr-mode-header">
+          <span class="tr-mode-icon">${mealIcon}</span>
+          <span class="tr-mode-label">${mealKicker}</span>
+        </div>
+        ${item.time ? `<div class="tr-station">
+          <div class="tr-station-meta">
+            <span class="tr-station-label">Time</span>
+            <span class="tr-station-name">${item.title}</span>
+          </div>
+          <span class="tr-station-time">${item.time}</span>
+        </div>` : `<div class="tr-station">
+          <div class="tr-station-meta">
+            <span class="tr-station-name">${item.title}</span>
+          </div>
+        </div>`}
+      </div>`;
+    // Booking info rows
+    let bkRows = '';
+    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val">${mealStatusTxt}</span></div>`;
+    if (b && b.price) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val">${b.price}</span></div>`;
+    if (b && b.note)  bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
+    const bkCardHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title ml-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
+    mealInfoEl.innerHTML = headerHtml + bkCardHtml;
     mealInfoEl.style.display = 'block';
+    document.getElementById('dr-body').style.display = 'none';
     transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
     bkEl.innerHTML = '';
     bkEl.style.display = 'none';
@@ -1882,7 +1907,7 @@ function closeDrawer() {
   document.getElementById('drawer').classList.remove('drawer--ticket');
   document.getElementById('drawer').classList.remove('drawer--transport');
   document.getElementById('drawer').classList.remove('drawer--meal');
-  const mi = document.getElementById('dr-meal-info'); if (mi) { mi.innerHTML = ''; mi.style.display = 'none'; }
+  const mi = document.getElementById('dr-meal-wrap'); if (mi) { mi.innerHTML = ''; mi.style.display = 'none'; }
   const ti = document.getElementById('dr-transport-wrap'); if (ti) { ti.innerHTML = ''; ti.style.display = 'none'; }
   const wb = document.getElementById('dr-website-btn'); if (wb) wb.style.display = 'none';
   const mapBtn = document.querySelector('.dr-map-btn'); if (mapBtn) mapBtn.style.display = '';

@@ -1004,6 +1004,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer--meal .dr-website-btn:hover { background: var(--amber-bg); }
 .drawer--meal .dr-text-btn:not(.dr-text-btn--danger) { color: var(--amber); }
 .drawer--meal .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--amber-bg); }
+.drawer--meal .ml-header-block { background: var(--amber) !important; }
+.drawer--meal .ml-section-title { color: var(--amber) !important; }
+.drawer--meal .tr-bk-row-key { color: var(--amber); }
+#dr-meal-wrap, #dr-meal-wrap * { font-family: 'Montserrat', sans-serif !important; }
 
 .drawer--ticket .ab-significant { background: var(--activity); }
 .drawer--ticket .ab-keyfacts .ab-icon-h { color: var(--activity); }
