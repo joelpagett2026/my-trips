@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=251">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=252">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -366,7 +366,7 @@
           </div>
           <input class="field-input" id="f-transport-type" type="hidden" value="Flight">
         </div>
-        <div class="field-group">
+        <div class="field-group" id="f-status-move-group">
           <label class="field-label">Status</label>
           <div class="transport-type-row" id="f-status-move-row">
             <button type="button" class="tt-btn active" data-val="booked">Booked</button>
@@ -2072,6 +2072,8 @@ function setTransportType(val) {
   const isFlight = val === 'Flight';
   document.getElementById('flight-booking-fields').style.display = isFlight ? 'flex' : 'none';
   document.getElementById('f-move-cost-standalone').style.display = isFlight ? 'none' : '';
+  document.getElementById('f-status-move-group').style.display = isFlight ? 'none' : '';
+  if (isFlight) setMoveStatus('booked'); // flights always booked
   // Non-flight: always show booking fields (no toggle needed)
   document.getElementById('booking-toggle-btn').style.display = 'none';
   document.getElementById('booking-fields').style.display = isFlight ? 'none' : 'flex';
