@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=258">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=259">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -167,7 +167,7 @@
   </div>
 
   <!-- ABOUT THIS PLACE — outside dr-body so no inherited padding -->
-  <div id="dr-about-wrap" style="display:none; flex:1; overflow-y:auto;">
+  <div id="dr-about-wrap" style="display:none; overflow-y:auto; flex-shrink:0;">
     <div id="dr-about-body"></div>
   </div>
   <div id="dr-about-loading" style="display:none; text-align:center; padding:20px 0;">
@@ -3114,8 +3114,7 @@ function renderAbout(about) {
     </div>` : ''}
   `;
 
-  document.getElementById('dr-about-wrap').style.display = 'flex';
-  document.getElementById('dr-about-wrap').style.flexDirection = 'column';
+  document.getElementById('dr-about-wrap').style.display = 'block';
   document.getElementById('dr-body').style.display = 'none';
   const regenBtn = document.getElementById('dr-btn-regen');
   if (regenBtn) regenBtn.style.display = '';
