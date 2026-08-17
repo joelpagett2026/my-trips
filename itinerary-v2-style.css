@@ -177,7 +177,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-text{flex:1;min-width:0;}
 .tl-title{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:2px;}
 .tl-sub{font-size:11.5px;color:var(--text2);font-weight:500;line-height:1.4;}
-.tl-note{font-size:11px;color:var(--text2);font-style:italic;line-height:1.4;margin-top:2px;}
+.tl-note{font-size:11.5px;color:var(--text2);font-weight:500;font-style:normal;line-height:1.4;margin-top:2px;}
 .tl-meta{display:flex;align-items:center;gap:7px;margin-top:5px;flex-wrap:wrap;}
 .tl-meta--flight{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:2px;}
 .tl-price{font-size:11px;font-weight:600;color:var(--text2);}
@@ -708,6 +708,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .tl-text { min-width: 0; }
   .tl-title { font-size: 13px; line-height: 1.3; }
   .tl-sub   { font-size: 11px; line-height: 1.4; }
+  .tl-note  { font-size: 11px; }
 
   /* Meta row wraps if needed */
   .tl-meta { gap: 5px; margin-top: 4px; }
