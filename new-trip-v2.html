@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=242">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=243">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1821,7 +1821,7 @@ function openDrawerItem(dayIdx, itemIdx) {
     if (item.status) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Status</span><span class="tr-bk-row-val" style="color:${statusColor};">${statusTxt}</span></div>`;
     if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Cost per person</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
     if (b.tickets) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Tickets</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.tickets}</span></div>`;
-    if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
+    if (b.ref && isTicket) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
     if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
     bkEl.innerHTML = bkRows ? `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title act-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>` : '';
     bkEl.style.display = bkRows ? 'block' : 'none';

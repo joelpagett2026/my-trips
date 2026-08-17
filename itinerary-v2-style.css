@@ -513,6 +513,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .tt-btn:hover { border-color: var(--teal); color: var(--teal); }
 .tt-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+/* Category selector — per-type active colours */
+#f-category-row .tt-btn[data-cat="attraction"].active { background: var(--activity); border-color: var(--activity); }
+#f-category-row .tt-btn[data-cat="attraction"]:hover:not(.active) { border-color: var(--activity); color: var(--activity); }
+#f-category-row .tt-btn[data-cat="meal"].active { background: var(--amber); border-color: var(--amber); }
+#f-category-row .tt-btn[data-cat="meal"]:hover:not(.active) { border-color: var(--amber); color: var(--amber); }
 /* Meal/Restaurant modal — amber theming */
 #fields-meal .field-label { color: var(--amber); }
 #fields-meal .field-input:focus,
