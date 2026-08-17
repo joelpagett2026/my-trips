@@ -984,14 +984,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   text-transform: uppercase; color: var(--transport); flex: 1;
 }
 .tr-bk-row-val {
-  font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--text2);
+  font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--text);
   text-align: right;
 }
 .tr-bk-row-val--strong { font-weight: 700; color: var(--text); }
-.tr-bk-row-val--status {
-  font-family: var(--font); font-weight: 700; color: var(--transport);
-  text-transform: uppercase; font-size: 11px; letter-spacing: 0.09em;
-}
+.tr-bk-row-val--status { font-weight: 700; color: var(--text); }
 
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
 /* ── MEAL drawer — amber theme ── */
