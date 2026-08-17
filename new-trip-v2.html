@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=248">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=249">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -374,7 +374,7 @@
           </div>
           <input class="field-input" id="f-status-move" type="hidden" value="booked">
         </div>
-        <div class="field-group">
+        <div class="field-group" id="f-move-cost-standalone">
           <label class="field-label">Cost</label>
           <input class="field-input" id="f-move-cost" type="text">
         </div>
@@ -402,13 +402,19 @@
 
       <!-- Flight booking fields (always visible for flights) -->
       <div id="flight-booking-fields" style="display:none;flex-direction:column;gap:13px;">
-        <div class="field-group">
-          <label class="field-label">Booking reference</label>
-          <input class="field-input" id="f-ref" type="text">
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Cost</label>
+            <input class="field-input" id="f-move-cost-flight" type="text">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Booking reference</label>
+            <input class="field-input" id="f-ref" type="text">
+          </div>
         </div>
         <div class="field-group">
           <label class="field-label">Avios</label>
-          <input class="field-input" id="f-avios" type="text" placeholder="e.g. 25000">
+          <input class="field-input" id="f-avios" type="text">
         </div>
       </div>
 
@@ -1977,7 +1983,9 @@ function openEditItem(dayIdx, itemIdx) {
     document.getElementById('f-to').value        = tr.to   || (item.title||'').split(' → ')[1] || '';
     document.getElementById('f-depart').value    = tr.depart || item.time || '';
     document.getElementById('f-arrive').value    = tr.arrive || '';
-    document.getElementById('f-move-cost').value = (item.booking && item.booking.price) || '';
+    const editCost = (item.booking && item.booking.price) || '';
+    document.getElementById('f-move-cost').value = editCost;
+    document.getElementById('f-move-cost-flight').value = editCost;
     const moveStatusMap = { booked:'booked', confirmed:'booked', payonuse:'payonuse', na:'na' };
     setMoveStatus(moveStatusMap[item.status] || 'na');
     const isFlight = (tr.mode || item.kicker) === 'Flight';
@@ -2021,7 +2029,7 @@ function clearForm() {
   ['f-place-location','f-place-time','f-place-notes','f-place-website',
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
-   'f-from','f-to','f-depart','f-arrive','f-move-cost',
+   'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
    'f-ref','f-ref-other','f-tickets','f-url','f-avios'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
@@ -2059,16 +2067,18 @@ function onCategoryChange() {
     const colMap = { place: 'var(--teal)', attraction: 'var(--activity)', meal: 'var(--amber)', move: 'var(--transport)' };
     saveBtn.style.background = colMap[type] || 'var(--teal)';
   }
-  // booking-toggle-btn visibility is handled by setTransportType for move items
-  if (type !== 'move') { showBookingFields(false); document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
+  // Hide transport-specific booking panels when not on transport
+  if (type !== 'move') { document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('booking-fields').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
 }
 
 function setTransportType(val) {
   document.getElementById('f-transport-type').value = val;
   const isFlight = val === 'Flight';
   document.getElementById('flight-booking-fields').style.display = isFlight ? 'flex' : 'none';
-  document.getElementById('booking-toggle-btn').style.display = isFlight ? 'none' : '';
-  if (isFlight) showBookingFields(false);
+  document.getElementById('f-move-cost-standalone').style.display = isFlight ? 'none' : '';
+  // Non-flight: always show booking fields (no toggle needed)
+  document.getElementById('booking-toggle-btn').style.display = 'none';
+  document.getElementById('booking-fields').style.display = isFlight ? 'none' : 'flex';
   document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
@@ -2167,7 +2177,8 @@ function saveItem() {
     const to     = document.getElementById('f-to').value.trim();
     const depart = document.getElementById('f-depart').value;
     const arrive = document.getElementById('f-arrive').value;
-    const cost   = document.getElementById('f-move-cost').value.trim();
+    const isFlight = tType === 'Flight';
+    const cost   = isFlight ? document.getElementById('f-move-cost-flight').value.trim() : document.getElementById('f-move-cost').value.trim();
     const statusV = document.getElementById('f-status-move').value || 'na';
     if (!from && !to) { document.getElementById('f-from').focus(); return; }
     const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Tram:'move', Taxi:'move' };
@@ -2177,7 +2188,7 @@ function saveItem() {
     item = { time, type, period, title, sub, status: statusV,
              transport: { mode: tType, from, to, depart, arrive },
              icoType: icoMap[tType] || 'move', kicker: tType };
-    if (tType === 'Flight') {
+    if (isFlight) {
       const ref   = document.getElementById('f-ref').value.trim();
       const avios = document.getElementById('f-avios').value.trim();
       if (cost || ref) item.booking = { ref, price: cost, tickets: '', url: '', note: (orig && orig.booking && orig.booking.note) || '' };
