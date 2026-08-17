@@ -1023,6 +1023,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #dr-about-wrap, #dr-about-wrap *, #dr-body .tr-bk-card, #dr-body .tr-bk-card * {
   font-family: 'Montserrat', sans-serif !important;
 }
+#dr-body .tr-bk-card { background: var(--bg); border-bottom: none; }
+#dr-body .tr-bk-row-item { padding: 11px 0; }
+#dr-body .tr-section-title { margin-bottom: 10px !important; }
 .drawer--ticket .dr-map-btn { background: var(--activity); }
 .drawer--ticket .dr-map-btn:hover { background: #4a7458; }
 .drawer--ticket .dr-website-btn { border-color: var(--activity); color: var(--activity); }
