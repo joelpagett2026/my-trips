@@ -932,17 +932,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── TRANSPORT PANEL — flat attraction-style layout ── */
 
-/* Journey card — solid blue block, white text throughout */
+/* Journey card — solid blue card, white text throughout */
 .tr-journey-card {
-  margin-top: 0;
+  margin: 14px 16px 0;
   background: var(--transport);
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 /* Mode header band */
 .tr-mode-bar {
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .tr-mode-icon { display: flex; align-items: center; color: #fff; opacity: 0.85; }
 .tr-mode-icon svg { display: block; }
@@ -983,24 +985,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* Duration strip */
 .tr-mid {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 16px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0,0,0,0.08);
 }
-.tr-mid-line { flex: 1; height: 1px; background: rgba(255,255,255,0.25); }
-.tr-mid-line--full { }
+.tr-mid-line { flex: 1; height: 1px; background: rgba(255,255,255,0.2); }
 .tr-mid-dur {
-  font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.8);
-  white-space: nowrap;
+  font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,0.75);
+  white-space: nowrap; letter-spacing: 0.02em;
 }
 
 /* Booking info — flat section header + icon rows */
-.tr-bk-card { margin-top: 14px; }
+.tr-bk-card { margin-top: 20px; }
 .tr-section-title {
   font-size: 9px; font-weight: 800; letter-spacing: 0.09em;
   text-transform: uppercase; color: var(--transport);
-  padding: 10px 16px 6px;
+  padding: 0 16px 10px;
 }
 .tr-bk-rows { display: flex; flex-direction: column; }
 .tr-bk-row-item {
@@ -1020,10 +1020,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .tr-bk-row-val--strong { font-weight: 700; color: var(--text); }
 .tr-bk-status-pill {
-  font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.05em;
   text-transform: uppercase; color: var(--transport);
-  background: var(--transport-bg);
-  padding: 3px 10px; border-radius: 20px;
 }
 
 /* ── TICKET / ATTRACTION — swap teal → activity green ── */
