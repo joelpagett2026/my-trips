@@ -513,6 +513,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .tt-btn:hover { border-color: var(--teal); color: var(--teal); }
 .tt-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+/* Attraction modal — green theming */
+#fields-attraction .field-label { color: var(--activity); }
+#fields-attraction .field-input:focus,
+#fields-attraction .field-select:focus,
+#fields-attraction .field-textarea:focus { border-color: var(--activity); }
+#fields-attraction .tt-btn:hover { border-color: var(--activity); color: var(--activity); }
+#fields-attraction .tt-btn.active { background: var(--activity); border-color: var(--activity); color: #fff; }
 #fields-standard, #fields-transport { display: flex; flex-direction: column; gap: 13px; }
 
 /* ── HIDDEN PERIOD RESTORE ── */
