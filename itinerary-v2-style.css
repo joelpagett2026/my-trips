@@ -522,7 +522,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #f-category-row .tt-btn[data-cat="move"]:hover:not(.active) { border-color: var(--transport); color: var(--transport); }
 /* Transport modal — blue theming */
 #fields-transport .field-label,
-#flight-booking-fields .field-label { color: var(--transport); }
+#flight-booking-fields .field-label,
+#booking-fields .field-label { color: var(--transport); }
+#booking-fields .field-input:focus { border-color: var(--transport); }
+#booking-toggle-btn { color: var(--transport) !important; background: var(--transport-bg) !important; }
+#booking-toggle-btn:hover { background: rgba(82,107,130,0.18) !important; }
 #fields-transport .field-input:focus,
 #fields-transport .field-select:focus,
 #fields-transport .field-textarea:focus,
