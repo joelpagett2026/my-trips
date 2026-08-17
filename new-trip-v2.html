@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=218">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=219">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -155,9 +155,10 @@
       <div class="dr-title" id="dr-title"></div>
       <div class="dr-sub" id="dr-sub"></div>
       <div id="dr-meal-info" style="display:none; margin-top:10px;"></div>
-      <div id="dr-transport-info" style="display:none;"></div>
     </div>
   </div>
+  <!-- TRANSPORT PANEL — outside dr-head so sections go edge-to-edge -->
+  <div id="dr-transport-wrap" style="display:none; flex-shrink:0; overflow-y:auto; flex:1;"></div>
   <div class="dr-body" id="dr-body">
     <div id="dr-status-row"></div>
     <div id="dr-booking-body"></div>
@@ -1714,7 +1715,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   // Meal info goes directly under the title
   const mealInfoEl = document.getElementById('dr-meal-info');
   // Transport info goes directly under the title
-  const transportInfoEl = document.getElementById('dr-transport-info');
+  const transportInfoEl = document.getElementById('dr-transport-wrap');
   if (isMeal) {
     const mealStatusColor = item.status === 'booked' || item.status === 'confirmed' ? 'var(--amber)' : 'var(--text3)';
     const mealStatusTxt   = { booked:'Booked', confirmed:'Booked', walkin:'Walk In Only' }[item.status] || 'Walk In Only';
@@ -1796,6 +1797,7 @@ function openDrawerItem(dayIdx, itemIdx) {
         </div>` : '';
       transportInfoEl.innerHTML = journeyHtml + bkCardHtml;
       transportInfoEl.style.display = 'block';
+      document.getElementById('dr-body').style.display = 'none';
     } else {
       transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
     }
@@ -1881,7 +1883,7 @@ function closeDrawer() {
   document.getElementById('drawer').classList.remove('drawer--transport');
   document.getElementById('drawer').classList.remove('drawer--meal');
   const mi = document.getElementById('dr-meal-info'); if (mi) { mi.innerHTML = ''; mi.style.display = 'none'; }
-  const ti = document.getElementById('dr-transport-info'); if (ti) { ti.innerHTML = ''; ti.style.display = 'none'; }
+  const ti = document.getElementById('dr-transport-wrap'); if (ti) { ti.innerHTML = ''; ti.style.display = 'none'; }
   const wb = document.getElementById('dr-website-btn'); if (wb) wb.style.display = 'none';
   const mapBtn = document.querySelector('.dr-map-btn'); if (mapBtn) mapBtn.style.display = '';
 }
