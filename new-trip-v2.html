@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=256">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=257">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -394,14 +394,6 @@
             <input class="field-input" id="f-arrive" type="time">
           </div>
         </div>
-        <div class="field-group" id="f-move-cost-standalone">
-          <label class="field-label">Cost</label>
-          <input class="field-input" id="f-move-cost" type="text">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Notes</label>
-          <textarea class="field-textarea" id="f-move-notes"></textarea>
-        </div>
       </div>
 
       <!-- Flight booking fields (always visible for flights) -->
@@ -420,21 +412,36 @@
           <label class="field-label">Avios</label>
           <input class="field-input" id="f-avios" type="text">
         </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-move-notes-flight"></textarea>
+        </div>
       </div>
 
-      <!-- Non-flight transport booking toggle -->
-      <button class="booking-toggle" id="booking-toggle-btn" style="display:none;" onclick="toggleBooking()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-        Add booking reference
-      </button>
-      <div class="booking-fields" id="booking-fields" style="display:none;">
-        <div class="field-group" id="f-ref-other-group">
-          <label class="field-label">Booking reference</label>
-          <input class="field-input" id="f-ref-other" type="text">
+      <!-- Non-flight transport booking fields (always visible) -->
+      <button class="booking-toggle" id="booking-toggle-btn" style="display:none;" onclick="toggleBooking()"></button>
+      <div class="booking-fields" id="booking-fields" style="display:none;flex-direction:column;gap:13px;">
+        <div class="field-row" id="f-move-cost-standalone">
+          <div class="field-group">
+            <label class="field-label">Cost</label>
+            <input class="field-input" id="f-move-cost" type="text">
+          </div>
+          <div class="field-group" id="f-ref-other-group">
+            <label class="field-label">Booking reference</label>
+            <input class="field-input" id="f-ref-other" type="text">
+          </div>
+        </div>
+        <div class="field-group" id="f-operator-group" style="display:none;">
+          <label class="field-label">Operator</label>
+          <input class="field-input" id="f-operator" type="text" placeholder="e.g. Flixbus, National Rail">
         </div>
         <div class="field-group">
           <label class="field-label">Timetable URL</label>
           <input class="field-input" id="f-url" type="url">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <textarea class="field-textarea" id="f-move-notes"></textarea>
         </div>
       </div>
     </div><!-- /modal-body-single -->
@@ -1212,7 +1219,7 @@ function makeItemNode(item, idx) {
       '<div class="tl-text">' +
         '<div class="tl-title">' + (item._hotelBreakfast ? item._hotelBreakfast : (item.title||'')) + '</div>' +
         (!isHBF && !isTransportItem && item.sub && item.sub !== item.title ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
-        (!isHBF && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
+        (!isHBF && !isTransportItem && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
         (meta     ? '<div class="' + (isTransportItem ? 'tl-meta--flight' : 'tl-meta') + '">' + meta + '</div>' : '') +
       '</div>' +
       (isHBF ? '' : '<button class="tl-more-btn">···</button>') +
@@ -1773,6 +1780,8 @@ function openDrawerItem(dayIdx, itemIdx) {
       if (b.price)   bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Price</span><span class="tr-bk-row-val tr-bk-row-val--strong">${b.price}</span></div>`;
       if (b.ref)     bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${b.ref}</span></div>`;
       if (isFlight && item._avios) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Avios</span><span class="tr-bk-row-val tr-bk-row-val--strong">${parseInt(item._avios).toLocaleString()}</span></div>`;
+      const opName = tr.operator || '';
+      if (!isFlight && opName) bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Operator</span><span class="tr-bk-row-val">${opName}</span></div>`;
       if (b.note)    bkRows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${b.note}</span></div>`;
       if (bkRows) bkCardHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Booking Information</div><div class="tr-bk-rows">${bkRows}</div></div>`;
     }
@@ -1986,16 +1995,18 @@ function openEditItem(dayIdx, itemIdx) {
     const editCost = (item.booking && item.booking.price) || '';
     document.getElementById('f-move-cost').value = editCost;
     document.getElementById('f-move-cost-flight').value = editCost;
-    document.getElementById('f-move-notes').value = (item.booking && item.booking.note) || '';
     const moveStatusMap = { booked:'booked', confirmed:'booked', payonuse:'payonuse', na:'na' };
     setMoveStatus(moveStatusMap[item.status] || 'na');
     const isFlight = (tr.mode || item.kicker) === 'Flight';
     if (isFlight) {
       document.getElementById('f-ref').value   = (item.booking && item.booking.ref) || '';
       document.getElementById('f-avios').value = item._avios || '';
-    } else if (item.booking && (item.booking.ref || item.booking.url)) {
-      document.getElementById('f-ref-other').value = item.booking.ref || '';
-      document.getElementById('f-url').value       = item.booking.url || '';
+      document.getElementById('f-move-notes-flight').value = (item.booking && item.booking.note) || '';
+    } else {
+      document.getElementById('f-ref-other').value = (item.booking && item.booking.ref) || '';
+      document.getElementById('f-url').value       = (item.booking && item.booking.url) || '';
+      document.getElementById('f-move-notes').value = (item.booking && item.booking.note) || '';
+      document.getElementById('f-operator').value  = (tr.operator) || '';
     }
   } else if (cat === 'attraction') {
     document.getElementById('f-att-name').value  = item.title || '';
@@ -2029,7 +2040,7 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
-   'f-ref','f-ref-other','f-url','f-avios','f-move-notes'].forEach(id => {
+   'f-ref','f-ref-other','f-url','f-avios','f-operator','f-move-notes','f-move-notes-flight'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   setAttBooked('notbooked');
@@ -2072,13 +2083,16 @@ function onCategoryChange() {
 function setTransportType(val) {
   document.getElementById('f-transport-type').value = val;
   const isFlight = val === 'Flight';
+  const hasOperator = ['Bus','Coach','Ferry','Train'].includes(val);
   document.getElementById('flight-booking-fields').style.display = isFlight ? 'flex' : 'none';
-  document.getElementById('f-move-cost-standalone').style.display = isFlight ? 'none' : '';
   document.getElementById('f-status-move-group').style.display = isFlight ? 'none' : '';
   if (isFlight) setMoveStatus('booked'); // flights always booked
   // Non-flight: always show booking fields (no toggle needed)
   document.getElementById('booking-toggle-btn').style.display = 'none';
   document.getElementById('booking-fields').style.display = isFlight ? 'none' : 'flex';
+  // Operator only for Bus, Coach, Ferry, Train
+  const opGroup = document.getElementById('f-operator-group');
+  if (opGroup) opGroup.style.display = hasOperator ? '' : 'none';
   document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
@@ -2181,16 +2195,18 @@ function saveItem() {
     const depart = document.getElementById('f-depart').value;
     const arrive = document.getElementById('f-arrive').value;
     const isFlight = tType === 'Flight';
+    const hasOperator = ['Bus','Coach','Ferry','Train'].includes(tType);
     const cost   = isFlight ? document.getElementById('f-move-cost-flight').value.trim() : document.getElementById('f-move-cost').value.trim();
-    const moveNote = document.getElementById('f-move-notes').value.trim();
+    const moveNote = isFlight ? document.getElementById('f-move-notes-flight').value.trim() : document.getElementById('f-move-notes').value.trim();
+    const operator = hasOperator ? document.getElementById('f-operator').value.trim() : '';
     const statusV = document.getElementById('f-status-move').value || 'na';
     if (!from && !to) { document.getElementById('f-from').focus(); return; }
     const icoMap = { Flight:'plane', Train:'move', Coach:'move', Bus:'move', Ferry:'move', Tram:'move', Taxi:'move' };
     time  = depart;
     title = [from, to].filter(Boolean).join(' → ');
-    const sub = [tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
+    const sub = [operator || tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
     item = { time, type, period, title, sub, status: statusV,
-             transport: { mode: tType, from, to, depart, arrive },
+             transport: { mode: tType, from, to, depart, arrive, operator },
              icoType: icoMap[tType] || 'move', kicker: tType };
     if (isFlight) {
       const ref   = document.getElementById('f-ref').value.trim();
