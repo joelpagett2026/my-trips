@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=261">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=262">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -169,9 +169,9 @@
   <!-- ABOUT THIS PLACE — outside dr-body so no inherited padding -->
   <div id="dr-about-wrap" style="display:none; flex:1; overflow-y:auto; flex-direction:column;">
     <div id="dr-about-body"></div>
-    <!-- BOOKING INFO — inside scroll area so it flows after content -->
-    <div id="dr-booking-section" style="display:none; border-top:1px solid var(--line);"></div>
   </div>
+  <!-- BOOKING INFO — pinned above action bar -->
+  <div id="dr-booking-section" style="display:none; flex-shrink:0; border-top:1px solid var(--line);"></div>
   <div id="dr-about-loading" style="display:none; text-align:center; padding:20px 0;">
     <div class="dr-about-spinner"></div>
     <div style="font-size:11px; color:var(--text3); margin-top:8px;">Generating visitor info…</div>
