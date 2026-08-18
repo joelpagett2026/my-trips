@@ -939,9 +939,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 /* Side-by-side buttons for attraction + transport drawers */
 .drawer--ticket .dr-action-bar { flex-direction: column; }
-.drawer--ticket .dr-btn-row { display: flex; gap: 10px; }
-.drawer--ticket .dr-btn-row .dr-website-btn,
-.drawer--ticket .dr-btn-row .dr-map-btn { flex: 1; width: auto; }
+.dr-btn-row { display: flex; gap: 10px; }
+.dr-btn-row .dr-website-btn,
+.dr-btn-row .dr-timetable-btn,
+.dr-btn-row .dr-map-btn { flex: 1; width: auto; padding: 10px 8px; font-size: 12px; }
 .drawer--transport .dr-btn-row { display: flex; gap: 10px; }
 .drawer--transport .dr-btn-row .dr-timetable-btn,
 .drawer--transport .dr-btn-row .dr-map-btn { flex: 1; width: auto; }
