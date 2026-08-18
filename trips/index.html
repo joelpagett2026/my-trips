@@ -484,6 +484,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
       <div class="modal-field"><div class="modal-label">Travellers</div><input class="modal-inp" id="m-trav" placeholder="2" type="number" min="1" max="20" autocomplete="off"></div>
       <div class="modal-field"><div class="modal-label">Status</div><select class="modal-select" id="m-status"><option value="upcoming">Upcoming</option><option value="planning">Planning</option><option value="past">Completed</option></select></div>
     </div>
+    <div class="modal-field">
+      <div class="modal-label">Cover photo (optional)</div>
+      <input type="file" id="m-photo-file" accept="image/*" style="display:none;" onchange="onNewTripPhotoSelected(this)">
+      <div id="m-photo-preview" style="display:none;position:relative;border-radius:10px;overflow:hidden;margin-bottom:8px;">
+        <img id="m-photo-img" style="width:100%;height:120px;object-fit:cover;display:block;">
+        <button type="button" onclick="clearNewTripPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-weight:600;">✕ Remove</button>
+      </div>
+      <button type="button" id="m-photo-btn" onclick="document.getElementById('m-photo-file').click()" class="modal-inp" style="text-align:left;cursor:pointer;color:#666666;">📷 Upload a photo…</button>
+      <div id="m-photo-status" style="display:none;font-size:11px;color:#666666;margin-top:4px;font-weight:500;"></div>
+    </div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="modal-btn modal-btn-create" id="create-btn" onclick="createTrip()">Create itinerary →</button>
@@ -1179,6 +1189,7 @@ async function seedAndRender() {
 
 function openModal(e){
   e.preventDefault();
+  clearNewTripPhoto();
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(()=>{
     document.getElementById('m-dest').focus();
@@ -1191,6 +1202,58 @@ function openModal(e){
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+// ── NEW TRIP: COVER PHOTO UPLOAD ────────────────────────────────────────
+// Same resize/encode approach used by new-trip-v2.html's Trip Settings
+// cover-photo upload, just scoped to the New Trip modal so the photo can
+// be attached at creation time and feed both the trip's own page and its
+// homepage dashboard card immediately.
+let newTripPhoto = null;
+
+function resizeAndEncode(file, maxW, maxH) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      const ratio = Math.min(maxW / w, maxH / h, 1);
+      w = Math.round(w * ratio); h = Math.round(h * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onNewTripPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('m-photo-status');
+  status.style.display = 'block'; status.textContent = 'Processing…';
+  try {
+    const b64 = await resizeAndEncode(file, 900, 560);
+    newTripPhoto = b64;
+    document.getElementById('m-photo-img').src = b64;
+    document.getElementById('m-photo-preview').style.display = 'block';
+    document.getElementById('m-photo-btn').style.display = 'none';
+    status.style.display = 'none';
+  } catch (e) {
+    status.textContent = 'Could not process that image';
+  }
+}
+
+function clearNewTripPhoto() {
+  newTripPhoto = null;
+  document.getElementById('m-photo-preview').style.display = 'none';
+  document.getElementById('m-photo-btn').style.display = 'block';
+  document.getElementById('m-photo-file').value = '';
+  document.getElementById('m-photo-status').style.display = 'none';
+}
 
 async function createTrip(){
   const btn=document.getElementById('create-btn');
@@ -1219,12 +1282,12 @@ async function createTrip(){
     } catch(geoErr) { /* geocode failed silently, card will show without map */ }
 
     // Create the dedicated HTML page on the server
-    const res = await apiCall('create_page', {}, {slug, dest, dep, ret, trav, status});
+    const res = await apiCall('create_page', {}, {slug, dest, dep, ret, trav, status, photo: newTripPhoto || ''});
     const url = res && res.url ? res.url : '/trips/' + slug + '.html';
 
     // Register in trip registry with map data
     const existing = await loadRegistry();
-    existing.push({dest, dep, ret, trav, status, slug, url, points, flags, cities, created: Date.now()});
+    existing.push({dest, dep, ret, trav, status, slug, url, points, flags, cities, created: Date.now(), photo: newTripPhoto || ''});
     await saveRegistry(existing);
 
     window.location.href = url;
