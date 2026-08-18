@@ -937,6 +937,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: var(--surface); flex-shrink: 0;
   padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
+/* Side-by-side buttons for attraction drawer */
+.drawer--ticket .dr-action-bar { flex-direction: column; }
+.drawer--ticket .dr-btn-row { display: flex; gap: 10px; }
+.drawer--ticket .dr-btn-row .dr-website-btn,
+.drawer--ticket .dr-btn-row .dr-map-btn { flex: 1; width: auto; }
 /* Full-width map button */
 .dr-map-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
