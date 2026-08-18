@@ -1,19 +1,12 @@
 <?php
-@include_once __DIR__ . '/secrets.php';
 // ══════════════════════════════════════════════════════════════════════
-//  MY TRIPS — API
-//  Configure the four constants below, then upload to your server.
+// MY TRIPS — API
 // ══════════════════════════════════════════════════════════════════════
-
-define('DB_HOST', 'sdb-77.hosting.stackcp.net');      // Usually 'localhost' on shared hosting
-define('DB_NAME', 'claudedb-35303735bca3');   // Your MySQL database name
-define('DB_USER', 'claudedb-35303735bca3');   // Your MySQL username
-define('DB_PASS', 'v^l]&AyQxr4G');   // Your MySQL password
+require_once __DIR__ . '/db-config.php'; // DB_HOST/DB_NAME/DB_USER/DB_PASS/PUBLIC_HTML + db()
 
 // PIN hash — SHA-256 of your PIN. Default is 0103.
 // To change: php -r "echo hash('sha256', 'YOURPIN');"
 define('PIN_HASH', '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395');
-define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
 
 // ══════════════════════════════════════════════════════════════════════
 //  NO CHANGES NEEDED BELOW THIS LINE
@@ -37,20 +30,6 @@ if ($action !== 'auth' && $action !== 'share_load') {
         echo json_encode(['error' => 'Unauthorised']);
         exit;
     }
-}
-
-// ── DATABASE ──────────────────────────────────────────────────────────
-function db(): PDO {
-    static $pdo;
-    if (!$pdo) {
-        $pdo = new PDO(
-            'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
-            DB_USER, DB_PASS,
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
-        );
-    }
-    return $pdo;
 }
 
 function ok(mixed $data = null): void {
@@ -133,45 +112,17 @@ switch ($action) {
         $status = $body['status'] ?? 'upcoming';
         if (!$slug || !$dest) fail('Missing slug or dest');
 
-        // Read new-trip.html template
-        $template = file_get_contents(__DIR__ . '/new-trip.html');
-        if (!$template) fail('Template not found');
+        // Reserved paths that must never be shadowed by a dynamic trip slug
+    $reserved = ['index', 'settings', 'new-trip', 'new-trip-v2', 'budget-template',
+    'api', 'deploy-webhook', 'trip', 'db-config', 'robots', 'favicon',
+    'trips', 'holidays', 'icons', 'concerts', 'parks', 'shows', 'private'];
+if (in_array($slug, $reserved, true)) fail('That trip name is reserved — please choose another');
 
-        // Bake in the record ID and suppress URL-param reading
-        $page = str_replace(
-            "// Read URL params
-const params = new URLSearchParams(window.location.search);
-const dest   = params.get('dest') || 'New Trip';
-const dep    = params.get('dep')  || '';
-const ret    = params.get('ret')  || '';
-const trav   = params.get('trav') || '2';
-const status = params.get('status') || 'upcoming';
-const slug   = params.get('slug') || 'new-trip';
-
-// Use slug as the database record ID
-const RECORD_ID = slug;",
-            "// Baked-in trip data
-const dest   = " . json_encode($dest) . ";
-const dep    = " . json_encode($dep) . ";
-const ret    = " . json_encode($ret) . ";
-const trav   = " . json_encode($trav) . ";
-const status = " . json_encode($status) . ";
-const slug   = " . json_encode($slug) . ";
-
-// Use slug as the database record ID
-const RECORD_ID = slug;",
-            $template
-        );
-
-        // Update the <title>
-        $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
-
-        // Write to public_html
-        $outPath = PUBLIC_HTML . '/' . $slug . '.html';
-        if (!defined('PUBLIC_HTML')) define('PUBLIC_HTML', '/home/sites/31a/d/dbd40dd264/public_html');
-        if (file_put_contents($outPath, $page) === false) fail('Could not write file');
-
-        ok(['slug' => $slug, 'url' => '/' . $slug . '.html']);
+// v2 trips are no longer baked to a static file. trip.php renders the
+// page fresh on every request straight from new-trip-v2.html + this
+// trip's saved data, so future template edits reach every trip
+// (old and new) automatically — no regeneration step required.
+ok(['slug' => $slug, 'url' => '/' . $slug]);
 
     // ── SHARE: CREATE A SHARE LINK (owner only) ────────────────────────
     // POST /api.php?action=create_share  { "trip_id": "gothenburg-2026" }
