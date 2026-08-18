@@ -1,5 +1,16 @@
 Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 
+# Dynamic v2 trip pages — clean-URL trips (e.g. /porto-2027) with no real
+# file or directory on disk are routed to trip.php, which renders them
+# fresh from new-trip-v2.html + the DB on every request. Existing baked
+# .html trips (real files) are left completely alone and win by default.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
+</IfModule>
+
 # Browser caching for static assets
 <IfModule mod_expires.c>
   ExpiresActive On
