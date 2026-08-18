@@ -110,6 +110,7 @@ switch ($action) {
         $ret    = $body['ret']  ?? '';
         $trav   = $body['trav'] ?? '2';
         $status = $body['status'] ?? 'upcoming';
+        $photo  = $body['photo'] ?? '';
         if (!$slug || !$dest) fail('Missing slug or dest');
 
         // Reserved paths that must never be shadowed by a dynamic trip slug
@@ -122,6 +123,26 @@ if (in_array($slug, $reserved, true)) fail('That trip name is reserved — pleas
 // page fresh on every request straight from new-trip-v2.html + this
 // trip's saved data, so future template edits reach every trip
 // (old and new) automatically — no regeneration step required.
+
+// If a cover photo was supplied at creation time, seed a full initial
+// record now so the trip's own page shows it immediately. new-trip-v2.html's
+// loadData() only treats a saved record as "existing" when it already has
+// a `days` array — otherwise it discards any partial seed and falls back
+// to defaults, so we must write a complete, valid record here.
+if ($photo) {
+    $seed = [
+        'days' => [[ 'date' => $dep, 'loc' => $dest, 'title' => 'Day 1', 'items' => [] ]],
+        'meta' => [
+            'dest' => $dest, 'dep' => $dep, 'ret' => $ret, 'trav' => $trav, 'status' => $status,
+            'hotel' => null, 'budget' => null, 'coverPhoto' => $photo,
+        ],
+    ];
+    $seedJson = json_encode($seed);
+    db()->prepare("INSERT INTO itinerary (id, data, updated_at) VALUES (?, ?, NOW())
+                   ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()")
+        ->execute([$slug, $seedJson]);
+}
+
 ok(['slug' => $slug, 'url' => '/' . $slug]);
 
     // ── SHARE: CREATE A SHARE LINK (owner only) ────────────────────────
