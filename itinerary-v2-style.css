@@ -962,6 +962,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .bv-panel-head-ico svg { width: 11px; height: 11px; }
 .bv-panel-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); }
+.bv-panel-subcount { font-size: 9px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text3); margin-left: 6px; }
 .bv-panel-total { font-size: 13px; font-weight: 800; color: var(--teal); }
 .bv-panel-body  { flex: 1; }
 .bv-row { display: flex; align-items: flex-start; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--line); }

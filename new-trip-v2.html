@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=269">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=270">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -3716,12 +3716,12 @@ function renderBudgetView() {
       </div>
     </div>`;
 
-  const mkPanel = (ico, icoBg, icoColor, title, total, rows, footHtml) =>
+  const mkPanel = (ico, icoBg, icoColor, title, total, rows, footHtml, subCount) =>
     `<div class="bv-panel">
       <div class="bv-panel-head">
         <div class="bv-panel-head-left">
           <div class="bv-panel-head-ico" style="background:${icoBg};color:${icoColor}">${ico}</div>
-          <span class="bv-panel-title">${title}</span>
+          <span class="bv-panel-title">${title}${subCount ? `<span class="bv-panel-subcount">${subCount}</span>` : ''}</span>
         </div>
         ${total ? `<span class="bv-panel-total">${fmt(total)}</span>` : ''}
       </div>
@@ -3767,7 +3767,11 @@ function renderBudgetView() {
     )
   ).join('');
 
-  const accomFoot = hotelTotal ? `<div class="bv-foot-row"><span>Total stay</span><span>${fmt(hotelTotal)}</span></div>` : '';
+  const avgNightly = hotels.length ? hotels.reduce((a,h)=>a+(h.nightly||0),0) / hotels.length : 0;
+  const accomFoot = [
+    hotelTotal ? `<div class="bv-foot-row"><span>Total stay</span><span>${fmt(hotelTotal)}</span></div>` : '',
+    hotels.length > 1 ? `<div class="bv-foot-row"><span>${hotels.length} hotels</span><span>${fmt(avgNightly)}/night avg</span></div>` : '',
+  ].filter(Boolean).join('');
   const travelFoot = [
     travelTotal ? `<div class="bv-foot-row"><span>Total</span><span>${fmt(travelTotal)}</span></div>` : '',
     totalAvios  ? `<div class="bv-foot-row"><span>Avios earned</span><span>${totalAvios.toLocaleString()}</span></div>` : '',
@@ -3793,7 +3797,7 @@ function renderBudgetView() {
     `<div class="bv-breakdown">
       <div class="bv-breakdown-title">Itemised Breakdown</div>
       <div class="bv-grid">
-        ${mkPanel(icoHotel, 'rgba(14,122,135,0.1)', '#0e7a87', 'Accommodation', hotelTotal, accomRows, accomFoot)}
+        ${mkPanel(icoHotel, 'rgba(14,122,135,0.1)', '#0e7a87', 'Accommodation', hotelTotal, accomRows, accomFoot, hotels.length > 1 ? hotels.length + ' hotels' : null)}
         ${mkPanel(icoFlight, 'rgba(82,107,130,0.1)', '#526B82', 'Travel', travelTotal, travelRows, travelFoot)}
         ${mkPanel(icoStar, 'rgba(90,137,104,0.1)', '#5A8968', 'Activities', actTotal, actRows, actFoot)}
       </div>
