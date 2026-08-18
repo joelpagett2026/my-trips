@@ -1894,6 +1894,47 @@ function openDrawerItem(dayIdx, itemIdx) {
   }
 }
 
+// ── Swipe-down-to-close for the full-screen mobile drawer ──
+// Drag starts from the header (drag handle) so it doesn't fight with
+// scrolling inside .dr-body.
+(function initDrawerSwipe() {
+  const drawer = document.getElementById('drawer');
+  const head = drawer ? drawer.querySelector('.dr-head') : null;
+  if (!drawer || !head) return;
+
+  let startY = 0, currentY = 0, dragging = false, drawerH = 0;
+
+  head.addEventListener('touchstart', (e) => {
+    if (!drawer.classList.contains('open')) return;
+    startY = currentY = e.touches[0].clientY;
+    drawerH = drawer.offsetHeight || window.innerHeight;
+    dragging = true;
+    drawer.classList.add('dragging');
+  }, { passive: true });
+
+  head.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    currentY = e.touches[0].clientY;
+    const dy = Math.max(0, currentY - startY);
+    drawer.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    drawer.classList.remove('dragging');
+    const dy = Math.max(0, currentY - startY);
+    drawer.style.transform = '';
+    if (dy > drawerH * 0.22) {
+      closeDrawer();
+    }
+    startY = currentY = 0;
+  }
+
+  head.addEventListener('touchend', endDrag);
+  head.addEventListener('touchcancel', endDrag);
+})();
+
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawer-overlay').classList.remove('open');
