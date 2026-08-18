@@ -59,30 +59,45 @@ if ($template === false) {
 
 // Same bake point new-trip-v2.html defines for api.php's (now-retired)
 // one-time bake — reused here, just applied fresh on every request.
+// NOTE: this must match new-trip-v2.html's source byte-for-byte (including
+// indentation) or str_replace silently no-ops and the page falls back to
+// URL-param defaults. Verified against the live file — see $count check
+// below, which surfaces a loud warning instead of silently failing again.
 $page = str_replace(
   "// Read URL params
-  const params = new URLSearchParams(window.location.search);
-  const dest   = params.get('dest') || 'New Trip';
-  const dep    = params.get('dep')  || '';
-  const ret    = params.get('ret')  || '';
-  const trav   = params.get('trav') || '2';
-  const status = params.get('status') || 'upcoming';
-  const slug   = params.get('slug') || 'new-trip';
+const params = new URLSearchParams(window.location.search);
+const dest   = params.get('dest') || 'New Trip';
+const dep    = params.get('dep')  || '';
+const ret    = params.get('ret')  || '';
+const trav   = params.get('trav') || '2';
+const status = params.get('status') || 'upcoming';
+const slug   = params.get('slug') || 'new-trip';
 
-  // Use slug as the database record ID
-  const RECORD_ID = slug;",
+// Use slug as the database record ID
+const RECORD_ID = slug;",
   "// Trip data (rendered dynamically from the DB on every request)
-  const dest   = " . json_encode($dest) . ";
-  const dep    = " . json_encode($dep) . ";
-  const ret    = " . json_encode($ret) . ";
-  const trav   = " . json_encode($trav) . ";
-  const status = " . json_encode($status) . ";
-  const slug   = " . json_encode($slug) . ";
+const dest   = " . json_encode($dest) . ";
+const dep    = " . json_encode($dep) . ";
+const ret    = " . json_encode($ret) . ";
+const trav   = " . json_encode($trav) . ";
+const status = " . json_encode($status) . ";
+const slug   = " . json_encode($slug) . ";
 
-  // Use slug as the database record ID
-  const RECORD_ID = slug;",
-  $template
+// Use slug as the database record ID
+const RECORD_ID = slug;",
+  $template,
+  $count
   );
+
+if ($count === 0) {
+  // The bake point didn't match — new-trip-v2.html's source changed shape.
+  // Fail loudly (visible in view-source) rather than silently serving a
+  // page seeded with URL-param defaults instead of the real trip data.
+  http_response_code(500);
+  echo '<!-- trip.php: bake point not found in new-trip-v2.html — template source has drifted, needs re-sync -->';
+  echo 'This trip could not be rendered right now. Please try again shortly.';
+  exit;
+}
 
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
 
