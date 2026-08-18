@@ -165,7 +165,7 @@ if ($templateV1) {
 
 // ── COPY CORE + NON-ITINERARY FILES FROM REPO ────────────────────────
 $coreFiles = [
-    'api.php', 'auth.js', 'db.js', 'datepicker.js',
+    'api.php', 'db-config.php', 'trip.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'itinerary-v2-style.css', 'deploy-webhook.php',
     'index.html', 'new-trip.html', 'new-trip-v2.html', 'budget-template.html', 'budget-style.css', 'settings.html',
     'robots.txt', '.htaccess', 'favicon.ico',
