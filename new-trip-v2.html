@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=264">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=265">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -187,7 +187,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span id="dr-website-label">Attraction Website</span>
       </button>
-      <button class="dr-map-btn" onclick="openMapsForItem()">
+      <button class="dr-timetable-btn" id="dr-timetable-btn" style="display:none" onclick="openTimetable()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Timetable
+      </button>
+      <button class="dr-map-btn" id="dr-map-btn" onclick="openMapsForItem()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         View on Map
       </button>
@@ -1828,6 +1832,13 @@ function openDrawerItem(dayIdx, itemIdx) {
       transportInfoEl.innerHTML = journeyHtml + bkCardHtml;
       transportInfoEl.style.display = 'block';
       document.getElementById('dr-body').style.display = 'none';
+      // Show timetable button if URL saved
+      const timetableBtn = document.getElementById('dr-timetable-btn');
+      if (timetableBtn) {
+        const tUrl = (b && b.url) || '';
+        timetableBtn.style.display = tUrl ? '' : 'none';
+        timetableBtn._url = tUrl;
+      }
     } else {
       transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
     }
@@ -1956,11 +1967,16 @@ function closeDrawer() {
   const mi = document.getElementById('dr-meal-wrap'); if (mi) { mi.innerHTML = ''; mi.style.display = 'none'; }
   const ti = document.getElementById('dr-transport-wrap'); if (ti) { ti.innerHTML = ''; ti.style.display = 'none'; }
   const wb = document.getElementById('dr-website-btn'); if (wb) wb.style.display = 'none';
-  const mapBtn = document.querySelector('.dr-map-btn'); if (mapBtn) mapBtn.style.display = '';
+  const tb = document.getElementById('dr-timetable-btn'); if (tb) { tb.style.display = 'none'; tb._url = ''; }
+  const mapBtn = document.getElementById('dr-map-btn'); if (mapBtn) mapBtn.style.display = '';
 }
 
 function openAttractionWebsite() {
   const btn = document.getElementById('dr-website-btn');
+  if (btn && btn._url) window.open(btn._url, '_blank');
+}
+function openTimetable() {
+  const btn = document.getElementById('dr-timetable-btn');
   if (btn && btn._url) window.open(btn._url, '_blank');
 }
 

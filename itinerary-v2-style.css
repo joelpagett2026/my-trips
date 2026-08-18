@@ -937,11 +937,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background: var(--surface); flex-shrink: 0;
   padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
-/* Side-by-side buttons for attraction drawer */
+/* Side-by-side buttons for attraction + transport drawers */
 .drawer--ticket .dr-action-bar { flex-direction: column; }
 .drawer--ticket .dr-btn-row { display: flex; gap: 10px; }
 .drawer--ticket .dr-btn-row .dr-website-btn,
 .drawer--ticket .dr-btn-row .dr-map-btn { flex: 1; width: auto; }
+.drawer--transport .dr-btn-row { display: flex; gap: 10px; }
+.drawer--transport .dr-btn-row .dr-timetable-btn,
+.drawer--transport .dr-btn-row .dr-map-btn { flex: 1; width: auto; }
+/* Timetable button — transport blue secondary style */
+.dr-timetable-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: none; border: 1.5px solid var(--transport); color: var(--transport);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.13s, color 0.13s; letter-spacing: 0.01em;
+}
+.dr-timetable-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+.dr-timetable-btn:hover { background: var(--transport-bg); }
 /* Full-width map button */
 .dr-map-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
