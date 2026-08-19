@@ -584,9 +584,38 @@
         <div id="ts-ai-status" style="font-size:10.5px;color:var(--text3);margin-top:8px;display:none;"></div>
       </div>
     </div>
+      <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
+        <label class="field-label" style="color:#e53e3e;">Danger zone</label>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Permanently delete this trip and all its itinerary data. This cannot be undone.</div>
+        <button class="modal-btn danger" style="width:100%;margin-right:0;" onclick="deleteTrip()">🗑 Delete this trip</button>
+      </div>
+    </div>
     <div class="modal-foot">
       <button class="modal-btn secondary" onclick="closeTripSettings()">Cancel</button>
       <button class="modal-btn primary" onclick="saveTripSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE TRIP CONFIRM MODAL -->
+<div class="modal-overlay" id="delete-trip-overlay">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head">
+      <div class="modal-title" style="color:#e53e3e;">Delete this trip?</div>
+      <button class="modal-close" onclick="closeDeleteTrip()">×</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;gap:13px;">
+      <div style="font-size:12.5px;color:var(--text2);line-height:1.5;">
+        This will permanently delete <strong id="dt-name"></strong> and every day, activity, hotel and booking in it. This action cannot be undone.
+      </div>
+      <div class="field-group">
+        <label class="field-label">Type the trip name to confirm</label>
+        <input class="field-input" id="dt-confirm-input" type="text" autocomplete="off" placeholder="">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn secondary" onclick="closeDeleteTrip()">Cancel</button>
+      <button class="modal-btn danger" style="margin-right:0;" id="dt-confirm-btn" onclick="confirmDeleteTrip()" disabled>Delete permanently</button>
     </div>
   </div>
 </div>
@@ -2917,6 +2946,46 @@ async function saveTripSettings() {
       await dbSaveRegistry(registry);
     }
   } catch (e) { /* registry sync is best-effort */ }
+}
+
+// ── DELETE TRIP ──────────────────────────────────────────────────────
+function deleteTrip() {
+  const tripName = (STATE.meta.dest || dest || 'this trip');
+  if (!confirm(`Are you sure you want to delete "${tripName}"?\n\nThis is the first of two confirmations.`)) return;
+  closeTripSettings();
+  document.getElementById('dt-name').textContent = tripName;
+  const input = document.getElementById('dt-confirm-input');
+  input.value = '';
+  input.placeholder = tripName;
+  document.getElementById('dt-confirm-btn').disabled = true;
+  input.oninput = () => {
+    document.getElementById('dt-confirm-btn').disabled = (input.value.trim() !== tripName);
+  };
+  document.getElementById('delete-trip-overlay').classList.add('open');
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeDeleteTrip() {
+  document.getElementById('delete-trip-overlay').classList.remove('open');
+}
+
+async function confirmDeleteTrip() {
+  const btn = document.getElementById('dt-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    await dbDelete(RECORD_ID);
+    try {
+      const registry = await dbLoadRegistry();
+      const updated = registry.filter(r => r.slug !== RECORD_ID);
+      await dbSaveRegistry(updated);
+    } catch (e) { /* registry cleanup is best-effort */ }
+    window.location.href = '/trips/';
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Delete permanently';
+    alert('Could not delete trip — please try again.');
+  }
 }
 
 // ── EDIT DAYS MODAL (rename / reorder / add / delete) ──────────────────
