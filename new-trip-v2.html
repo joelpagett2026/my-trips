@@ -1347,7 +1347,7 @@ function makeItemNode(item, idx) {
             const label = t ? 'Booked at ' + t : 'Booked';
             return '<span class="badge attention" style="font-size:10px;padding:2px 7px;">' + label + '</span>' + (price ? price : '');
           }
-          return [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble, price].filter(Boolean).join('');
+          return [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble].filter(Boolean).join('');
         })()
   const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
 
