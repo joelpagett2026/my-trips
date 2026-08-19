@@ -88,7 +88,9 @@ $itineraries = [
     ['slug' => 'canada-2027',     'filename' => 'canada.html',            'dest' => 'Canada Road Trip',   'dep' => '25/09/2027', 'ret' => '10/10/2027', 'trav' => '2', 'status' => 'upcoming'],
     ['slug' => 'hk-taiwan-2027',  'filename' => 'hong-kong-taiwan.html',  'dest' => 'Hong Kong & Taiwan', 'dep' => '27/03/2027', 'ret' => '12/04/2027', 'trav' => '2', 'status' => 'planning'],
     ['slug' => 'porto-2026',      'filename' => 'porto-2026.html',        'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'],
-    ['slug' => 'gothenburg-2026', 'filename' => 'gothenburg-2026.html',   'dest' => 'Gothenburg',         'dep' => '09/10/2026', 'ret' => '12/10/2026', 'trav' => '2', 'status' => 'planning'],
+    // 'gothenburg-2026' migrated to v2 — now served dynamically via trip.php
+    // at the clean URL /gothenburg-2026 (see the v2 comment above). No
+    // longer regenerated here to avoid a stale v1 gothenburg-2026.html file.
     ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
     ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
     ['slug' => 'porto-2026-v2',      'filename' => 'porto-budget.html',     'dest' => 'Porto',  'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
