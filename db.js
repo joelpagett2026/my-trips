@@ -34,7 +34,7 @@ async function apiCall(action, params = {}, body = null, method = null) {
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
-    const token = (action === 'auth') ? getToken() : await waitForToken();
+    const token = (action === 'auth' || action === 'share_load') ? getToken() : await waitForToken();
 
     const options = {
         method: method || (body ? 'POST' : 'GET'),
@@ -93,10 +93,16 @@ async function dbSaveRegistry(trips) {
 
 // ── SHARE LINKS ──────────────────────────────────────────────────────
 
-/** Create a new read-only share link for a trip. Returns the token. */
-async function dbCreateShare(tripId) {
-    const result = await apiCall('create_share', {}, { trip_id: tripId });
+/** Create a new read-only share link for a trip. showRefs controls whether
+ *  booking references are visible on this link. Returns the token. */
+async function dbCreateShare(tripId, showRefs = false) {
+    const result = await apiCall('create_share', {}, { trip_id: tripId, show_refs: !!showRefs });
     return result ? result.token : null;
+}
+
+/** Toggle whether an existing share link shows booking references. */
+async function dbUpdateShare(token, showRefs) {
+    return apiCall('update_share', {}, { token, show_refs: !!showRefs });
 }
 
 /** List active share links for a trip. */

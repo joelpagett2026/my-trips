@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=272">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=273">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -73,7 +73,7 @@
     </div>
     <div class="tb-right">
       <span class="tb-status" id="tb-status"></span>
-      <button class="tb-btn" id="tb-share" onclick="triggerShare()">
+      <button class="tb-btn" id="tb-share" onclick="openShareModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>
         Share
       </button>
@@ -626,6 +626,34 @@
     <div class="modal-foot">
       <button class="modal-btn secondary" onclick="closeDeleteTrip()">Cancel</button>
       <button class="modal-btn danger" style="margin-right:0;" id="dt-confirm-btn" onclick="confirmDeleteTrip()" disabled>Delete permanently</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="share-overlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-head">
+      <div class="modal-title">Share this trip</div>
+      <button class="modal-close" onclick="closeShareModal()">×</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;gap:13px;">
+      <div style="font-size:10.5px;color:var(--text3);">Anyone with a share link can view a read-only copy of this itinerary — no login needed.</div>
+
+      <div id="share-links-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+      <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
+        <label class="field-label">Create new share link</label>
+        <div class="ts-status-seg" id="share-new-refs-seg" style="margin-bottom:10px;">
+          <button type="button" class="ts-status-opt" data-refs="hide" onclick="setShareNewRefs(false)">Hide booking refs</button>
+          <button type="button" class="ts-status-opt" data-refs="show" onclick="setShareNewRefs(true)">Show booking refs</button>
+        </div>
+        <button class="modal-btn secondary" style="width:100%;" onclick="createShareLink()">+ Create share link</button>
+      </div>
+      <div id="share-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn secondary" onclick="closeShareModal()">Close</button>
     </div>
   </div>
 </div>
@@ -2426,18 +2454,120 @@ function setDay(i) {
 }
 
 // ── SHARE ─────────────────────────────────────────────────────────────
-async function triggerShare() {
+// ── SHARE MODAL ──────────────────────────────────────────────────────
+let _shareNewRefs = false; // whether the next created link should show booking refs
+
+function setShareNewRefs(showRefs) {
+  _shareNewRefs = showRefs;
+  document.querySelectorAll('#share-new-refs-seg .ts-status-opt').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.refs === 'show') === showRefs);
+  });
+}
+
+function shareUrl(token) {
+  return location.origin + '/share.html?t=' + token + '&share=1';
+}
+
+async function openShareModal() {
+  setShareNewRefs(false);
+  document.getElementById('share-status').style.display = 'none';
+  document.getElementById('share-overlay').classList.add('open');
+  await renderShareLinks();
+}
+
+function closeShareModal() {
+  document.getElementById('share-overlay').classList.remove('open');
+}
+
+function setShareStatus(msg) {
+  const el = document.getElementById('share-status');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+async function renderShareLinks() {
+  const list = document.getElementById('share-links-list');
+  list.innerHTML = '<div style="font-size:10.5px;color:var(--text3);">Loading…</div>';
   try {
-    const token = await dbCreateShare(RECORD_ID);
-    const url = location.origin + '/share.html?t=' + token;
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(url);
-      alert('Share link copied to clipboard:\n' + url);
-    } else {
-      prompt('Share link (copy it):', url);
+    const shares = await dbListShares(RECORD_ID);
+    if (!shares.length) {
+      list.innerHTML = '<div style="font-size:10.5px;color:var(--text3);">No active share links yet.</div>';
+      return;
     }
-  } catch(e) {
-    alert('Could not create share link. ' + e.message);
+    list.innerHTML = '';
+    shares.forEach(s => {
+      const url = shareUrl(s.token);
+      const row = document.createElement('div');
+      row.className = 'share-link-row';
+      row.innerHTML = `
+        <div class="slr-top">
+          <div class="slr-url">${url}</div>
+          <button class="slr-btn" onclick="copyShareLink('${s.token}')">Copy</button>
+          <button class="slr-btn slr-revoke" onclick="revokeShareLink('${s.token}')">Revoke</button>
+        </div>
+        <div class="slr-bottom">
+          <label class="slr-refs-toggle">
+            <input type="checkbox" ${s.show_refs ? 'checked' : ''} onchange="toggleShareRefs('${s.token}', this.checked)">
+            Show booking references
+          </label>
+          <div class="slr-date">Created ${formatShareDate(s.created_at)}</div>
+        </div>`;
+      list.appendChild(row);
+    });
+  } catch (e) {
+    list.innerHTML = '<div style="font-size:10.5px;color:#e53e3e;">Could not load share links.</div>';
+  }
+}
+
+function formatShareDate(str) {
+  const d = new Date((str || '').replace(' ', 'T'));
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+async function createShareLink() {
+  setShareStatus('Creating…');
+  try {
+    const token = await dbCreateShare(RECORD_ID, _shareNewRefs);
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl(token));
+      setShareStatus('New link created and copied to clipboard.');
+    } else {
+      setShareStatus('New link created.');
+    }
+    await renderShareLinks();
+  } catch (e) {
+    setShareStatus('Could not create share link. ' + e.message);
+  }
+}
+
+async function copyShareLink(token) {
+  try {
+    await navigator.clipboard.writeText(shareUrl(token));
+    setShareStatus('Link copied to clipboard.');
+  } catch (e) {
+    prompt('Share link (copy it):', shareUrl(token));
+  }
+}
+
+async function toggleShareRefs(token, showRefs) {
+  try {
+    await dbUpdateShare(token, showRefs);
+    setShareStatus(showRefs ? 'Booking references are now visible on this link.' : 'Booking references are now hidden on this link.');
+  } catch (e) {
+    setShareStatus('Could not update this link. ' + e.message);
+    await renderShareLinks();
+  }
+}
+
+async function revokeShareLink(token) {
+  if (!confirm('Revoke this share link? Anyone using it will lose access immediately.')) return;
+  try {
+    await dbRevokeShare(token);
+    setShareStatus('Link revoked.');
+    await renderShareLinks();
+  } catch (e) {
+    setShareStatus('Could not revoke this link. ' + e.message);
   }
 }
 
