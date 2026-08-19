@@ -343,6 +343,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .modal-btn.danger:hover{background:#fee;}
 .modal-btn.secondary.danger-text{color:#e53e3e;}
 .modal-btn.secondary.danger-text:hover{border-color:#e53e3e;color:#e53e3e;background:#fee;}
+.ts-status-seg{display:flex;border:1.5px solid var(--line);border-radius:9px;overflow:hidden;}
+.ts-status-opt{flex:1;padding:9px 6px;text-align:center;font-size:11.5px;font-weight:700;font-family:var(--font);color:var(--text2);background:#fff;border:none;cursor:pointer;transition:all 0.13s;border-right:1.5px solid var(--line);}
+.ts-status-opt:last-child{border-right:none;}
+.ts-status-opt:hover{background:var(--teal-xdim);}
+.ts-status-opt.active[data-status="planning"]{background:var(--amber-bg);color:var(--amber);}
+.ts-status-opt.active[data-status="upcoming"]{background:var(--teal-dim);color:var(--teal);}
+.ts-status-opt.active[data-status="past"]{background:rgba(0,0,0,0.06);color:var(--text2);}
 
 /* Edit Days modal */
 .ed-list{display:flex;flex-direction:column;gap:6px;}

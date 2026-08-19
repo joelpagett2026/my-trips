@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=271">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=272">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -569,6 +569,16 @@
       <div class="field-group">
         <label class="field-label">Travellers</label>
         <input class="field-input" id="ts-trav" type="number" min="1" style="max-width:100px;">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Trip status</label>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Automatically switches to Completed the day after the trip's return date — you can also set it manually.</div>
+        <div class="ts-status-seg" id="ts-status-seg">
+          <button type="button" class="ts-status-opt" data-status="planning" onclick="setTsStatus('planning')">Planning</button>
+          <button type="button" class="ts-status-opt" data-status="upcoming" onclick="setTsStatus('upcoming')">Upcoming</button>
+          <button type="button" class="ts-status-opt" data-status="past" onclick="setTsStatus('past')">Completed</button>
+        </div>
       </div>
 
       <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
@@ -2870,6 +2880,14 @@ function deleteHotel() {
 
 // ── TRIP SETTINGS MODAL ──────────────────────────────────────────────
 let _tsPendingPhoto = undefined; // undefined = no change, '' = removed, string = new photo
+let _tsSelectedStatus = null;    // status chosen in the currently-open Trip Settings modal
+
+function setTsStatus(s) {
+  _tsSelectedStatus = s;
+  document.querySelectorAll('#ts-status-seg .ts-status-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === s);
+  });
+}
 
 function parseDMY(s) {
   const [d,m,y] = (s||'').split('/').map(Number);
@@ -2887,6 +2905,7 @@ function openTripSettings() {
   document.getElementById('ts-dep').value  = m.dep  || dep  || '';
   document.getElementById('ts-ret').value  = m.ret  || ret  || '';
   document.getElementById('ts-trav').value = m.trav || trav || '2';
+  setTsStatus(m.status || status || 'upcoming');
   const existingPhoto = m.coverPhoto || m._coverPhoto || '';
   if (existingPhoto) {
     document.getElementById('ts-photo-img').src = existingPhoto;
@@ -2949,6 +2968,7 @@ async function saveTripSettings() {
   m.dep  = newDep;
   m.ret  = newRet;
   m.trav = newTrav;
+  if (_tsSelectedStatus) m.status = _tsSelectedStatus;
 
   if (_tsPendingPhoto !== undefined) {
     m.coverPhoto = _tsPendingPhoto || '';
@@ -2965,6 +2985,7 @@ async function saveTripSettings() {
     const entry = registry.find(r => r.slug === RECORD_ID);
     if (entry) {
       entry.dep = m.dep; entry.ret = m.ret;
+      if (_tsSelectedStatus) { entry.status = _tsSelectedStatus; entry.statusManual = true; }
       if (_tsPendingPhoto !== undefined) entry.photo = m.coverPhoto || '';
       await dbSaveRegistry(registry);
     }

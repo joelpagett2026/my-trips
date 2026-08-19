@@ -1009,9 +1009,15 @@ async function geocode(place) {
 
 // Build a dynamic card — with live map + flag from itinerary data
 function buildDynamicCard(t) {
-  // Auto-complete if departure date has passed
-  const depDate = parseAnyDate(t.dep);
-  if (depDate && depDate <= TODAY && t.status !== 'past') t.status = 'past';
+  // Auto-complete the day AFTER the trip's return date — but never override
+  // a status the user has manually set in Trip Settings.
+  if (!t.statusManual) {
+    const retDate = parseAnyDate(t.ret) || parseAnyDate(t.dep);
+    if (retDate) {
+      const dayAfterEnd = new Date(retDate); dayAfterEnd.setDate(dayAfterEnd.getDate() + 1);
+      if (dayAfterEnd <= TODAY && t.status !== 'past') t.status = 'past';
+    }
+  }
   const statusClass = t.status==='past' ? 'pill-past' : t.status==='planning' ? 'pill-planning' : 'pill-upcoming';
   const statusLabel = t.status==='past' ? 'Completed' : t.status==='planning' ? 'Planning' : 'Upcoming';
   const url = t.url || `/trips/${t.slug}.html`;
