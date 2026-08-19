@@ -770,7 +770,19 @@ async function loadData() {
       STATE = saved;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
     } else {
-      // New trip — seed with one empty day
+            // New trip — seed with one day per day of the trip (departure through return, inclusive)
+      const depDt = parseDMY(dep);
+      const retDt = parseDMY(ret);
+      if (depDt && retDt && retDt >= depDt) {
+        const dayCount = Math.round((retDt - depDt) / 86400000) + 1;
+        STATE.days = [];
+        for (let i = 0; i < dayCount; i++) {
+          const dt = new Date(depDt); dt.setDate(dt.getDate() + i);
+          STATE.days.push({ date: formatDMY(dt), loc: dest, title: `Day ${i+1}`, items: [] });
+        }
+      } else {
+        STATE.days = [{ date: dep, loc: dest, title: 'Day 1', items: [] }];
+      }
       STATE.days = [{ date: dep, loc: dest, title: 'Day 1', items: [] }];
       STATE.meta = { dest, dep, ret, trav, status, hotel:null, budget:null };
     }
