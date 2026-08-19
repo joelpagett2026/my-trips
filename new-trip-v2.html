@@ -835,6 +835,21 @@ function scheduleSave() {
   setStatus('saving', '●  Saving…');
 }
 
+// Safety net: flush any pending debounced save immediately when the tab is
+// backgrounded, closed, or navigated away from — otherwise edits made just
+// before leaving the page can be lost silently (save never fires).
+function flushPendingSave() {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    saveData();
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushPendingSave();
+});
+window.addEventListener('pagehide', flushPendingSave);
+
 async function saveData() {
   // Take a snapshot before every save
   takeSnapshot();
@@ -1443,7 +1458,7 @@ function parseDate(str) {
   return new Date(y, m-1, d);
 }
 
-// Find the hotel covering the active day (checkin <= day < checkout)
+// Find the hotel covering the active day (checkin <= day <= checkout)
 function hotelForDay(dayIdx) {
   const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
   if (!hotels.length) return null;
@@ -1452,7 +1467,7 @@ function hotelForDay(dayIdx) {
   for (const h of hotels) {
     const ci = parseDate(h.checkin);
     const co = parseDate(h.checkout);
-    if (ci && co && dayDate >= ci && dayDate < co) return h;
+    if (ci && co && dayDate >= ci && dayDate <= co) return h;
   }
   // Fallback: closest upcoming
   return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
