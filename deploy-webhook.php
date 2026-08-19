@@ -91,7 +91,9 @@ $itineraries = [
     // 'gothenburg-2026' migrated to v2 — now served dynamically via trip.php
     // at the clean URL /gothenburg-2026 (see the v2 comment above). No
     // longer regenerated here to avoid a stale v1 gothenburg-2026.html file.
-    ['slug' => 'cyprus-2026',     'filename' => 'cyprus-2026.html',       'dest' => 'Cyprus',             'dep' => '23/12/2026', 'ret' => '30/12/2026', 'trav' => '2', 'status' => 'upcoming'],
+    // 'cyprus-2026' migrated to v2 — now served dynamically via trip.php
+    // at the clean URL /cyprus-2026. No longer regenerated here to avoid
+    // a stale v1 cyprus-2026.html file.
     ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
     ['slug' => 'porto-2026-v2',      'filename' => 'porto-budget.html',     'dest' => 'Porto',  'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
     ['slug' => 'porto-2026-v2',     'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
