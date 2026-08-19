@@ -1069,6 +1069,7 @@ function buildDynamicCard(t) {
         days.forEach(d => {
           if (d.from && d.from.trim()) cityNames.push(d.from.trim());
           if (d.to && d.to.trim()) cityNames.push(d.to.trim());
+          if (d.loc && d.loc.trim()) cityNames.push(d.loc.trim());
         });
         const seen = new Set();
         const unique = [t.dest, ...cityNames].filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });

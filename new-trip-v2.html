@@ -537,6 +537,10 @@
     </div>
     <div class="modal-body" style="flex-direction:column;gap:13px;">
       <div class="field-group">
+        <label class="field-label">Trip name</label>
+        <input class="field-input" id="ts-name" type="text" placeholder="e.g. Porto">
+      </div>
+      <div class="field-group">
         <label class="field-label">Cover photo</label>
         <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px;">Used for this trip's sidebar and its card on the homepage.</div>
         <label class="hotel-upload-label" id="ts-upload-label" for="ts-photo-file">
@@ -902,9 +906,45 @@ async function saveData() {
   try {
     await dbSave(RECORD_ID, STATE);
     setStatus('saved', '');
+    syncRegistryCities();
   } catch(e) {
     setStatus('error', '✕ Save failed');
   }
+}
+
+// Build the list of place tags shown on this trip's homepage card:
+// the trip name plus every unique day location that's been filled in.
+function computeTripCities() {
+  const m = STATE.meta;
+  const seen = new Set();
+  const out = [];
+  [m.dest || dest, ...STATE.days.map(d => (d.loc || '').trim())].forEach(c => {
+    if (!c) return;
+    const key = c.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(c);
+  });
+  return out.slice(0, 8);
+}
+
+// Best-effort sync of the homepage trip-registry entry's city tags whenever
+// this trip autosaves — keeps the card in sync as day locations are added
+// or edited, without needing to open Trip Settings.
+let _lastSyncedCities = null;
+async function syncRegistryCities() {
+  try {
+    const cities = computeTripCities();
+    const key = JSON.stringify(cities);
+    if (key === _lastSyncedCities) return; // no change since last sync
+    const registry = await dbLoadRegistry();
+    const entry = registry.find(r => r.slug === RECORD_ID);
+    if (!entry) return;
+    if (JSON.stringify(entry.cities || []) === key) { _lastSyncedCities = key; return; }
+    entry.cities = cities;
+    await dbSaveRegistry(registry);
+    _lastSyncedCities = key;
+  } catch (e) { /* best-effort only */ }
 }
 
 function setStatus(cls, txt) {
@@ -3040,6 +3080,7 @@ function formatDMY(dt) {
 function openTripSettings() {
   _tsPendingPhoto = undefined;
   const m = STATE.meta;
+  document.getElementById('ts-name').value = m.dest || dest || '';
   document.getElementById('ts-dep').value  = m.dep  || dep  || '';
   document.getElementById('ts-ret').value  = m.ret  || ret  || '';
   document.getElementById('ts-trav').value = m.trav || trav || '2';
@@ -3086,10 +3127,13 @@ function clearTripPhoto() {
 }
 
 async function saveTripSettings() {
+  const newName = document.getElementById('ts-name').value.trim();
   const newDep  = document.getElementById('ts-dep').value.trim();
   const newRet  = document.getElementById('ts-ret').value.trim();
   const newTrav = document.getElementById('ts-trav').value.trim() || '2';
   const m = STATE.meta;
+
+  if (newName) m.dest = newName;
 
   // Shift every day's date by the same amount the departure date moved
   const oldDepDt = parseDMY(m.dep || dep);
@@ -3122,9 +3166,11 @@ async function saveTripSettings() {
     const registry = await dbLoadRegistry();
     const entry = registry.find(r => r.slug === RECORD_ID);
     if (entry) {
+      if (newName) entry.dest = m.dest;
       entry.dep = m.dep; entry.ret = m.ret;
       if (_tsSelectedStatus) { entry.status = _tsSelectedStatus; entry.statusManual = true; }
       if (_tsPendingPhoto !== undefined) entry.photo = m.coverPhoto || '';
+      entry.cities = computeTripCities();
       await dbSaveRegistry(registry);
     }
   } catch (e) { /* registry sync is best-effort */ }
