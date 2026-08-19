@@ -1746,8 +1746,15 @@ function renderSidebarReadiness() {
     ];
 
     // Count stats for overview tiles
+    // "FLIGHTS" counts only actual flights — 'move' items also cover trains,
+    // buses, ferries etc. and shouldn't be lumped in here.
     let transportCount = 0;
-    days.forEach(d => (d.items||[]).forEach(it => { if (it && it.type==='move') transportCount++; }));
+    days.forEach(d => (d.items||[]).forEach(it => {
+      if (it && it.type === 'move') {
+        const mode = (it.transport && it.transport.mode) || it.kicker || '';
+        if (mode === 'Flight') transportCount++;
+      }
+    }));
     const hotelCount = (STATE.meta?.hotels||[]).length;
     let totalMealCount = 0, actCount = 0;
     days.forEach((d, i) => {
