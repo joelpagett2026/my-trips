@@ -1112,6 +1112,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-ticket-status--booked {
   background: var(--activity-bg); color: var(--activity);
 }
+.tl-ticket-status--unbooked {
+  background: rgba(229,62,62,0.12); color: #e53e3e;
+}
 
 /* ── TRANSPORT — swap teal → transport blue ── */
 .drawer--transport .dr-kicker { color: var(--transport); }
