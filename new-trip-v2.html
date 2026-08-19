@@ -1301,9 +1301,10 @@ function makeItemNode(item, idx) {
   const isTicketType = item.type === 'ticket' || item.type === 'attraction';
   const isTransportItem = item.type === 'move';
 
-  // Booking status bubble for ticket/attraction items
+  // Booking status bubble for ticket/attraction items — always show one
+  // (missing/null status defaults to "Not Booked" rather than hiding the bubble)
   let ticketStatusBubble = '';
-  if (isTicketType && item.status) {
+  if (isTicketType) {
     const isBooked = item.status === 'booked' || item.status === 'confirmed';
     const isPrebookable = item.status === 'prebookable';
     const statusLabel = isBooked ? 'Booked' : (isPrebookable ? 'Not Pre-Bookable' : 'Not Booked');
