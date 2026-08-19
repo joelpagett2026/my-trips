@@ -1033,6 +1033,7 @@ function buildDynamicCard(t) {
   const mapId = 'dyn-map-' + t.slug;
 
   // Flags HTML from stored flags array
+  const flagsId = 'dyn-flags-' + t.slug;
   const flagsHtml = (t.flags || []).map(cc =>
     `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}">`
   ).join('');
@@ -1043,7 +1044,7 @@ function buildDynamicCard(t) {
 
   a.innerHTML = `<div class="card-image-area" style="background:#e0eef0;position:relative;">
     ${imageAreaHtml}
-    <div class="card-map-flags">${flagsHtml}</div>
+    <div class="card-map-flags" id="${flagsId}">${flagsHtml}</div>
     <div class="card-status-pill ${statusClass}">${statusLabel}</div>
   </div>
   <div class="card-body">
@@ -1051,6 +1052,26 @@ function buildDynamicCard(t) {
     <div class="card-dates">${[t.dep,t.ret].filter(Boolean).join(' – ')}</div>
     ${cityTagsHtml ? `<div class="card-cities">${cityTagsHtml}</div>` : ''}
   </div>`;
+
+  // Self-healing: if this trip has no flag yet (e.g. the original geocode
+  // lookup at creation time didn't return a country code), quietly retry
+  // in the background and persist the result so it doesn't keep happening.
+  if (!(t.flags && t.flags.length) && t.dest) {
+    setTimeout(async () => {
+      try {
+        const geo = await geocode(t.dest);
+        if (!geo || !geo.cc) return;
+        const flagsEl = document.getElementById(flagsId);
+        if (flagsEl) flagsEl.innerHTML = `<img src="https://flagcdn.com/w80/${geo.cc}.png" alt="${geo.cc}">`;
+        const registry = await loadRegistry();
+        const entry = registry.find(r => r.slug === t.slug);
+        if (entry && !(entry.flags && entry.flags.length)) {
+          entry.flags = [geo.cc];
+          await saveRegistry(registry);
+        }
+      } catch (e) { /* best-effort only */ }
+    }, 150);
+  }
 
   // Render map — use stored points if available, else geocode destination
   // Skipped entirely when a cover photo is set for this trip.
