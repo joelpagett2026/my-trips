@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=282">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=283">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1032,6 +1032,31 @@ const ROAD_TRIP_BADGE_LABEL = {
   included: 'CAR HIRE INCLUDED',
 };
 
+// Works out which item to open for editing when the user clicks the day
+// panel. Prefers an item that actually lives on the day being viewed (the
+// hire item itself, or today's driving leg); falls back to the hire's
+// master item on whichever day it was entered on — this is the case that
+// was previously impossible to edit at all: a multi-day hire shows
+// "CAR HIRE INCLUDED" on every day it spans, but only the pick-up day
+// actually holds an editable item.
+function findCarHireEditTarget(dayIdx) {
+  const day = STATE.days[dayIdx];
+  if (day) {
+    const idx = (day.items||[]).findIndex(it => it && it.type==='move' && (it.transport&&it.transport.mode)==='Car Hire / Road Trip');
+    if (idx !== -1) return { dayIdx, itemIdx: idx };
+  }
+  for (let d = 0; d < STATE.days.length; d++) {
+    const items = STATE.days[d].items || [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (it && it.type==='move' && (it.transport&&it.transport.mode)==='Car Hire / Road Trip' && it.transport.hire) {
+        return { dayIdx: d, itemIdx: i };
+      }
+    }
+  }
+  return null;
+}
+
 // Renders the "I've got a car today" panel above the Morning section —
 // the core of the feature (section 20 of the brief): a user should be
 // able to tell from this panel alone, without opening any transport
@@ -1076,10 +1101,18 @@ function renderRoadTripPanel(dayIdx) {
         <span class="rt-panel-badge-label">${label}</span>
         ${statLine ? `<span class="rt-panel-badge-stat">${statLine}</span>` : ''}
       </div>
+      <button type="button" class="rt-panel-edit-btn">Edit</button>
     </div>
     ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
     ${warnHtml}
   `;
+  const editBtn = wrap.querySelector('.rt-panel-edit-btn');
+  const target = findCarHireEditTarget(dayIdx);
+  if (target) {
+    editBtn.addEventListener('click', () => openEditItem(target.dayIdx, target.itemIdx));
+  } else {
+    editBtn.style.display = 'none';
+  }
   return wrap;
 }
 
