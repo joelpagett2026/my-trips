@@ -93,16 +93,12 @@ async function dbSaveRegistry(trips) {
 
 // ── SHARE LINKS ──────────────────────────────────────────────────────
 
-/** Create a new read-only share link for a trip. showRefs controls whether
- *  booking references are visible on this link. Returns the token. */
-async function dbCreateShare(tripId, showRefs = false) {
-    const result = await apiCall('create_share', {}, { trip_id: tripId, show_refs: !!showRefs });
+/** Create a new read-only share link for a trip. Anyone with the link
+ *  gets full, unrestricted read access to every tab — there's no
+ *  booking-refs toggle. Returns the token. */
+async function dbCreateShare(tripId) {
+    const result = await apiCall('create_share', {}, { trip_id: tripId });
     return result ? result.token : null;
-}
-
-/** Toggle whether an existing share link shows booking references. */
-async function dbUpdateShare(token, showRefs) {
-    return apiCall('update_share', {}, { token, show_refs: !!showRefs });
 }
 
 /** List active share links for a trip. */

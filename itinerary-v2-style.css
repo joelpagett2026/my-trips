@@ -1865,3 +1865,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .rp2-ov-tile-status { font-size: 9px; font-weight: 700; color: var(--text3); }
 .rp2-ov-tile-status.ok { color: var(--teal); }
 .rp2-ov-tile-count { font-size: 13px; font-weight: 800; color: var(--text); }
+
+/* ══ SHARE VIEW (read-only) ═══════════════════════════════════════════
+   Applied via body.share-view when the page is opened through a share
+   link. Hides every editing affordance while leaving all four tabs
+   (Itinerary / Bookings / Map / Budget) and every content section fully
+   visible and browsable. Corresponding JS neutralises the functions
+   these controls call, so this is belt-and-braces even if a selector
+   below misses something. */
+body.share-view .tb-btn#tb-share,
+body.share-view .sb-bottom,
+body.share-view .mob-menu-footer,
+body.share-view .tl-grip,
+body.share-view .tl-more-btn,
+body.share-view .tl-delete-btn,
+body.share-view .tl-add-btn,
+body.share-view .tl-section-regen,
+body.share-view .tl-section-clear,
+body.share-view .tl-restore-strip,
+body.share-view .hotel-edit-btn,
+body.share-view .rp2-add-btn,
+body.share-view .rp2-hotel-edit-head button,
+body.share-view .bv-avios-input {
+  display: none !important;
+}
+body.share-view .tl-item { cursor: pointer; }
+body.share-view .tl-time { cursor: pointer; }
+body.share-view .tb-title { cursor: default; }
+
+.sh-banner-v2 {
+  background: linear-gradient(135deg, var(--teal), #0d9e8c);
+  color: #fff; font-family: 'Montserrat', sans-serif;
+  padding: 8px 20px; font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; letter-spacing: 0.02em;
+}

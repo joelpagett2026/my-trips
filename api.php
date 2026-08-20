@@ -146,27 +146,18 @@ if ($photo) {
 ok(['slug' => $slug, 'url' => '/' . $slug]);
 
     // ── SHARE: CREATE A SHARE LINK (owner only) ────────────────────────
-    // POST /api.php?action=create_share  { "trip_id": "gothenburg-2026", "show_refs": false }
+    // Every share link grants full, unrestricted read access to the trip
+    // (no booking-refs toggle) — the link itself is the only access
+    // control, and revoking it is the only way to cut it off.
+    // POST /api.php?action=create_share  { "trip_id": "gothenburg-2026" }
     case 'create_share':
         $tripId = $body['trip_id'] ?? '';
         if (!$tripId) fail('Missing trip_id');
-        $showRefs = !empty($body['show_refs']) ? 1 : 0;
         ensureSharesTable();
         $token = bin2hex(random_bytes(12));
-        db()->prepare("INSERT INTO shares (token, trip_id, show_refs, created_at) VALUES (?, ?, ?, NOW())")
-            ->execute([$token, $tripId, $showRefs]);
-        ok(['token' => $token, 'show_refs' => (bool)$showRefs]);
-
-    // ── SHARE: UPDATE A SHARE LINK'S SETTINGS (owner only) ──────────────
-    // POST /api.php?action=update_share  { "token": "...", "show_refs": true }
-    case 'update_share':
-        $token = $body['token'] ?? '';
-        if (!$token) fail('Missing token');
-        if (!array_key_exists('show_refs', $body)) fail('Missing show_refs');
-        $showRefs = !empty($body['show_refs']) ? 1 : 0;
-        ensureSharesTable();
-        db()->prepare("UPDATE shares SET show_refs = ? WHERE token = ?")->execute([$showRefs, $token]);
-        ok(['token' => $token, 'show_refs' => (bool)$showRefs]);
+        db()->prepare("INSERT INTO shares (token, trip_id, created_at) VALUES (?, ?, NOW())")
+            ->execute([$token, $tripId]);
+        ok(['token' => $token]);
 
     // ── SHARE: LIST ACTIVE SHARE LINKS FOR A TRIP (owner only) ─────────
     // GET /api.php?action=list_shares&trip_id=...
@@ -174,11 +165,9 @@ ok(['slug' => $slug, 'url' => '/' . $slug]);
         $tripId = $_GET['trip_id'] ?? '';
         if (!$tripId) fail('Missing trip_id');
         ensureSharesTable();
-        $stmt = db()->prepare("SELECT token, show_refs, created_at FROM shares WHERE trip_id = ? ORDER BY created_at DESC");
+        $stmt = db()->prepare("SELECT token, created_at FROM shares WHERE trip_id = ? ORDER BY created_at DESC");
         $stmt->execute([$tripId]);
-        $rows = $stmt->fetchAll();
-        foreach ($rows as &$r) { $r['show_refs'] = (bool)$r['show_refs']; }
-        ok($rows);
+        ok($stmt->fetchAll());
 
     // ── SHARE: REVOKE A SHARE LINK (owner only) ─────────────────────────
     // DELETE /api.php?action=revoke_share&token=...
@@ -190,14 +179,15 @@ ok(['slug' => $slug, 'url' => '/' . $slug]);
         ok();
 
     // ── SHARE: LOAD A SHARED ITINERARY (PUBLIC — no PIN required) ──────
-    // Booking references are stripped unless the share was created (or
-    // later updated) with show_refs enabled.
+    // Returns the trip's full data, unmodified — a share link grants
+    // complete read access (every tab, every detail). The link itself,
+    // and revoking it, are the only access controls.
     // GET /api.php?action=share_load&token=...
     case 'share_load':
         $token = $_GET['token'] ?? '';
         if (!$token) fail('Missing token');
         ensureSharesTable();
-        $stmt = db()->prepare("SELECT trip_id, show_refs FROM shares WHERE token = ?");
+        $stmt = db()->prepare("SELECT trip_id FROM shares WHERE token = ?");
         $stmt->execute([$token]);
         $share = $stmt->fetch();
         if (!$share) fail('This share link is no longer valid', 404);
@@ -206,8 +196,7 @@ ok(['slug' => $slug, 'url' => '/' . $slug]);
         $row = $stmt2->fetch();
         if (!$row) fail('Trip not found', 404);
         $data = json_decode($row['data'], true);
-        if (empty($share['show_refs'])) $data = stripBookingRefs($data);
-        ok(['data' => $data, 'trip_id' => $share['trip_id'], 'show_refs' => (bool)$share['show_refs']]);
+        ok(['data' => $data, 'trip_id' => $share['trip_id']]);
 
     // ── DELETE A RECORD ──────────────────────────────────────────────
     // DELETE /api.php?action=delete&id=...

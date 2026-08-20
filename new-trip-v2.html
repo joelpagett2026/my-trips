@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=274">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=275">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -642,16 +642,11 @@
       <button class="modal-close" onclick="closeShareModal()">×</button>
     </div>
     <div class="modal-body" style="flex-direction:column;gap:13px;">
-      <div style="font-size:10.5px;color:var(--text3);">Anyone with a share link can view a read-only copy of this itinerary — no login needed.</div>
+      <div style="font-size:10.5px;color:var(--text3);">Anyone with a share link can fully view this itinerary — every tab, no login needed — but can't change anything.</div>
 
       <div id="share-links-list" style="display:flex;flex-direction:column;gap:8px;"></div>
 
       <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
-        <label class="field-label">Create new share link</label>
-        <div class="ts-status-seg" id="share-new-refs-seg" style="margin-bottom:10px;">
-          <button type="button" class="ts-status-opt" data-refs="hide" onclick="setShareNewRefs(false)">Hide booking refs</button>
-          <button type="button" class="ts-status-opt" data-refs="show" onclick="setShareNewRefs(true)">Show booking refs</button>
-        </div>
         <button class="modal-btn secondary" style="width:100%;" onclick="createShareLink()">+ Create share link</button>
       </div>
       <div id="share-status" style="font-size:10.5px;color:var(--text3);display:none;"></div>
@@ -750,6 +745,12 @@ const slug   = params.get('slug') || 'new-trip';
 // Use slug as the database record ID
 const RECORD_ID = slug;
 const budgetPageUrl = '/' + slug.split('-')[0] + '-budget.html';
+
+// Read-only shared link — set when this page was opened via a share URL
+// (?share=1&t=TOKEN). No PIN required; data loads via the token instead
+// of the authenticated record ID, and every editing control is disabled.
+const SHARE_TOKEN   = params.get('t') || '';
+const IS_SHARE_VIEW = params.has('share') && !!SHARE_TOKEN;
 // ────────────────────────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────────────────────────
@@ -844,6 +845,18 @@ function badgeHtml(status, label) {
 // ── LOAD / SAVE ───────────────────────────────────────────────────────
 async function loadData() {
   try {
+    if (IS_SHARE_VIEW) {
+      const result = await dbLoadShare(SHARE_TOKEN);
+      if (!result || !result.data) {
+        showShareInvalid();
+        return;
+      }
+      STATE = result.data;
+      STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
+      applyShareViewBanner();
+      render();
+      return;
+    }
     const saved = await dbLoad(RECORD_ID);
     if (saved && saved.days) {
       STATE = saved;
@@ -866,6 +879,7 @@ async function loadData() {
     }
   } catch(e) {
     console.error('Load failed', e);
+    if (IS_SHARE_VIEW) { showShareInvalid(); return; }
     const msg = e && e.message ? e.message : String(e);
     document.getElementById('tb-kicker').textContent = msg.includes('token') || msg.includes('auth') 
       ? 'Session expired — re-enter PIN' : 'Load error: ' + msg.slice(0,40);
@@ -877,6 +891,29 @@ async function loadData() {
     return;
   }
   render();
+}
+
+// Marks the page read-only and drops a small banner at the top so it's
+// obvious this is a shared, view-only copy of the itinerary.
+function applyShareViewBanner() {
+  document.body.classList.add('share-view');
+  if (document.getElementById('sh-banner-v2')) return;
+  const banner = document.createElement('div');
+  banner.id = 'sh-banner-v2';
+  banner.className = 'sh-banner-v2';
+  banner.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg> Read-only shared itinerary';
+  document.body.insertBefore(banner, document.body.firstChild);
+}
+
+// Friendly full-page message for a revoked/invalid/missing share link.
+function showShareInvalid() {
+  document.body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Montserrat',sans-serif;background:#e8e8e8;padding:20px;text-align:center;">
+      <div style="max-width:360px;">
+        <div style="font-size:19px;font-weight:700;color:#444;margin-bottom:8px;">This link is no longer valid</div>
+        <div style="font-size:14px;color:#666;">It may have been revoked by the trip owner, or the link is incomplete.</div>
+      </div>
+    </div>`;
 }
 
 function scheduleSave() {
@@ -960,6 +997,7 @@ const SNAPS_ID = RECORD_ID + '-snaps';
 let snapshotList = [];
 
 async function loadSnapshots() {
+  if (IS_SHARE_VIEW) return; // snapshots are an owner-only editing feature
   try {
     const d = await dbLoad(SNAPS_ID);
     snapshotList = (d && d.snaps) ? d.snaps : [];
@@ -1201,7 +1239,9 @@ function renderTimeline() {
     buckets[p].push({ item, globalIdx });
   });
 
-  const hiddenPeriods = d._hiddenPeriods || [];
+  // Read-only shared links see every period regardless of the owner's
+  // per-day hide/show state — "full access" means nothing stays hidden.
+  const hiddenPeriods = IS_SHARE_VIEW ? [] : (d._hiddenPeriods || []);
   PERIODS.forEach(({ key, label }) => {
     if (hiddenPeriods.includes(key)) return;
     const section = document.createElement('div');
@@ -2513,21 +2553,15 @@ function setDay(i) {
 
 // ── SHARE ─────────────────────────────────────────────────────────────
 // ── SHARE MODAL ──────────────────────────────────────────────────────
-let _shareNewRefs = false; // whether the next created link should show booking refs
-
-function setShareNewRefs(showRefs) {
-  _shareNewRefs = showRefs;
-  document.querySelectorAll('#share-new-refs-seg .ts-status-opt').forEach(btn => {
-    btn.classList.toggle('active', (btn.dataset.refs === 'show') === showRefs);
-  });
-}
-
 function shareUrl(token) {
-  return location.origin + '/share.html?t=' + token + '&share=1';
+  // Points straight at the itinerary page itself (in read-only mode via
+  // ?share=1&t=TOKEN) rather than the old separate share.html — that way
+  // shared links show every tab (Itinerary, Bookings, Map, Budget) instead
+  // of a cut-down day list.
+  return location.origin + '/new-trip-v2.html?share=1&t=' + token;
 }
 
 async function openShareModal() {
-  setShareNewRefs(false);
   document.getElementById('share-status').style.display = 'none';
   document.getElementById('share-overlay').classList.add('open');
   await renderShareLinks();
@@ -2564,10 +2598,6 @@ async function renderShareLinks() {
           <button class="slr-btn slr-revoke" onclick="revokeShareLink('${s.token}')">Revoke</button>
         </div>
         <div class="slr-bottom">
-          <label class="slr-refs-toggle">
-            <input type="checkbox" ${s.show_refs ? 'checked' : ''} onchange="toggleShareRefs('${s.token}', this.checked)">
-            Show booking references
-          </label>
           <div class="slr-date">Created ${formatShareDate(s.created_at)}</div>
         </div>`;
       list.appendChild(row);
@@ -2586,7 +2616,7 @@ function formatShareDate(str) {
 async function createShareLink() {
   setShareStatus('Creating…');
   try {
-    const token = await dbCreateShare(RECORD_ID, _shareNewRefs);
+    const token = await dbCreateShare(RECORD_ID);
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(shareUrl(token));
       setShareStatus('New link created and copied to clipboard.');
@@ -2605,16 +2635,6 @@ async function copyShareLink(token) {
     setShareStatus('Link copied to clipboard.');
   } catch (e) {
     prompt('Share link (copy it):', shareUrl(token));
-  }
-}
-
-async function toggleShareRefs(token, showRefs) {
-  try {
-    await dbUpdateShare(token, showRefs);
-    setShareStatus(showRefs ? 'Booking references are now visible on this link.' : 'Booking references are now hidden on this link.');
-  } catch (e) {
-    setShareStatus('Could not update this link. ' + e.message);
-    await renderShareLinks();
   }
 }
 
@@ -3389,6 +3409,7 @@ async function fetchMealPhoto(item) {
     return;
   }
   photoSlot.style.display = 'none';
+  if (IS_SHARE_VIEW) return; // no cached photo — skip the live fetch, nothing to persist to anyway
   try {
     const city = drawerItem ? (STATE.days[drawerItem.dayIdx]?.loc || STATE.meta?.dest || '') : '';
     const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(item.title) + '&city=' + encodeURIComponent(city), {
@@ -3413,6 +3434,15 @@ async function generateAbout(force) {
 
   // Don't re-fetch if we already have it and not forced
   if (item._about && !force) { renderAbout(item._about); return; }
+
+  if (IS_SHARE_VIEW) {
+    // No cached info to show, and nowhere to persist a freshly generated
+    // one — just hide the section instead of firing a live AI request.
+    document.getElementById('dr-about-wrap').style.display    = 'none';
+    document.getElementById('dr-about-loading').style.display = 'none';
+    document.getElementById('dr-about-retry').style.display   = 'none';
+    return;
+  }
 
   // Show loading
   document.getElementById('dr-about-wrap').style.display    = 'none';
@@ -4064,7 +4094,9 @@ function renderBudgetView() {
     mkRowWithIco(TRANSPORT_ICONS['Flight']||icoFlight, 'rgba(82,107,130,0.1)', '#526B82',
       f.title, f.date||'', 'Flight',
       f.price, f.rawPrice,
-      `<div class="bv-row-avios">\u2726 <input class="bv-avios-input" placeholder="Add Avios" value="${f.avios||''}" onchange="saveBudgetAvios(${i},this.value)"></div>`
+      IS_SHARE_VIEW
+        ? (f.avios ? `<div class="bv-row-avios">\u2726 ${f.avios}</div>` : '')
+        : `<div class="bv-row-avios">\u2726 <input class="bv-avios-input" placeholder="Add Avios" value="${f.avios||''}" onchange="saveBudgetAvios(${i},this.value)"></div>`
     )
   ).join('');
   const transRows = transport.map(t =>
@@ -4169,11 +4201,41 @@ setView = function(view) {
   });
 };
 
+// ── SHARE VIEW LOCKDOWN ─────────────────────────────────────────────
+// Read-only shared links get full visibility into every tab (Itinerary,
+// Bookings, Map, Budget) but cannot change anything. Rather than hunting
+// down every call site individually, every function that opens an edit
+// UI, mutates STATE, or persists to the DB is neutralised into a no-op
+// here. Viewing functions (openDrawerItem, setView, setDay, setMapFilter,
+// setBookingsFilter, focusMapItem, map/external links, etc.) are left
+// alone on purpose — those are exactly what "full access" means.
+if (IS_SHARE_VIEW) {
+  [
+    'openTripSettings', 'closeTripSettings', 'saveTripSettings', 'deleteTrip', 'confirmDeleteTrip',
+    'onTripPhotoSelected', 'clearTripPhoto', 'generateAllAboutInfo',
+    'openShareModal', 'createShareLink', 'revokeShareLink',
+    'openEditItem', 'openAddItem', 'openAddDay', 'editCurrentItem', 'deleteCurrentItem', 'saveItem',
+    'unhidePeriod', 'clearPeriod', 'saveBulkItems', 'regeneratePeriod', 'restoreSnapshot',
+    'openHotelModal', 'editHotelForCurrentDay', 'closeHotelModal', 'saveHotel', 'deleteHotel',
+    'onHotelPhotoSelected', 'clearHotelPhoto', 'addHotelBreakfasts', 'removeHotelBreakfasts',
+    'openEditDays', 'closeEditDays', 'edAddDay', 'edDeleteDay', 'edDragStart', 'edDragOver',
+    'edDrop', 'edDragEnd', 'saveEditDays',
+    'editDayTitle', 'onDragStart', 'saveBudgetAvios',
+  ].forEach(name => {
+    if (typeof window[name] === 'function') window[name] = function(){};
+  });
+
+  // Belt-and-braces: even if some path slips past the above, nothing
+  // reaches the database — there's no session token to save with anyway.
+  saveData = async function(){};
+  scheduleSave = function(){};
+}
+
 (function waitForAuth() {
   if (typeof isAuthed !== 'function' || typeof dbLoad !== 'function') {
     setTimeout(waitForAuth, 50); return;
   }
-  if (!isAuthed()) {
+  if (!isAuthed() && !IS_SHARE_VIEW) {
     // Not authed — auth.js will show PIN overlay, wait for it to complete
     setTimeout(waitForAuth, 200); return;
   }
