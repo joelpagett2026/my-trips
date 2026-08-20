@@ -749,8 +749,12 @@ const budgetPageUrl = '/' + slug.split('-')[0] + '-budget.html';
 // Read-only shared link — set when this page was opened via a share URL
 // (?share=1&t=TOKEN). No PIN required; data loads via the token instead
 // of the authenticated record ID, and every editing control is disabled.
-const SHARE_TOKEN   = params.get('t') || '';
-const IS_SHARE_VIEW = params.has('share') && !!SHARE_TOKEN;
+// NOTE: reads location.search directly (not the `params` above) because
+// baked/rendered trip pages have that block replaced with static consts
+// during deploy — `params` itself doesn't survive baking.
+const _shareParams  = new URLSearchParams(window.location.search);
+const SHARE_TOKEN   = _shareParams.get('t') || '';
+const IS_SHARE_VIEW = _shareParams.has('share') && !!SHARE_TOKEN;
 // ────────────────────────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────────────────────────
