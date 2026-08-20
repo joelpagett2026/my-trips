@@ -19,6 +19,9 @@
   --green-bg:   rgba(26,138,82,0.10);
   --transport:  #526B82;
   --transport-bg: rgba(82,107,130,0.10);
+  --carhire:    #6d28d9;
+  --carhire2:   #9333ea;
+  --carhire-bg: rgba(124,58,237,0.10);
   --activity:   #5A8968;
   --activity-bg: rgba(90,137,104,0.10);
   --amber:      #b96a00;
@@ -171,6 +174,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-ico svg{width:21px;height:21px;stroke:currentColor;fill:currentColor;}
 .tl-ico.meal{background:rgba(217,123,10,0.10);color:#d97b0a;}
 .tl-ico.move{background:var(--transport-bg);color:var(--transport);}
+.tl-ico.move-carhire{background:var(--carhire-bg);color:var(--carhire);}
 .tl-ico.move-bus svg{width:25px;height:25px;}
 .tl-ico.ticket{background:var(--activity-bg);color:var(--activity);}
 .tl-dot.attraction{background:var(--activity);}
@@ -540,6 +544,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #f-category-row .tt-btn[data-cat="meal"]:hover:not(.active) { border-color: var(--amber); color: var(--amber); }
 #f-category-row .tt-btn[data-cat="move"].active { background: var(--transport); border-color: var(--transport); }
 #f-category-row .tt-btn[data-cat="move"]:hover:not(.active) { border-color: var(--transport); color: var(--transport); }
+#f-category-row .tt-btn[data-cat="carhire"].active { background: linear-gradient(135deg, var(--carhire2), var(--carhire)); border-color: var(--carhire); }
+#f-category-row .tt-btn[data-cat="carhire"]:hover:not(.active) { border-color: var(--carhire2); color: var(--carhire2); }
 /* Transport modal — blue theming */
 #fields-transport .field-label,
 #flight-booking-fields .field-label,
@@ -1123,6 +1129,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .drawer--transport .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--transport-bg); }
 .drawer--transport .dr-website-btn { border-color: var(--transport); color: var(--transport); }
 .drawer--transport .dr-website-btn:hover { background: var(--transport-bg); }
+
+/* Car Hire / Road Trip drawer — layout inherited from .drawer--transport
+   above (same button row etc.), colours overridden to purple here. */
+.drawer--carhire .dr-kicker { color: var(--carhire); }
+.drawer--carhire .ab-significant { background: var(--carhire); }
+.drawer--carhire .dr-text-btn:not(.dr-text-btn--danger) { color: var(--carhire); }
+.drawer--carhire .dr-text-btn:not(.dr-text-btn--danger):hover { background: var(--carhire-bg); }
+.drawer--carhire .dr-website-btn { border-color: var(--carhire); color: var(--carhire); }
+.drawer--carhire .dr-website-btn:hover { background: var(--carhire-bg); }
 
 /* ── TRANSPORT PANEL — POI-style layout with transport blue ── */
 
@@ -1925,7 +1940,7 @@ body.share-view .tb-title { cursor: default; }
    ══════════════════════════════════════════════════════════════════════ */
 
 .rt-subhead {
-  font-size: 12px; font-weight: 800; color: var(--transport); text-transform: uppercase;
+  font-size: 12px; font-weight: 800; color: var(--carhire); text-transform: uppercase;
   letter-spacing: 0.06em; padding-bottom: 4px; border-bottom: 1px solid var(--line); margin-top: 4px;
 }
 .rt-subhead-hint { font-weight: 500; text-transform: none; letter-spacing: normal; color: var(--text3); font-size: 10.5px; }
@@ -2034,7 +2049,7 @@ body.share-view .tb-title { cursor: default; }
 /* Bookings tab — Car Hire card (distinct from a driving-leg journey
    card: this represents the vehicle rental itself). */
 .bk-card--carhire { flex-direction: column; }
-.bk-card-ico.carhire { background: var(--transport-bg); color: var(--transport); }
+.bk-card-ico.carhire { background: var(--carhire-bg); color: var(--carhire); }
 .bk-ch-route { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; }
 .bk-ch-point { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .bk-ch-loc { font-size: 12.5px; font-weight: 700; color: var(--text); }

@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=281">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=282">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -257,6 +257,7 @@
           <button type="button" class="tt-btn" data-cat="attraction">Attraction</button>
           <button type="button" class="tt-btn" data-cat="meal">Meal</button>
           <button type="button" class="tt-btn" data-cat="move">Transport</button>
+          <button type="button" class="tt-btn" data-cat="carhire">Car Hire / Road Trip</button>
         </div>
         <input type="hidden" id="f-type" value="place">
         <input type="hidden" id="f-period" value="morning">
@@ -358,7 +359,7 @@
 
       <!-- TRANSPORT FIELDS -->
       <div id="fields-transport" style="display:none;flex-direction:column;gap:13px;">
-        <div class="field-group">
+        <div class="field-group" id="f-transport-method-group">
           <label class="field-label">Transport Method</label>
           <div class="transport-type-row" id="f-transport-type-row">
             <button type="button" class="tt-btn active" data-val="Flight">Flight</button>
@@ -368,7 +369,6 @@
             <button type="button" class="tt-btn" data-val="Ferry">Ferry</button>
             <button type="button" class="tt-btn" data-val="Tram">Tram</button>
             <button type="button" class="tt-btn" data-val="Taxi">Taxi</button>
-            <button type="button" class="tt-btn" data-val="Car Hire / Road Trip">Car Hire / Road Trip</button>
           </div>
           <input class="field-input" id="f-transport-type" type="hidden" value="Flight">
         </div>
@@ -1196,7 +1196,8 @@ function icoForType(t, sub, item) {
   }
   if (t==='move') {
     const mode = (item && item.transport && item.transport.mode) || (item && item.kicker) || 'Flight';
-    const extraCls = (mode === 'Bus' || mode === 'Coach' || mode === 'Tram') ? ' move-bus' : '';
+    const extraCls = mode === 'Car Hire / Road Trip' ? ' move-carhire'
+      : (mode === 'Bus' || mode === 'Coach' || mode === 'Tram') ? ' move-bus' : '';
     return {html: TRANSPORT_ICONS[mode] || ICO.plane, cls:'move' + extraCls};
   }
   if (t==='hotel') return {html:ICO.home, cls:''};
@@ -2299,13 +2300,15 @@ function openDrawerItem(dayIdx, itemIdx) {
   const isAct       = item.type === 'act' || (!item.type && item.icoType === 'pin');
   const isTicket    = item.type === 'ticket' || item.type === 'attraction';
   const isTransport = item.type === 'move';
+  const isCarHire    = isTransport && (item.transport && item.transport.mode) === 'Car Hire / Road Trip';
   const isMeal      = item.type === 'meal';
   const kickerLabel = (isAct || item.type === 'place') ? 'Point of Interest' : (item.kicker || item.type || 'Activity');
   const kickerEl = document.getElementById('dr-kicker');
   kickerEl.textContent = (dayLoc && !isMeal && !isTransport) ? `${kickerLabel} · ${dayLoc}` : kickerLabel;
-  kickerEl.style.color = isTicket ? 'var(--activity)' : isTransport ? 'var(--transport)' : isMeal ? '' : '';
+  kickerEl.style.color = isTicket ? 'var(--activity)' : isCarHire ? 'var(--carhire)' : isTransport ? 'var(--transport)' : isMeal ? '' : '';
   document.getElementById('drawer').classList.toggle('drawer--ticket', isTicket);
   document.getElementById('drawer').classList.toggle('drawer--transport', isTransport);
+  document.getElementById('drawer').classList.toggle('drawer--carhire', isCarHire);
   document.getElementById('drawer').classList.toggle('drawer--meal', isMeal);
   // Hide map button for transport items — they're not a single map point
   const mapBtn = document.querySelector('.dr-map-btn');
@@ -2641,10 +2644,9 @@ function openEditItem(dayIdx, itemIdx) {
   } else if (!['place','attraction','meal','move'].includes(item.type)) {
     cat = 'place'; // fallback for any legacy/unrecognised type
   }
-  setCategory(cat);
+  setCategory(cat === 'move' && (item.transport && item.transport.mode) === 'Car Hire / Road Trip' ? 'carhire' : cat);
 
   if (cat === 'move' && (item.transport && item.transport.mode) === 'Car Hire / Road Trip') {
-    setTransportType('Car Hire / Road Trip');
     populateCarHireForm(item.transport || {});
   } else if (cat === 'move') {
     const tr = item.transport || {};
@@ -2726,11 +2728,23 @@ function clearForm() {
 }
 
 function setCategory(cat) {
-  document.getElementById('f-type').value = cat;
+  const isCarHire = cat === 'carhire';
+  document.getElementById('f-type').value = isCarHire ? 'move' : cat;
   document.querySelectorAll('#f-category-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.cat === cat);
   });
   onCategoryChange();
+  // The generic Transport Method picker (Flight/Train/...) is redundant
+  // once Car Hire / Road Trip has its own dedicated category tab.
+  const methodGroup = document.getElementById('f-transport-method-group');
+  if (methodGroup) methodGroup.style.display = isCarHire ? 'none' : '';
+  if (isCarHire) {
+    setTransportType('Car Hire / Road Trip');
+  } else if (cat === 'move' && document.getElementById('f-transport-type').value === 'Car Hire / Road Trip') {
+    // Switched back from the Car Hire tab to plain Transport — fall back
+    // to a real transport method rather than leaving stale car-hire fields showing.
+    setTransportType('Flight');
+  }
 }
 
 function onCategoryChange() {
@@ -2746,8 +2760,10 @@ function onCategoryChange() {
   // Save button colour follows category
   const saveBtn = document.getElementById('modal-save-btn');
   if (saveBtn) {
-    const colMap = { place: 'var(--teal)', attraction: 'var(--activity)', meal: 'var(--amber)', move: 'var(--transport)' };
-    saveBtn.style.background = colMap[type] || 'var(--teal)';
+    const activeCatBtn = document.querySelector('#f-category-row .tt-btn.active');
+    const activeCat = activeCatBtn ? activeCatBtn.dataset.cat : type;
+    const colMap = { place: 'var(--teal)', attraction: 'var(--activity)', meal: 'var(--amber)', move: 'var(--transport)', carhire: 'var(--carhire)' };
+    saveBtn.style.background = colMap[activeCat] || 'var(--teal)';
   }
   // Hide transport-specific booking panels when not on transport
   if (type !== 'move') { document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('booking-fields').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
@@ -4485,7 +4501,7 @@ function renderBookingsView() {
     {key:'hotel',label:'Hotels',count:hotels.length,color:'#0e7a87'},
     {key:'flight',label:'Flights',count:flights.length,color:'#526B82'},
     {key:'transport',label:'Travel',count:transport.length,color:'#d97b0a'},
-    {key:'carhire',label:'Car Hire',count:carhire.length,color:'#526B82'},
+    {key:'carhire',label:'Car Hire',count:carhire.length,color:'#6d28d9'},
     {key:'attraction',label:'Attractions',count:attractions.length,color:'#5A8968'},
     {key:'dining',label:'Dining',count:dining.length,color:'#9333ea'},
   ].filter(c=>c.count>0);
@@ -4560,7 +4576,7 @@ function renderBookingsView() {
     { key:'hotel',      label:'Hotels',      items:hotels,     color:'#0e7a87' },
     { key:'flight',     label:'Flights',     items:flights,    color:'#526B82' },
     { key:'transport',  label:'Travel',      items:transport,  color:'#d97b0a' },
-    { key:'carhire',    label:'Car Hire',    items:carhire,    color:'#526B82' },
+    { key:'carhire',    label:'Car Hire',    items:carhire,    color:'#6d28d9' },
     { key:'attraction', label:'Attractions', items:attractions,color:'#5A8968' },
     { key:'dining',     label:'Dining',      items:dining,     color:'#9333ea' },
   ].filter(sec => sec.items.length > 0);
