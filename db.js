@@ -117,3 +117,25 @@ async function dbLoadShare(token) {
     const result = await apiCall('share_load', { token });
     return result || null;
 }
+
+// ── CAR HIRE / ROAD TRIP ─────────────────────────────────────────────
+
+/** Places autocomplete predictions for a partial input string. */
+async function dbPlacesAutocomplete(input) {
+    const result = await apiCall('places_autocomplete', { input });
+    return result ? (result.predictions || []) : [];
+}
+
+/** Resolve a place_id to { place_id, name, address, lat, lng }. */
+async function dbPlaceDetails(placeId) {
+    const result = await apiCall('places_details', { place_id: placeId });
+    return result ? result.place : null;
+}
+
+/** Compute a driving route via the Google Routes API.
+ *  origin/destination/waypoints: { placeId } or { lat, lng }.
+ *  Returns { distanceMeters, durationSeconds, polyline, legs, error }. */
+async function dbComputeRoute(origin, destination, waypoints = []) {
+    const result = await apiCall('routes_compute', {}, { origin, destination, waypoints });
+    return result || null;
+}

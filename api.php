@@ -483,6 +483,138 @@ PROMPT;
         }
         ok(['photo' => $finalUrl ?: $photoUrl]);
 
+    // ── PLACES AUTOCOMPLETE (Car Hire / Road Trip) ──────────────────────
+    // GET /api.php?action=places_autocomplete&input=Edinbu
+    // Returns { predictions: [{ place_id, description }] }
+    case 'places_autocomplete':
+        $PLACES_KEY_AC = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
+        if (!$PLACES_KEY_AC) { ok(['predictions' => [], 'error' => 'No Places API key']); break; }
+        $input = trim($_GET['input'] ?? '');
+        if (strlen($input) < 2) ok(['predictions' => []]);
+
+        $acFetch = function(string $url): array {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_TIMEOUT=>6,
+                CURLOPT_HTTPHEADER=>['User-Agent: MyTripsApp/1.0']]);
+            $r = curl_exec($ch); curl_close($ch);
+            return json_decode($r ?: '{}', true) ?: [];
+        };
+
+        $acUrl = 'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+            . '?input=' . urlencode($input)
+            . '&types=geocode|establishment'
+            . '&key=' . $PLACES_KEY_AC;
+        $acData = $acFetch($acUrl);
+        $preds = array_map(fn($p) => [
+            'place_id'    => $p['place_id'] ?? '',
+            'description' => $p['description'] ?? '',
+        ], $acData['predictions'] ?? []);
+        ok(['predictions' => array_slice($preds, 0, 6)]);
+
+    // ── PLACE DETAILS (resolve place_id → lat/lng) ──────────────────────
+    // GET /api.php?action=places_details&place_id=ChIJ...
+    case 'places_details':
+        $PLACES_KEY_PD = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
+        if (!$PLACES_KEY_PD) { ok(['place' => null, 'error' => 'No Places API key']); break; }
+        $placeId = trim($_GET['place_id'] ?? '');
+        if (!$placeId) fail('Missing place_id');
+
+        $pdFetch = function(string $url): array {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_TIMEOUT=>6,
+                CURLOPT_HTTPHEADER=>['User-Agent: MyTripsApp/1.0']]);
+            $r = curl_exec($ch); curl_close($ch);
+            return json_decode($r ?: '{}', true) ?: [];
+        };
+
+        $pdUrl = 'https://maps.googleapis.com/maps/api/place/details/json'
+            . '?place_id=' . urlencode($placeId)
+            . '&fields=geometry,formatted_address,name'
+            . '&key=' . $PLACES_KEY_PD;
+        $pdData = $pdFetch($pdUrl);
+        $res = $pdData['result'] ?? null;
+        if (!$res || empty($res['geometry']['location'])) { ok(['place' => null]); break; }
+        $loc = $res['geometry']['location'];
+        ok(['place' => [
+            'place_id' => $placeId,
+            'name'     => $res['name'] ?? '',
+            'address'  => $res['formatted_address'] ?? '',
+            'lat'      => $loc['lat'],
+            'lng'      => $loc['lng'],
+        ]]);
+
+    // ── ROUTES: COMPUTE DRIVING ROUTE (Car Hire / Road Trip) ────────────
+    // POST /api.php?action=routes_compute
+    // { "origin": {"placeId":"..."} | {"lat":..,"lng":..},
+    //   "destination": {...}, "waypoints": [ {...}, ... ] }
+    // Returns { distanceMeters, durationSeconds, polyline,
+    //           legs: [{ distanceMeters, durationSeconds }] }
+    case 'routes_compute':
+        $ROUTES_KEY = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
+        if (!$ROUTES_KEY) fail('No Routes API key configured');
+
+        $toWaypoint = function(?array $p) {
+            if (!$p) return null;
+            if (!empty($p['placeId'])) return ['placeId' => $p['placeId']];
+            if (isset($p['lat'], $p['lng'])) return ['location' => ['latLng' => ['latitude' => $p['lat'], 'longitude' => $p['lng']]]];
+            return null;
+        };
+
+        $origin      = $toWaypoint($body['origin']      ?? null);
+        $destination = $toWaypoint($body['destination']  ?? null);
+        if (!$origin || !$destination) fail('Missing origin or destination');
+
+        $intermediates = array_values(array_filter(array_map($toWaypoint, $body['waypoints'] ?? [])));
+
+        $payload = json_encode([
+            'origin'          => $origin,
+            'destination'     => $destination,
+            'intermediates'   => $intermediates,
+            'travelMode'      => 'DRIVE',
+            'routingPreference' => 'TRAFFIC_UNAWARE',
+            'polylineQuality' => 'OVERVIEW',
+            'units'           => 'IMPERIAL',
+        ]);
+
+        $ch = curl_init('https://routes.googleapis.com/directions/v2:computeRoutes');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'X-Goog-Api-Key: ' . $ROUTES_KEY,
+                'X-Goog-FieldMask: routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.duration,routes.legs.distanceMeters',
+            ],
+        ]);
+        $resp    = curl_exec($ch);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+        if (!$resp) fail('Routes API unreachable: ' . $curlErr);
+
+        $data  = json_decode($resp, true);
+        $route = $data['routes'][0] ?? null;
+        if (!$route) {
+            // Surface Google's own error message when present — makes it
+            // obvious in the UI when the Routes API just isn't enabled yet.
+            $msg = $data['error']['message'] ?? 'No route found';
+            ok(['route' => null, 'error' => $msg]);
+            break;
+        }
+
+        $legs = array_map(fn($l) => [
+            'distanceMeters' => $l['distanceMeters'] ?? 0,
+            'durationSeconds' => (int)rtrim($l['duration'] ?? '0s', 's'),
+        ], $route['legs'] ?? []);
+
+        ok(['route' => [
+            'distanceMeters'  => $route['distanceMeters'] ?? 0,
+            'durationSeconds' => (int)rtrim($route['duration'] ?? '0s', 's'),
+            'polyline'        => $route['polyline']['encodedPolyline'] ?? '',
+            'legs'            => $legs,
+        ]]);
+
     default:
         fail('Unknown action');
 }

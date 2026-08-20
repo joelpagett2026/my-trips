@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=280">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=281">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -368,6 +368,7 @@
             <button type="button" class="tt-btn" data-val="Ferry">Ferry</button>
             <button type="button" class="tt-btn" data-val="Tram">Tram</button>
             <button type="button" class="tt-btn" data-val="Taxi">Taxi</button>
+            <button type="button" class="tt-btn" data-val="Car Hire / Road Trip">Car Hire / Road Trip</button>
           </div>
           <input class="field-input" id="f-transport-type" type="hidden" value="Flight">
         </div>
@@ -379,25 +380,141 @@
           </div>
           <input class="field-input" id="f-status-move" type="hidden" value="booked">
         </div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Departure</label>
-            <input class="field-input" id="f-from" type="text">
+        <div id="f-transport-journey-basic">
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Departure</label>
+              <input class="field-input" id="f-from" type="text">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Departure time</label>
+              <input class="field-input" id="f-depart" type="time">
+            </div>
           </div>
-          <div class="field-group">
-            <label class="field-label">Departure time</label>
-            <input class="field-input" id="f-depart" type="time">
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Arrival</label>
+              <input class="field-input" id="f-to" type="text">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Arrival time</label>
+              <input class="field-input" id="f-arrive" type="time">
+            </div>
           </div>
         </div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Arrival</label>
-            <input class="field-input" id="f-to" type="text">
+
+        <!-- CAR HIRE / ROAD TRIP FIELDS -->
+        <div id="fields-carhire" style="display:none;flex-direction:column;gap:13px;">
+          <div class="rt-subhead">Car Hire Details</div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Car hire company</label>
+              <input class="field-input" id="f-ch-company" type="text">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Vehicle type</label>
+              <input class="field-input" id="f-ch-vehicle" type="text" placeholder="e.g. Compact SUV">
+            </div>
+          </div>
+          <div class="field-group places-ac-wrap">
+            <label class="field-label">Pick-up location</label>
+            <input class="field-input places-ac-input" id="f-ch-pickup-loc" type="text" autocomplete="off">
+            <div class="places-ac-list" id="f-ch-pickup-loc-list"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Pick-up date</label>
+              <input class="field-input" id="f-ch-pickup-date" type="date">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Pick-up time</label>
+              <input class="field-input" id="f-ch-pickup-time" type="time">
+            </div>
+          </div>
+          <div class="field-group places-ac-wrap">
+            <label class="field-label">Drop-off location</label>
+            <input class="field-input places-ac-input" id="f-ch-dropoff-loc" type="text" autocomplete="off">
+            <div class="places-ac-list" id="f-ch-dropoff-loc-list"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Drop-off date</label>
+              <input class="field-input" id="f-ch-dropoff-date" type="date">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Drop-off time</label>
+              <input class="field-input" id="f-ch-dropoff-time" type="time">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Booking reference</label>
+              <input class="field-input" id="f-ch-ref" type="text">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Hire cost</label>
+              <input class="field-input" id="f-ch-hire-cost" type="text" placeholder="£">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Insurance cost</label>
+              <input class="field-input" id="f-ch-insurance-cost" type="text" placeholder="£">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Additional driver cost</label>
+              <input class="field-input" id="f-ch-driver-cost" type="text" placeholder="£">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Other extras</label>
+              <input class="field-input" id="f-ch-extras-cost" type="text" placeholder="£">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Extras notes</label>
+              <input class="field-input" id="f-ch-extras-note" type="text" placeholder="e.g. Child seat, GPS">
+            </div>
           </div>
           <div class="field-group">
-            <label class="field-label">Arrival time</label>
-            <input class="field-input" id="f-arrive" type="time">
+            <label class="field-label">Notes</label>
+            <textarea class="field-textarea" id="f-ch-notes"></textarea>
           </div>
+
+          <div class="rt-subhead" style="margin-top:6px;">Road Trip Journey <span class="rt-subhead-hint">— leave blank if the car isn't being driven today</span></div>
+          <div class="field-group places-ac-wrap">
+            <label class="field-label">Starting point</label>
+            <input class="field-input places-ac-input" id="f-rt-start" type="text" autocomplete="off">
+            <div class="places-ac-list" id="f-rt-start-list"></div>
+          </div>
+          <div class="field-group places-ac-wrap">
+            <label class="field-label">Ending point</label>
+            <input class="field-input places-ac-input" id="f-rt-end" type="text" autocomplete="off">
+            <div class="places-ac-list" id="f-rt-end-list"></div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Departure time</label>
+              <input class="field-input" id="f-rt-depart" type="time">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Arrival time <span class="rt-subhead-hint">(optional — calculated if left blank)</span></label>
+              <input class="field-input" id="f-rt-arrive" type="time">
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Stops <span class="rt-subhead-hint">(optional)</span></label>
+            <div id="rt-stops-list"></div>
+            <button type="button" class="rt-add-stop-btn" onclick="addStopRow()">+ Add Stop</button>
+          </div>
+
+          <button type="button" class="rt-calc-btn" id="rt-calc-btn" onclick="computeRoadTripRoute()">Calculate Route</button>
+          <div class="rt-calc-summary" id="rt-calc-summary" style="display:none;"></div>
+          <input type="hidden" id="f-rt-distance-miles">
+          <input type="hidden" id="f-rt-duration-min">
+          <input type="hidden" id="f-rt-recommended-min">
+          <input type="hidden" id="f-rt-polyline">
         </div>
       </div>
 
@@ -793,6 +910,7 @@ const ICO = {
   coach:`<svg viewBox="0 0 512 512" fill="currentColor"><g><path d="m507.606 90.644-25-25c-2.813-2.813-6.628-4.394-10.606-4.394h-19.135c-2.075-33.984-30.368-61-64.865-61h-264c-34.497 0-62.79 27.016-64.865 61h-19.135c-3.979 0-7.794 1.581-10.606 4.394l-25 25c-2.814 2.813-4.394 6.628-4.394 10.606v75c0 8.284 6.716 15 15 15s15-6.716 15-15v-68.787l16.213-16.213h12.787v180.888c62.106 12.296 333.635 11.951 394 0v-180.888h12.787l16.213 16.213v68.787c0 8.284 6.716 15 15 15s15-6.716 15-15v-75c0-3.978-1.58-7.793-4.394-10.606z"/><path d="m76 480.66v6.09c0 13.79 11.21 25 25 25h47c13.79 0 25-11.21 25-25v-5.5c-93.793-.199-90.047.449-97-.59z"/><path d="m339 481.25v5.5c0 13.79 11.21 25 25 25h47c13.79 0 25-11.21 25-25v-6.09c-6.952 1.039-3.198.391-97 .59z"/><path d="m59 302.602v55.478l94.562 16.391c5.509.955 10.028 4.894 11.729 10.219l21.243 66.561h138.935l21.243-66.561c1.7-5.326 6.22-9.264 11.729-10.219l94.559-16.391v-55.478c-72.249 11.534-321.714 11.539-394 0zm242 73.648h-90c-8.284 0-15-6.716-15-15s6.716-15 15-15h90c8.284 0 15 6.716 15 15s-6.716 15-15 15z"/><path d="m356.958 451.25h71.042c13.785 0 25-11.215 25-25v-37.723l-80.476 13.949z"/><path d="m155.042 451.25-15.566-48.774-80.476-13.949v37.723c0 13.785 11.215 25 25 25z"/></g></svg>`,
   tram:`<svg viewBox="0 0 426.667 426.667" fill="currentColor"><path d="M234.56,64.32L250.667,32H320V0H106.667v32H208l-16.213,32.32C125.013,66.347,64,79.68,64,138.667V318.72c0,30.827,25.28,56.64,55.253,63.467L85.333,416v10.667h47.573L175.573,384H256l42.667,42.667h42.667V416l-32-32h-1.707c36.053,0,55.04-29.333,55.04-65.28V138.667C362.667,79.04,306.987,66.133,234.56,64.32z M213.333,352c-17.707,0-32-14.293-32-32s14.293-32,32-32s32,14.293,32,32S231.04,352,213.333,352z M320,256H106.667V149.333H320V256z"/></svg>`,
   taxi:`<svg viewBox="0 0 226.969 226.969" fill="currentColor"><path d="M217.289,83.307c-1.024,0-2.075,0.146-3.124,0.436l-11.023,3.036L191.49,58.398c-3.491-8.506-13.813-15.427-23.009-15.427h-7.753V19.442c0-4.136-3.364-7.5-7.5-7.5H73.742c-4.136,0-7.5,3.364-7.5,7.5v23.529h-7.913c-9.195,0-19.518,6.92-23.009,15.426L23.684,86.739l-10.879-2.997c-1.049-0.289-2.101-0.436-3.124-0.436C4.072,83.307,0,87.593,0,93.497v6.032c0,6.893,5.608,12.5,12.5,12.5h0.802l-1.664,4.052c-3.244,7.903-5.884,21.283-5.884,29.825v56.621c0,6.893,5.607,12.5,12.5,12.5h15.027c6.893,0,12.5-5.607,12.5-12.5v-13.916H181.03v13.916c0,6.893,5.608,12.5,12.5,12.5h15.024c6.893,0,12.5-5.607,12.5-12.5v-56.621c0-8.542-2.64-21.922-5.884-29.825l-1.664-4.052h0.963c6.893,0,12.5-5.607,12.5-12.5v-6.032C226.969,87.593,222.898,83.307,217.289,83.307z M32.516,105.062l17.705-43.129c2.089-5.088,8.298-9.251,13.798-9.251h98.772c5.5,0,11.709,4.163,13.798,9.251l17.705,43.129c2.089,5.088-0.702,9.251-6.202,9.251H38.718C33.218,114.313,30.427,110.15,32.516,105.062z M72.512,160.604c0,2.75-2.25,5-5,5H33.718c-2.75,0-5-2.25-5-5v-16.032c0-2.75,2.25-5,5-5h33.794c2.75,0,5,2.25,5,5V160.604z M197.768,160.604c0,2.75-2.25,5-5,5h-33.794c-2.75,0-5-2.25-5-5v-16.032c0-2.75,2.25-5,5-5h33.794c2.75,0,5,2.25,5,5V160.604z"/></svg>`,
+  car:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>`,
 };
 
 const TRANSPORT_ICONS = {
@@ -803,7 +921,255 @@ const TRANSPORT_ICONS = {
   Ferry:  ICO.ferry,
   Tram:   ICO.tram,
   Taxi:   ICO.taxi,
+  'Car Hire / Road Trip': ICO.car,
 };
+
+// Car hire is active this many minutes of driving before it's flagged as
+// a "long driving day" warning (section 8 of the road-trip spec).
+const ROAD_TRIP_LONG_DRIVE_MIN = 240; // 4h+
+const ROAD_TRIP_MODERATE_DRIVE_MIN = 120; // 2-4h = moderate note, no alarm
+// Recommended journey allowance = driving time + 15%, min +15min, rounded to 5.
+function roadTripRecommendedMin(durationMin) {
+  const buffered = Math.max(durationMin + 15, Math.round(durationMin * 1.15));
+  return Math.ceil(buffered / 5) * 5;
+}
+function fmtHoursMins(mins) {
+  mins = Math.round(mins || 0);
+  const h = Math.floor(mins / 60), m = mins % 60;
+  if (h && m) return h + 'h ' + m + 'm';
+  if (h) return h + 'h';
+  return m + 'm';
+}
+function addMinsToTime(time, mins) {
+  if (!time) return '';
+  const [h, m] = time.split(':').map(Number);
+  if (isNaN(h)) return '';
+  let total = h * 60 + m + Math.round(mins || 0);
+  total = ((total % 1440) + 1440) % 1440;
+  const hh = Math.floor(total / 60), mm = total % 60;
+  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+}
+// dd/mm/yyyy (site's day-date format) <-> yyyy-mm-dd (HTML date input format)
+function ddmmyyyyToInput(d) {
+  const parts = (d||'').split('/');
+  if (parts.length !== 3) return '';
+  return parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+}
+function inputToDdmmyyyy(d) {
+  const parts = (d||'').split('-');
+  if (parts.length !== 3) return '';
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
+
+// ── CAR HIRE / ROAD TRIP — day-level logic ──────────────────────────────
+// Compares dd/mm/yyyy day-date strings (the site's stored format).
+function ddmmyyyyToDate(s) {
+  const p = (s||'').split('/');
+  if (p.length !== 3) return null;
+  const d = new Date(+p[2], +p[1]-1, +p[0]);
+  return isNaN(d) ? null : d;
+}
+
+// Works out whether a car is relevant on a given day by scanning every
+// item across the whole trip (a hire's pick-up/drop-off dates can live on
+// a different item than a given day's driving leg — see buildCarHireItem).
+// Returns null if no car hire applies to this day, otherwise:
+// { kind: 'pickup'|'return'|'roadtrip'|'included', driving: {distanceMiles,durationMin,recommendedMin}|null, warnLevel: ''|'moderate'|'long' }
+function dayCarHireState(dayIdx) {
+  const day = STATE.days[dayIdx];
+  if (!day) return null;
+  const dayDate = ddmmyyyyToDate(day.date);
+
+  let hireActive = false, isPickup = false, isReturn = false;
+  let driving = null;
+
+  for (const d of STATE.days) {
+    for (const it of (d.items||[])) {
+      if (!it || it.type !== 'move' || (it.transport && it.transport.mode) !== 'Car Hire / Road Trip') continue;
+      const hire = it.transport.hire;
+      if (hire && dayDate) {
+        const pu = ddmmyyyyToDate(hire.pickup && hire.pickup.date);
+        const dr = ddmmyyyyToDate(hire.dropoff && hire.dropoff.date);
+        if (pu && dr && dayDate >= pu && dayDate <= dr) {
+          hireActive = true;
+          if (dayDate.getTime() === pu.getTime()) isPickup = true;
+          if (dayDate.getTime() === dr.getTime()) isReturn = true;
+        }
+      }
+    }
+  }
+  // Driving only counts on the day the journey item actually lives on.
+  for (const it of (day.items||[])) {
+    if (!it || it.type !== 'move' || (it.transport && it.transport.mode) !== 'Car Hire / Road Trip') continue;
+    const rt = it.transport.roadTrip;
+    if (rt && rt.durationMin) {
+      if (!driving) driving = { distanceMiles: 0, durationMin: 0 };
+      driving.distanceMiles += rt.distanceMiles || 0;
+      driving.durationMin   += rt.durationMin || 0;
+    }
+    if (it.transport.hire) hireActive = true; // hire item itself always makes its own day relevant, even w/o parsable dates
+  }
+
+  if (!hireActive && !driving) return null;
+
+  let kind;
+  if (isPickup && isReturn) kind = 'pickup'; // same-day rental — pick-up wording wins
+  else if (isPickup) kind = 'pickup';
+  else if (isReturn) kind = 'return';
+  else if (driving) kind = 'roadtrip';
+  else kind = 'included';
+
+  const warnLevel = driving && driving.durationMin >= ROAD_TRIP_LONG_DRIVE_MIN ? 'long'
+    : driving && driving.durationMin >= ROAD_TRIP_MODERATE_DRIVE_MIN ? 'moderate' : '';
+
+  return { kind, driving, warnLevel };
+}
+
+const ROAD_TRIP_BADGE_LABEL = {
+  pickup:   'CAR HIRE — PICK UP',
+  return:   'CAR HIRE — RETURN',
+  roadtrip: 'ROAD TRIP',
+  included: 'CAR HIRE INCLUDED',
+};
+
+// Renders the "I've got a car today" panel above the Morning section —
+// the core of the feature (section 20 of the brief): a user should be
+// able to tell from this panel alone, without opening any transport
+// item, whether a car is relevant today and what's planned.
+function renderRoadTripPanel(dayIdx) {
+  const state = dayCarHireState(dayIdx);
+  if (!state) return null;
+  const day = STATE.days[dayIdx];
+  const label = ROAD_TRIP_BADGE_LABEL[state.kind];
+  const carIco = ICO.car.replace('<svg', '<svg width="18" height="18"');
+
+  let statLine = '';
+  if (state.driving) {
+    statLine = `${state.driving.distanceMiles.toFixed(0)} miles &middot; ${fmtHoursMins(state.driving.durationMin)} driving`;
+  }
+
+  // List every driving leg + planned stop for today, so the plan is
+  // visible without opening the transport card.
+  const legs = (day.items||[]).filter(it => it && it.type==='move' && (it.transport&&it.transport.mode)==='Car Hire / Road Trip' && it.transport.roadTrip);
+  const legsHtml = legs.map(it => {
+    const rt = it.transport.roadTrip;
+    const stopsHtml = (rt.stops||[]).length
+      ? `<div class="rt-panel-stops">${rt.stops.map(s => `<span class="rt-panel-stop">${s.name}</span>`).join('<span class="rt-panel-stop-sep">→</span>')}</div>`
+      : '';
+    return `<div class="rt-panel-leg">
+      <div class="rt-panel-leg-route">${rt.from} <span class="rt-panel-arrow">→</span> ${rt.to}</div>
+      <div class="rt-panel-leg-meta">${rt.depart?rt.depart+' depart · ':''}${rt.distanceMiles?rt.distanceMiles.toFixed(0)+' miles · ':''}${rt.durationMin?fmtHoursMins(rt.durationMin)+' driving':''}${rt.estArrival?' · est. arrival '+rt.estArrival:''}</div>
+      ${stopsHtml}
+    </div>`;
+  }).join('');
+
+  const warnHtml = state.warnLevel === 'long'
+    ? `<div class="rt-panel-warn">${ICO.warn.replace('<svg','<svg width="14" height="14"')} <div><strong>Long driving day</strong><span>${fmtHoursMins(state.driving.durationMin)} estimated driving — consider adding a stop or breaking the journey.</span></div></div>`
+    : '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'rt-panel rt-panel--' + state.kind;
+  wrap.innerHTML = `
+    <div class="rt-panel-badge">
+      <span class="rt-panel-badge-ico">${carIco}</span>
+      <div class="rt-panel-badge-text">
+        <span class="rt-panel-badge-label">${label}</span>
+        ${statLine ? `<span class="rt-panel-badge-stat">${statLine}</span>` : ''}
+      </div>
+    </div>
+    ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
+    ${warnHtml}
+  `;
+  return wrap;
+}
+
+// Compact meta lines shown under a Car Hire / Road Trip item in the day
+// timeline (mirrors the flight-style Departure/Arrival/Duration lines).
+function carHireTimelineMeta(tr) {
+  const lines = [];
+  const ARR = ' <span class="tl-flight-arrow">→</span> ';
+  if (tr.roadTrip) {
+    const rt = tr.roadTrip;
+    if (rt.from || rt.depart) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">From:</span> ' + (rt.from||'') + (rt.depart ? ARR + rt.depart : '') + '</div>');
+    if (rt.to || rt.estArrival) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">To:</span> ' + (rt.to||'') + (rt.estArrival ? ARR + rt.estArrival : '') + '</div>');
+    if (rt.distanceMiles) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Distance:</span> ' + rt.distanceMiles.toFixed(0) + ' miles &middot; ' + fmtHoursMins(rt.durationMin) + ' driving</div>');
+    if (rt.stops && rt.stops.length) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Stops:</span> ' + rt.stops.map(s=>s.name).join(', ') + '</div>');
+  }
+  if (tr.hire) {
+    const h = tr.hire;
+    if (h.pickup && h.pickup.loc) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Pick-up:</span> ' + h.pickup.loc + (h.pickup.time ? ARR + h.pickup.time : '') + '</div>');
+    if (h.dropoff && h.dropoff.loc) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Drop-off:</span> ' + h.dropoff.loc + (h.dropoff.time ? ARR + h.dropoff.time : '') + '</div>');
+  }
+  return lines.join('');
+}
+
+// Full drawer card for a Car Hire / Road Trip item: the journey mini
+// timeline (with stops), plus a car-hire booking info card when this
+// item also carries the rental's hire{} details.
+function renderCarHireDrawerHtml(tr, modeIcon) {
+  const rt = tr.roadTrip, hire = tr.hire;
+  let journeyHtml = '';
+  if (rt) {
+    const stopsHtml = (rt.stops||[]).map(s => {
+      const durLabel = (s.arrival && s.departure) ? fmtHoursMins((function(){
+        const [ah,am]=s.arrival.split(':').map(Number), [dh,dm]=s.departure.split(':').map(Number);
+        let m=(dh*60+dm)-(ah*60+am); if(m<0)m+=1440; return m;
+      })()) + ' stop' : '';
+      return `<div class="tr-dur-row"><div class="tr-dur-line"></div><span class="tr-dur-text">${durLabel||'stop'}</span><div class="tr-dur-line"></div></div>
+        <div class="tr-station tr-station--stop">
+          <div class="tr-station-meta"><span class="tr-station-label">Stop</span><span class="tr-station-name">${s.name}</span></div>
+          ${s.arrival ? `<span class="tr-station-time">${s.arrival}</span>` : ''}
+        </div>`;
+    }).join('');
+    const durHtml = rt.durationMin ? `
+      <div class="tr-dur-row">
+        <div class="tr-dur-line"></div>
+        <span class="tr-dur-text">${fmtHoursMins(rt.durationMin)}${rt.distanceMiles ? ' · ' + rt.distanceMiles.toFixed(0) + ' miles' : ''}</span>
+        <div class="tr-dur-line"></div>
+      </div>` : `<div class="tr-dur-row"><div class="tr-dur-line"></div></div>`;
+    const warnLevel = rt.durationMin >= ROAD_TRIP_LONG_DRIVE_MIN ? 'long' : (rt.durationMin >= ROAD_TRIP_MODERATE_DRIVE_MIN ? 'moderate' : '');
+    journeyHtml = `
+      <div class="ab-section ab-significant tr-journey-block">
+        <div class="tr-mode-header">
+          <span class="tr-mode-icon">${modeIcon}</span>
+          <span class="tr-mode-label">Road Trip Journey</span>
+        </div>
+        <div class="tr-station tr-station--dep">
+          <div class="tr-station-meta"><span class="tr-station-label">Depart</span><span class="tr-station-name">${rt.from||'—'}</span></div>
+          ${rt.depart ? `<span class="tr-station-time">${rt.depart}</span>` : ''}
+        </div>
+        ${durHtml}
+        ${stopsHtml}
+        ${stopsHtml ? '<div class="tr-dur-row"><div class="tr-dur-line"></div></div>' : ''}
+        <div class="tr-station tr-station--arr">
+          <div class="tr-station-meta"><span class="tr-station-label">Est. Arrival</span><span class="tr-station-name">${rt.to||'—'}</span></div>
+          ${rt.estArrival ? `<span class="tr-station-time">${rt.estArrival}</span>` : ''}
+        </div>
+      </div>
+      ${rt.recommendedMin ? `<div class="rt-drawer-allow">Allow ${fmtHoursMins(rt.recommendedMin)} including normal stops</div>` : ''}
+      ${warnLevel==='long' ? `<div class="rt-panel-warn">${ICO.warn.replace('<svg','<svg width="14" height="14"')} <div><strong>Long driving day</strong><span>${fmtHoursMins(rt.durationMin)} estimated driving — consider adding a stop or breaking the journey.</span></div></div>` : ''}
+    `;
+  }
+
+  let hireHtml = '';
+  if (hire) {
+    let rows = '';
+    if (hire.company) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Company</span><span class="tr-bk-row-val tr-bk-row-val--strong">${hire.company}</span></div>`;
+    if (hire.vehicle) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Vehicle</span><span class="tr-bk-row-val">${hire.vehicle}</span></div>`;
+    if (hire.pickup?.loc) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Pick-up</span><span class="tr-bk-row-val">${[hire.pickup.loc, hire.pickup.date, hire.pickup.time].filter(Boolean).join(' · ')}</span></div>`;
+    if (hire.dropoff?.loc) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Drop-off</span><span class="tr-bk-row-val">${[hire.dropoff.loc, hire.dropoff.date, hire.dropoff.time].filter(Boolean).join(' · ')}</span></div>`;
+    if (hire.ref) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${hire.ref}</span></div>`;
+    const costs = hire.costs || {};
+    const costParts = [
+      costs.hire ? 'Hire ' + costs.hire : null, costs.insurance ? 'Insurance ' + costs.insurance : null,
+      costs.driver ? 'Driver ' + costs.driver : null, costs.extras ? 'Extras ' + costs.extras : null,
+    ].filter(Boolean);
+    if (costParts.length) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Costs</span><span class="tr-bk-row-val tr-bk-row-val--strong">${costParts.join(' · ')}</span></div>`;
+    if (hire.notes) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${hire.notes}</span></div>`;
+    if (rows) hireHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Car Hire Booking</div><div class="tr-bk-rows">${rows}</div></div>`;
+  }
+  return journeyHtml + hireHtml;
+}
 
 const MEAL_KIND_ICONS = {
   Breakfast: ICO.breakfast,
@@ -1235,6 +1601,12 @@ function renderTimeline() {
     col.appendChild(pill);
   }
 
+  // Car Hire / Road Trip day panel — shown above Morning only on days a
+  // car is actually relevant (see dayCarHireState). This is the primary
+  // "I've got a car today" indicator; nothing renders for ordinary days.
+  const roadTripPanel = renderRoadTripPanel(activeDay);
+  if (roadTripPanel) col.appendChild(roadTripPanel);
+
   const allItems = d.items || [];
 
   // Bucket items into periods (fall back to inferPeriod for legacy items)
@@ -1372,7 +1744,10 @@ function makeItemNode(item, idx) {
 
   // Transport info lines
   let transportMeta = '';
-  if (isTransportItem) {
+  const isCarHireItem = isTransportItem && (item.transport && item.transport.mode) === 'Car Hire / Road Trip';
+  if (isCarHireItem) {
+    transportMeta = carHireTimelineMeta(item.transport);
+  } else if (isTransportItem) {
     const tr = item.transport || {};
     const mode = tr.mode || item.kicker || 'Flight';
     let dep = tr.depart || '', arr = tr.arrive || '';
@@ -1985,6 +2360,13 @@ function openDrawerItem(dayIdx, itemIdx) {
     const mode = tr.mode || item.kicker || 'Flight';
     const modeIcon = (TRANSPORT_ICONS[mode] || ICO.plane).replace('<svg', '<svg width="22" height="22"');
     const isFlight = mode === 'Flight';
+    if (mode === 'Car Hire / Road Trip') {
+      transportInfoEl.innerHTML = renderCarHireDrawerHtml(tr, modeIcon);
+      transportInfoEl.style.display = 'block';
+      document.getElementById('dr-body').style.display = 'none';
+      const timetableBtn2 = document.getElementById('dr-timetable-btn');
+      if (timetableBtn2) timetableBtn2.style.display = 'none';
+    } else {
     // Inline SVG icons for booking rows
     const icoCheck  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
     const icoPrice  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
@@ -2051,6 +2433,7 @@ function openDrawerItem(dayIdx, itemIdx) {
     } else {
       transportInfoEl.innerHTML = ''; transportInfoEl.style.display = 'none';
     }
+    } // end non-car-hire transport branch
   } else {
     mealInfoEl.innerHTML = '';
     mealInfoEl.style.display = 'none';
@@ -2260,7 +2643,10 @@ function openEditItem(dayIdx, itemIdx) {
   }
   setCategory(cat);
 
-  if (cat === 'move') {
+  if (cat === 'move' && (item.transport && item.transport.mode) === 'Car Hire / Road Trip') {
+    setTransportType('Car Hire / Road Trip');
+    populateCarHireForm(item.transport || {});
+  } else if (cat === 'move') {
     const tr = item.transport || {};
     setTransportType(tr.mode || item.kicker || 'Flight');
     document.getElementById('f-from').value      = tr.from || (item.title||'').split(' → ')[0] || '';
@@ -2316,9 +2702,20 @@ function clearForm() {
    'f-att-name','f-att-time','f-att-link','f-att-cost','f-att-notes',
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
-   'f-ref','f-ref-other','f-url','f-avios','f-operator','f-route','f-move-notes','f-move-notes-flight'].forEach(id => {
+   'f-ref','f-ref-other','f-url','f-avios','f-operator','f-route','f-move-notes','f-move-notes-flight',
+   'f-ch-company','f-ch-vehicle','f-ch-pickup-loc','f-ch-pickup-date','f-ch-pickup-time',
+   'f-ch-dropoff-loc','f-ch-dropoff-date','f-ch-dropoff-time','f-ch-ref',
+   'f-ch-hire-cost','f-ch-insurance-cost','f-ch-driver-cost','f-ch-extras-cost','f-ch-extras-note','f-ch-notes',
+   'f-rt-start','f-rt-end','f-rt-depart','f-rt-arrive',
+   'f-rt-distance-miles','f-rt-duration-min','f-rt-recommended-min','f-rt-polyline'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  ['f-ch-pickup-loc','f-ch-dropoff-loc','f-rt-start','f-rt-end'].forEach(id => {
+    const el = document.getElementById(id); if (el) { delete el.dataset.placeId; delete el.dataset.lat; delete el.dataset.lng; }
+  });
+  document.getElementById('rt-stops-list').innerHTML = '';
+  const summaryEl = document.getElementById('rt-calc-summary');
+  summaryEl.style.display = 'none'; summaryEl.innerHTML = '';
   setAttBooked('notbooked');
   document.getElementById('f-period').value = 'morning';
   setCategory('place');
@@ -2359,19 +2756,27 @@ function onCategoryChange() {
 function setTransportType(val) {
   document.getElementById('f-transport-type').value = val;
   const isFlight = val === 'Flight';
+  const isCarHire = val === 'Car Hire / Road Trip';
   const hasOperator = ['Bus','Coach','Ferry','Train'].includes(val);
   document.getElementById('flight-booking-fields').style.display = isFlight ? 'flex' : 'none';
-  document.getElementById('f-status-move-group').style.display = isFlight ? 'none' : '';
+  document.getElementById('f-status-move-group').style.display = (isFlight || isCarHire) ? 'none' : '';
   if (isFlight) setMoveStatus('booked'); // flights always booked
-  // Non-flight: always show booking fields (no toggle needed)
+  // Non-flight, non-car-hire: always show booking fields (no toggle needed).
+  // Car Hire has its own cost/reference fields, so the generic booking
+  // block would just duplicate them — hide it for that mode.
   document.getElementById('booking-toggle-btn').style.display = 'none';
-  document.getElementById('booking-fields').style.display = isFlight ? 'none' : 'flex';
+  document.getElementById('booking-fields').style.display = (isFlight || isCarHire) ? 'none' : 'flex';
   // Operator only for Bus, Coach, Ferry, Train
   const opGroup = document.getElementById('f-operator-group');
   if (opGroup) opGroup.style.display = hasOperator ? '' : 'none';
   // Route number only for Bus, Coach
   const routeGroup = document.getElementById('f-route-group');
   if (routeGroup) routeGroup.style.display = ['Bus','Coach'].includes(val) ? '' : 'none';
+  // Car Hire / Road Trip swaps the generic from/to/depart/arrive row for
+  // its own richer field set (car hire details + journey + stops).
+  document.getElementById('f-transport-journey-basic').style.display = isCarHire ? 'none' : '';
+  document.getElementById('fields-carhire').style.display = isCarHire ? 'flex' : 'none';
+  if (isCarHire) initCarHireAutocompletes();
   document.querySelectorAll('#f-transport-type-row .tt-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.val === val);
   });
@@ -2458,6 +2863,329 @@ function showBookingFields(show) {
   document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking reference' : '+ Add booking reference';
 }
 
+// ── PLACES AUTOCOMPLETE (Car Hire / Road Trip) ──────────────────────────
+let _placesAcTimer = null;
+function initCarHireAutocompletes() {
+  ['f-ch-pickup-loc','f-ch-dropoff-loc','f-rt-start','f-rt-end'].forEach(id => attachPlacesAutocomplete(id));
+}
+function attachPlacesAutocomplete(inputId) {
+  const input = document.getElementById(inputId);
+  const list  = document.getElementById(inputId + '-list');
+  if (!input || !list || input._acAttached) return;
+  input._acAttached = true;
+  input.addEventListener('input', () => {
+    delete input.dataset.placeId; delete input.dataset.lat; delete input.dataset.lng;
+    clearTimeout(_placesAcTimer);
+    const q = input.value.trim();
+    if (q.length < 3) { list.style.display = 'none'; list.innerHTML = ''; return; }
+    _placesAcTimer = setTimeout(async () => {
+      try {
+        const preds = await dbPlacesAutocomplete(q);
+        if (!preds.length) { list.style.display = 'none'; list.innerHTML = ''; return; }
+        list.innerHTML = preds.map(p => `<div class="places-ac-item" data-place-id="${p.place_id}">${p.description}</div>`).join('');
+        list.style.display = 'block';
+      } catch (e) { list.style.display = 'none'; }
+    }, 300);
+  });
+  list.addEventListener('mousedown', async e => {
+    // mousedown (not click) so this fires before the input's blur hides the list
+    const it = e.target.closest('.places-ac-item');
+    if (!it) return;
+    e.preventDefault();
+    const placeId = it.dataset.placeId;
+    input.value = it.textContent;
+    list.style.display = 'none';
+    try {
+      const place = await dbPlaceDetails(placeId);
+      if (place) {
+        input.dataset.placeId = place.place_id;
+        input.dataset.lat = place.lat;
+        input.dataset.lng = place.lng;
+      }
+    } catch (e) { /* keep typed text even if details lookup fails */ }
+  });
+  input.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 150));
+}
+
+// ── ROAD TRIP STOPS (added as genuine stop rows in the modal; each one
+//    also becomes a real itinerary POI on save — see saveItem()) ────────
+let _stopIdCounter = 0;
+function addStopRow(stop) {
+  const wrap = document.getElementById('rt-stops-list');
+  const rowId = 'rt-stop-' + (_stopIdCounter++);
+  const row = document.createElement('div');
+  row.className = 'rt-stop-row';
+  row.dataset.rowId = rowId;
+  row.innerHTML = `
+    <div class="field-group places-ac-wrap rt-stop-place-wrap">
+      <input class="field-input places-ac-input" id="${rowId}-place" type="text" placeholder="Stop — place name" autocomplete="off">
+      <div class="places-ac-list" id="${rowId}-place-list"></div>
+    </div>
+    <div class="rt-stop-times">
+      <input class="field-input rt-stop-time" id="${rowId}-arr" type="time" title="Arrival time">
+      <span class="rt-stop-arrow">→</span>
+      <input class="field-input rt-stop-time" id="${rowId}-dep" type="time" title="Departure time">
+      <button type="button" class="rt-stop-remove" onclick="this.closest('.rt-stop-row').remove()" title="Remove stop">×</button>
+    </div>
+    <input class="field-input rt-stop-notes" id="${rowId}-notes" type="text" placeholder="Notes (optional)">`;
+  wrap.appendChild(row);
+  attachPlacesAutocomplete(rowId + '-place');
+  if (stop) {
+    const placeEl = document.getElementById(rowId + '-place');
+    placeEl.value = stop.name || '';
+    if (stop.placeId) placeEl.dataset.placeId = stop.placeId;
+    if (stop.lat != null) placeEl.dataset.lat = stop.lat;
+    if (stop.lng != null) placeEl.dataset.lng = stop.lng;
+    document.getElementById(rowId + '-arr').value = stop.arrival || '';
+    document.getElementById(rowId + '-dep').value = stop.departure || '';
+    document.getElementById(rowId + '-notes').value = stop.notes || '';
+  }
+}
+function collectStopRows() {
+  return Array.from(document.querySelectorAll('#rt-stops-list .rt-stop-row')).map(row => {
+    const rowId = row.dataset.rowId;
+    const placeEl = document.getElementById(rowId + '-place');
+    const name = placeEl.value.trim();
+    if (!name) return null;
+    return {
+      name,
+      placeId: placeEl.dataset.placeId || '',
+      lat: placeEl.dataset.lat ? parseFloat(placeEl.dataset.lat) : null,
+      lng: placeEl.dataset.lng ? parseFloat(placeEl.dataset.lng) : null,
+      arrival: document.getElementById(rowId + '-arr').value || '',
+      departure: document.getElementById(rowId + '-dep').value || '',
+      notes: document.getElementById(rowId + '-notes').value.trim(),
+    };
+  }).filter(Boolean);
+}
+
+function haversineMiles(p1, p2) {
+  const R = 3958.8;
+  const dLat = (p2.lat - p1.lat) * Math.PI / 180, dLng = (p2.lng - p1.lng) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(p1.lat*Math.PI/180) * Math.cos(p2.lat*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Calculates distance/duration/route via the Google Routes API (falling
+// back to a straight-line estimate if the API errors, e.g. not yet
+// enabled on the key) — never asks the user to enter these manually.
+async function computeRoadTripRoute() {
+  const startEl = document.getElementById('f-rt-start');
+  const endEl   = document.getElementById('f-rt-end');
+  const start = startEl.value.trim(), end = endEl.value.trim();
+  if (!start || !end) { alert('Enter a starting point and ending point first.'); return; }
+  const btn = document.getElementById('rt-calc-btn');
+  const summaryEl = document.getElementById('rt-calc-summary');
+  btn.disabled = true; btn.textContent = 'Calculating…';
+  summaryEl.style.display = 'block';
+  summaryEl.innerHTML = '<span class="rt-calc-loading">Calculating route…</span>';
+  try {
+    const originPt = startEl.dataset.placeId ? { placeId: startEl.dataset.placeId }
+      : (startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null);
+    const destPt = endEl.dataset.placeId ? { placeId: endEl.dataset.placeId }
+      : (endEl.dataset.lat ? { lat: parseFloat(endEl.dataset.lat), lng: parseFloat(endEl.dataset.lng) } : null);
+    const stops = collectStopRows();
+    const waypoints = stops.map(s => s.placeId ? { placeId: s.placeId } : (s.lat != null ? { lat: s.lat, lng: s.lng } : null)).filter(Boolean);
+
+    let distanceMiles = 0, durationMin = 0, estimated = false, polyline = '';
+    if (originPt && destPt) {
+      const result = await dbComputeRoute(originPt, destPt, waypoints);
+      if (result && result.route) {
+        distanceMiles = result.route.distanceMeters / 1609.34;
+        durationMin   = result.route.durationSeconds / 60;
+        polyline      = result.route.polyline || '';
+      } else {
+        estimated = true;
+      }
+    } else {
+      estimated = true;
+    }
+    if (estimated) {
+      const p1 = startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null;
+      const p2 = endEl.dataset.lat   ? { lat: parseFloat(endEl.dataset.lat),   lng: parseFloat(endEl.dataset.lng) }   : null;
+      if (p1 && p2) {
+        const straightMiles = haversineMiles(p1, p2) * 1.3; // rough road-distance fudge
+        distanceMiles = straightMiles;
+        durationMin   = (straightMiles / 35) * 60; // rough 35mph average assumption
+      }
+    }
+    const recommendedMin = distanceMiles ? roadTripRecommendedMin(durationMin) : 0;
+    document.getElementById('f-rt-distance-miles').value  = distanceMiles ? distanceMiles.toFixed(1) : '';
+    document.getElementById('f-rt-duration-min').value    = distanceMiles ? Math.round(durationMin) : '';
+    document.getElementById('f-rt-recommended-min').value = recommendedMin || '';
+    document.getElementById('f-rt-polyline').value        = polyline;
+    if (!distanceMiles) {
+      summaryEl.innerHTML = '<span class="rt-calc-error">Could not calculate this route — pick both points from the suggestion list, then try again.</span>';
+      return;
+    }
+    const dep = document.getElementById('f-rt-depart').value;
+    const estArr = dep ? addMinsToTime(dep, durationMin) : '';
+    const warnLevel = durationMin >= ROAD_TRIP_LONG_DRIVE_MIN ? 'long' : (durationMin >= ROAD_TRIP_MODERATE_DRIVE_MIN ? 'moderate' : '');
+    summaryEl.innerHTML = `
+      <div class="rt-calc-line rt-calc-line--main">${distanceMiles.toFixed(0)} miles &middot; ${fmtHoursMins(durationMin)} driving${estimated ? ' <span class="rt-calc-est">(estimated — enable the Routes API for exact figures)</span>' : ''}</div>
+      <div class="rt-calc-line">Allow ${fmtHoursMins(recommendedMin)} including normal stops</div>
+      ${estArr ? `<div class="rt-calc-line">Estimated arrival ${estArr}</div>` : ''}
+      ${warnLevel === 'long' ? `<div class="rt-calc-warn">${ICO.warn.replace('<svg','<svg width="13" height="13"')} Long driving day — consider adding a stop or breaking the journey.</div>` : ''}
+    `;
+  } catch (e) {
+    summaryEl.innerHTML = '<span class="rt-calc-error">Could not calculate the route. You can still save — try again later.</span>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Calculate Route';
+  }
+}
+
+function populateCarHireForm(tr) {
+  const hire = tr.hire || {};
+  const rt   = tr.roadTrip || {};
+  document.getElementById('f-ch-company').value = hire.company || '';
+  document.getElementById('f-ch-vehicle').value = hire.vehicle || '';
+  const pu = document.getElementById('f-ch-pickup-loc');
+  pu.value = hire.pickup?.loc || '';
+  if (hire.pickup?.placeId) pu.dataset.placeId = hire.pickup.placeId;
+  if (hire.pickup?.lat != null) { pu.dataset.lat = hire.pickup.lat; pu.dataset.lng = hire.pickup.lng; }
+  document.getElementById('f-ch-pickup-date').value = ddmmyyyyToInput(hire.pickup?.date);
+  document.getElementById('f-ch-pickup-time').value = hire.pickup?.time || '';
+  const doEl = document.getElementById('f-ch-dropoff-loc');
+  doEl.value = hire.dropoff?.loc || '';
+  if (hire.dropoff?.placeId) doEl.dataset.placeId = hire.dropoff.placeId;
+  if (hire.dropoff?.lat != null) { doEl.dataset.lat = hire.dropoff.lat; doEl.dataset.lng = hire.dropoff.lng; }
+  document.getElementById('f-ch-dropoff-date').value = ddmmyyyyToInput(hire.dropoff?.date);
+  document.getElementById('f-ch-dropoff-time').value = hire.dropoff?.time || '';
+  document.getElementById('f-ch-ref').value = hire.ref || '';
+  document.getElementById('f-ch-hire-cost').value = hire.costs?.hire || '';
+  document.getElementById('f-ch-insurance-cost').value = hire.costs?.insurance || '';
+  document.getElementById('f-ch-driver-cost').value = hire.costs?.driver || '';
+  document.getElementById('f-ch-extras-cost').value = hire.costs?.extras || '';
+  document.getElementById('f-ch-extras-note').value = hire.extrasNote || '';
+  document.getElementById('f-ch-notes').value = hire.notes || '';
+
+  const startEl = document.getElementById('f-rt-start');
+  startEl.value = rt.from || '';
+  if (rt.fromPlaceId) startEl.dataset.placeId = rt.fromPlaceId;
+  if (rt.fromLat != null) { startEl.dataset.lat = rt.fromLat; startEl.dataset.lng = rt.fromLng; }
+  const endEl = document.getElementById('f-rt-end');
+  endEl.value = rt.to || '';
+  if (rt.toPlaceId) endEl.dataset.placeId = rt.toPlaceId;
+  if (rt.toLat != null) { endEl.dataset.lat = rt.toLat; endEl.dataset.lng = rt.toLng; }
+  document.getElementById('f-rt-depart').value = rt.depart || '';
+  document.getElementById('f-rt-arrive').value = rt.arrive || '';
+  document.getElementById('rt-stops-list').innerHTML = '';
+  (rt.stops || []).forEach(s => addStopRow(s));
+  if (rt.distanceMiles) {
+    document.getElementById('f-rt-distance-miles').value = rt.distanceMiles;
+    document.getElementById('f-rt-duration-min').value = rt.durationMin;
+    document.getElementById('f-rt-recommended-min').value = rt.recommendedMin;
+    document.getElementById('f-rt-polyline').value = rt.polyline || '';
+    const summaryEl = document.getElementById('rt-calc-summary');
+    summaryEl.style.display = 'block';
+    summaryEl.innerHTML = `<div class="rt-calc-line rt-calc-line--main">${Number(rt.distanceMiles).toFixed(0)} miles &middot; ${fmtHoursMins(rt.durationMin)} driving</div><div class="rt-calc-line">Allow ${fmtHoursMins(rt.recommendedMin)} including normal stops</div>`;
+  }
+}
+
+// Builds the single 'move' item for a Car Hire / Road Trip entry. Either
+// (or both) of the Car Hire Details / Road Trip Journey sections may be
+// filled in — a hire that spans several days is entered once (on its
+// pick-up day) and subsequent driving-only days get their own entry with
+// just the Journey section filled; the day-level indicator (see
+// dayCarHireState()) scans every day's items to work out whether a car
+// is relevant on a given day, so it doesn't matter which item the hire
+// details live on.
+function buildCarHireItem() {
+  const company = document.getElementById('f-ch-company').value.trim();
+  const vehicle = document.getElementById('f-ch-vehicle').value.trim();
+  const pickupLoc = document.getElementById('f-ch-pickup-loc').value.trim();
+  const pickupDate = inputToDdmmyyyy(document.getElementById('f-ch-pickup-date').value);
+  const pickupTime = document.getElementById('f-ch-pickup-time').value;
+  const dropoffLoc = document.getElementById('f-ch-dropoff-loc').value.trim();
+  const dropoffDate = inputToDdmmyyyy(document.getElementById('f-ch-dropoff-date').value);
+  const dropoffTime = document.getElementById('f-ch-dropoff-time').value;
+  const ref = document.getElementById('f-ch-ref').value.trim();
+  const hireCost = document.getElementById('f-ch-hire-cost').value.trim();
+  const insuranceCost = document.getElementById('f-ch-insurance-cost').value.trim();
+  const driverCost = document.getElementById('f-ch-driver-cost').value.trim();
+  const extrasCost = document.getElementById('f-ch-extras-cost').value.trim();
+  const extrasNote = document.getElementById('f-ch-extras-note').value.trim();
+  const chNotes = document.getElementById('f-ch-notes').value.trim();
+  const hasHire = company || pickupLoc || dropoffLoc || pickupDate || dropoffDate;
+
+  const startEl = document.getElementById('f-rt-start');
+  const endEl   = document.getElementById('f-rt-end');
+  const from = startEl.value.trim(), to = endEl.value.trim();
+  const depart = document.getElementById('f-rt-depart').value;
+  const arrive = document.getElementById('f-rt-arrive').value;
+  const distanceMiles = parseFloat(document.getElementById('f-rt-distance-miles').value) || 0;
+  const durationMin = parseFloat(document.getElementById('f-rt-duration-min').value) || 0;
+  const recommendedMin = parseFloat(document.getElementById('f-rt-recommended-min').value) || 0;
+  const polyline = document.getElementById('f-rt-polyline').value || '';
+  const stops = collectStopRows();
+  const hasJourney = from || to;
+
+  if (!hasHire && !hasJourney) { document.getElementById('f-ch-company').focus(); return null; }
+  if (hasJourney && !distanceMiles) {
+    if (!confirm('You haven’t calculated the route yet — save anyway without distance/time?')) return null;
+  }
+
+  const hire = hasHire ? {
+    company, vehicle,
+    pickup: { loc: pickupLoc, date: pickupDate, time: pickupTime,
+      placeId: document.getElementById('f-ch-pickup-loc').dataset.placeId || '',
+      lat: document.getElementById('f-ch-pickup-loc').dataset.lat ? parseFloat(document.getElementById('f-ch-pickup-loc').dataset.lat) : null,
+      lng: document.getElementById('f-ch-pickup-loc').dataset.lng ? parseFloat(document.getElementById('f-ch-pickup-loc').dataset.lng) : null },
+    dropoff: { loc: dropoffLoc, date: dropoffDate, time: dropoffTime,
+      placeId: document.getElementById('f-ch-dropoff-loc').dataset.placeId || '',
+      lat: document.getElementById('f-ch-dropoff-loc').dataset.lat ? parseFloat(document.getElementById('f-ch-dropoff-loc').dataset.lat) : null,
+      lng: document.getElementById('f-ch-dropoff-loc').dataset.lng ? parseFloat(document.getElementById('f-ch-dropoff-loc').dataset.lng) : null },
+    ref, costs: { hire: hireCost, insurance: insuranceCost, driver: driverCost, extras: extrasCost },
+    extrasNote, notes: chNotes,
+  } : null;
+
+  const estArrival = (depart && durationMin) ? addMinsToTime(depart, durationMin) : (arrive || '');
+  const roadTrip = hasJourney ? {
+    from, to, depart, arrive: arrive || estArrival,
+    fromPlaceId: startEl.dataset.placeId || '', fromLat: startEl.dataset.lat ? parseFloat(startEl.dataset.lat) : null, fromLng: startEl.dataset.lng ? parseFloat(startEl.dataset.lng) : null,
+    toPlaceId: endEl.dataset.placeId || '', toLat: endEl.dataset.lat ? parseFloat(endEl.dataset.lat) : null, toLng: endEl.dataset.lng ? parseFloat(endEl.dataset.lng) : null,
+    distanceMiles, durationMin, recommendedMin, estArrival, polyline, stops,
+  } : null;
+
+  let title, time, sub;
+  if (hasJourney) {
+    title = [from, to].filter(Boolean).join(' → ');
+    time = depart || (hasHire ? pickupTime : '') || '09:00';
+    sub = ['Car Hire / Road Trip', distanceMiles ? distanceMiles.toFixed(0) + ' miles' : '', durationMin ? fmtHoursMins(durationMin) + ' driving' : ''].filter(Boolean).join(' · ');
+  } else {
+    title = (company ? company + ' — ' : '') + (pickupLoc && dropoffLoc ? pickupLoc + ' → ' + dropoffLoc : (pickupLoc || 'Car Hire'));
+    time = pickupTime || '09:00';
+    sub = 'Car Hire / Road Trip';
+  }
+
+  return {
+    _id: (editItem && editItem.item && editItem.item._id) || (crypto.randomUUID ? crypto.randomUUID() : 'ch-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+    time, type: 'move', period: document.getElementById('f-period').value || 'morning',
+    title, sub, status: ref ? 'booked' : null,
+    transport: { mode: 'Car Hire / Road Trip', hire, roadTrip },
+    icoType: 'car', kicker: 'Car Hire / Road Trip',
+  };
+}
+
+// Adds each named stop as a real itinerary Point of Interest on the same
+// day as the journey, right after the road-trip item itself — per the
+// brief, stops should behave like genuine itinerary locations, not just
+// entries inside the transport card.
+function addStopsAsPoiItems(dayItems, journeyItem, stops) {
+  if (!stops || !stops.length) return;
+  const insertAt = dayItems.indexOf(journeyItem) + 1;
+  const poiItems = stops.map(s => ({
+    time: s.arrival || '', type: 'place', period: journeyItem.period,
+    title: s.name, sub: '',
+    status: null,
+    booking: s.notes ? { ref:'', price:'', tickets:'', url:'', note: s.notes } : undefined,
+    _roadTripStop: true,
+    _fromItemId: journeyItem._id,
+    _geo: (s.lat != null) ? { place_id: s.placeId || '', lat: s.lat, lng: s.lng, name: s.name } : undefined,
+  }));
+  dayItems.splice(insertAt, 0, ...poiItems);
+}
+
 function saveItem() {
   if (document.getElementById('tab-bulk').classList.contains('active')) {
     saveBulkItems(); return;
@@ -2466,6 +3194,38 @@ function saveItem() {
   const period = document.getElementById('f-period').value || 'morning';
   const orig   = (editItem && editItem.item) || null;
   let time, title, item;
+
+  if (type === 'move' && document.getElementById('f-transport-type').value === 'Car Hire / Road Trip') {
+    item = buildCarHireItem();
+    if (!item) return; // validation failed — focus already set, keep modal open
+    time = item.time;
+    const items = STATE.days[activeDay].items;
+    if (editItem && editItem.dayIdx === activeDay) {
+      const ri = editItem.item ? items.indexOf(editItem.item) : -1;
+      // Drop any POI items this edit previously generated for its stops,
+      // then re-add fresh ones below — avoids piling up duplicates when
+      // stops are added/removed/reordered across edits.
+      const oldId = editItem.item && editItem.item._id;
+      for (let i = items.length - 1; i >= 0; i--) {
+        if (items[i] && items[i]._roadTripStop && oldId && items[i]._fromItemId === oldId) items.splice(i, 1);
+      }
+      const idx = ri !== -1 ? ri : editItem.itemIdx;
+      items[idx] = item;
+    } else {
+      const toMins = t => { const [h,m]=(t||'').split(':').map(Number); return isNaN(h)?9999:h*60+(m||0); };
+      const pos = items.findIndex(it => it && !it.conn && toMins(it.time) > toMins(time));
+      if (pos === -1) items.push(item); else items.splice(pos, 0, item);
+    }
+    if (item.transport.roadTrip) addStopsAsPoiItems(items, item, item.transport.roadTrip.stops);
+    const day = STATE.days[activeDay];
+    if (day._hiddenPeriods && day._hiddenPeriods.includes(item.period)) {
+      day._hiddenPeriods = day._hiddenPeriods.filter(p => p !== item.period);
+    }
+    closeModal();
+    scheduleSave();
+    render();
+    return;
+  }
 
   if (type === 'move') {
     const tType  = document.getElementById('f-transport-type').value;
@@ -3642,11 +4402,32 @@ function extractBookings(state) {
     date:h.checkin,
   }));
 
-  const flights=[], transport=[], attractions=[], dining=[];
+  const flights=[], transport=[], attractions=[], dining=[], carhire=[];
 
   for (const d of state.days||[]) {
     for (const it of d.items||[]) {
       if (!it) continue;
+      const isCarHire = it.type==='move' && it.transport?.mode === 'Car Hire / Road Trip';
+      // The Car Hire booking represents the vehicle rental itself — a
+      // Road Trip Journey with no hire details attached is just a
+      // driving leg, not a booking, so it's excluded here (it still
+      // shows on the day as a transport card).
+      if (isCarHire) {
+        const hire = it.transport.hire;
+        if (!hire) continue;
+        const price = parsePr(hire.costs?.hire) + (parsePr(hire.costs?.insurance)||0) + (parsePr(hire.costs?.driver)||0) + (parsePr(hire.costs?.extras)||0);
+        carhire.push({
+          name: hire.company || 'Car Hire', cat:'carhire',
+          status: hire.ref ? 'confirmed' : 'pending', ref: hire.ref||'',
+          price: price || null, date: hire.pickup?.date || d.date,
+          dayIdx: state.days.indexOf(d),
+          pickupLoc: hire.pickup?.loc, pickupDate: hire.pickup?.date, pickupTime: hire.pickup?.time,
+          dropoffLoc: hire.dropoff?.loc, dropoffDate: hire.dropoff?.date, dropoffTime: hire.dropoff?.time,
+          vehicle: hire.vehicle,
+        });
+        continue;
+      }
+
       const b = it.booking||{};
       const st = it.status||'';
       const hasRef = !!(b.ref);
@@ -3672,7 +4453,7 @@ function extractBookings(state) {
       }
     }
   }
-  return { hotels, flights, transport, attractions, dining };
+  return { hotels, flights, transport, attractions, dining, carhire };
 }
 
 let bookingsFilter = 'all';
@@ -3681,11 +4462,12 @@ function renderBookingsView() {
   const el = document.getElementById('bookings-main');
   if (!STATE?.days) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">No data</div>'; return; }
 
-  const { hotels, flights, transport, attractions, dining } = extractBookings(STATE);
+  const { hotels, flights, transport, attractions, dining, carhire } = extractBookings(STATE);
   const all = [
     ...hotels.map(b=>({...b,cat:'hotel'})),
     ...flights.map(b=>({...b,cat:'flight'})),
     ...transport.map(b=>({...b,cat:'transport'})),
+    ...carhire.map(b=>({...b,cat:'carhire'})),
     ...attractions.map(b=>({...b,cat:'attraction'})),
     ...dining.map(b=>({...b,cat:'dining'})),
   ].sort((a,b) => (a.date||'').localeCompare(b.date||''));
@@ -3703,6 +4485,7 @@ function renderBookingsView() {
     {key:'hotel',label:'Hotels',count:hotels.length,color:'#0e7a87'},
     {key:'flight',label:'Flights',count:flights.length,color:'#526B82'},
     {key:'transport',label:'Travel',count:transport.length,color:'#d97b0a'},
+    {key:'carhire',label:'Car Hire',count:carhire.length,color:'#526B82'},
     {key:'attraction',label:'Attractions',count:attractions.length,color:'#5A8968'},
     {key:'dining',label:'Dining',count:dining.length,color:'#9333ea'},
   ].filter(c=>c.count>0);
@@ -3718,10 +4501,32 @@ function renderBookingsView() {
     transport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><line x1="8" y1="19" x2="16" y2="19"/><path d="M8 19l-2 2"/><path d="M16 19l2 2"/></svg>',
     attraction: '<svg viewBox="0 0 481.08 481.08" fill="currentColor"><path d="M470.52,159.601l-35.977-35.688c-10.657,10.656-23.604,15.988-38.828,15.988c-15.229,0-28.168-5.332-38.824-15.988c-10.664-10.66-15.988-23.601-15.988-38.83c0-15.23,5.331-28.171,15.988-38.832l-35.693-35.688c-7.05-7.04-15.66-10.562-25.838-10.562c-10.184,0-18.794,3.523-25.837,10.562L10.566,269.233C3.521,276.279,0,284.896,0,295.07c0,10.182,3.521,18.791,10.566,25.838l35.688,35.977c10.66-10.656,23.604-15.988,38.831-15.988c15.226,0,28.167,5.325,38.826,15.988c10.657,10.657,15.987,23.6,15.987,38.828s-5.327,28.164-15.987,38.828l35.976,35.974c7.044,7.043,15.658,10.564,25.841,10.564c10.184,0,18.798-3.521,25.837-10.564L470.52,211.275c7.043-7.042,10.561-15.653,10.561-25.837C481.08,175.255,477.562,166.645,470.52,159.601z M393.145,216.701L216.702,393.139c-3.422,3.433-7.705,5.144-12.847,5.144c-5.137,0-9.419-1.711-12.845-5.144L87.653,289.793c-3.617-3.621-5.424-7.902-5.424-12.847c0-4.949,1.807-9.236,5.424-12.854L264.095,87.651c3.429-3.427,7.714-5.142,12.854-5.142c5.134,0,9.418,1.715,12.847,5.142l103.35,103.353c3.621,3.619,5.428,7.902,5.428,12.85C398.572,208.801,396.766,213.083,393.145,216.701z"/><path d="M276.955,113.639l90.223,90.218L203.87,367.165l-90.218-90.218L276.955,113.639z"/></svg>',
     dining: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+    carhire: ICO.car,
   };
 
   const mkCard = (b) => {
     const ico = catIcons[b.cat] || catIcons.attraction;
+    if (b.cat === 'carhire') {
+      // Distinct layout — this is the vehicle rental itself, not a
+      // driving leg, so it reads as a pickup → drop-off journey.
+      return `<div class="bk-card bk-card--carhire">
+        <div class="bk-card-ico carhire">${ico}</div>
+        <div class="bk-card-body">
+          <div class="bk-card-name">${b.name}${b.vehicle ? ' · ' + b.vehicle : ''}</div>
+          <div class="bk-ch-route">
+            <div class="bk-ch-point"><span class="bk-ch-loc">${b.pickupLoc||'—'}</span><span class="bk-ch-time">${[b.pickupDate,b.pickupTime].filter(Boolean).join(' — ')}</span></div>
+            <div class="bk-ch-arrow">↓</div>
+            <div class="bk-ch-point"><span class="bk-ch-loc">${b.dropoffLoc||'—'}</span><span class="bk-ch-time">${[b.dropoffDate,b.dropoffTime].filter(Boolean).join(' — ')}</span></div>
+          </div>
+          <div class="bk-card-row2">
+            ${statusBadge(b.status)}
+            ${b.ref ? `<span class="bk-card-ref">Ref: ${b.ref}</span>` : ''}
+            ${b.price ? `<span class="bk-card-price">${fmt(b.price)}</span>` : ''}
+          </div>
+          <div class="bk-card-actions"><button class="bk-action" onclick="setView('itinerary');setDay(${b.dayIdx||0})">View in itinerary</button></div>
+        </div>
+      </div>`;
+    }
     const actions = [
       b.url ? `<a href="${b.url}" target="_blank" class="bk-action">View ticket →</a>` : null,
       `<button class="bk-action" onclick="setView('itinerary');setDay(${b.dayIdx||0})">View in itinerary</button>`,
@@ -3755,6 +4560,7 @@ function renderBookingsView() {
     { key:'hotel',      label:'Hotels',      items:hotels,     color:'#0e7a87' },
     { key:'flight',     label:'Flights',     items:flights,    color:'#526B82' },
     { key:'transport',  label:'Travel',      items:transport,  color:'#d97b0a' },
+    { key:'carhire',    label:'Car Hire',    items:carhire,    color:'#526B82' },
     { key:'attraction', label:'Attractions', items:attractions,color:'#5A8968' },
     { key:'dining',     label:'Dining',      items:dining,     color:'#9333ea' },
   ].filter(sec => sec.items.length > 0);
@@ -4239,6 +5045,7 @@ if (SHARE_VIEW_ACTIVE) {
     'openEditDays', 'closeEditDays', 'edAddDay', 'edDeleteDay', 'edDragStart', 'edDragOver',
     'edDrop', 'edDragEnd', 'saveEditDays',
     'editDayTitle', 'onDragStart', 'saveBudgetAvios',
+    'addStopRow', 'computeRoadTripRoute',
   ].forEach(name => {
     if (typeof window[name] === 'function') window[name] = function(){};
   });
