@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=283">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=284">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -645,6 +645,42 @@
   </div>
 </div>
 
+<!-- QUICK ADD JOURNEY MODAL -->
+<div class="modal-overlay" id="quick-journey-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add Journey</div>
+      <button class="modal-close" onclick="closeQuickJourneyModal()">×</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;gap:13px;">
+      <div class="field-group places-ac-wrap">
+        <label class="field-label">Starting point</label>
+        <input class="field-input places-ac-input" id="f-qj-start" type="text" autocomplete="off">
+        <div class="places-ac-list" id="f-qj-start-list"></div>
+      </div>
+      <div class="field-group places-ac-wrap">
+        <label class="field-label">Ending point</label>
+        <input class="field-input places-ac-input" id="f-qj-end" type="text" autocomplete="off">
+        <div class="places-ac-list" id="f-qj-end-list"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Departure time</label>
+          <input class="field-input" id="f-qj-depart" type="time">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Approx. arrival time <span class="rt-subhead-hint">(calculated if left blank)</span></label>
+          <input class="field-input" id="f-qj-arrive" type="time">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn secondary" onclick="closeQuickJourneyModal()">Cancel</button>
+      <button class="modal-btn primary" id="qj-save-btn" onclick="saveQuickJourney()" style="background:var(--carhire);">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- TRIP SETTINGS MODAL -->
 <div class="modal-overlay" id="trip-settings-overlay">
   <div class="modal">
@@ -980,7 +1016,7 @@ function dayCarHireState(dayIdx) {
   if (!day) return null;
   const dayDate = ddmmyyyyToDate(day.date);
 
-  let hireActive = false, isPickup = false, isReturn = false;
+  let hireActive = false, isPickup = false, isReturn = false, hireInfo = null;
   let driving = null;
 
   for (const d of STATE.days) {
@@ -992,6 +1028,7 @@ function dayCarHireState(dayIdx) {
         const dr = ddmmyyyyToDate(hire.dropoff && hire.dropoff.date);
         if (pu && dr && dayDate >= pu && dayDate <= dr) {
           hireActive = true;
+          if (!hireInfo) hireInfo = hire;
           if (dayDate.getTime() === pu.getTime()) isPickup = true;
           if (dayDate.getTime() === dr.getTime()) isReturn = true;
         }
@@ -1007,7 +1044,7 @@ function dayCarHireState(dayIdx) {
       driving.distanceMiles += rt.distanceMiles || 0;
       driving.durationMin   += rt.durationMin || 0;
     }
-    if (it.transport.hire) hireActive = true; // hire item itself always makes its own day relevant, even w/o parsable dates
+    if (it.transport.hire) { hireActive = true; if (!hireInfo) hireInfo = it.transport.hire; } // hire item itself always makes its own day relevant, even w/o parsable dates
   }
 
   if (!hireActive && !driving) return null;
@@ -1022,7 +1059,7 @@ function dayCarHireState(dayIdx) {
   const warnLevel = driving && driving.durationMin >= ROAD_TRIP_LONG_DRIVE_MIN ? 'long'
     : driving && driving.durationMin >= ROAD_TRIP_MODERATE_DRIVE_MIN ? 'moderate' : '';
 
-  return { kind, driving, warnLevel };
+  return { kind, driving, warnLevel, hire: hireInfo };
 }
 
 const ROAD_TRIP_BADGE_LABEL = {
@@ -1057,6 +1094,23 @@ function findCarHireEditTarget(dayIdx) {
   return null;
 }
 
+// Short "01 Sep" style date for the hire summary card — dates are stored
+// as dd/mm/yyyy strings throughout this feature (see ddmmyyyyToDate).
+function fmtShortDdmmyyyy(s) {
+  const d = ddmmyyyyToDate(s);
+  if (!d) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+}
+
+// Google Maps link for a hire pickup/drop-off location — prefers the
+// resolved place_id (exact pin) and falls back to a text search on
+// whatever the user typed if no place was picked from the autocomplete.
+function mapsLinkForLoc(loc, placeId) {
+  if (placeId) return 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(placeId);
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc || '');
+}
+
 // Renders the "I've got a car today" panel above the Morning section —
 // the core of the feature (section 20 of the brief): a user should be
 // able to tell from this panel alone, without opening any transport
@@ -1069,8 +1123,10 @@ function renderRoadTripPanel(dayIdx) {
   const carIco = ICO.car.replace('<svg', '<svg width="18" height="18"');
 
   let statLine = '';
-  if (state.driving) {
-    statLine = `${state.driving.distanceMiles.toFixed(0)} miles &middot; ${fmtHoursMins(state.driving.durationMin)} driving`;
+  if (state.driving && state.driving.durationMin) {
+    statLine = state.driving.distanceMiles
+      ? `${state.driving.distanceMiles.toFixed(0)} miles &middot; ${fmtHoursMins(state.driving.durationMin)} driving`
+      : `${fmtHoursMins(state.driving.durationMin)} driving`;
   }
 
   // List every driving leg + planned stop for today, so the plan is
@@ -1092,6 +1148,24 @@ function renderRoadTripPanel(dayIdx) {
     ? `<div class="rt-panel-warn">${ICO.warn.replace('<svg','<svg width="14" height="14"')} <div><strong>Long driving day</strong><span>${fmtHoursMins(state.driving.durationMin)} estimated driving — consider adding a stop or breaking the journey.</span></div></div>`
     : '';
 
+  // At-a-glance hire summary — company, booking ref, pick-up/drop-off
+  // (with a Google Maps link) and total cost — shown on every day the
+  // hire is active, not just the day it was entered on.
+  let hireSummaryHtml = '';
+  if (state.hire) {
+    const h = state.hire;
+    const fmtMoney = n => n ? '£' + n.toFixed(2).replace(/\.00$/, '') : '';
+    const numTrav = parseInt((STATE.meta && STATE.meta.trav) || trav) || 2;
+    const totalCost = ['hire','insurance','driver','extras'].reduce((sum, k) => sum + (parsePrice(h.costs && h.costs[k], numTrav) || 0), 0);
+    const rows = [];
+    if (h.company || h.ref) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Company</span><span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</span></div>`);
+    if (h.pickup && h.pickup.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Pick-up</span><span><a href="${mapsLinkForLoc(h.pickup.loc, h.pickup.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.pickup.loc}</a>${[fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') : ''}</span></div>`);
+    if (h.dropoff && h.dropoff.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Drop-off</span><span><a href="${mapsLinkForLoc(h.dropoff.loc, h.dropoff.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.dropoff.loc}</a>${[fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') : ''}</span></div>`);
+    if (totalCost) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost</span><span>${fmtMoney(totalCost)}</span></div>`);
+    if (h.notes) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes</span><span>${h.notes}</span></div>`);
+    if (rows.length) hireSummaryHtml = `<div class="rt-panel-hire">${rows.join('')}</div>`;
+  }
+
   const wrap = document.createElement('div');
   wrap.className = 'rt-panel rt-panel--' + state.kind;
   wrap.innerHTML = `
@@ -1101,8 +1175,12 @@ function renderRoadTripPanel(dayIdx) {
         <span class="rt-panel-badge-label">${label}</span>
         ${statLine ? `<span class="rt-panel-badge-stat">${statLine}</span>` : ''}
       </div>
-      <button type="button" class="rt-panel-edit-btn">Edit</button>
+      <div class="rt-panel-actions">
+        <button type="button" class="rt-panel-journey-btn">+ Add Journey</button>
+        <button type="button" class="rt-panel-edit-btn">Edit</button>
+      </div>
     </div>
+    ${hireSummaryHtml}
     ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
     ${warnHtml}
   `;
@@ -1113,6 +1191,7 @@ function renderRoadTripPanel(dayIdx) {
   } else {
     editBtn.style.display = 'none';
   }
+  wrap.querySelector('.rt-panel-journey-btn').addEventListener('click', () => openQuickJourneyModal());
   return wrap;
 }
 
@@ -3015,6 +3094,44 @@ function haversineMiles(p1, p2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// Pure route computation — no DOM reads/writes — shared by the full Road
+// Trip Journey section's "Calculate Route" button and the quick Add
+// Journey modal. Tries the Google Routes API first, falling back to a
+// straight-line estimate (flagged via `estimated`) if it errors or isn't
+// enabled on the key yet.
+async function computeRouteData(startEl, endEl, stops) {
+  const originPt = startEl.dataset.placeId ? { placeId: startEl.dataset.placeId }
+    : (startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null);
+  const destPt = endEl.dataset.placeId ? { placeId: endEl.dataset.placeId }
+    : (endEl.dataset.lat ? { lat: parseFloat(endEl.dataset.lat), lng: parseFloat(endEl.dataset.lng) } : null);
+  const waypoints = (stops||[]).map(s => s.placeId ? { placeId: s.placeId } : (s.lat != null ? { lat: s.lat, lng: s.lng } : null)).filter(Boolean);
+
+  let distanceMiles = 0, durationMin = 0, estimated = false, polyline = '';
+  if (originPt && destPt) {
+    const result = await dbComputeRoute(originPt, destPt, waypoints);
+    if (result && result.route) {
+      distanceMiles = result.route.distanceMeters / 1609.34;
+      durationMin   = result.route.durationSeconds / 60;
+      polyline      = result.route.polyline || '';
+    } else {
+      estimated = true;
+    }
+  } else {
+    estimated = true;
+  }
+  if (estimated) {
+    const p1 = startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null;
+    const p2 = endEl.dataset.lat   ? { lat: parseFloat(endEl.dataset.lat),   lng: parseFloat(endEl.dataset.lng) }   : null;
+    if (p1 && p2) {
+      const straightMiles = haversineMiles(p1, p2) * 1.3; // rough road-distance fudge
+      distanceMiles = straightMiles;
+      durationMin   = (straightMiles / 35) * 60; // rough 35mph average assumption
+    }
+  }
+  const recommendedMin = distanceMiles ? roadTripRecommendedMin(durationMin) : 0;
+  return { distanceMiles, durationMin, recommendedMin, polyline, estimated };
+}
+
 // Calculates distance/duration/route via the Google Routes API (falling
 // back to a straight-line estimate if the API errors, e.g. not yet
 // enabled on the key) — never asks the user to enter these manually.
@@ -3029,36 +3146,8 @@ async function computeRoadTripRoute() {
   summaryEl.style.display = 'block';
   summaryEl.innerHTML = '<span class="rt-calc-loading">Calculating route…</span>';
   try {
-    const originPt = startEl.dataset.placeId ? { placeId: startEl.dataset.placeId }
-      : (startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null);
-    const destPt = endEl.dataset.placeId ? { placeId: endEl.dataset.placeId }
-      : (endEl.dataset.lat ? { lat: parseFloat(endEl.dataset.lat), lng: parseFloat(endEl.dataset.lng) } : null);
     const stops = collectStopRows();
-    const waypoints = stops.map(s => s.placeId ? { placeId: s.placeId } : (s.lat != null ? { lat: s.lat, lng: s.lng } : null)).filter(Boolean);
-
-    let distanceMiles = 0, durationMin = 0, estimated = false, polyline = '';
-    if (originPt && destPt) {
-      const result = await dbComputeRoute(originPt, destPt, waypoints);
-      if (result && result.route) {
-        distanceMiles = result.route.distanceMeters / 1609.34;
-        durationMin   = result.route.durationSeconds / 60;
-        polyline      = result.route.polyline || '';
-      } else {
-        estimated = true;
-      }
-    } else {
-      estimated = true;
-    }
-    if (estimated) {
-      const p1 = startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null;
-      const p2 = endEl.dataset.lat   ? { lat: parseFloat(endEl.dataset.lat),   lng: parseFloat(endEl.dataset.lng) }   : null;
-      if (p1 && p2) {
-        const straightMiles = haversineMiles(p1, p2) * 1.3; // rough road-distance fudge
-        distanceMiles = straightMiles;
-        durationMin   = (straightMiles / 35) * 60; // rough 35mph average assumption
-      }
-    }
-    const recommendedMin = distanceMiles ? roadTripRecommendedMin(durationMin) : 0;
+    const { distanceMiles, durationMin, recommendedMin, polyline, estimated } = await computeRouteData(startEl, endEl, stops);
     document.getElementById('f-rt-distance-miles').value  = distanceMiles ? distanceMiles.toFixed(1) : '';
     document.getElementById('f-rt-duration-min').value    = distanceMiles ? Math.round(durationMin) : '';
     document.getElementById('f-rt-recommended-min').value = recommendedMin || '';
@@ -3080,6 +3169,75 @@ async function computeRoadTripRoute() {
     summaryEl.innerHTML = '<span class="rt-calc-error">Could not calculate the route. You can still save — try again later.</span>';
   } finally {
     btn.disabled = false; btn.textContent = 'Calculate Route';
+  }
+}
+
+// ── QUICK ADD JOURNEY ────────────────────────────────────────────────
+// A fast path for logging a driving leg without opening the full Add
+// Activity modal: just Starting Point, Ending Point, Departure Time, and
+// an optional Arrival Time (auto-calculated from the route if left
+// blank, same as the full modal's "Calculate Route" flow). Always
+// creates a journey-only item (no hire{} details) on the currently
+// viewed day — hire details are still entered via the full Car Hire /
+// Road Trip category tab.
+function openQuickJourneyModal() {
+  ['f-qj-start','f-qj-end'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; delete el.dataset.placeId; delete el.dataset.lat; delete el.dataset.lng; }
+  });
+  document.getElementById('f-qj-depart').value = '';
+  document.getElementById('f-qj-arrive').value = '';
+  attachPlacesAutocomplete('f-qj-start');
+  attachPlacesAutocomplete('f-qj-end');
+  document.getElementById('quick-journey-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-qj-start').focus(), 100);
+}
+
+function closeQuickJourneyModal() {
+  document.getElementById('quick-journey-overlay').classList.remove('open');
+}
+
+async function saveQuickJourney() {
+  const startEl = document.getElementById('f-qj-start');
+  const endEl   = document.getElementById('f-qj-end');
+  const from = startEl.value.trim(), to = endEl.value.trim();
+  if (!from || !to) { alert('Enter a starting point and ending point.'); return; }
+  const depart = document.getElementById('f-qj-depart').value;
+  let arrive = document.getElementById('f-qj-arrive').value;
+
+  const saveBtn = document.getElementById('qj-save-btn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+  try {
+    const { distanceMiles, durationMin, recommendedMin, polyline } = await computeRouteData(startEl, endEl, []);
+    const estArrival = (depart && durationMin) ? addMinsToTime(depart, durationMin) : '';
+    if (!arrive) arrive = estArrival;
+
+    const roadTrip = {
+      from, to, depart, arrive,
+      fromPlaceId: startEl.dataset.placeId || '', fromLat: startEl.dataset.lat ? parseFloat(startEl.dataset.lat) : null, fromLng: startEl.dataset.lng ? parseFloat(startEl.dataset.lng) : null,
+      toPlaceId: endEl.dataset.placeId || '', toLat: endEl.dataset.lat ? parseFloat(endEl.dataset.lat) : null, toLng: endEl.dataset.lng ? parseFloat(endEl.dataset.lng) : null,
+      distanceMiles: distanceMiles || 0, durationMin: distanceMiles ? Math.round(durationMin) : 0, recommendedMin: recommendedMin || 0,
+      estArrival, polyline: polyline || '', stops: [],
+    };
+    const title = [from, to].filter(Boolean).join(' → ');
+    const sub = ['Car Hire / Road Trip', distanceMiles ? distanceMiles.toFixed(0) + ' miles' : '', durationMin ? fmtHoursMins(durationMin) + ' driving' : ''].filter(Boolean).join(' · ');
+    const item = {
+      _id: crypto.randomUUID ? crypto.randomUUID() : 'ch-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+      time: depart || '09:00', type: 'move', period: inferPeriod({ time: depart, kicker: 'Car Hire / Road Trip' }),
+      title, sub, status: null,
+      transport: { mode: 'Car Hire / Road Trip', hire: null, roadTrip },
+      icoType: 'car', kicker: 'Car Hire / Road Trip',
+    };
+    takeSnapshot();
+    if (!STATE.days[activeDay].items) STATE.days[activeDay].items = [];
+    STATE.days[activeDay].items.push(item);
+    closeQuickJourneyModal();
+    scheduleSave();
+    render();
+  } catch (e) {
+    alert('Could not save this journey — try again.');
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = 'Save';
   }
 }
 
@@ -5095,6 +5253,7 @@ if (SHARE_VIEW_ACTIVE) {
     'edDrop', 'edDragEnd', 'saveEditDays',
     'editDayTitle', 'onDragStart', 'saveBudgetAvios',
     'addStopRow', 'computeRoadTripRoute',
+    'openQuickJourneyModal', 'closeQuickJourneyModal', 'saveQuickJourney',
   ].forEach(name => {
     if (typeof window[name] === 'function') window[name] = function(){};
   });

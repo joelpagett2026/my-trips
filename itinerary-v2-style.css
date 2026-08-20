@@ -1901,6 +1901,7 @@ body.share-view .hotel-edit-btn,
 body.share-view .rp2-add-btn,
 body.share-view .rp2-hotel-edit-head,
 body.share-view .rt-panel-edit-btn,
+body.share-view .rt-panel-journey-btn,
 body.share-view .bv-avios-input {
   display: none !important;
 }
@@ -2028,11 +2029,24 @@ body.share-view .tb-title { cursor: default; }
 }
 .rt-panel--roadtrip .rt-panel-badge-label { color: var(--teal); }
 .rt-panel-badge-stat { font-size: 12px; color: var(--text2); }
-.rt-panel-edit-btn {
-  margin-left: auto; flex-shrink: 0; background: none; border: 1px solid var(--carhire); border-radius: 6px;
+.rt-panel-actions { margin-left: auto; flex-shrink: 0; display: flex; gap: 8px; }
+.rt-panel-journey-btn, .rt-panel-edit-btn {
+  background: none; border: 1px solid var(--carhire); border-radius: 6px;
   padding: 4px 12px; font-family: var(--font); font-size: 11px; font-weight: 700; color: var(--carhire); cursor: pointer;
+  white-space: nowrap;
 }
-.rt-panel-edit-btn:hover { background: var(--carhire-bg); }
+.rt-panel-journey-btn:hover, .rt-panel-edit-btn:hover { background: var(--carhire-bg); }
+.rt-panel-hire {
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.rt-panel-hire-row { display: flex; align-items: baseline; gap: 10px; font-size: 12px; color: var(--text); }
+.rt-panel-hire-label {
+  flex-shrink: 0; width: 62px; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  color: var(--text3); text-transform: uppercase;
+}
+.rt-panel-hire-link { color: var(--carhire); text-decoration: none; font-weight: 600; }
+.rt-panel-hire-link:hover { text-decoration: underline; }
 .rt-panel-legs { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
 .rt-panel-leg { padding-top: 10px; border-top: 1px solid var(--line); }
 .rt-panel-leg-route { font-size: 13px; font-weight: 700; color: var(--text); }
@@ -2050,6 +2064,10 @@ body.share-view .tb-title { cursor: default; }
   .rt-panel-badge-ico { width: 32px; height: 32px; }
   .rt-panel-badge-label { font-size: 11px; }
   .rt-panel-badge-stat { font-size: 11px; }
+  .rt-panel-badge { flex-wrap: wrap; }
+  .rt-panel-actions { margin-left: 0; width: 100%; margin-top: 4px; }
+  .rt-panel-journey-btn, .rt-panel-edit-btn { flex: 1; text-align: center; }
+  .rt-panel-hire-label { width: 56px; }
 }
 
 /* Bookings tab — Car Hire card (distinct from a driving-leg journey
