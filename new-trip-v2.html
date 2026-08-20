@@ -754,7 +754,7 @@ const budgetPageUrl = '/' + slug.split('-')[0] + '-budget.html';
 // during deploy — `params` itself doesn't survive baking.
 const _shareParams  = new URLSearchParams(window.location.search);
 const SHARE_TOKEN   = _shareParams.get('t') || '';
-const IS_SHARE_VIEW = _shareParams.has('share') && !!SHARE_TOKEN;
+const SHARE_VIEW_ACTIVE = _shareParams.has('share') && !!SHARE_TOKEN;
 // ────────────────────────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────────────────────────
@@ -849,7 +849,7 @@ function badgeHtml(status, label) {
 // ── LOAD / SAVE ───────────────────────────────────────────────────────
 async function loadData() {
   try {
-    if (IS_SHARE_VIEW) {
+    if (SHARE_VIEW_ACTIVE) {
       const result = await dbLoadShare(SHARE_TOKEN);
       if (!result || !result.data) {
         showShareInvalid();
@@ -883,7 +883,7 @@ async function loadData() {
     }
   } catch(e) {
     console.error('Load failed', e);
-    if (IS_SHARE_VIEW) { showShareInvalid(); return; }
+    if (SHARE_VIEW_ACTIVE) { showShareInvalid(); return; }
     const msg = e && e.message ? e.message : String(e);
     document.getElementById('tb-kicker').textContent = msg.includes('token') || msg.includes('auth') 
       ? 'Session expired — re-enter PIN' : 'Load error: ' + msg.slice(0,40);
@@ -1001,7 +1001,7 @@ const SNAPS_ID = RECORD_ID + '-snaps';
 let snapshotList = [];
 
 async function loadSnapshots() {
-  if (IS_SHARE_VIEW) return; // snapshots are an owner-only editing feature
+  if (SHARE_VIEW_ACTIVE) return; // snapshots are an owner-only editing feature
   try {
     const d = await dbLoad(SNAPS_ID);
     snapshotList = (d && d.snaps) ? d.snaps : [];
@@ -1245,7 +1245,7 @@ function renderTimeline() {
 
   // Read-only shared links see every period regardless of the owner's
   // per-day hide/show state — "full access" means nothing stays hidden.
-  const hiddenPeriods = IS_SHARE_VIEW ? [] : (d._hiddenPeriods || []);
+  const hiddenPeriods = SHARE_VIEW_ACTIVE ? [] : (d._hiddenPeriods || []);
   PERIODS.forEach(({ key, label }) => {
     if (hiddenPeriods.includes(key)) return;
     const section = document.createElement('div');
@@ -3413,7 +3413,7 @@ async function fetchMealPhoto(item) {
     return;
   }
   photoSlot.style.display = 'none';
-  if (IS_SHARE_VIEW) return; // no cached photo — skip the live fetch, nothing to persist to anyway
+  if (SHARE_VIEW_ACTIVE) return; // no cached photo — skip the live fetch, nothing to persist to anyway
   try {
     const city = drawerItem ? (STATE.days[drawerItem.dayIdx]?.loc || STATE.meta?.dest || '') : '';
     const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(item.title) + '&city=' + encodeURIComponent(city), {
@@ -3439,7 +3439,7 @@ async function generateAbout(force) {
   // Don't re-fetch if we already have it and not forced
   if (item._about && !force) { renderAbout(item._about); return; }
 
-  if (IS_SHARE_VIEW) {
+  if (SHARE_VIEW_ACTIVE) {
     // No cached info to show, and nowhere to persist a freshly generated
     // one — just hide the section instead of firing a live AI request.
     document.getElementById('dr-about-wrap').style.display    = 'none';
@@ -4098,7 +4098,7 @@ function renderBudgetView() {
     mkRowWithIco(TRANSPORT_ICONS['Flight']||icoFlight, 'rgba(82,107,130,0.1)', '#526B82',
       f.title, f.date||'', 'Flight',
       f.price, f.rawPrice,
-      IS_SHARE_VIEW
+      SHARE_VIEW_ACTIVE
         ? (f.avios ? `<div class="bv-row-avios">\u2726 ${f.avios}</div>` : '')
         : `<div class="bv-row-avios">\u2726 <input class="bv-avios-input" placeholder="Add Avios" value="${f.avios||''}" onchange="saveBudgetAvios(${i},this.value)"></div>`
     )
@@ -4213,7 +4213,7 @@ setView = function(view) {
 // here. Viewing functions (openDrawerItem, setView, setDay, setMapFilter,
 // setBookingsFilter, focusMapItem, map/external links, etc.) are left
 // alone on purpose — those are exactly what "full access" means.
-if (IS_SHARE_VIEW) {
+if (SHARE_VIEW_ACTIVE) {
   [
     'openTripSettings', 'closeTripSettings', 'saveTripSettings', 'deleteTrip', 'confirmDeleteTrip',
     'onTripPhotoSelected', 'clearTripPhoto', 'generateAllAboutInfo',
@@ -4239,7 +4239,7 @@ if (IS_SHARE_VIEW) {
   if (typeof isAuthed !== 'function' || typeof dbLoad !== 'function') {
     setTimeout(waitForAuth, 50); return;
   }
-  if (!isAuthed() && !IS_SHARE_VIEW) {
+  if (!isAuthed() && !SHARE_VIEW_ACTIVE) {
     // Not authed — auth.js will show PIN overlay, wait for it to complete
     setTimeout(waitForAuth, 200); return;
   }
