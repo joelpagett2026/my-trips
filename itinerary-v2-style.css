@@ -1907,5 +1907,8 @@ body.share-view .tb-title { cursor: default; }
 }
 .sh-banner-v2 svg { width: 11px; height: 11px; flex-shrink: 0; }
 @media (max-width: 640px) {
-  .sh-banner-v2 { top: auto; bottom: 14px; right: 14px; }
+  /* Sit just below the mobile top bar (48px tall) rather than the top-right
+     corner (would collide with the hamburger icon) or the bottom (would
+     collide with the fixed day-nav bar). */
+  .sh-banner-v2 { top: 56px; right: 10px; padding: 5px 12px; font-size: 10px; }
 }
