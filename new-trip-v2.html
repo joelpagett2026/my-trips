@@ -1250,6 +1250,9 @@ function renderTimeline() {
   const hiddenPeriods = SHARE_VIEW_ACTIVE ? [] : (d._hiddenPeriods || []);
   PERIODS.forEach(({ key, label }) => {
     if (hiddenPeriods.includes(key)) return;
+    // Share view has no "Add" buttons or reason to show an empty period —
+    // skip sections with nothing in them rather than showing a bare header.
+    if (SHARE_VIEW_ACTIVE && buckets[key].length === 0) return;
     const section = document.createElement('div');
     section.className = 'tl-section';
     section.dataset.period = key;
@@ -1291,6 +1294,15 @@ function renderTimeline() {
     col.appendChild(section);
     initDrag(tl);
   });
+
+  // If every period is empty, show a simple friendly message instead of
+  // three empty section headers with nothing between them.
+  if (SHARE_VIEW_ACTIVE && !buckets.morning.length && !buckets.afternoon.length && !buckets.evening.length) {
+    const empty = document.createElement('div');
+    empty.className = 'tl-empty';
+    empty.innerHTML = '<p>Nothing planned for this day yet.</p>';
+    col.appendChild(empty);
+  }
 
   // Restore strip for any hidden periods
   if (hiddenPeriods.length) {
