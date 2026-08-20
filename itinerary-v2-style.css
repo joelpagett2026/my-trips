@@ -1894,8 +1894,18 @@ body.share-view .tl-time { cursor: pointer; }
 body.share-view .tb-title { cursor: default; }
 
 .sh-banner-v2 {
+  position: fixed;
+  top: 12px; right: 16px;
+  z-index: 500;
   background: linear-gradient(135deg, var(--teal), #0d9e8c);
   color: #fff; font-family: 'Montserrat', sans-serif;
-  padding: 8px 20px; font-size: 11px; font-weight: 600;
-  display: flex; align-items: center; gap: 8px; letter-spacing: 0.02em;
+  padding: 6px 14px; font-size: 10.5px; font-weight: 700;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  display: flex; align-items: center; gap: 6px; letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.sh-banner-v2 svg { width: 11px; height: 11px; flex-shrink: 0; }
+@media (max-width: 640px) {
+  .sh-banner-v2 { top: auto; bottom: 14px; right: 14px; }
 }

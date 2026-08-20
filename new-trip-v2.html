@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=275">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=276">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -897,16 +897,18 @@ async function loadData() {
   render();
 }
 
-// Marks the page read-only and drops a small banner at the top so it's
-// obvious this is a shared, view-only copy of the itinerary.
+// Marks the page read-only and drops a small floating pill in the top-right
+// corner so it's obvious this is a shared, view-only copy of the itinerary.
+// Fixed-position so it sits outside the sidebar/main flex layout entirely
+// rather than being inserted as a flex item alongside them.
 function applyShareViewBanner() {
   document.body.classList.add('share-view');
   if (document.getElementById('sh-banner-v2')) return;
-  const banner = document.createElement('div');
-  banner.id = 'sh-banner-v2';
-  banner.className = 'sh-banner-v2';
-  banner.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg> Read-only shared itinerary';
-  document.body.insertBefore(banner, document.body.firstChild);
+  const badge = document.createElement('div');
+  badge.id = 'sh-banner-v2';
+  badge.className = 'sh-banner-v2';
+  badge.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg> Read-only';
+  document.body.appendChild(badge);
 }
 
 // Friendly full-page message for a revoked/invalid/missing share link.
