@@ -6,6 +6,12 @@ Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 # .html trips (real files) are left completely alone and win by default.
 <IfModule mod_rewrite.c>
 RewriteEngine On
+
+# share.html was retired — old share links already carry ?t=TOKEN&share=1,
+# so a redirect straight to new-trip-v2.html (which now handles read-only
+# share views itself) keeps any previously-shared links working.
+RewriteRule ^share\.html$ /new-trip-v2.html [R=301,L,QSA]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]

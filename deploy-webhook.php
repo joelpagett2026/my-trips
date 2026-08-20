@@ -103,6 +103,9 @@ $itineraries = [
 // ── ENSURE SUBDIRECTORIES EXIST ──────────────────────────────────────
 // One-time cleanup: retired concerts year-log page
 @unlink(PUBLIC_HTML . '/concerts/log.html');
+// One-time cleanup: retired share.html — share links now open
+// new-trip-v2.html directly in read-only mode instead.
+@unlink(PUBLIC_HTML . '/share.html');
 
 foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks', 'icons', 'private'] as $dir) {
     $dirPath = PUBLIC_HTML . '/' . $dir;
@@ -172,7 +175,6 @@ $coreFiles = [
     'api.php', 'db-config.php', 'trip.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'itinerary-v2-style.css', 'deploy-webhook.php',
     'index.html', 'new-trip.html', 'new-trip-v2.html', 'budget-template.html', 'budget-style.css', 'settings.html',
-    'share.html',
     'robots.txt', '.htaccess', 'favicon.ico',
 ];
 
