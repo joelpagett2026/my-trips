@@ -1876,7 +1876,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 body.share-view .tb-btn#tb-share,
 body.share-view .sb-bottom,
 body.share-view .mob-menu-footer,
-body.share-view .tl-grip,
 body.share-view .tl-more-btn,
 body.share-view .tl-delete-btn,
 body.share-view .tl-add-btn,
@@ -1889,6 +1888,14 @@ body.share-view .rp2-hotel-edit-head,
 body.share-view .bv-avios-input {
   display: none !important;
 }
+/* .tl-grip is a CSS Grid child of .tl-item (grid-template-columns: 20px
+   65px 1fr, exactly 3 children). display:none would remove it from grid
+   layout entirely, which shifts the remaining two children (.tl-time,
+   .tl-body-wrap) into the FIRST two column tracks (20px, 65px) instead of
+   their intended ones — crushing the whole item into ~85px with the 1fr
+   column left empty. visibility:hidden hides it visually without
+   removing it from the grid, so the other columns stay correctly sized. */
+body.share-view .tl-grip { visibility: hidden !important; }
 body.share-view .tl-item { cursor: pointer; }
 body.share-view .tl-time { cursor: pointer; }
 body.share-view .tb-title { cursor: default; }
