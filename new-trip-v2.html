@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=289">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=290">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1173,7 +1173,11 @@ function carHireTimelineMeta(tr) {
     const rt = tr.roadTrip;
     if (rt.from || rt.depart) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">From:</span> ' + (rt.from||'') + (rt.depart ? ARR + rt.depart : '') + '</div>');
     if (rt.to || rt.estArrival) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">To:</span> ' + (rt.to||'') + (rt.estArrival ? ARR + rt.estArrival : '') + '</div>');
-    if (rt.distanceMiles) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Distance:</span> ' + rt.distanceMiles.toFixed(0) + ' miles &middot; ' + fmtHoursMins(rt.durationMin) + ' driving</div>');
+    if (rt.distanceMiles || rt.durationMin) {
+      const milesPart = rt.distanceMiles ? '<span class="tl-transport-label">Miles:</span> ' + rt.distanceMiles.toFixed(0) : '';
+      const durPart = rt.durationMin ? '<span class="tl-transport-label">Approx Driving Time:</span> ' + fmtHoursMins(rt.durationMin) : '';
+      lines.push('<div class="tl-flight-line tl-flight-line--split">' + [milesPart, durPart].filter(Boolean).join('<span class="tl-flight-line-sep">|</span>') + '</div>');
+    }
     if (rt.stops && rt.stops.length) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Stops:</span> ' + rt.stops.map(s=>s.name).join(', ') + '</div>');
   }
   if (tr.hire) {
@@ -1823,6 +1827,11 @@ function makeItemNode(item, idx) {
   // Transport info lines
   let transportMeta = '';
   const isCarHireItem = isTransportItem && (item.transport && item.transport.mode) === 'Car Hire / Road Trip';
+  // A "pure" driving leg (no hire{} details attached — created via the
+  // quick Add Journey modal, or planned separately from the rental
+  // itself) is titled generically rather than repeating the From/To
+  // route, which now has its own dedicated meta lines below.
+  const isPureJourney = isCarHireItem && !(item.transport && item.transport.hire);
   if (isCarHireItem) {
     transportMeta = carHireTimelineMeta(item.transport);
   } else if (isTransportItem) {
@@ -1884,7 +1893,7 @@ function makeItemNode(item, idx) {
       '<div class="tl-dot ' + dotCls + '"></div>' +
       '<div class="tl-ico ' + ico.cls + '">' + ico.html + '</div>' +
       '<div class="tl-text">' +
-        '<div class="tl-title">' + (item._hotelBreakfast ? item._hotelBreakfast : (item.title||'')) + '</div>' +
+        '<div class="tl-title">' + (item._hotelBreakfast ? item._hotelBreakfast : (isPureJourney ? 'Driving' : (item.title||''))) + '</div>' +
         (!isHBF && !isTransportItem && item.sub && item.sub !== item.title ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
         (!isHBF && !isTransportItem && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
         (meta     ? '<div class="' + (isTransportItem ? 'tl-meta--flight' : 'tl-meta') + '">' + meta + '</div>' : '') +
@@ -2391,7 +2400,7 @@ function openDrawerItem(dayIdx, itemIdx) {
   // Hide map button for transport items — they're not a single map point
   const mapBtn = document.querySelector('.dr-map-btn');
   if (mapBtn) mapBtn.style.display = isTransport ? 'none' : '';
-  document.getElementById('dr-title').textContent  = item.title || '';
+  document.getElementById('dr-title').textContent  = (isCarHire && !(item.transport && item.transport.hire)) ? 'Driving' : (item.title || '');
   const subVal = (isTransport || isMeal) ? '' : (item.sub && item.sub !== item.title ? item.sub : '');
   document.getElementById('dr-sub').textContent    = subVal;
   const srEl = document.getElementById('dr-status-row');

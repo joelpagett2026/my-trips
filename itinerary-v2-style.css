@@ -1105,6 +1105,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* ── FLIGHT INFO LINES (itinerary list) ── */
 .tl-flight-line { font-size: 11.5px; font-weight: 500; color: var(--text2); line-height: 1.4; }
+.tl-flight-line--split { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tl-flight-line-sep { color: var(--text3); }
 .tl-transport-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 3px; }
 .tl-flight-arrow { font-size: 11px; color: var(--transport); font-weight: 700; margin: 0 7px; }
 .tl-flight-line--dur { font-size: 11.5px; font-weight: 500; color: var(--text2); line-height: 1.4; }
