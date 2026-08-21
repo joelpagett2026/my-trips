@@ -19,9 +19,9 @@
   --green-bg:   rgba(26,138,82,0.10);
   --transport:  #526B82;
   --transport-bg: rgba(82,107,130,0.10);
-  --carhire:    #6d28d9;
-  --carhire2:   #9333ea;
-  --carhire-bg: rgba(124,58,237,0.10);
+  --carhire:    #6E5090;
+  --carhire2:   #8A6FAE;
+  --carhire-bg: rgba(110,80,144,0.10);
   --activity:   #5A8968;
   --activity-bg: rgba(90,137,104,0.10);
   --amber:      #b96a00;
@@ -544,7 +544,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #f-category-row .tt-btn[data-cat="meal"]:hover:not(.active) { border-color: var(--amber); color: var(--amber); }
 #f-category-row .tt-btn[data-cat="move"].active { background: var(--transport); border-color: var(--transport); }
 #f-category-row .tt-btn[data-cat="move"]:hover:not(.active) { border-color: var(--transport); color: var(--transport); }
-#f-category-row .tt-btn[data-cat="carhire"].active { background: linear-gradient(135deg, var(--carhire2), var(--carhire)); border-color: var(--carhire); }
+#f-category-row .tt-btn[data-cat="carhire"].active { background: var(--carhire); border-color: var(--carhire); }
 #f-category-row .tt-btn[data-cat="carhire"]:hover:not(.active) { border-color: var(--carhire2); color: var(--carhire2); }
 /* Transport modal — blue theming */
 #fields-transport .field-label,
