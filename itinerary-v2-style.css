@@ -1146,7 +1146,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   font-family: 'Montserrat', sans-serif !important;
 }
 
-.tr-journey-block { background: var(--transport) !important; }
+.tr-journey-block { background: var(--transport); }
+.drawer--carhire .tr-journey-block { background: var(--carhire); }
 
 .tr-mode-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .tr-mode-icon { display: flex; align-items: center; color: rgba(255,255,255,0.85); }
