@@ -376,6 +376,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .ed-daynum{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;}
 .ed-loc-input{border:1.5px solid var(--line);border-radius:6px;padding:6px 9px;font-family:var(--font);font-size:14px;font-weight:600;color:var(--text);background:#fff;outline:none;width:100%;transition:border-color 0.13s;}
 .ed-loc-input:focus{border-color:var(--teal);}
+.ed-noaccom{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;font-weight:600;color:var(--text2);cursor:pointer;margin-top:2px;line-height:1.4;}
+.ed-noaccom input[type="checkbox"]{flex-shrink:0;margin-top:2px;accent-color:var(--teal);cursor:pointer;}
+.ed-noaccom-hint{font-weight:500;color:var(--text3);}
 .ed-delete{flex-shrink:0;background:none;border:none;color:var(--text3);cursor:pointer;padding:6px;border-radius:6px;display:flex;transition:all 0.13s;}
 .ed-delete:hover{color:#e53e3e;background:#fee;}
 .booking-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11.5px;font-weight:700;color:var(--teal);background:var(--teal-xdim);border:none;padding:7px 12px;border-radius:7px;font-family:var(--font);width:100%;transition:background 0.13s;}

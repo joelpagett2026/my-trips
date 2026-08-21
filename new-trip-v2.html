@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=291">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=292">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -2077,6 +2077,7 @@ function parseDate(str) {
 
 // Find the hotel covering the active day (checkin <= day <= checkout)
 function hotelForDay(dayIdx) {
+  if (STATE.days[dayIdx]?.noAccommodation) return null; // explicitly marked — staying with family/friends, or flying that day
   const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
   if (!hotels.length) return null;
   const dayDate = parseDate(STATE.days[dayIdx]?.date);
@@ -2149,7 +2150,16 @@ function renderHotelCard(h, hotelIdx) {
 }
 
 function renderHotelPanel() {
+  const section = document.getElementById('rp-hotel-section');
   const el = document.getElementById('rp-hotel');
+  if (STATE.days[activeDay]?.noAccommodation) {
+    // Explicitly marked as not needed for this day — remove the whole
+    // Hotel card (header + Add/Edit button included), not just show an
+    // empty state with an "+ Add hotel" prompt the user doesn't want.
+    if (section) section.style.display = 'none';
+    return;
+  }
+  if (section) section.style.display = '';
   const h = hotelForDay(activeDay);
   if (!h) {
     el.innerHTML = '<div class="rp2-empty">No accommodation for this day.<br><button class="rp2-add-btn" onclick="openHotelModal()">+ Add hotel</button></div>';
@@ -2222,10 +2232,12 @@ function renderSidebarReadiness() {
   const outboundOk = N > 0 && hasTransport(days[0]);
   const returnOk   = N > 1 && hasTransport(days[N - 1]);
 
-  // HOTELS: one per night, every night except the last.
+  // HOTELS: one per night, every night except the last. A night explicitly
+  // marked "no accommodation required" counts as satisfied, same as a
+  // night with a real hotel booked.
   const nights = Math.max(N - 1, 0);
   let hotelDone = 0;
-  for (let i = 0; i < nights; i++) if (hotelForDay(i)) hotelDone++;
+  for (let i = 0; i < nights; i++) if (hotelForDay(i) || days[i]?.noAccommodation) hotelDone++;
 
   // MEALS: at least one meal per day across ALL days.
   // A hotel breakfast counts as the meal for that day if breakfast is included.
@@ -4203,6 +4215,10 @@ function edRenderList() {
         <div class="ed-daynum">Day ${i+1} · ${dateLabel}</div>
         <input class="ed-loc-input" type="text" value="${(d.loc||'').replace(/"/g,'&quot;')}"
           placeholder="Location name" oninput="edDays[${i}].loc=this.value">
+        <label class="ed-noaccom">
+          <input type="checkbox" ${d.noAccommodation ? 'checked' : ''} onchange="edDays[${i}].noAccommodation=this.checked">
+          No accommodation required <span class="ed-noaccom-hint">(staying with family/friends, or flying that day)</span>
+        </label>
       </div>
       <button class="ed-delete" title="Delete day${itemCount ? ' (' + itemCount + ' item' + (itemCount>1?'s':'') + ')' : ''}" onclick="edDeleteDay(${i})">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
