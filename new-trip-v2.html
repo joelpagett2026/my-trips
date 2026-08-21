@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=284">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=285">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -403,7 +403,7 @@
           </div>
         </div>
 
-        <!-- CAR HIRE / ROAD TRIP FIELDS -->
+        <!-- CAR HIRE FIELDS -->
         <div id="fields-carhire" style="display:none;flex-direction:column;gap:13px;">
           <div class="rt-subhead">Car Hire Details</div>
           <div class="field-row">
@@ -412,13 +412,18 @@
               <input class="field-input" id="f-ch-company" type="text">
             </div>
             <div class="field-group">
-              <label class="field-label">Vehicle type</label>
-              <input class="field-input" id="f-ch-vehicle" type="text" placeholder="e.g. Compact SUV">
+              <label class="field-label">Booking reference</label>
+              <input class="field-input" id="f-ch-ref" type="text">
             </div>
           </div>
           <div class="field-group places-ac-wrap">
             <label class="field-label">Pick-up location</label>
-            <input class="field-input places-ac-input" id="f-ch-pickup-loc" type="text" autocomplete="off">
+            <div class="field-input-with-link">
+              <input class="field-input places-ac-input" id="f-ch-pickup-loc" type="text" autocomplete="off">
+              <a class="field-maps-link" id="f-ch-pickup-maps-link" href="#" target="_blank" rel="noopener" title="Open in Google Maps">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </a>
+            </div>
             <div class="places-ac-list" id="f-ch-pickup-loc-list"></div>
           </div>
           <div class="field-row">
@@ -431,11 +436,6 @@
               <input class="field-input" id="f-ch-pickup-time" type="time">
             </div>
           </div>
-          <div class="field-group places-ac-wrap">
-            <label class="field-label">Drop-off location</label>
-            <input class="field-input places-ac-input" id="f-ch-dropoff-loc" type="text" autocomplete="off">
-            <div class="places-ac-list" id="f-ch-dropoff-loc-list"></div>
-          </div>
           <div class="field-row">
             <div class="field-group">
               <label class="field-label">Drop-off date</label>
@@ -446,75 +446,24 @@
               <input class="field-input" id="f-ch-dropoff-time" type="time">
             </div>
           </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Booking reference</label>
-              <input class="field-input" id="f-ch-ref" type="text">
+          <div class="field-group places-ac-wrap">
+            <label class="field-label">Drop-off location</label>
+            <div class="field-input-with-link">
+              <input class="field-input places-ac-input" id="f-ch-dropoff-loc" type="text" autocomplete="off">
+              <a class="field-maps-link" id="f-ch-dropoff-maps-link" href="#" target="_blank" rel="noopener" title="Open in Google Maps">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </a>
             </div>
-            <div class="field-group">
-              <label class="field-label">Hire cost</label>
-              <input class="field-input" id="f-ch-hire-cost" type="text" placeholder="£">
-            </div>
+            <div class="places-ac-list" id="f-ch-dropoff-loc-list"></div>
           </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Insurance cost</label>
-              <input class="field-input" id="f-ch-insurance-cost" type="text" placeholder="£">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Additional driver cost</label>
-              <input class="field-input" id="f-ch-driver-cost" type="text" placeholder="£">
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Other extras</label>
-              <input class="field-input" id="f-ch-extras-cost" type="text" placeholder="£">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Extras notes</label>
-              <input class="field-input" id="f-ch-extras-note" type="text" placeholder="e.g. Child seat, GPS">
-            </div>
+          <div class="field-group">
+            <label class="field-label">Total cost</label>
+            <input class="field-input" id="f-ch-total-cost" type="text" placeholder="£">
           </div>
           <div class="field-group">
             <label class="field-label">Notes</label>
             <textarea class="field-textarea" id="f-ch-notes"></textarea>
           </div>
-
-          <div class="rt-subhead" style="margin-top:6px;">Road Trip Journey <span class="rt-subhead-hint">— leave blank if the car isn't being driven today</span></div>
-          <div class="field-group places-ac-wrap">
-            <label class="field-label">Starting point</label>
-            <input class="field-input places-ac-input" id="f-rt-start" type="text" autocomplete="off">
-            <div class="places-ac-list" id="f-rt-start-list"></div>
-          </div>
-          <div class="field-group places-ac-wrap">
-            <label class="field-label">Ending point</label>
-            <input class="field-input places-ac-input" id="f-rt-end" type="text" autocomplete="off">
-            <div class="places-ac-list" id="f-rt-end-list"></div>
-          </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Departure time</label>
-              <input class="field-input" id="f-rt-depart" type="time">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Arrival time <span class="rt-subhead-hint">(optional — calculated if left blank)</span></label>
-              <input class="field-input" id="f-rt-arrive" type="time">
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Stops <span class="rt-subhead-hint">(optional)</span></label>
-            <div id="rt-stops-list"></div>
-            <button type="button" class="rt-add-stop-btn" onclick="addStopRow()">+ Add Stop</button>
-          </div>
-
-          <button type="button" class="rt-calc-btn" id="rt-calc-btn" onclick="computeRoadTripRoute()">Calculate Route</button>
-          <div class="rt-calc-summary" id="rt-calc-summary" style="display:none;"></div>
-          <input type="hidden" id="f-rt-distance-miles">
-          <input type="hidden" id="f-rt-duration-min">
-          <input type="hidden" id="f-rt-recommended-min">
-          <input type="hidden" id="f-rt-polyline">
         </div>
       </div>
 
@@ -649,7 +598,7 @@
 <div class="modal-overlay" id="quick-journey-overlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title">Add Journey</div>
+      <div class="modal-title" id="quick-journey-modal-title">Add Journey</div>
       <button class="modal-close" onclick="closeQuickJourneyModal()">×</button>
     </div>
     <div class="modal-body" style="flex-direction:column;gap:13px;">
@@ -675,6 +624,7 @@
       </div>
     </div>
     <div class="modal-foot">
+      <button class="modal-btn danger" id="qj-delete-btn" style="display:none" onclick="deleteQuickJourney()">Delete</button>
       <button class="modal-btn secondary" onclick="closeQuickJourneyModal()">Cancel</button>
       <button class="modal-btn primary" id="qj-save-btn" onclick="saveQuickJourney()" style="background:var(--carhire);">Save</button>
     </div>
@@ -917,6 +867,10 @@ let activeDay = 0;
 let currentMode = 'plan';
 let drawerItem = null;  // { dayIdx, item } — object ref
 let editItem   = null;  // same, or null for new
+// Preserves an existing item's Road Trip Journey data (from before the
+// separate quick "Add Journey" modal existed — see saveQuickJourney())
+// across an edit, since the Car Hire modal no longer has any UI for it.
+let _editingCarHireRoadTrip = null;
 let snapshotData = null;
 let saveTimer = null;
 
@@ -1079,7 +1033,7 @@ const ROAD_TRIP_BADGE_LABEL = {
 function findCarHireEditTarget(dayIdx) {
   const day = STATE.days[dayIdx];
   if (day) {
-    const idx = (day.items||[]).findIndex(it => it && it.type==='move' && (it.transport&&it.transport.mode)==='Car Hire / Road Trip');
+    const idx = (day.items||[]).findIndex(it => it && it.type==='move' && (it.transport&&it.transport.mode)==='Car Hire / Road Trip' && it.transport.hire);
     if (idx !== -1) return { dayIdx, itemIdx: idx };
   }
   for (let d = 0; d < STATE.days.length; d++) {
@@ -1154,14 +1108,12 @@ function renderRoadTripPanel(dayIdx) {
   let hireSummaryHtml = '';
   if (state.hire) {
     const h = state.hire;
-    const fmtMoney = n => n ? '£' + n.toFixed(2).replace(/\.00$/, '') : '';
-    const numTrav = parseInt((STATE.meta && STATE.meta.trav) || trav) || 2;
-    const totalCost = ['hire','insurance','driver','extras'].reduce((sum, k) => sum + (parsePrice(h.costs && h.costs[k], numTrav) || 0), 0);
+    const totalCost = totalCarHireCost(h.costs);
     const rows = [];
     if (h.company || h.ref) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Company</span><span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</span></div>`);
     if (h.pickup && h.pickup.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Pick-up</span><span><a href="${mapsLinkForLoc(h.pickup.loc, h.pickup.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.pickup.loc}</a>${[fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') : ''}</span></div>`);
     if (h.dropoff && h.dropoff.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Drop-off</span><span><a href="${mapsLinkForLoc(h.dropoff.loc, h.dropoff.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.dropoff.loc}</a>${[fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') : ''}</span></div>`);
-    if (totalCost) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost</span><span>${fmtMoney(totalCost)}</span></div>`);
+    if (totalCost) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost</span><span>£${totalCost}</span></div>`);
     if (h.notes) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes</span><span>${h.notes}</span></div>`);
     if (rows.length) hireSummaryHtml = `<div class="rt-panel-hire">${rows.join('')}</div>`;
   }
@@ -1271,12 +1223,8 @@ function renderCarHireDrawerHtml(tr, modeIcon) {
     if (hire.pickup?.loc) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Pick-up</span><span class="tr-bk-row-val">${[hire.pickup.loc, hire.pickup.date, hire.pickup.time].filter(Boolean).join(' · ')}</span></div>`;
     if (hire.dropoff?.loc) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Drop-off</span><span class="tr-bk-row-val">${[hire.dropoff.loc, hire.dropoff.date, hire.dropoff.time].filter(Boolean).join(' · ')}</span></div>`;
     if (hire.ref) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Reference</span><span class="tr-bk-row-val">${hire.ref}</span></div>`;
-    const costs = hire.costs || {};
-    const costParts = [
-      costs.hire ? 'Hire ' + costs.hire : null, costs.insurance ? 'Insurance ' + costs.insurance : null,
-      costs.driver ? 'Driver ' + costs.driver : null, costs.extras ? 'Extras ' + costs.extras : null,
-    ].filter(Boolean);
-    if (costParts.length) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Costs</span><span class="tr-bk-row-val tr-bk-row-val--strong">${costParts.join(' · ')}</span></div>`;
+    const totalCost = totalCarHireCost(hire.costs);
+    if (totalCost) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Total cost</span><span class="tr-bk-row-val tr-bk-row-val--strong">£${totalCost}</span></div>`;
     if (hire.notes) rows += `<div class="tr-bk-row-item"><span class="tr-bk-row-key">Notes</span><span class="tr-bk-row-val">${hire.notes}</span></div>`;
     if (rows) hireHtml = `<div class="ab-section tr-bk-card"><div class="ab-icon-h tr-section-title">Car Hire Booking</div><div class="tr-bk-rows">${rows}</div></div>`;
   }
@@ -2742,6 +2690,16 @@ function openEditItem(dayIdx, itemIdx) {
   drawerItem = { dayIdx, itemIdx, item: refItem };
   const item = refItem;
   if (!item) return;
+
+  // Journey-only Car Hire items (no hire{} details — created via the
+  // quick Add Journey modal, or a pure driving leg) are edited through
+  // that same lightweight modal; the full Car Hire modal is hire-details
+  // only and has no journey fields of its own.
+  if (item.type === 'move' && (item.transport && item.transport.mode) === 'Car Hire / Road Trip' && !(item.transport && item.transport.hire)) {
+    openQuickJourneyModal({ dayIdx, itemIdx });
+    return;
+  }
+
   document.getElementById('modal-title').textContent = 'Edit activity';
   document.getElementById('modal-delete-btn').style.display = 'block';
   document.getElementById('modal-tabs').style.display = 'none';
@@ -2817,19 +2775,16 @@ function clearForm() {
    'f-meal-name','f-meal-time','f-meal-notes',
    'f-from','f-to','f-depart','f-arrive','f-move-cost','f-move-cost-flight',
    'f-ref','f-ref-other','f-url','f-avios','f-operator','f-route','f-move-notes','f-move-notes-flight',
-   'f-ch-company','f-ch-vehicle','f-ch-pickup-loc','f-ch-pickup-date','f-ch-pickup-time',
-   'f-ch-dropoff-loc','f-ch-dropoff-date','f-ch-dropoff-time','f-ch-ref',
-   'f-ch-hire-cost','f-ch-insurance-cost','f-ch-driver-cost','f-ch-extras-cost','f-ch-extras-note','f-ch-notes',
-   'f-rt-start','f-rt-end','f-rt-depart','f-rt-arrive',
-   'f-rt-distance-miles','f-rt-duration-min','f-rt-recommended-min','f-rt-polyline'].forEach(id => {
+   'f-ch-company','f-ch-ref','f-ch-pickup-loc','f-ch-pickup-date','f-ch-pickup-time',
+   'f-ch-dropoff-loc','f-ch-dropoff-date','f-ch-dropoff-time',
+   'f-ch-total-cost','f-ch-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  ['f-ch-pickup-loc','f-ch-dropoff-loc','f-rt-start','f-rt-end'].forEach(id => {
+  ['f-ch-pickup-loc','f-ch-dropoff-loc'].forEach(id => {
     const el = document.getElementById(id); if (el) { delete el.dataset.placeId; delete el.dataset.lat; delete el.dataset.lng; }
   });
-  document.getElementById('rt-stops-list').innerHTML = '';
-  const summaryEl = document.getElementById('rt-calc-summary');
-  summaryEl.style.display = 'none'; summaryEl.innerHTML = '';
+  updateCarHireMapsLinks();
+  _editingCarHireRoadTrip = null;
   setAttBooked('notbooked');
   document.getElementById('f-period').value = 'morning';
   setCategory('place');
@@ -2991,10 +2946,24 @@ function showBookingFields(show) {
   document.getElementById('booking-toggle-btn').textContent = show ? '− Hide booking reference' : '+ Add booking reference';
 }
 
-// ── PLACES AUTOCOMPLETE (Car Hire / Road Trip) ──────────────────────────
+// ── PLACES AUTOCOMPLETE (Car Hire) ───────────────────────────────────
 let _placesAcTimer = null;
 function initCarHireAutocompletes() {
-  ['f-ch-pickup-loc','f-ch-dropoff-loc','f-rt-start','f-rt-end'].forEach(id => attachPlacesAutocomplete(id));
+  ['f-ch-pickup-loc','f-ch-dropoff-loc'].forEach(id => attachPlacesAutocomplete(id));
+  updateCarHireMapsLinks();
+}
+// Keeps the pick-up/drop-off "open in maps" links in sync with whatever
+// location text (or resolved place_id, once one's been picked from the
+// autocomplete list) is currently in those fields. Safe to call for any
+// field context — no-ops if the maps-link elements aren't present (e.g.
+// the quick Add Journey modal, which has no map links).
+function updateCarHireMapsLinks() {
+  const puInput = document.getElementById('f-ch-pickup-loc');
+  const puLink  = document.getElementById('f-ch-pickup-maps-link');
+  if (puInput && puLink) puLink.href = mapsLinkForLoc(puInput.value.trim(), puInput.dataset.placeId);
+  const doInput = document.getElementById('f-ch-dropoff-loc');
+  const doLink  = document.getElementById('f-ch-dropoff-maps-link');
+  if (doInput && doLink) doLink.href = mapsLinkForLoc(doInput.value.trim(), doInput.dataset.placeId);
 }
 function attachPlacesAutocomplete(inputId) {
   const input = document.getElementById(inputId);
@@ -3003,6 +2972,7 @@ function attachPlacesAutocomplete(inputId) {
   input._acAttached = true;
   input.addEventListener('input', () => {
     delete input.dataset.placeId; delete input.dataset.lat; delete input.dataset.lng;
+    updateCarHireMapsLinks();
     clearTimeout(_placesAcTimer);
     const q = input.value.trim();
     if (q.length < 3) { list.style.display = 'none'; list.innerHTML = ''; return; }
@@ -3031,62 +3001,12 @@ function attachPlacesAutocomplete(inputId) {
         input.dataset.lng = place.lng;
       }
     } catch (e) { /* keep typed text even if details lookup fails */ }
+    updateCarHireMapsLinks();
   });
   input.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 150));
 }
 
-// ── ROAD TRIP STOPS (added as genuine stop rows in the modal; each one
-//    also becomes a real itinerary POI on save — see saveItem()) ────────
-let _stopIdCounter = 0;
-function addStopRow(stop) {
-  const wrap = document.getElementById('rt-stops-list');
-  const rowId = 'rt-stop-' + (_stopIdCounter++);
-  const row = document.createElement('div');
-  row.className = 'rt-stop-row';
-  row.dataset.rowId = rowId;
-  row.innerHTML = `
-    <div class="field-group places-ac-wrap rt-stop-place-wrap">
-      <input class="field-input places-ac-input" id="${rowId}-place" type="text" placeholder="Stop — place name" autocomplete="off">
-      <div class="places-ac-list" id="${rowId}-place-list"></div>
-    </div>
-    <div class="rt-stop-times">
-      <input class="field-input rt-stop-time" id="${rowId}-arr" type="time" title="Arrival time">
-      <span class="rt-stop-arrow">→</span>
-      <input class="field-input rt-stop-time" id="${rowId}-dep" type="time" title="Departure time">
-      <button type="button" class="rt-stop-remove" onclick="this.closest('.rt-stop-row').remove()" title="Remove stop">×</button>
-    </div>
-    <input class="field-input rt-stop-notes" id="${rowId}-notes" type="text" placeholder="Notes (optional)">`;
-  wrap.appendChild(row);
-  attachPlacesAutocomplete(rowId + '-place');
-  if (stop) {
-    const placeEl = document.getElementById(rowId + '-place');
-    placeEl.value = stop.name || '';
-    if (stop.placeId) placeEl.dataset.placeId = stop.placeId;
-    if (stop.lat != null) placeEl.dataset.lat = stop.lat;
-    if (stop.lng != null) placeEl.dataset.lng = stop.lng;
-    document.getElementById(rowId + '-arr').value = stop.arrival || '';
-    document.getElementById(rowId + '-dep').value = stop.departure || '';
-    document.getElementById(rowId + '-notes').value = stop.notes || '';
-  }
-}
-function collectStopRows() {
-  return Array.from(document.querySelectorAll('#rt-stops-list .rt-stop-row')).map(row => {
-    const rowId = row.dataset.rowId;
-    const placeEl = document.getElementById(rowId + '-place');
-    const name = placeEl.value.trim();
-    if (!name) return null;
-    return {
-      name,
-      placeId: placeEl.dataset.placeId || '',
-      lat: placeEl.dataset.lat ? parseFloat(placeEl.dataset.lat) : null,
-      lng: placeEl.dataset.lng ? parseFloat(placeEl.dataset.lng) : null,
-      arrival: document.getElementById(rowId + '-arr').value || '',
-      departure: document.getElementById(rowId + '-dep').value || '',
-      notes: document.getElementById(rowId + '-notes').value.trim(),
-    };
-  }).filter(Boolean);
-}
-
+// ── ROUTE CALCULATION HELPERS ────────────────────────────────────────
 function haversineMiles(p1, p2) {
   const R = 3958.8;
   const dLat = (p2.lat - p1.lat) * Math.PI / 180, dLng = (p2.lng - p1.lng) * Math.PI / 180;
@@ -3132,61 +3052,35 @@ async function computeRouteData(startEl, endEl, stops) {
   return { distanceMiles, durationMin, recommendedMin, polyline, estimated };
 }
 
-// Calculates distance/duration/route via the Google Routes API (falling
-// back to a straight-line estimate if the API errors, e.g. not yet
-// enabled on the key) — never asks the user to enter these manually.
-async function computeRoadTripRoute() {
-  const startEl = document.getElementById('f-rt-start');
-  const endEl   = document.getElementById('f-rt-end');
-  const start = startEl.value.trim(), end = endEl.value.trim();
-  if (!start || !end) { alert('Enter a starting point and ending point first.'); return; }
-  const btn = document.getElementById('rt-calc-btn');
-  const summaryEl = document.getElementById('rt-calc-summary');
-  btn.disabled = true; btn.textContent = 'Calculating…';
-  summaryEl.style.display = 'block';
-  summaryEl.innerHTML = '<span class="rt-calc-loading">Calculating route…</span>';
-  try {
-    const stops = collectStopRows();
-    const { distanceMiles, durationMin, recommendedMin, polyline, estimated } = await computeRouteData(startEl, endEl, stops);
-    document.getElementById('f-rt-distance-miles').value  = distanceMiles ? distanceMiles.toFixed(1) : '';
-    document.getElementById('f-rt-duration-min').value    = distanceMiles ? Math.round(durationMin) : '';
-    document.getElementById('f-rt-recommended-min').value = recommendedMin || '';
-    document.getElementById('f-rt-polyline').value        = polyline;
-    if (!distanceMiles) {
-      summaryEl.innerHTML = '<span class="rt-calc-error">Could not calculate this route — pick both points from the suggestion list, then try again.</span>';
-      return;
-    }
-    const dep = document.getElementById('f-rt-depart').value;
-    const estArr = dep ? addMinsToTime(dep, durationMin) : '';
-    const warnLevel = durationMin >= ROAD_TRIP_LONG_DRIVE_MIN ? 'long' : (durationMin >= ROAD_TRIP_MODERATE_DRIVE_MIN ? 'moderate' : '');
-    summaryEl.innerHTML = `
-      <div class="rt-calc-line rt-calc-line--main">${distanceMiles.toFixed(0)} miles &middot; ${fmtHoursMins(durationMin)} driving${estimated ? ' <span class="rt-calc-est">(estimated — enable the Routes API for exact figures)</span>' : ''}</div>
-      <div class="rt-calc-line">Allow ${fmtHoursMins(recommendedMin)} including normal stops</div>
-      ${estArr ? `<div class="rt-calc-line">Estimated arrival ${estArr}</div>` : ''}
-      ${warnLevel === 'long' ? `<div class="rt-calc-warn">${ICO.warn.replace('<svg','<svg width="13" height="13"')} Long driving day — consider adding a stop or breaking the journey.</div>` : ''}
-    `;
-  } catch (e) {
-    summaryEl.innerHTML = '<span class="rt-calc-error">Could not calculate the route. You can still save — try again later.</span>';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Calculate Route';
-  }
-}
-
-// ── QUICK ADD JOURNEY ────────────────────────────────────────────────
+// ── QUICK ADD/EDIT JOURNEY ────────────────────────────────────────────
 // A fast path for logging a driving leg without opening the full Add
 // Activity modal: just Starting Point, Ending Point, Departure Time, and
 // an optional Arrival Time (auto-calculated from the route if left
-// blank, same as the full modal's "Calculate Route" flow). Always
-// creates a journey-only item (no hire{} details) on the currently
-// viewed day — hire details are still entered via the full Car Hire /
-// Road Trip category tab.
-function openQuickJourneyModal() {
-  ['f-qj-start','f-qj-end'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.value = ''; delete el.dataset.placeId; delete el.dataset.lat; delete el.dataset.lng; }
-  });
-  document.getElementById('f-qj-depart').value = '';
-  document.getElementById('f-qj-arrive').value = '';
+// blank). Creates (or edits, if editTarget is given — see openEditItem())
+// a journey-only item (no hire{} details) — hire details are entered via
+// the Car Hire category tab instead, which no longer has any journey UI
+// of its own.
+let _quickJourneyEditTarget = null; // { dayIdx, itemIdx } while editing, else null
+
+function openQuickJourneyModal(editTarget) {
+  _quickJourneyEditTarget = editTarget || null;
+  const existing = editTarget ? STATE.days[editTarget.dayIdx]?.items?.[editTarget.itemIdx] : null;
+  const rt = existing?.transport?.roadTrip || {};
+
+  const startEl = document.getElementById('f-qj-start');
+  const endEl   = document.getElementById('f-qj-end');
+  startEl.value = rt.from || ''; endEl.value = rt.to || '';
+  delete startEl.dataset.placeId; delete startEl.dataset.lat; delete startEl.dataset.lng;
+  delete endEl.dataset.placeId; delete endEl.dataset.lat; delete endEl.dataset.lng;
+  if (rt.fromPlaceId) startEl.dataset.placeId = rt.fromPlaceId;
+  if (rt.fromLat != null) { startEl.dataset.lat = rt.fromLat; startEl.dataset.lng = rt.fromLng; }
+  if (rt.toPlaceId) endEl.dataset.placeId = rt.toPlaceId;
+  if (rt.toLat != null) { endEl.dataset.lat = rt.toLat; endEl.dataset.lng = rt.toLng; }
+  document.getElementById('f-qj-depart').value = rt.depart || '';
+  document.getElementById('f-qj-arrive').value = rt.arrive || '';
+
+  document.getElementById('quick-journey-modal-title').textContent = editTarget ? 'Edit Journey' : 'Add Journey';
+  document.getElementById('qj-delete-btn').style.display = editTarget ? 'block' : 'none';
   attachPlacesAutocomplete('f-qj-start');
   attachPlacesAutocomplete('f-qj-end');
   document.getElementById('quick-journey-overlay').classList.add('open');
@@ -3195,6 +3089,18 @@ function openQuickJourneyModal() {
 
 function closeQuickJourneyModal() {
   document.getElementById('quick-journey-overlay').classList.remove('open');
+  _quickJourneyEditTarget = null;
+}
+
+function deleteQuickJourney() {
+  if (!_quickJourneyEditTarget) return;
+  if (!confirm('Delete this journey?')) return;
+  const { dayIdx, itemIdx } = _quickJourneyEditTarget;
+  takeSnapshot();
+  STATE.days[dayIdx].items.splice(itemIdx, 1);
+  closeQuickJourneyModal();
+  scheduleSave();
+  render();
 }
 
 async function saveQuickJourney() {
@@ -3221,16 +3127,24 @@ async function saveQuickJourney() {
     };
     const title = [from, to].filter(Boolean).join(' → ');
     const sub = ['Car Hire / Road Trip', distanceMiles ? distanceMiles.toFixed(0) + ' miles' : '', durationMin ? fmtHoursMins(durationMin) + ' driving' : ''].filter(Boolean).join(' · ');
-    const item = {
-      _id: crypto.randomUUID ? crypto.randomUUID() : 'ch-' + Date.now() + '-' + Math.random().toString(36).slice(2),
-      time: depart || '09:00', type: 'move', period: inferPeriod({ time: depart, kicker: 'Car Hire / Road Trip' }),
-      title, sub, status: null,
-      transport: { mode: 'Car Hire / Road Trip', hire: null, roadTrip },
-      icoType: 'car', kicker: 'Car Hire / Road Trip',
-    };
+
     takeSnapshot();
-    if (!STATE.days[activeDay].items) STATE.days[activeDay].items = [];
-    STATE.days[activeDay].items.push(item);
+    if (_quickJourneyEditTarget) {
+      const { dayIdx, itemIdx } = _quickJourneyEditTarget;
+      const existing = STATE.days[dayIdx].items[itemIdx];
+      existing.title = title; existing.sub = sub; existing.time = depart || existing.time || '09:00';
+      existing.transport.roadTrip = roadTrip;
+    } else {
+      const item = {
+        _id: crypto.randomUUID ? crypto.randomUUID() : 'ch-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+        time: depart || '09:00', type: 'move', period: inferPeriod({ time: depart, kicker: 'Car Hire / Road Trip' }),
+        title, sub, status: null,
+        transport: { mode: 'Car Hire / Road Trip', hire: null, roadTrip },
+        icoType: 'car', kicker: 'Car Hire / Road Trip',
+      };
+      if (!STATE.days[activeDay].items) STATE.days[activeDay].items = [];
+      STATE.days[activeDay].items.push(item);
+    }
     closeQuickJourneyModal();
     scheduleSave();
     render();
@@ -3241,11 +3155,20 @@ async function saveQuickJourney() {
   }
 }
 
+// Total cost as a single figure — reads the new costs.total field, or
+// falls back to summing the old itemised hire/insurance/driver/extras
+// fields for trips saved before this was simplified to one field.
+function totalCarHireCost(costs) {
+  costs = costs || {};
+  if (costs.total != null && costs.total !== '') return costs.total;
+  const sum = ['hire','insurance','driver','extras'].reduce((s, k) => s + (parsePrice(costs[k], 1) || 0), 0);
+  return sum ? sum.toFixed(2).replace(/\.00$/, '') : '';
+}
+
 function populateCarHireForm(tr) {
   const hire = tr.hire || {};
-  const rt   = tr.roadTrip || {};
   document.getElementById('f-ch-company').value = hire.company || '';
-  document.getElementById('f-ch-vehicle').value = hire.vehicle || '';
+  document.getElementById('f-ch-ref').value = hire.ref || '';
   const pu = document.getElementById('f-ch-pickup-loc');
   pu.value = hire.pickup?.loc || '';
   if (hire.pickup?.placeId) pu.dataset.placeId = hire.pickup.placeId;
@@ -3258,35 +3181,13 @@ function populateCarHireForm(tr) {
   if (hire.dropoff?.lat != null) { doEl.dataset.lat = hire.dropoff.lat; doEl.dataset.lng = hire.dropoff.lng; }
   document.getElementById('f-ch-dropoff-date').value = ddmmyyyyToInput(hire.dropoff?.date);
   document.getElementById('f-ch-dropoff-time').value = hire.dropoff?.time || '';
-  document.getElementById('f-ch-ref').value = hire.ref || '';
-  document.getElementById('f-ch-hire-cost').value = hire.costs?.hire || '';
-  document.getElementById('f-ch-insurance-cost').value = hire.costs?.insurance || '';
-  document.getElementById('f-ch-driver-cost').value = hire.costs?.driver || '';
-  document.getElementById('f-ch-extras-cost').value = hire.costs?.extras || '';
-  document.getElementById('f-ch-extras-note').value = hire.extrasNote || '';
+  document.getElementById('f-ch-total-cost').value = totalCarHireCost(hire.costs);
   document.getElementById('f-ch-notes').value = hire.notes || '';
-
-  const startEl = document.getElementById('f-rt-start');
-  startEl.value = rt.from || '';
-  if (rt.fromPlaceId) startEl.dataset.placeId = rt.fromPlaceId;
-  if (rt.fromLat != null) { startEl.dataset.lat = rt.fromLat; startEl.dataset.lng = rt.fromLng; }
-  const endEl = document.getElementById('f-rt-end');
-  endEl.value = rt.to || '';
-  if (rt.toPlaceId) endEl.dataset.placeId = rt.toPlaceId;
-  if (rt.toLat != null) { endEl.dataset.lat = rt.toLat; endEl.dataset.lng = rt.toLng; }
-  document.getElementById('f-rt-depart').value = rt.depart || '';
-  document.getElementById('f-rt-arrive').value = rt.arrive || '';
-  document.getElementById('rt-stops-list').innerHTML = '';
-  (rt.stops || []).forEach(s => addStopRow(s));
-  if (rt.distanceMiles) {
-    document.getElementById('f-rt-distance-miles').value = rt.distanceMiles;
-    document.getElementById('f-rt-duration-min').value = rt.durationMin;
-    document.getElementById('f-rt-recommended-min').value = rt.recommendedMin;
-    document.getElementById('f-rt-polyline').value = rt.polyline || '';
-    const summaryEl = document.getElementById('rt-calc-summary');
-    summaryEl.style.display = 'block';
-    summaryEl.innerHTML = `<div class="rt-calc-line rt-calc-line--main">${Number(rt.distanceMiles).toFixed(0)} miles &middot; ${fmtHoursMins(rt.durationMin)} driving</div><div class="rt-calc-line">Allow ${fmtHoursMins(rt.recommendedMin)} including normal stops</div>`;
-  }
+  updateCarHireMapsLinks();
+  // The Car Hire modal no longer has any Road Trip Journey UI — preserve
+  // whatever journey data this item already had (from before the
+  // separate quick Add Journey modal existed) so saving doesn't wipe it.
+  _editingCarHireRoadTrip = tr.roadTrip || null;
 }
 
 // Builds the single 'move' item for a Car Hire / Road Trip entry. Either
@@ -3299,41 +3200,21 @@ function populateCarHireForm(tr) {
 // details live on.
 function buildCarHireItem() {
   const company = document.getElementById('f-ch-company').value.trim();
-  const vehicle = document.getElementById('f-ch-vehicle').value.trim();
+  const ref = document.getElementById('f-ch-ref').value.trim();
   const pickupLoc = document.getElementById('f-ch-pickup-loc').value.trim();
   const pickupDate = inputToDdmmyyyy(document.getElementById('f-ch-pickup-date').value);
   const pickupTime = document.getElementById('f-ch-pickup-time').value;
   const dropoffLoc = document.getElementById('f-ch-dropoff-loc').value.trim();
   const dropoffDate = inputToDdmmyyyy(document.getElementById('f-ch-dropoff-date').value);
   const dropoffTime = document.getElementById('f-ch-dropoff-time').value;
-  const ref = document.getElementById('f-ch-ref').value.trim();
-  const hireCost = document.getElementById('f-ch-hire-cost').value.trim();
-  const insuranceCost = document.getElementById('f-ch-insurance-cost').value.trim();
-  const driverCost = document.getElementById('f-ch-driver-cost').value.trim();
-  const extrasCost = document.getElementById('f-ch-extras-cost').value.trim();
-  const extrasNote = document.getElementById('f-ch-extras-note').value.trim();
+  const totalCost = document.getElementById('f-ch-total-cost').value.trim();
   const chNotes = document.getElementById('f-ch-notes').value.trim();
-  const hasHire = company || pickupLoc || dropoffLoc || pickupDate || dropoffDate;
+  const hasHire = company || pickupLoc || dropoffLoc || pickupDate || dropoffDate || ref || totalCost || chNotes;
 
-  const startEl = document.getElementById('f-rt-start');
-  const endEl   = document.getElementById('f-rt-end');
-  const from = startEl.value.trim(), to = endEl.value.trim();
-  const depart = document.getElementById('f-rt-depart').value;
-  const arrive = document.getElementById('f-rt-arrive').value;
-  const distanceMiles = parseFloat(document.getElementById('f-rt-distance-miles').value) || 0;
-  const durationMin = parseFloat(document.getElementById('f-rt-duration-min').value) || 0;
-  const recommendedMin = parseFloat(document.getElementById('f-rt-recommended-min').value) || 0;
-  const polyline = document.getElementById('f-rt-polyline').value || '';
-  const stops = collectStopRows();
-  const hasJourney = from || to;
+  if (!hasHire) { document.getElementById('f-ch-company').focus(); return null; }
 
-  if (!hasHire && !hasJourney) { document.getElementById('f-ch-company').focus(); return null; }
-  if (hasJourney && !distanceMiles) {
-    if (!confirm('You haven’t calculated the route yet — save anyway without distance/time?')) return null;
-  }
-
-  const hire = hasHire ? {
-    company, vehicle,
+  const hire = {
+    company,
     pickup: { loc: pickupLoc, date: pickupDate, time: pickupTime,
       placeId: document.getElementById('f-ch-pickup-loc').dataset.placeId || '',
       lat: document.getElementById('f-ch-pickup-loc').dataset.lat ? parseFloat(document.getElementById('f-ch-pickup-loc').dataset.lat) : null,
@@ -3342,34 +3223,23 @@ function buildCarHireItem() {
       placeId: document.getElementById('f-ch-dropoff-loc').dataset.placeId || '',
       lat: document.getElementById('f-ch-dropoff-loc').dataset.lat ? parseFloat(document.getElementById('f-ch-dropoff-loc').dataset.lat) : null,
       lng: document.getElementById('f-ch-dropoff-loc').dataset.lng ? parseFloat(document.getElementById('f-ch-dropoff-loc').dataset.lng) : null },
-    ref, costs: { hire: hireCost, insurance: insuranceCost, driver: driverCost, extras: extrasCost },
-    extrasNote, notes: chNotes,
-  } : null;
+    ref, costs: { total: totalCost }, notes: chNotes,
+  };
 
-  const estArrival = (depart && durationMin) ? addMinsToTime(depart, durationMin) : (arrive || '');
-  const roadTrip = hasJourney ? {
-    from, to, depart, arrive: arrive || estArrival,
-    fromPlaceId: startEl.dataset.placeId || '', fromLat: startEl.dataset.lat ? parseFloat(startEl.dataset.lat) : null, fromLng: startEl.dataset.lng ? parseFloat(startEl.dataset.lng) : null,
-    toPlaceId: endEl.dataset.placeId || '', toLat: endEl.dataset.lat ? parseFloat(endEl.dataset.lat) : null, toLng: endEl.dataset.lng ? parseFloat(endEl.dataset.lng) : null,
-    distanceMiles, durationMin, recommendedMin, estArrival, polyline, stops,
-  } : null;
-
-  let title, time, sub;
-  if (hasJourney) {
-    title = [from, to].filter(Boolean).join(' → ');
-    time = depart || (hasHire ? pickupTime : '') || '09:00';
-    sub = ['Car Hire / Road Trip', distanceMiles ? distanceMiles.toFixed(0) + ' miles' : '', durationMin ? fmtHoursMins(durationMin) + ' driving' : ''].filter(Boolean).join(' · ');
-  } else {
-    title = (company ? company + ' — ' : '') + (pickupLoc && dropoffLoc ? pickupLoc + ' → ' + dropoffLoc : (pickupLoc || 'Car Hire'));
-    time = pickupTime || '09:00';
-    sub = 'Car Hire / Road Trip';
-  }
+  const title = (company ? company + ' — ' : '') + (pickupLoc && dropoffLoc ? pickupLoc + ' → ' + dropoffLoc : (pickupLoc || 'Car Hire'));
+  const time = pickupTime || '09:00';
+  const sub = 'Car Hire / Road Trip';
 
   return {
     _id: (editItem && editItem.item && editItem.item._id) || (crypto.randomUUID ? crypto.randomUUID() : 'ch-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
     time, type: 'move', period: document.getElementById('f-period').value || 'morning',
     title, sub, status: ref ? 'booked' : null,
-    transport: { mode: 'Car Hire / Road Trip', hire, roadTrip },
+    // The Car Hire modal is hire-details-only now — any journey/road-trip
+    // data this item already carried (from before the separate quick Add
+    // Journey modal existed) is preserved unchanged via
+    // _editingCarHireRoadTrip, set in populateCarHireForm(); it's null
+    // for a brand-new item.
+    transport: { mode: 'Car Hire / Road Trip', hire, roadTrip: _editingCarHireRoadTrip },
     icoType: 'car', kicker: 'Car Hire / Road Trip',
   };
 }
@@ -4622,7 +4492,7 @@ function extractBookings(state) {
       if (isCarHire) {
         const hire = it.transport.hire;
         if (!hire) continue;
-        const price = parsePr(hire.costs?.hire) + (parsePr(hire.costs?.insurance)||0) + (parsePr(hire.costs?.driver)||0) + (parsePr(hire.costs?.extras)||0);
+        const price = parsePr(totalCarHireCost(hire.costs));
         carhire.push({
           name: hire.company || 'Car Hire', cat:'carhire',
           status: hire.ref ? 'confirmed' : 'pending', ref: hire.ref||'',
@@ -4630,7 +4500,6 @@ function extractBookings(state) {
           dayIdx: state.days.indexOf(d),
           pickupLoc: hire.pickup?.loc, pickupDate: hire.pickup?.date, pickupTime: hire.pickup?.time,
           dropoffLoc: hire.dropoff?.loc, dropoffDate: hire.dropoff?.date, dropoffTime: hire.dropoff?.time,
-          vehicle: hire.vehicle,
         });
         continue;
       }

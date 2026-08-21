@@ -1958,44 +1958,16 @@ body.share-view .tb-title { cursor: default; }
 .places-ac-item:last-child { border-bottom: none; }
 .places-ac-item:hover { background: var(--teal-xdim); color: var(--teal); }
 
-/* Stops */
-.rt-stop-row {
-  display: grid; grid-template-columns: 1fr; gap: 6px; padding: 10px; margin-bottom: 8px;
-  background: rgba(0,0,0,0.02); border: 1px solid var(--line); border-radius: 9px;
+/* Location field with an "open in maps" icon-link (Car Hire pick-up /
+   drop-off) — sits flush against the input's right edge. */
+.field-input-with-link { position: relative; }
+.field-input-with-link .field-input { padding-right: 38px; }
+.field-maps-link {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 36px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--carhire); flex-shrink: 0;
 }
-.rt-stop-times { display: flex; align-items: center; gap: 6px; }
-.rt-stop-time { flex: 1; }
-.rt-stop-arrow { color: var(--text3); font-size: 12px; }
-.rt-stop-remove {
-  border: none; background: none; color: var(--text3); font-size: 18px; line-height: 1; cursor: pointer;
-  padding: 0 4px; flex-shrink: 0;
-}
-.rt-stop-remove:hover { color: #e53e3e; }
-.rt-add-stop-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 9px;
-  background: none; border: 1.5px dashed rgba(82,107,130,0.35); border-radius: 9px; color: var(--transport);
-  font-family: var(--font); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.14s;
-  text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px;
-}
-.rt-add-stop-btn:hover { border-color: var(--transport); background: var(--transport-bg); }
-
-/* Calculate route */
-.rt-calc-btn {
-  width: 100%; padding: 11px; border-radius: 9px; border: none; background: var(--transport); color: #fff;
-  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.13s;
-}
-.rt-calc-btn:hover { opacity: 0.9; }
-.rt-calc-btn:disabled { opacity: 0.6; cursor: default; }
-.rt-calc-summary {
-  background: var(--transport-bg); border-radius: 9px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;
-}
-.rt-calc-line { font-size: 12.5px; color: var(--text2); }
-.rt-calc-line--main { font-size: 14px; font-weight: 800; color: var(--transport); }
-.rt-calc-est { font-weight: 500; color: var(--text3); font-size: 11px; }
-.rt-calc-error { font-size: 12px; color: #c0392b; }
-.rt-calc-loading { font-size: 12px; color: var(--text3); }
-.rt-calc-warn { display: flex; align-items: center; gap: 6px; color: #b96a00; font-size: 11.5px; font-weight: 700; margin-top: 4px; }
-.rt-calc-warn svg { flex-shrink: 0; stroke: currentColor; }
+.field-maps-link:hover { color: var(--carhire2); }
 
 /* Journey drawer additions */
 .tr-station--stop .tr-station-name { font-size: 13px; font-weight: 600; }
