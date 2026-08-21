@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=287">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=288">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1863,7 +1863,8 @@ function makeItemNode(item, idx) {
           }
           return [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble].filter(Boolean).join('');
         })()
-  const dotCls = item.type==='meal' ? 'meal' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''));
+  const isCarHireDot = item.type==='move' && (item.transport && item.transport.mode) === 'Car Hire / Road Trip';
+  const dotCls = item.type==='meal' ? 'meal' : (isCarHireDot ? 'carhire' : (item.type==='move' ? 'move' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : '')));
 
   const row = document.createElement('div');
   row.className = 'tl-item';
