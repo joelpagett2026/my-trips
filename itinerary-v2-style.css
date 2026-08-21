@@ -2001,17 +2001,29 @@ body.share-view .tb-title { cursor: default; }
 }
 .rt-panel--roadtrip .rt-panel-badge-label { color: var(--teal); }
 .rt-panel-badge-stat { font-size: 12px; color: var(--text2); }
-.rt-panel-actions { margin-left: auto; flex-shrink: 0; display: flex; gap: 8px; }
+.rt-panel-badge--toggle .rt-panel-badge-text { cursor: pointer; }
+.rt-panel-actions { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
 .rt-panel-journey-btn, .rt-panel-edit-btn {
   background: none; border: 1px solid var(--carhire); border-radius: 6px;
   padding: 4px 12px; font-family: var(--font); font-size: 11px; font-weight: 700; color: var(--carhire); cursor: pointer;
   white-space: nowrap;
 }
 .rt-panel-journey-btn:hover, .rt-panel-edit-btn:hover { background: var(--carhire-bg); }
-.rt-panel-hire {
-  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 6px;
+.rt-panel-chevron {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; border: none; background: none;
+  color: var(--carhire); display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: transform 0.18s ease, background 0.12s;
 }
+.rt-panel-chevron:hover { background: var(--carhire-bg); }
+.rt-panel-chevron--open { transform: rotate(180deg); }
+.rt-panel-details {
+  display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.18s ease;
+}
+.rt-panel-details-inner {
+  overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
+}
+.rt-panel-details--open { grid-template-rows: 1fr; opacity: 1; }
+.rt-panel-hire { display: flex; flex-direction: column; gap: 6px; }
 .rt-panel-hire-row { display: flex; align-items: baseline; gap: 10px; font-size: 12px; color: var(--text); }
 .rt-panel-hire-label {
   flex-shrink: 0; width: 62px; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
@@ -2019,7 +2031,8 @@ body.share-view .tb-title { cursor: default; }
 }
 .rt-panel-hire-link { color: var(--carhire); text-decoration: none; font-weight: 600; }
 .rt-panel-hire-link:hover { text-decoration: underline; }
-.rt-panel-legs { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.rt-panel-legs { display: flex; flex-direction: column; gap: 10px; }
+.rt-panel-hire + .rt-panel-legs, .rt-panel-hire + .rt-panel-warn, .rt-panel-legs + .rt-panel-warn { margin-top: 12px; }
 .rt-panel-leg { padding-top: 10px; border-top: 1px solid var(--line); }
 .rt-panel-leg-route { font-size: 13px; font-weight: 700; color: var(--text); }
 .rt-panel-arrow { color: var(--text3); }

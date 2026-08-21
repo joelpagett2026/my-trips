@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=285">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=286">
 <script src="/auth.js" defer></script>
 <script src="/db.js" defer></script>
 </head>
@@ -1069,6 +1069,11 @@ function mapsLinkForLoc(loc, placeId) {
 // the core of the feature (section 20 of the brief): a user should be
 // able to tell from this panel alone, without opening any transport
 // item, whether a car is relevant today and what's planned.
+// Which days' Car Hire panel the user has expanded to see full details —
+// resets each page load, defaults to collapsed (just the "Car Hire
+// Included" badge) so the itinerary isn't cluttered by default.
+let _rtPanelExpanded = {};
+
 function renderRoadTripPanel(dayIdx) {
   const state = dayCarHireState(dayIdx);
   if (!state) return null;
@@ -1118,10 +1123,14 @@ function renderRoadTripPanel(dayIdx) {
     if (rows.length) hireSummaryHtml = `<div class="rt-panel-hire">${rows.join('')}</div>`;
   }
 
+  const hasDetails = !!(hireSummaryHtml || legsHtml || warnHtml);
+  const expanded = hasDetails && !!_rtPanelExpanded[dayIdx];
+  const chevronIco = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
   const wrap = document.createElement('div');
   wrap.className = 'rt-panel rt-panel--' + state.kind;
   wrap.innerHTML = `
-    <div class="rt-panel-badge">
+    <div class="rt-panel-badge${hasDetails ? ' rt-panel-badge--toggle' : ''}">
       <span class="rt-panel-badge-ico">${carIco}</span>
       <div class="rt-panel-badge-text">
         <span class="rt-panel-badge-label">${label}</span>
@@ -1130,11 +1139,14 @@ function renderRoadTripPanel(dayIdx) {
       <div class="rt-panel-actions">
         <button type="button" class="rt-panel-journey-btn">+ Add Journey</button>
         <button type="button" class="rt-panel-edit-btn">Edit</button>
+        ${hasDetails ? `<button type="button" class="rt-panel-chevron${expanded ? ' rt-panel-chevron--open' : ''}" title="${expanded ? 'Hide details' : 'Show details'}">${chevronIco}</button>` : ''}
       </div>
     </div>
-    ${hireSummaryHtml}
-    ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
-    ${warnHtml}
+    ${hasDetails ? `<div class="rt-panel-details${expanded ? ' rt-panel-details--open' : ''}"><div class="rt-panel-details-inner">
+      ${hireSummaryHtml}
+      ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
+      ${warnHtml}
+    </div></div>` : ''}
   `;
   const editBtn = wrap.querySelector('.rt-panel-edit-btn');
   const target = findCarHireEditTarget(dayIdx);
@@ -1144,6 +1156,11 @@ function renderRoadTripPanel(dayIdx) {
     editBtn.style.display = 'none';
   }
   wrap.querySelector('.rt-panel-journey-btn').addEventListener('click', () => openQuickJourneyModal());
+  if (hasDetails) {
+    const toggle = () => { _rtPanelExpanded[dayIdx] = !_rtPanelExpanded[dayIdx]; renderTimeline(); };
+    wrap.querySelector('.rt-panel-chevron').addEventListener('click', toggle);
+    wrap.querySelector('.rt-panel-badge-text').addEventListener('click', toggle);
+  }
   return wrap;
 }
 
