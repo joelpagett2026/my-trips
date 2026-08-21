@@ -3041,12 +3041,35 @@ function haversineMiles(p1, p2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// If a location field still has free-typed text with no resolved
+// place_id (the user typed a location but never clicked a suggestion
+// from the autocomplete dropdown), silently look up the top matching
+// place and resolve it — so driving-time calculation doesn't silently
+// fail just because nothing was explicitly picked from the list.
+async function resolveTypedLocation(el) {
+  if (!el || el.dataset.placeId || el.dataset.lat) return; // already resolved, nothing to do
+  const text = el.value.trim();
+  if (!text) return;
+  try {
+    const preds = await dbPlacesAutocomplete(text);
+    if (!preds || !preds.length) return;
+    const place = await dbPlaceDetails(preds[0].place_id);
+    if (place) {
+      el.dataset.placeId = place.place_id;
+      el.dataset.lat = place.lat;
+      el.dataset.lng = place.lng;
+    }
+  } catch (e) { /* leave unresolved — computeRouteData falls back gracefully */ }
+}
+
 // Pure route computation — no DOM reads/writes — shared by the full Road
 // Trip Journey section's "Calculate Route" button and the quick Add
 // Journey modal. Tries the Google Routes API first, falling back to a
 // straight-line estimate (flagged via `estimated`) if it errors or isn't
 // enabled on the key yet.
 async function computeRouteData(startEl, endEl, stops) {
+  await resolveTypedLocation(startEl);
+  await resolveTypedLocation(endEl);
   const originPt = startEl.dataset.placeId ? { placeId: startEl.dataset.placeId }
     : (startEl.dataset.lat ? { lat: parseFloat(startEl.dataset.lat), lng: parseFloat(startEl.dataset.lng) } : null);
   const destPt = endEl.dataset.placeId ? { placeId: endEl.dataset.placeId }
