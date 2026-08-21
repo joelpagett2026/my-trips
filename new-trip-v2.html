@@ -3150,12 +3150,12 @@ async function saveQuickJourney() {
     if (_quickJourneyEditTarget) {
       const { dayIdx, itemIdx } = _quickJourneyEditTarget;
       const existing = STATE.days[dayIdx].items[itemIdx];
-      existing.title = title; existing.sub = sub; existing.time = depart || existing.time || '09:00';
+      existing.title = title; existing.sub = sub; existing.time = depart;
       existing.transport.roadTrip = roadTrip;
     } else {
       const item = {
         _id: crypto.randomUUID ? crypto.randomUUID() : 'ch-' + Date.now() + '-' + Math.random().toString(36).slice(2),
-        time: depart || '09:00', type: 'move', period: inferPeriod({ time: depart, kicker: 'Car Hire / Road Trip' }),
+        time: depart, type: 'move', period: inferPeriod({ time: depart, kicker: 'Car Hire / Road Trip' }),
         title, sub, status: null,
         transport: { mode: 'Car Hire / Road Trip', hire: null, roadTrip },
         icoType: 'car', kicker: 'Car Hire / Road Trip',
@@ -3245,7 +3245,7 @@ function buildCarHireItem() {
   };
 
   const title = (company ? company + ' — ' : '') + (pickupLoc && dropoffLoc ? pickupLoc + ' → ' + dropoffLoc : (pickupLoc || 'Car Hire'));
-  const time = pickupTime || '09:00';
+  const time = pickupTime;
   const sub = 'Car Hire / Road Trip';
 
   return {
