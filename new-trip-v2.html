@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=290">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=291">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1691,10 +1691,17 @@ function renderTimeline() {
 
   const allItems = d.items || [];
 
-  // Bucket items into periods (fall back to inferPeriod for legacy items)
+  // Bucket items into periods (fall back to inferPeriod for legacy items).
+  // Car Hire bookings (the rental itself — has transport.hire) are
+  // intentionally excluded: they only drive the day-panel badge above,
+  // not a Morning/Afternoon/Evening card of their own. Driving legs
+  // (transport.roadTrip, no hire — added via the quick Add Journey
+  // modal) still get a normal timeline entry.
   const buckets = { morning:[], afternoon:[], evening:[] };
   allItems.forEach((item, globalIdx) => {
     if (!item) return;
+    const isHireBooking = item.type==='move' && (item.transport && item.transport.mode)==='Car Hire / Road Trip' && item.transport.hire;
+    if (isHireBooking) return;
     const p = item.period || inferPeriod(item);
     buckets[p].push({ item, globalIdx });
   });
@@ -3291,6 +3298,12 @@ function buildCarHireItem() {
     // for a brand-new item.
     transport: { mode: 'Car Hire / Road Trip', hire, roadTrip: _editingCarHireRoadTrip },
     icoType: 'car', kicker: 'Car Hire / Road Trip',
+    // Doesn't get a Morning/Afternoon/Evening timeline card of its own —
+    // it only drives the day-panel badge (dayCarHireState() still scans
+    // day.items for it, same as before). Actual driving legs are logged
+    // separately via the quick Add Journey modal, which DO get their own
+    // timeline entries. See renderTimeline()'s bucket-building step.
+    _hireOnly: true,
   };
 }
 
@@ -3618,12 +3631,16 @@ function saveBulkItems() {
 function clearPeriod(periodKey) {
   const day   = STATE.days[activeDay];
   const items = day.items || [];
-  const count = items.filter(it => it && (it.period || inferPeriod(it)) === periodKey).length;
+  // Car Hire bookings don't show in any period's visible list (see
+  // renderTimeline), so they must never be swept up by "clear this
+  // period" either — the user has no way to see it's about to be deleted.
+  const isHireBooking = it => it && it.type==='move' && (it.transport && it.transport.mode)==='Car Hire / Road Trip' && it.transport.hire;
+  const count = items.filter(it => it && !isHireBooking(it) && (it.period || inferPeriod(it)) === periodKey).length;
 
   if (count > 0) {
     if (!confirm('Remove all ' + count + ' ' + periodKey + ' item' + (count !== 1 ? 's' : '') + ' from this day?')) return;
     takeSnapshot();
-    day.items = items.filter(it => !it || (it.period || inferPeriod(it)) !== periodKey);
+    day.items = items.filter(it => !it || isHireBooking(it) || (it.period || inferPeriod(it)) !== periodKey);
   }
 
   // Hide the section

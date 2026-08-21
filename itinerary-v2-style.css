@@ -2008,8 +2008,8 @@ body.share-view .tb-title { cursor: default; }
 .rt-panel-badge--toggle .rt-panel-badge-text { cursor: pointer; }
 .rt-panel-actions { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
 .rt-panel-journey-btn, .rt-panel-edit-btn {
-  background: none; border: 1px solid var(--carhire); border-radius: 6px;
-  padding: 4px 12px; font-family: var(--font); font-size: 11px; font-weight: 700; color: var(--carhire); cursor: pointer;
+  background: none; border: 1px solid var(--carhire); border-radius: 20px;
+  padding: 5px 13px; font-family: var(--font); font-size: 11px; font-weight: 700; color: var(--carhire); cursor: pointer;
   white-space: nowrap;
 }
 .rt-panel-journey-btn:hover, .rt-panel-edit-btn:hover { background: var(--carhire-bg); }
