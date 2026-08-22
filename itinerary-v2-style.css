@@ -2046,7 +2046,7 @@ body.share-view .tb-title { cursor: default; }
   flex: 5 1 240px; min-width: 230px; display: flex; align-items: center; gap: 10px;
   background: var(--carhire-bg); border-radius: 12px; padding: 14px 16px;
 }
-.rt-hire-leg { flex: 1; min-width: 0; }
+.rt-hire-leg { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; }
 .rt-hire-date { font-family: var(--font); font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.2; }
 .rt-hire-sub {
   display: flex; align-items: center; gap: 5px; margin-top: 5px;
@@ -2067,6 +2067,7 @@ body.share-view .tb-title { cursor: default; }
 .rt-hire-provider {
   flex: 2 1 110px; min-width: 100px; display: flex; flex-direction: column; justify-content: center; gap: 6px;
   background: var(--carhire); color: #fff; border-radius: 12px; padding: 12px 14px;
+  overflow-wrap: break-word; word-break: break-word;
 }
 .rt-hire-provider-row { font-size: 12px; line-height: 1.45; }
 .rt-hire-provider-label {
