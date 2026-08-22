@@ -508,6 +508,11 @@ PROMPT;
         $preds = array_map(fn($p) => [
             'place_id'    => $p['place_id'] ?? '',
             'description' => $p['description'] ?? '',
+            // Google's short primary label (e.g. "Hertz Car Rental - Larnaca Airport")
+            // vs the full description (e.g. "...Larnaka International Airport (LCA),
+            // Arrivals, Larnaca, Cyprus") — used once a suggestion is picked, so
+            // saved journeys/locations don't carry the whole verbose address.
+            'main_text'   => $p['structured_formatting']['main_text'] ?? ($p['description'] ?? ''),
         ], $acData['predictions'] ?? []);
         ok(['predictions' => array_slice($preds, 0, 6)]);
 

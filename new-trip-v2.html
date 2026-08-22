@@ -3028,7 +3028,7 @@ function attachPlacesAutocomplete(inputId) {
       try {
         const preds = await dbPlacesAutocomplete(q);
         if (!preds.length) { list.style.display = 'none'; list.innerHTML = ''; return; }
-        list.innerHTML = preds.map(p => `<div class="places-ac-item" data-place-id="${p.place_id}">${p.description}</div>`).join('');
+        list.innerHTML = preds.map(p => `<div class="places-ac-item" data-place-id="${p.place_id}" data-main-text="${(p.main_text||'').replace(/"/g,'&quot;')}">${p.description}</div>`).join('');
         list.style.display = 'block';
       } catch (e) { list.style.display = 'none'; }
     }, 300);
@@ -3039,7 +3039,12 @@ function attachPlacesAutocomplete(inputId) {
     if (!it) return;
     e.preventDefault();
     const placeId = it.dataset.placeId;
-    input.value = it.textContent;
+    // The dropdown shows the full address for disambiguation (useful when
+    // several branches/locations share a name), but the field itself is
+    // set to the shorter primary name — keeps saved journeys and their
+    // timeline display clean rather than carrying a whole verbose
+    // Google-formatted address into every FROM/TO line.
+    input.value = it.dataset.mainText || it.textContent;
     list.style.display = 'none';
     try {
       const place = await dbPlaceDetails(placeId);
@@ -3119,6 +3124,10 @@ async function computeRouteData(startEl, endEl, stops) {
       durationMin   = (straightMiles / 35) * 60; // rough 35mph average assumption
     }
   }
+  // Round the approximate driving time up to the nearest 5 minutes (e.g.
+  // 1h 42m -> 1h 45m) — a precise-looking odd number reads as falsely
+  // exact for what's already an estimate.
+  if (durationMin) durationMin = Math.ceil(durationMin / 5) * 5;
   const recommendedMin = distanceMiles ? roadTripRecommendedMin(durationMin) : 0;
   return { distanceMiles, durationMin, recommendedMin, polyline, estimated };
 }
