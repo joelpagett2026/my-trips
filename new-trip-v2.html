@@ -257,7 +257,7 @@
           <button type="button" class="tt-btn" data-cat="attraction">Attraction</button>
           <button type="button" class="tt-btn" data-cat="meal">Meal</button>
           <button type="button" class="tt-btn" data-cat="move">Transport</button>
-          <button type="button" class="tt-btn" data-cat="carhire">Car Hire / Road Trip</button>
+          <button type="button" class="tt-btn" data-cat="carhire">Car Hire</button>
         </div>
         <input type="hidden" id="f-type" value="place">
         <input type="hidden" id="f-period" value="morning">
@@ -3006,7 +3006,6 @@ document.addEventListener('click', e => {
 function openModal() {
   setModalTab('single');
   document.getElementById('modal-tabs').style.display = '';
-  document.getElementById('modal-save-btn').style.background = 'var(--teal)';
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-place-location').focus(), 100);
 }
