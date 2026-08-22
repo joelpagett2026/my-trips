@@ -737,12 +737,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   /* The itinerary + right-panel content now scrolls together as one
      column instead of each independently — see the full .v2-content /
      .tl-col rules further down in this same media query, under
-     "TIMELINE + RIGHT PANEL FILL REMAINING SPACE". .rp-col itself is
-     only styled here since nothing later in this block touches it. */
+     "TIMELINE + RIGHT PANEL FILL REMAINING SPACE".
+     Every property below is !important: this file has several later,
+     non-mobile-scoped ".rp-col{...}" sections (a "CHATGPT SIDEBAR
+     REFINEMENT" block, plus a separate @media(max-width:1100px) block)
+     that also set width/padding — same specificity, later in the file,
+     so they'd silently win without !important, exactly what happened
+     the first time this was tried (confirmed on a real device: the
+     panel rendered at a fixed ~240px width instead of full-width, and
+     the bottom nav bar covered the last section since its padding-
+     bottom got reset back to 17px by those later rules). */
   .rp-col {
-    display: flex !important; width: 100%; min-width: 0;
-    border-left: none; border-top: 8px solid var(--bg);
-    padding-bottom: calc(160px + env(safe-area-inset-bottom, 20px)); /* clears the fixed bottom nav bar — rp-col is now the last scrollable thing, this allowance used to live on tl-col */
+    display: flex !important; width: 100% !important; min-width: 0 !important;
+    border-left: none !important; border-top: 8px solid var(--bg) !important;
+    padding: 17px 14px calc(160px + env(safe-area-inset-bottom, 20px)) !important;
   }
 
   /* ── MOBILE HEADER ── */
@@ -752,9 +760,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .tb-title  { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
 
   /* ── TIMELINE + RIGHT PANEL FILL REMAINING SPACE, SCROLL TOGETHER ── */
-  .v2-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; min-height: 0; }
+  .v2-content { flex: 1; overflow-y: auto !important; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; min-height: 0; }
   .tl-col {
-    flex: none; overflow-y: visible;
+    flex: none !important; overflow-y: visible !important;
     padding: 14px 14px 20px;
   }
   #view-budget { overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
