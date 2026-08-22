@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=292">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=293">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1081,16 +1081,18 @@ function renderRoadTripPanel(dayIdx) {
   const label = ROAD_TRIP_BADGE_LABEL[state.kind];
   const carIco = ICO.car.replace('<svg', '<svg width="18" height="18"');
 
-  let statLine = '';
-  if (state.driving && state.driving.durationMin) {
-    statLine = state.driving.distanceMiles
-      ? `${state.driving.distanceMiles.toFixed(0)} miles &middot; ${fmtHoursMins(state.driving.durationMin)} driving`
-      : `${fmtHoursMins(state.driving.durationMin)} driving`;
-  }
-
   // List every driving leg + planned stop for today, so the plan is
   // visible without opening the transport card.
   const legs = (day.items||[]).filter(it => it && it.type==='move' && (it.transport&&it.transport.mode)==='Car Hire / Road Trip' && it.transport.roadTrip);
+
+  let statLine = '';
+  if (state.driving && state.driving.durationMin) {
+    const parts = [];
+    if (state.driving.distanceMiles) parts.push(`${state.driving.distanceMiles.toFixed(0)} miles`);
+    parts.push(`${fmtHoursMins(state.driving.durationMin)} driving`);
+    parts.push(`${legs.length} journey${legs.length === 1 ? '' : 's'}`);
+    statLine = parts.join(' <span class="rt-panel-badge-stat-sep">|</span> ');
+  }
   const legsHtml = legs.map(it => {
     const rt = it.transport.roadTrip;
     const stopsHtml = (rt.stops||[]).length

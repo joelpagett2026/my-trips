@@ -1990,24 +1990,24 @@ body.share-view .tb-title { cursor: default; }
 .rt-panel-warn strong { display: block; font-size: 12px; margin-bottom: 1px; }
 
 /* Day-level Car Hire / Road Trip panel — the primary "I've got a car
-   today" indicator, shown above the Morning section on relevant days. */
+   today" indicator, shown above the Morning section on relevant days.
+   Always purple, including a driving-only day with no hire attached
+   (previously teal for that one state — now consistent throughout). */
 .rt-panel {
   background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px;
   box-shadow: var(--shadow); border-left: 4px solid var(--carhire);
 }
-.rt-panel--roadtrip { border-left-color: var(--teal); }
 .rt-panel-badge { display: flex; align-items: center; gap: 12px; }
 .rt-panel-badge-ico {
   width: 38px; height: 38px; border-radius: 11px; background: var(--carhire-bg); color: var(--carhire);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.rt-panel--roadtrip .rt-panel-badge-ico { background: var(--teal-xdim); color: var(--teal); }
 .rt-panel-badge-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .rt-panel-badge-label {
   font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; color: var(--carhire); text-transform: uppercase;
 }
-.rt-panel--roadtrip .rt-panel-badge-label { color: var(--teal); }
 .rt-panel-badge-stat { font-size: 12px; color: var(--text2); }
+.rt-panel-badge-stat-sep { color: var(--text3); margin: 0 1px; }
 .rt-panel-badge--toggle .rt-panel-badge-text { cursor: pointer; }
 .rt-panel-actions { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
 .rt-panel-journey-btn, .rt-panel-edit-btn {
@@ -2040,7 +2040,11 @@ body.share-view .tb-title { cursor: default; }
 .rt-panel-hire-link:hover { text-decoration: underline; }
 .rt-panel-legs { display: flex; flex-direction: column; gap: 10px; }
 .rt-panel-hire + .rt-panel-legs, .rt-panel-hire + .rt-panel-warn, .rt-panel-legs + .rt-panel-warn { margin-top: 12px; }
-.rt-panel-leg { padding-top: 10px; border-top: 1px solid var(--line); }
+/* Border only BETWEEN legs, not before the first one — the container
+   (.rt-panel-details-inner) already has its own top border, so a leg
+   that's also the first thing inside it would otherwise show two
+   stacked lines right next to each other. */
+.rt-panel-leg + .rt-panel-leg { padding-top: 10px; border-top: 1px solid var(--line); }
 .rt-panel-leg-route { font-size: 13px; font-weight: 700; color: var(--text); }
 .rt-panel-arrow { color: var(--text3); }
 .rt-panel-leg-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
