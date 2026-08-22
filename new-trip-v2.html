@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=308">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=309">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4981,26 +4981,29 @@ function renderMapView() {
 
   // Render filter bar
   const days = STATE.days||[];
-  const isMobile = window.innerWidth <= 768;
   const filterEl = document.getElementById('map-filters');
 
-  const dayFilterHtml = isMobile
-    ? `<select class="mf-select" onchange="setMapFilter('day',this.value)">
-        <option value="all" ${_mapDayFilter==='all'?'selected':''}>All days</option>
-        ${days.map((d,i) => { const dt=(d.date||'').split('/').slice(0,2).join('/'); const loc=(d.loc||'').split(' ')[0]; return `<option value="${i}" ${_mapDayFilter===String(i)?'selected':''}>Day ${i+1} · ${dt} · ${loc}</option>`; }).join('')}
-       </select>`
-    : `<div class="mf-row">
-        <button class="mf-btn ${_mapDayFilter==='all'?'active':''}" onclick="setMapFilter('day','all')">All days</button>
-        ${days.map((d,i) => `<button class="mf-btn ${_mapDayFilter===String(i)?'active':''}" onclick="setMapFilter('day','${i}')">Day ${i+1}</button>`).join('')}
-       </div>`;
+  const dayFilterHtml = `<select class="mf-select" onchange="setMapFilter('day',this.value)">
+        <option value="all" ${_mapDayFilter==='all'?'selected':''}>All Days</option>
+        ${days.map((d,i) => { const dt=(d.date||'').split('/').slice(0,2).join('/'); const loc=(d.loc||'').split(' ')[0]; return `<option value="${i}" ${_mapDayFilter===String(i)?'selected':''}>Day ${i+1} - ${loc} - ${dt}</option>`; }).join('')}
+       </select>`;
+
+  const catIcons = {
+    all:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+    act:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>',
+    meal:   ICO.utensils,
+    ticket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="13" y1="6" x2="13" y2="8"/><line x1="13" y1="11" x2="13" y2="13"/><line x1="13" y1="16" x2="13" y2="18"/></svg>',
+    hotel:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V6"/><path d="M3 10h16a2 2 0 0 1 2 2v6"/><path d="M3 15h18"/><path d="M7 10V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2"/></svg>',
+  };
+  const catBtn = (key, label, cls) => `<button type="button" class="mf-icon-btn ${cls} ${_mapCatFilter===key?'active':''}" onclick="setMapFilter('cat','${key}')" title="${label}">${catIcons[key]}</button>`;
 
   filterEl.innerHTML = dayFilterHtml + `
-    <div class="mf-row">
-      <button class="mf-btn ${_mapCatFilter==='all'?'active':''}" onclick="setMapFilter('cat','all')">All</button>
-      <button class="mf-btn cat-act ${_mapCatFilter==='act'?'active':''}" onclick="setMapFilter('cat','act')">Places</button>
-      <button class="mf-btn cat-meal ${_mapCatFilter==='meal'?'active':''}" onclick="setMapFilter('cat','meal')">Meals</button>
-      <button class="mf-btn cat-ticket ${_mapCatFilter==='ticket'?'active':''}" onclick="setMapFilter('cat','ticket')">Attractions</button>
-      <button class="mf-btn cat-hotel ${_mapCatFilter==='hotel'?'active':''}" onclick="setMapFilter('cat','hotel')">Hotels</button>
+    <div class="mf-row mf-row-icons">
+      ${catBtn('all', 'All', 'cat-all')}
+      ${catBtn('act', 'Places', 'cat-act')}
+      ${catBtn('meal', 'Meals', 'cat-meal')}
+      ${catBtn('ticket', 'Attractions', 'cat-ticket')}
+      ${catBtn('hotel', 'Hotels', 'cat-hotel')}
     </div>`;
 
   // Render list
