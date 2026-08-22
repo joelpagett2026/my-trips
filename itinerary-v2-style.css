@@ -787,10 +787,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .tl-item { grid-template-columns: 44px 1fr; border-radius: 0; }
   .tl-grip { display: none; }
 
-  /* Time column — tighter, no overlap with dot */
+  /* Time column — tighter, dynamically centred to match the dot
+     (previously a fixed padding-top, which only coincidentally lined up
+     with the dot for items of one particular height — a shorter or
+     taller item's time would drift out of alignment, since the dot
+     centres on the item's actual rendered height while a fixed offset
+     doesn't adapt to it). */
   .tl-time {
-    font-size: 10px; padding: 14px 8px 0 0; text-align: right;
+    font-size: 10px; padding: 0 8px 0 0; text-align: right; align-self: center;
   }
+
+  /* Dot — slightly smaller on mobile; -7px keeps it centred on the same
+     rail line as the 16px desktop version (rail sits at the body-wrap's
+     left edge either way). */
+  .tl-dot { width: 12px; height: 12px; left: -7px; border-width: 1.5px; }
 
   /* Body wrap — icon + text in a row, give text room */
   .tl-body-wrap { padding: 10px 10px 10px 0; gap: 8px; }
