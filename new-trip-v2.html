@@ -4088,10 +4088,13 @@ function daysForHotelBreakfast(hotel) {
 
 function addHotelBreakfasts(hotel) {
   daysForHotelBreakfast(hotel).forEach(day => {
-    // Don't add if a hotel breakfast already exists for this hotel
-    const already = (day.items || []).some(it =>
-      it && it._hotelBreakfast === hotel.name
-    );
+    // Don't add if a hotel breakfast already exists for this hotel — checks
+    // both the current tag format AND the legacy pre-tag format (kicker
+    // 'Breakfast' + sub 'Included with stay'), since a trip that had
+    // breakfast items added before the _hotelBreakfast tag existed would
+    // otherwise not be recognised here, and re-saving the hotel would add
+    // a second, duplicate breakfast entry alongside the untagged old one.
+    const already = (day.items || []).some(it => it && it.title === hotel.name && isHotelBreakfastItem(it));
     if (already) return;
     if (!day.items) day.items = [];
     // Insert at start of morning items
@@ -4113,7 +4116,7 @@ function addHotelBreakfasts(hotel) {
 function removeHotelBreakfasts(hotel) {
   STATE.days.forEach(day => {
     day.items = (day.items || []).filter(it =>
-      !(it && it._hotelBreakfast === hotel.name)
+      !(it && it.title === hotel.name && isHotelBreakfastItem(it))
     );
   });
 }
