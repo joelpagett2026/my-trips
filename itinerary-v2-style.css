@@ -2030,7 +2030,31 @@ body.share-view .tb-title { cursor: default; }
   overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
 }
 .rt-panel-details--open { grid-template-rows: 1fr; opacity: 1; }
-.rt-panel-hire { display: flex; flex-direction: column; gap: 5px; }
+.rt-panel-hire { display: flex; flex-direction: column; gap: 12px; }
+/* Trip "ticket" card — pick-up / duration / drop-off */
+.rt-hire-trip {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--carhire-bg); border-radius: 12px; padding: 14px 16px;
+}
+.rt-hire-leg { flex: 1; min-width: 0; }
+.rt-hire-date { font-family: var(--font); font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.2; }
+.rt-hire-sub {
+  display: flex; align-items: center; gap: 5px; margin-top: 5px;
+  font-size: 11px; color: var(--text2); line-height: 1.3;
+}
+.rt-hire-sub svg { flex-shrink: 0; color: var(--carhire); }
+.rt-hire-sub a.rt-panel-hire-link { font-size: 11px; }
+.rt-hire-duration {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 0 4px;
+}
+.rt-hire-duration-ico { color: var(--carhire); display: flex; }
+.rt-hire-duration-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--text3); text-align: center; white-space: nowrap;
+}
+/* Provider / cost details underneath the ticket card */
+.rt-hire-details { display: flex; flex-direction: column; gap: 5px; }
 .rt-panel-hire-row { font-size: 12px; color: var(--text); line-height: 1.5; }
 .rt-panel-hire-label {
   font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
@@ -2063,6 +2087,9 @@ body.share-view .tb-title { cursor: default; }
   .rt-panel-badge { flex-wrap: wrap; }
   .rt-panel-actions { margin-left: 0; width: 100%; margin-top: 4px; }
   .rt-panel-journey-btn, .rt-panel-edit-btn { flex: 1; text-align: center; }
+  .rt-hire-trip { flex-direction: column; align-items: stretch; padding: 12px 14px; gap: 10px; }
+  .rt-hire-duration { flex-direction: row; justify-content: center; padding: 2px 0; }
+  .rt-hire-duration-ico svg { width: 15px; height: 15px; }
 }
 
 /* Bookings tab — Car Hire card (distinct from a driving-leg journey

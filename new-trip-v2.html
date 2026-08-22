@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=294">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=295">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1109,20 +1109,50 @@ function renderRoadTripPanel(dayIdx) {
     ? `<div class="rt-panel-warn">${ICO.warn.replace('<svg','<svg width="14" height="14"')} <div><strong>Long driving day</strong><span>${fmtHoursMins(state.driving.durationMin)} estimated driving — consider adding a stop or breaking the journey.</span></div></div>`
     : '';
 
-  // At-a-glance hire summary — company, booking ref, pick-up/drop-off
-  // (with a Google Maps link) and total cost — shown on every day the
-  // hire is active, not just the day it was entered on.
+  // At-a-glance hire summary — a compact "ticket" style card (pick-up
+  // date/time/location, duration, drop-off date/time/location) plus
+  // provider/cost details underneath — shown on every day the hire is
+  // active, not just the day it was entered on.
   let hireSummaryHtml = '';
   if (state.hire) {
     const h = state.hire;
     const totalCost = totalCarHireCost(h.costs);
-    const rows = [];
-    if (h.company || h.ref) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Company:</span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</div>`);
-    if (h.pickup && h.pickup.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Pick-up:</span><a href="${mapsLinkForLoc(h.pickup.loc, h.pickup.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.pickup.loc}</a>${[fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') : ''}</div>`);
-    if (h.dropoff && h.dropoff.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Drop-off:</span><a href="${mapsLinkForLoc(h.dropoff.loc, h.dropoff.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.dropoff.loc}</a>${[fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') : ''}</div>`);
-    if (totalCost) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost:</span>£${totalCost}</div>`);
-    if (h.notes) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes:</span>${h.notes}</div>`);
-    if (rows.length) hireSummaryHtml = `<div class="rt-panel-hire">${rows.join('')}</div>`;
+    const pu = h.pickup || {}, doo = h.dropoff || {};
+    const puDate = ddmmyyyyToDate(pu.date), doDate = ddmmyyyyToDate(doo.date);
+    const durationDays = (puDate && doDate) ? Math.round((doDate - puDate) / 86400000) : null;
+
+    const icoCal = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+    const icoPin = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>';
+
+    const legCard = (dateRaw, time, loc, placeId) => {
+      const dateShort = fmtShortDdmmyyyy(dateRaw);
+      return `<div class="rt-hire-leg">
+        <div class="rt-hire-date">${dateShort || '—'}</div>
+        <div class="rt-hire-sub">${icoCal}<span>${[dateShort, time].filter(Boolean).join(' · ') || '—'}</span></div>
+        ${loc ? `<div class="rt-hire-sub">${icoPin}<a href="${mapsLinkForLoc(loc, placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${loc}</a></div>` : ''}
+      </div>`;
+    };
+
+    let tripCardHtml = '';
+    if (pu.loc || pu.date || doo.loc || doo.date) {
+      tripCardHtml = `<div class="rt-hire-trip">
+        ${legCard(pu.date, pu.time, pu.loc, pu.placeId)}
+        <div class="rt-hire-duration">
+          <span class="rt-hire-duration-ico">${carIco}</span>
+          ${durationDays != null ? `<span class="rt-hire-duration-label">${durationDays} Day${durationDays===1?'':'s'} Duration</span>` : ''}
+        </div>
+        ${legCard(doo.date, doo.time, doo.loc, doo.placeId)}
+      </div>`;
+    }
+
+    const detailRows = [];
+    if (h.company || h.ref) detailRows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Provider:</span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</div>`);
+    if (totalCost) detailRows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost:</span>£${totalCost}</div>`);
+    if (h.notes) detailRows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes:</span>${h.notes}</div>`);
+
+    if (tripCardHtml || detailRows.length) {
+      hireSummaryHtml = `<div class="rt-panel-hire">${tripCardHtml}${detailRows.length ? `<div class="rt-hire-details">${detailRows.join('')}</div>` : ''}</div>`;
+    }
   }
 
   const hasDetails = !!(hireSummaryHtml || legsHtml || warnHtml);
