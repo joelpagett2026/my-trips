@@ -1996,7 +1996,7 @@ body.share-view .tb-title { cursor: default; }
    (previously teal for that one state — now consistent throughout). */
 .rt-panel {
   background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px;
-  box-shadow: var(--shadow); border-left: 4px solid var(--carhire);
+  box-shadow: var(--shadow);
 }
 .rt-panel-badge { display: flex; align-items: center; gap: 12px; }
 .rt-panel-badge-ico {
@@ -2082,7 +2082,8 @@ body.share-view .tb-title { cursor: default; }
 .rt-panel-hire-link { color: var(--carhire); text-decoration: none; font-weight: 600; }
 .rt-panel-hire-link:hover { text-decoration: underline; }
 .rt-panel-legs { display: flex; flex-direction: column; gap: 10px; }
-.rt-panel-hire + .rt-panel-legs, .rt-panel-hire + .rt-panel-warn, .rt-panel-legs + .rt-panel-warn { margin-top: 12px; }
+.rt-panel-hire + .rt-panel-legs { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.rt-panel-hire + .rt-panel-warn, .rt-panel-legs + .rt-panel-warn { margin-top: 12px; }
 /* Border only BETWEEN legs, not before the first one — the container
    (.rt-panel-details-inner) already has its own top border, so a leg
    that's also the first thing inside it would otherwise show two
