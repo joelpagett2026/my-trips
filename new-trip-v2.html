@@ -460,10 +460,6 @@
             <label class="field-label">Total cost</label>
             <input class="field-input" id="f-ch-total-cost" type="text" placeholder="£">
           </div>
-          <div class="field-group">
-            <label class="field-label">Notes</label>
-            <textarea class="field-textarea" id="f-ch-notes"></textarea>
-          </div>
         </div>
       </div>
 
@@ -871,6 +867,10 @@ let editItem   = null;  // same, or null for new
 // separate quick "Add Journey" modal existed — see saveQuickJourney())
 // across an edit, since the Car Hire modal no longer has any UI for it.
 let _editingCarHireRoadTrip = null;
+// Same idea for Notes — removed from the modal's visible fields, but an
+// existing item's notes shouldn't just get silently wiped out by editing
+// and re-saving its other details.
+let _editingCarHireNotes = '';
 let snapshotData = null;
 let saveTimer = null;
 
@@ -2855,7 +2855,7 @@ function clearForm() {
    'f-ref','f-ref-other','f-url','f-avios','f-operator','f-route','f-move-notes','f-move-notes-flight',
    'f-ch-company','f-ch-ref','f-ch-pickup-loc','f-ch-pickup-date','f-ch-pickup-time',
    'f-ch-dropoff-loc','f-ch-dropoff-date','f-ch-dropoff-time',
-   'f-ch-total-cost','f-ch-notes'].forEach(id => {
+   'f-ch-total-cost'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   ['f-ch-pickup-loc','f-ch-dropoff-loc'].forEach(id => {
@@ -2863,6 +2863,7 @@ function clearForm() {
   });
   updateCarHireMapsLinks();
   _editingCarHireRoadTrip = null;
+  _editingCarHireNotes = '';
   setAttBooked('notbooked');
   document.getElementById('f-period').value = 'morning';
   setCategory('place');
@@ -3291,12 +3292,14 @@ function populateCarHireForm(tr) {
   document.getElementById('f-ch-dropoff-date').value = ddmmyyyyToInput(hire.dropoff?.date);
   document.getElementById('f-ch-dropoff-time').value = hire.dropoff?.time || '';
   document.getElementById('f-ch-total-cost').value = totalCarHireCost(hire.costs);
-  document.getElementById('f-ch-notes').value = hire.notes || '';
   updateCarHireMapsLinks();
   // The Car Hire modal no longer has any Road Trip Journey UI — preserve
   // whatever journey data this item already had (from before the
   // separate quick Add Journey modal existed) so saving doesn't wipe it.
   _editingCarHireRoadTrip = tr.roadTrip || null;
+  // Same for Notes — no longer an editable field here, but preserve
+  // whatever was already saved rather than silently deleting it.
+  _editingCarHireNotes = hire.notes || '';
 }
 
 // Builds the single 'move' item for a Car Hire / Road Trip entry. Either
@@ -3317,7 +3320,9 @@ function buildCarHireItem() {
   const dropoffDate = inputToDdmmyyyy(document.getElementById('f-ch-dropoff-date').value);
   const dropoffTime = document.getElementById('f-ch-dropoff-time').value;
   const totalCost = document.getElementById('f-ch-total-cost').value.trim();
-  const chNotes = document.getElementById('f-ch-notes').value.trim();
+  // No longer an editable field in this modal — preserve whatever was
+  // already saved (set in populateCarHireForm()), empty for a new item.
+  const chNotes = _editingCarHireNotes || '';
   const hasHire = company || pickupLoc || dropoffLoc || pickupDate || dropoffDate || ref || totalCost || chNotes;
 
   if (!hasHire) { document.getElementById('f-ch-company').focus(); return null; }
