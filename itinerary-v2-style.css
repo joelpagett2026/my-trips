@@ -1909,6 +1909,7 @@ body.share-view .rp2-add-btn,
 body.share-view .rp2-hotel-edit-head,
 body.share-view .rt-panel-edit-btn,
 body.share-view .rt-panel-journey-btn,
+body.share-view .rt-panel-delete-btn,
 body.share-view .bv-avios-input {
   display: none !important;
 }
@@ -2027,8 +2028,15 @@ body.share-view .tb-title { cursor: default; }
   display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.18s ease;
 }
 .rt-panel-details-inner {
-  overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
+  position: relative; overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
 }
+.rt-panel-delete-btn {
+  position: absolute; top: 8px; right: 0; z-index: 1;
+  background: var(--surface); border: none; color: var(--text3); cursor: pointer;
+  width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: all 0.13s; box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+.rt-panel-delete-btn:hover { color: #e53e3e; background: #fee; }
 .rt-panel-details--open { grid-template-rows: 1fr; opacity: 1; }
 .rt-panel-hire { display: flex; flex-direction: column; gap: 12px; }
 /* Trip "ticket" card — pick-up / duration / drop-off */

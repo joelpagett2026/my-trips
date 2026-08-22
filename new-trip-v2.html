@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=295">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=296">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1175,6 +1175,7 @@ function renderRoadTripPanel(dayIdx) {
       </div>
     </div>
     ${hasDetails ? `<div class="rt-panel-details${expanded ? ' rt-panel-details--open' : ''}"><div class="rt-panel-details-inner">
+      ${state.hire ? `<button type="button" class="rt-panel-delete-btn" title="Delete car hire booking"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : ''}
       ${hireSummaryHtml}
       ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
       ${warnHtml}
@@ -1193,7 +1194,24 @@ function renderRoadTripPanel(dayIdx) {
     wrap.querySelector('.rt-panel-chevron').addEventListener('click', toggle);
     wrap.querySelector('.rt-panel-badge-text').addEventListener('click', toggle);
   }
+  const deleteBtn = wrap.querySelector('.rt-panel-delete-btn');
+  if (deleteBtn && target) {
+    deleteBtn.addEventListener('click', () => deleteCarHireBooking(target.dayIdx, target.itemIdx));
+  }
   return wrap;
+}
+
+// Deletes the Car Hire booking itself (company, dates, cost) — the small
+// trash button in the top-right of the expanded day panel. Any driving
+// legs logged separately via the quick Add Journey modal are untouched.
+function deleteCarHireBooking(dayIdx, itemIdx) {
+  if (!confirm('Delete this car hire booking? This removes the company, dates and cost — any journeys you\'ve logged separately will stay.')) return;
+  takeSnapshot();
+  STATE.days[dayIdx].items.splice(itemIdx, 1);
+  scheduleSave();
+  render();
+  showSnapshotBar(true);
+  setTimeout(() => showSnapshotBar(false), 6000);
 }
 
 // Compact meta lines shown under a Car Hire / Road Trip item in the day
@@ -5250,7 +5268,7 @@ if (SHARE_VIEW_ACTIVE) {
     'edDrop', 'edDragEnd', 'saveEditDays',
     'editDayTitle', 'onDragStart', 'saveBudgetAvios',
     'addStopRow', 'computeRoadTripRoute',
-    'openQuickJourneyModal', 'closeQuickJourneyModal', 'saveQuickJourney',
+    'openQuickJourneyModal', 'closeQuickJourneyModal', 'saveQuickJourney', 'deleteCarHireBooking',
   ].forEach(name => {
     if (typeof window[name] === 'function') window[name] = function(){};
   });
