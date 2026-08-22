@@ -750,7 +750,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .rp-col {
     display: flex !important; width: 100% !important; min-width: 0 !important;
     border-left: none !important; border-top: 8px solid var(--bg) !important;
-    padding: 17px 14px calc(160px + env(safe-area-inset-bottom, 20px)) !important;
+    padding: 37px 14px calc(180px + env(safe-area-inset-bottom, 20px)) !important;
     /* Base (desktop) CSS gives .rp-col its own overflow-y:auto, since
        there it's a fixed-height sidebar that scrolls independently. On
        mobile it's just flowing content inside .v2-content's single
