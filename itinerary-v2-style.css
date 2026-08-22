@@ -751,6 +751,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     display: flex !important; width: 100% !important; min-width: 0 !important;
     border-left: none !important; border-top: 8px solid var(--bg) !important;
     padding: 17px 14px calc(160px + env(safe-area-inset-bottom, 20px)) !important;
+    /* Base (desktop) CSS gives .rp-col its own overflow-y:auto, since
+       there it's a fixed-height sidebar that scrolls independently. On
+       mobile it's just flowing content inside .v2-content's single
+       outer scroll now — left as auto, it stayed a SECOND, nested
+       scroll container clipped to a collapsed height (confirmed on a
+       real device: content was genuinely there, ~97KB of hotel-card
+       HTML rendered correctly, but only the first ~185px of it was
+       visible, with the rest clipped and its scrollbar hidden by the
+       existing ::-webkit-scrollbar{display:none} rule — looked like
+       empty space rather than a second scrollbar). */
+    height: auto !important; overflow-y: visible !important;
   }
 
   /* ── MOBILE HEADER ── */
