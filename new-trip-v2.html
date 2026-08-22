@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=296">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=297">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1137,21 +1137,28 @@ function renderRoadTripPanel(dayIdx) {
     if (pu.loc || pu.date || doo.loc || doo.date) {
       tripCardHtml = `<div class="rt-hire-trip">
         ${legCard(pu.date, pu.time, pu.loc, pu.placeId)}
+        ${legCard(doo.date, doo.time, doo.loc, doo.placeId)}
         <div class="rt-hire-duration">
           <span class="rt-hire-duration-ico">${carIco}</span>
           ${durationDays != null ? `<span class="rt-hire-duration-label">${durationDays} Day${durationDays===1?'':'s'} Duration</span>` : ''}
         </div>
-        ${legCard(doo.date, doo.time, doo.loc, doo.placeId)}
       </div>`;
     }
 
-    const detailRows = [];
-    if (h.company || h.ref) detailRows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Provider:</span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</div>`);
-    if (totalCost) detailRows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost:</span>£${totalCost}</div>`);
-    if (h.notes) detailRows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes:</span>${h.notes}</div>`);
+    let providerCardHtml = '';
+    const providerRows = [];
+    if (h.company) providerRows.push(`<div class="rt-hire-provider-row"><span class="rt-hire-provider-label">Provider:</span>${h.company}</div>`);
+    if (h.ref) providerRows.push(`<div class="rt-hire-provider-row"><span class="rt-hire-provider-label">Reference:</span>${h.ref}</div>`);
+    if (totalCost) providerRows.push(`<div class="rt-hire-provider-row"><span class="rt-hire-provider-label">Total Cost:</span>£${totalCost}</div>`);
+    if (providerRows.length) providerCardHtml = `<div class="rt-hire-provider">${providerRows.join('')}</div>`;
 
-    if (tripCardHtml || detailRows.length) {
-      hireSummaryHtml = `<div class="rt-panel-hire">${tripCardHtml}${detailRows.length ? `<div class="rt-hire-details">${detailRows.join('')}</div>` : ''}</div>`;
+    const notesHtml = h.notes ? `<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes:</span>${h.notes}</div>` : '';
+
+    if (tripCardHtml || providerCardHtml || notesHtml) {
+      hireSummaryHtml = `<div class="rt-panel-hire">
+        ${(tripCardHtml || providerCardHtml) ? `<div class="rt-hire-row">${tripCardHtml}${providerCardHtml}</div>` : ''}
+        ${notesHtml}
+      </div>`;
     }
   }
 
