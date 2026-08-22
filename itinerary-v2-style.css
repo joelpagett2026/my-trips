@@ -2043,7 +2043,7 @@ body.share-view .tb-title { cursor: default; }
    cost card sit side by side in one row. */
 .rt-hire-row { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; }
 .rt-hire-trip {
-  flex: 3 1 220px; min-width: 200px; display: flex; align-items: center; gap: 10px;
+  flex: 5 1 240px; min-width: 230px; display: flex; align-items: center; gap: 10px;
   background: var(--carhire-bg); border-radius: 12px; padding: 14px 16px;
 }
 .rt-hire-leg { flex: 1; min-width: 0; }
@@ -2065,8 +2065,8 @@ body.share-view .tb-title { cursor: default; }
 }
 /* Provider / reference / total cost — dark purple, white text */
 .rt-hire-provider {
-  flex: 2 1 130px; min-width: 120px; display: flex; flex-direction: column; justify-content: center; gap: 6px;
-  background: var(--carhire); color: #fff; border-radius: 12px; padding: 14px 16px;
+  flex: 2 1 110px; min-width: 100px; display: flex; flex-direction: column; justify-content: center; gap: 6px;
+  background: var(--carhire); color: #fff; border-radius: 12px; padding: 12px 14px;
 }
 .rt-hire-provider-row { font-size: 12px; line-height: 1.45; }
 .rt-hire-provider-label {
