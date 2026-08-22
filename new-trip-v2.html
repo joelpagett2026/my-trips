@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=306">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=307">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1177,23 +1177,54 @@ function renderRoadTripPanel(dayIdx) {
       </div>
       <div class="rt-panel-actions">
         <button type="button" class="rt-panel-journey-btn">+ Add Journey</button>
-        <button type="button" class="rt-panel-edit-btn">Edit</button>
+        <div class="rt-panel-edit-wrap">
+          <button type="button" class="rt-panel-edit-btn rt-panel-edit-btn--split">Edit<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="rt-panel-edit-menu">
+            <button type="button" class="rt-panel-edit-menu-item" data-action="edit">Edit Car Hire Details</button>
+            <button type="button" class="rt-panel-edit-menu-item rt-panel-edit-menu-item--danger" data-action="delete">Delete Car Hire</button>
+          </div>
+        </div>
         ${hasDetails ? `<button type="button" class="rt-panel-chevron${expanded ? ' rt-panel-chevron--open' : ''}" title="${expanded ? 'Hide details' : 'Show details'}">${chevronIco}</button>` : ''}
       </div>
     </div>
     ${hasDetails ? `<div class="rt-panel-details${expanded ? ' rt-panel-details--open' : ''}"><div class="rt-panel-details-inner">
-      ${state.hire ? `<button type="button" class="rt-panel-delete-btn" title="Delete car hire booking"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : ''}
       ${hireSummaryHtml}
       ${legsHtml ? `<div class="rt-panel-legs">${legsHtml}</div>` : ''}
       ${warnHtml}
     </div></div>` : ''}
   `;
-  const editBtn = wrap.querySelector('.rt-panel-edit-btn');
   const target = findCarHireEditTarget(dayIdx);
+  const editWrap = wrap.querySelector('.rt-panel-edit-wrap');
+  const editBtn = wrap.querySelector('.rt-panel-edit-btn');
+  const editMenu = wrap.querySelector('.rt-panel-edit-menu');
   if (target) {
-    editBtn.addEventListener('click', () => openEditItem(target.dayIdx, target.itemIdx));
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = editMenu.classList.toggle('open');
+      if (isOpen) {
+        // Close on any click elsewhere — registered fresh each time the
+        // menu opens, and removes itself the moment it fires.
+        const closeOnOutsideClick = (evt) => {
+          if (!editWrap.contains(evt.target)) {
+            editMenu.classList.remove('open');
+            document.removeEventListener('click', closeOnOutsideClick);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 0);
+      }
+    });
+    editMenu.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      editMenu.classList.remove('open');
+      openEditItem(target.dayIdx, target.itemIdx);
+    });
+    editMenu.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      editMenu.classList.remove('open');
+      deleteCarHireEverything();
+    });
   } else {
-    editBtn.style.display = 'none';
+    editWrap.style.display = 'none';
   }
   wrap.querySelector('.rt-panel-journey-btn').addEventListener('click', () => openQuickJourneyModal());
   if (hasDetails) {
@@ -1201,20 +1232,27 @@ function renderRoadTripPanel(dayIdx) {
     wrap.querySelector('.rt-panel-chevron').addEventListener('click', toggle);
     wrap.querySelector('.rt-panel-badge-text').addEventListener('click', toggle);
   }
-  const deleteBtn = wrap.querySelector('.rt-panel-delete-btn');
-  if (deleteBtn && target) {
-    deleteBtn.addEventListener('click', () => deleteCarHireBooking(target.dayIdx, target.itemIdx));
-  }
   return wrap;
 }
 
-// Deletes the Car Hire booking itself (company, dates, cost) — the small
-// trash button in the top-right of the expanded day panel. Any driving
-// legs logged separately via the quick Add Journey modal are untouched.
-function deleteCarHireBooking(dayIdx, itemIdx) {
-  if (!confirm('Delete this car hire booking? This removes the company, dates and cost — any journeys you\'ve logged separately will stay.')) return;
+// Deletes the Car Hire booking AND every driving leg logged for it,
+// across the whole trip — not just the current day. Reached via the
+// "Delete Car Hire" option in the Edit dropdown, with a warning that
+// spells out exactly how many journeys will go with it, since that's
+// easy to lose track of on a trip spanning several days.
+function deleteCarHireEverything() {
+  const isCarHireItem = it => it && it.type === 'move' && (it.transport && it.transport.mode) === 'Car Hire / Road Trip';
+  const journeyCount = STATE.days.reduce((sum, d) => sum + (d.items||[]).filter(it => isCarHireItem(it) && it.transport.roadTrip && !it.transport.hire).length, 0);
+  const hireCount = STATE.days.reduce((sum, d) => sum + (d.items||[]).filter(it => isCarHireItem(it) && it.transport.hire).length, 0);
+  if (!journeyCount && !hireCount) return;
+
+  const warning = journeyCount > 0
+    ? `Delete this car hire booking? This will also delete all ${journeyCount} journey${journeyCount===1?'':'s'} you've logged for it across the whole trip.`
+    : 'Delete this car hire booking?';
+  if (!confirm(warning)) return;
+
   takeSnapshot();
-  STATE.days[dayIdx].items.splice(itemIdx, 1);
+  STATE.days.forEach(d => { d.items = (d.items||[]).filter(it => !isCarHireItem(it)); });
   scheduleSave();
   render();
   showSnapshotBar(true);
@@ -5275,7 +5313,7 @@ if (SHARE_VIEW_ACTIVE) {
     'edDrop', 'edDragEnd', 'saveEditDays',
     'editDayTitle', 'onDragStart', 'saveBudgetAvios',
     'addStopRow', 'computeRoadTripRoute',
-    'openQuickJourneyModal', 'closeQuickJourneyModal', 'saveQuickJourney', 'deleteCarHireBooking',
+    'openQuickJourneyModal', 'closeQuickJourneyModal', 'saveQuickJourney', 'deleteCarHireEverything',
   ].forEach(name => {
     if (typeof window[name] === 'function') window[name] = function(){};
   });

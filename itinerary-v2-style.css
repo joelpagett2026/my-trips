@@ -1941,9 +1941,8 @@ body.share-view .tl-restore-strip,
 body.share-view .hotel-edit-btn,
 body.share-view .rp2-add-btn,
 body.share-view .rp2-hotel-edit-head,
-body.share-view .rt-panel-edit-btn,
+body.share-view .rt-panel-edit-wrap,
 body.share-view .rt-panel-journey-btn,
-body.share-view .rt-panel-delete-btn,
 body.share-view .bv-avios-input {
   display: none !important;
 }
@@ -2051,6 +2050,23 @@ body.share-view .tb-title { cursor: default; }
   white-space: nowrap;
 }
 .rt-panel-journey-btn:hover, .rt-panel-edit-btn:hover { background: var(--carhire-bg); }
+.rt-panel-edit-wrap { position: relative; }
+.rt-panel-edit-btn--split { display: inline-flex; align-items: center; gap: 4px; }
+.rt-panel-edit-menu {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+  background: var(--surface); border-radius: 10px; box-shadow: 0 4px 18px rgba(0,0,0,0.16);
+  border: 1px solid var(--line); overflow: hidden; min-width: 195px;
+}
+.rt-panel-edit-menu.open { display: block; }
+.rt-panel-edit-menu-item {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  padding: 11px 14px; font-family: var(--font); font-size: 12.5px; font-weight: 600;
+  color: var(--text); cursor: pointer; transition: background 0.12s; white-space: nowrap;
+}
+.rt-panel-edit-menu-item:hover { background: var(--carhire-bg); }
+.rt-panel-edit-menu-item + .rt-panel-edit-menu-item { border-top: 1px solid var(--line); }
+.rt-panel-edit-menu-item--danger { color: #e53e3e; }
+.rt-panel-edit-menu-item--danger:hover { background: #fee; }
 .rt-panel-chevron {
   flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; border: none; background: none;
   color: var(--carhire); display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -2062,15 +2078,8 @@ body.share-view .tb-title { cursor: default; }
   display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.18s ease;
 }
 .rt-panel-details-inner {
-  position: relative; overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
+  overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
 }
-.rt-panel-delete-btn {
-  position: absolute; top: 8px; right: 0; z-index: 1;
-  background: var(--surface); border: none; color: var(--text3); cursor: pointer;
-  width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  transition: all 0.13s; box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-}
-.rt-panel-delete-btn:hover { color: #e53e3e; background: #fee; }
 .rt-panel-details--open { grid-template-rows: 1fr; opacity: 1; }
 .rt-panel-hire { display: flex; flex-direction: column; gap: 10px; }
 /* Trip "ticket" card (pick-up + drop-off + duration) and the provider/
@@ -2140,7 +2149,10 @@ body.share-view .tb-title { cursor: default; }
   .rt-panel-badge-stat { font-size: 11px; }
   .rt-panel-badge { flex-wrap: wrap; }
   .rt-panel-actions { margin-left: 0; width: 100%; margin-top: 4px; }
-  .rt-panel-journey-btn, .rt-panel-edit-btn { flex: 1; text-align: center; }
+  .rt-panel-journey-btn, .rt-panel-edit-wrap { flex: 1; }
+  .rt-panel-edit-btn { width: 100%; justify-content: center; }
+  .rt-panel-journey-btn { text-align: center; }
+  .rt-panel-edit-menu { left: 0; right: auto; min-width: 100%; }
   .rt-hire-trip { flex-direction: column; align-items: stretch; padding: 12px 14px; gap: 10px; }
   .rt-hire-duration { flex-direction: row; justify-content: center; padding: 2px 0; }
   .rt-hire-duration-ico svg { width: 15px; height: 15px; }
