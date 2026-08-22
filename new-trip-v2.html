@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=293">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=294">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1117,11 +1117,11 @@ function renderRoadTripPanel(dayIdx) {
     const h = state.hire;
     const totalCost = totalCarHireCost(h.costs);
     const rows = [];
-    if (h.company || h.ref) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Company</span><span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</span></div>`);
-    if (h.pickup && h.pickup.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Pick-up</span><span><a href="${mapsLinkForLoc(h.pickup.loc, h.pickup.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.pickup.loc}</a>${[fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') : ''}</span></div>`);
-    if (h.dropoff && h.dropoff.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Drop-off</span><span><a href="${mapsLinkForLoc(h.dropoff.loc, h.dropoff.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.dropoff.loc}</a>${[fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') : ''}</span></div>`);
-    if (totalCost) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost</span><span>£${totalCost}</span></div>`);
-    if (h.notes) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes</span><span>${h.notes}</span></div>`);
+    if (h.company || h.ref) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Company:</span>${[h.company, h.ref ? 'Ref ' + h.ref : ''].filter(Boolean).join(' · ')}</div>`);
+    if (h.pickup && h.pickup.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Pick-up:</span><a href="${mapsLinkForLoc(h.pickup.loc, h.pickup.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.pickup.loc}</a>${[fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.pickup.date), h.pickup.time].filter(Boolean).join(' · ') : ''}</div>`);
+    if (h.dropoff && h.dropoff.loc) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Drop-off:</span><a href="${mapsLinkForLoc(h.dropoff.loc, h.dropoff.placeId)}" target="_blank" rel="noopener" class="rt-panel-hire-link">${h.dropoff.loc}</a>${[fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') ? ' · ' + [fmtShortDdmmyyyy(h.dropoff.date), h.dropoff.time].filter(Boolean).join(' · ') : ''}</div>`);
+    if (totalCost) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Total cost:</span>£${totalCost}</div>`);
+    if (h.notes) rows.push(`<div class="rt-panel-hire-row"><span class="rt-panel-hire-label">Notes:</span>${h.notes}</div>`);
     if (rows.length) hireSummaryHtml = `<div class="rt-panel-hire">${rows.join('')}</div>`;
   }
 

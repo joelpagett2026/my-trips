@@ -2030,11 +2030,11 @@ body.share-view .tb-title { cursor: default; }
   overflow: hidden; min-height: 0; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line);
 }
 .rt-panel-details--open { grid-template-rows: 1fr; opacity: 1; }
-.rt-panel-hire { display: flex; flex-direction: column; gap: 6px; }
-.rt-panel-hire-row { display: flex; align-items: baseline; gap: 10px; font-size: 12px; color: var(--text); }
+.rt-panel-hire { display: flex; flex-direction: column; gap: 5px; }
+.rt-panel-hire-row { font-size: 12px; color: var(--text); line-height: 1.5; }
 .rt-panel-hire-label {
-  flex-shrink: 0; width: 62px; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
-  color: var(--text3); text-transform: uppercase;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  color: var(--text3); text-transform: uppercase; margin-right: 3px;
 }
 .rt-panel-hire-link { color: var(--carhire); text-decoration: none; font-weight: 600; }
 .rt-panel-hire-link:hover { text-decoration: underline; }
@@ -2063,7 +2063,6 @@ body.share-view .tb-title { cursor: default; }
   .rt-panel-badge { flex-wrap: wrap; }
   .rt-panel-actions { margin-left: 0; width: 100%; margin-top: 4px; }
   .rt-panel-journey-btn, .rt-panel-edit-btn { flex: 1; text-align: center; }
-  .rt-panel-hire-label { width: 56px; }
 }
 
 /* Bookings tab — Car Hire card (distinct from a driving-leg journey
