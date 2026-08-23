@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=313">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=314">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4751,14 +4751,6 @@ function renderBookingsView() {
 
   // Summary
   const total = all.length;
-  const cats = [
-    {key:'hotel',label:'Hotels',count:hotels.length,color:'#0e7a87'},
-    {key:'flight',label:'Flights',count:flights.length,color:'#526B82'},
-    {key:'transport',label:'Travel',count:transport.length,color:'#d97b0a'},
-    {key:'carhire',label:'Car Hire',count:carhire.length,color:'#6E5090'},
-    {key:'attraction',label:'Attractions',count:attractions.length,color:'#5A8968'},
-    {key:'dining',label:'Dining',count:dining.length,color:'#9333ea'},
-  ].filter(c=>c.count>0);
 
   // Next upcoming booking
   const today = new Date();
@@ -4865,22 +4857,8 @@ function renderBookingsView() {
   // Everything confirmed vs still-pending, for the closing banner
   const pendingCount = all.filter(b => b.status && b.status !== 'confirmed' && b.status !== 'booked').length;
   const briefcaseIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
-  const calCheckIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>';
 
   el.innerHTML = `
-    <div class="bk-summary">
-      <div class="bk-summary-total">
-        <div class="bk-summary-total-ico">${calCheckIco}</div>
-        <div class="bk-summary-num">${total}</div>
-        <div class="bk-summary-label">Confirmed bookings</div>
-      </div>
-      <div class="bk-summary-cats">
-        ${cats.map(c=>`<div class="bk-summary-cat">
-          <div class="bk-summary-cat-ico" style="color:${c.color}">${catIcons[c.key]||catIcons.attraction}</div>
-          <div class="bk-summary-cat-text"><span>${c.label}</span><strong>${c.count}</strong><em>booking${c.count===1?'':'s'}</em></div>
-        </div>`).join('')}
-      </div>
-    </div>
     <div class="bk-columns">
       <div class="bk-col">
         <div class="bk-col-head">

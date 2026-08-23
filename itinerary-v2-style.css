@@ -1368,31 +1368,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #bookings-main { max-width:none; padding:24px 24px 48px; }
 @media (max-width:768px) { #bookings-main { max-width:none; padding:14px 14px 130px; } }
 
-.bk-summary {
-  background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow);
-  margin-bottom:16px; display:flex; align-items:stretch; overflow:hidden;
-}
-.bk-summary-total {
-  text-align:center; flex-shrink:0; background:var(--teal); color:#fff;
-  padding:20px 28px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
-}
-.bk-summary-total-ico { width:26px; height:26px; margin-bottom:4px; opacity:0.9; }
-.bk-summary-total-ico svg { width:100%; height:100%; }
-.bk-summary-num   { font-size:36px; font-weight:800; line-height:1; }
-.bk-summary-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.85); text-transform:uppercase; letter-spacing:0.07em; margin-top:3px; }
-.bk-summary-cats  { flex:1; display:flex; align-items:center; gap:28px; padding:18px 28px; flex-wrap:wrap; }
-.bk-summary-cat   { display:flex; align-items:center; gap:10px; }
-.bk-summary-cat-ico { width:26px; height:26px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-.bk-summary-cat-ico svg { width:100%; height:100%; }
-.bk-summary-cat-text { display:flex; flex-direction:column; }
-.bk-summary-cat-text span { font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text3); }
-.bk-summary-cat-text strong { font-size:19px; font-weight:800; color:var(--text); line-height:1.25; }
-.bk-summary-cat-text em { font-size:10.5px; font-style:normal; color:var(--text3); }
-@media (max-width:900px) {
-  .bk-summary { flex-direction:column; }
-  .bk-summary-cats { padding:14px 20px; gap:18px 24px; }
-}
-
 .bk-upcoming { background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; margin-bottom:16px; }
 .bk-upcoming-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text3); padding:12px 16px 8px; }
 .bk-upcoming-item { display:flex; align-items:center; gap:12px; padding:10px 16px; border-top:1px solid var(--line); }
@@ -1416,7 +1391,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px; }
 
 /* Three-column layout: Hotels | Transport (Flights + mode totals) | Attractions */
-.bk-columns { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; align-items:start; margin-top:18px; }
+.bk-columns { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; align-items:start; }
 .bk-col { display:flex; flex-direction:column; gap:10px; min-width:0; }
 .bk-col-head { font-size:15px; font-weight:800; display:flex; align-items:center; gap:10px; }
 .bk-col-head-ico { width:32px; height:32px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
