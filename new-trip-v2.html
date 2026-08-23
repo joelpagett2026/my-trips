@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=311">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=312">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4820,29 +4820,41 @@ function renderBookingsView() {
     </div>`;
   };
 
-  // Filter tabs
-  const filters = [
-    {key:'all',label:'All',count:total},
-    ...cats.map(c=>({key:c.key,label:c.label,count:c.count}))
-  ];
+  // Transport (non-flight) grouped into totals by mode — Car Hire counts
+  // as one of these groups too, since from a "what am I spending on
+  // getting around" view it belongs alongside Train/Coach/Bus rather
+  // than off on its own. Doesn't need to be a full itemised list per the
+  // brief — just mode, count, and a running total.
+  const transportGroups = {};
+  transport.forEach(t => {
+    const key = t.kicker || 'Other';
+    if (!transportGroups[key]) transportGroups[key] = { count: 0, total: 0, ico: TRANSPORT_ICONS[key] || ICO.plane };
+    transportGroups[key].count++;
+    if (t.price) transportGroups[key].total += t.price;
+  });
+  if (carhire.length) {
+    transportGroups['Car Hire'] = {
+      count: carhire.length,
+      total: carhire.reduce((s,c) => s + (c.price||0), 0),
+      ico: ICO.car,
+    };
+  }
+  const transportGroupRows = Object.entries(transportGroups).map(([label, g]) => `
+    <div class="bk-tgroup-row">
+      <div class="bk-tgroup-ico">${g.ico}</div>
+      <div class="bk-tgroup-label">${label}</div>
+      <div class="bk-tgroup-count">${g.count} booking${g.count===1?'':'s'}</div>
+      <div class="bk-tgroup-total">${g.total ? fmt(g.total) : '—'}</div>
+    </div>`).join('');
 
-  const sections = [
-    { key:'hotel',      label:'Hotels',      items:hotels,     color:'#0e7a87' },
-    { key:'flight',     label:'Flights',     items:flights,    color:'#526B82' },
-    { key:'transport',  label:'Travel',      items:transport,  color:'#d97b0a' },
-    { key:'carhire',    label:'Car Hire',    items:carhire,    color:'#6E5090' },
-    { key:'attraction', label:'Attractions', items:attractions,color:'#5A8968' },
-    { key:'dining',     label:'Dining',      items:dining,     color:'#9333ea' },
-  ].filter(sec => sec.items.length > 0);
-
-  const renderSection = (sec) => `
-    <div class="bk-section">
-      <div class="bk-section-head" style="border-left:3px solid ${sec.color}">
-        <span class="bk-section-title">${sec.label}</span>
-        <span class="bk-section-count">${sec.items.length}</span>
-      </div>
-      <div class="bk-list">${sec.items.map(b => mkCard({...b, cat:sec.key})).join('')}</div>
-    </div>`;
+  // Attractions with a price attached — name + cost, nothing else.
+  const paidAttractions = attractions.filter(a => a.price);
+  const attractionRows = paidAttractions.map(a => `
+    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${a.dayIdx||0})">
+      <span class="bk-attraction-name">${a.name}</span>
+      <span class="bk-attraction-price">${fmt(a.price)}</span>
+    </div>`).join('');
+  const attractionsTotal = paidAttractions.reduce((s,a) => s + (a.price||0), 0);
 
   el.innerHTML = `
     <div class="bk-summary">
@@ -4857,7 +4869,31 @@ function renderBookingsView() {
         </div>`).join('')}
       </div>
     </div>
-    ${sections.map(renderSection).join('')}`;
+    <div class="bk-columns">
+      <div class="bk-col">
+        <div class="bk-col-head" style="color:#0e7a87">Hotels <span class="bk-col-count">(${hotels.length})</span></div>
+        <div class="bk-list bk-list--col">${hotels.map(b => mkCard({...b, cat:'hotel'})).join('') || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
+      </div>
+      <div class="bk-col">
+        <div class="bk-col-head" style="color:#526B82">Transport</div>
+        ${flights.length ? `
+          <div class="bk-col-subhead">Flights <span class="bk-col-count">(${flights.length})</span></div>
+          <div class="bk-list bk-list--col">${flights.map(b => mkCard({...b, cat:'flight'})).join('')}</div>
+        ` : ''}
+        ${transportGroupRows ? `
+          <div class="bk-col-subhead">Other Transport</div>
+          <div class="bk-tgroup-list">${transportGroupRows}</div>
+        ` : ''}
+        ${!flights.length && !transportGroupRows ? '<div class="bk-col-empty">No transport booked yet.</div>' : ''}
+      </div>
+      <div class="bk-col">
+        <div class="bk-col-head" style="color:#5A8968">Attractions <span class="bk-col-count">(${paidAttractions.length})</span></div>
+        ${attractionRows ? `
+          <div class="bk-attraction-list">${attractionRows}</div>
+          <div class="bk-attraction-total-row">Total <span>${fmt(attractionsTotal)}</span></div>
+        ` : '<div class="bk-col-empty">No paid attractions yet.</div>'}
+      </div>
+    </div>`;
 }
 
 function setBookingsFilter(key) {

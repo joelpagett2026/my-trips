@@ -1401,6 +1401,47 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-filter:hover:not(.active) { border-color:var(--teal); color:var(--teal); }
 
 .bk-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px; }
+
+/* Three-column layout: Hotels | Transport (Flights + mode totals) | Attractions */
+.bk-columns { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; align-items:start; margin-top:18px; }
+.bk-col { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.bk-col-head { font-size:15px; font-weight:800; display:flex; align-items:baseline; gap:6px; }
+.bk-col-count { font-size:12px; font-weight:600; color:var(--text3); }
+.bk-col-subhead {
+  font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--text3); margin-top:4px;
+}
+.bk-list--col { display:flex; flex-direction:column; gap:10px; }
+.bk-col-empty { font-size:12.5px; color:var(--text3); padding:10px 0; }
+
+/* Other Transport — compact mode/count/total rows, not full cards */
+.bk-tgroup-list { display:flex; flex-direction:column; background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
+.bk-tgroup-row { display:flex; align-items:center; gap:10px; padding:10px 14px; }
+.bk-tgroup-row + .bk-tgroup-row { border-top:1px solid var(--line); }
+.bk-tgroup-ico { width:22px; height:22px; flex-shrink:0; color:var(--transport); display:flex; align-items:center; justify-content:center; }
+.bk-tgroup-ico svg { width:16px; height:16px; }
+.bk-tgroup-label { font-size:13px; font-weight:700; color:var(--text); }
+.bk-tgroup-count { font-size:11px; color:var(--text3); margin-left:auto; }
+.bk-tgroup-total { font-size:13px; font-weight:700; color:var(--text); min-width:56px; text-align:right; }
+
+/* Attractions — name + price list, click through to the itinerary */
+.bk-attraction-list { display:flex; flex-direction:column; background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
+.bk-attraction-row {
+  display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; transition:background 0.12s;
+}
+.bk-attraction-row:hover { background:var(--activity-bg); }
+.bk-attraction-row + .bk-attraction-row { border-top:1px solid var(--line); }
+.bk-attraction-name { font-size:13px; font-weight:600; color:var(--text); }
+.bk-attraction-price { font-size:13px; font-weight:700; color:var(--text); margin-left:auto; flex-shrink:0; }
+.bk-attraction-total-row {
+  display:flex; justify-content:space-between; padding:10px 14px; font-size:12px; font-weight:700;
+  color:var(--text2); background:var(--activity-bg); border-radius:var(--r);
+}
+.bk-attraction-total-row span { color:var(--activity); }
+
+@media (max-width: 900px) {
+  .bk-columns { grid-template-columns:1fr; }
+}
 .bk-card { background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); display:flex; gap:14px; padding:14px 16px; }
 .bk-card-ico { width:36px; height:36px; border-radius:10px; background:var(--teal-xdim); color:var(--teal); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
 .bk-card-ico svg { width:17px; height:17px; stroke:currentColor; fill:currentColor; }
