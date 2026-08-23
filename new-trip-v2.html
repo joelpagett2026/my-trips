@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=312">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=313">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4806,8 +4806,14 @@ function renderBookingsView() {
       b.tickets, b.ref ? 'Ref: '+b.ref : null, b.nights ? b.nights+' nights' : null,
       b.breakfast==='included' ? 'Breakfast incl.' : null,
     ].filter(Boolean).join(' · ');
+    // Hotels use their actual uploaded photo as the thumbnail (falls
+    // back to the generic bed icon if none's been added yet), matching
+    // how the Hotel card looks everywhere else in the app.
+    const thumb = (b.cat === 'hotel' && b.photo)
+      ? `<div class="bk-card-photo" style="background-image:url('${b.photo}')"></div>`
+      : `<div class="bk-card-ico ${b.cat}">${ico}</div>`;
     return `<div class="bk-card">
-      <div class="bk-card-ico ${b.cat}">${ico}</div>
+      ${thumb}
       <div class="bk-card-body">
         <div class="bk-card-name">${b.name}</div>
         ${meta ? `<div class="bk-card-meta">${meta}</div>` : ''}
@@ -4856,43 +4862,68 @@ function renderBookingsView() {
     </div>`).join('');
   const attractionsTotal = paidAttractions.reduce((s,a) => s + (a.price||0), 0);
 
+  // Everything confirmed vs still-pending, for the closing banner
+  const pendingCount = all.filter(b => b.status && b.status !== 'confirmed' && b.status !== 'booked').length;
+  const briefcaseIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+  const calCheckIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>';
+
   el.innerHTML = `
     <div class="bk-summary">
       <div class="bk-summary-total">
+        <div class="bk-summary-total-ico">${calCheckIco}</div>
         <div class="bk-summary-num">${total}</div>
         <div class="bk-summary-label">Confirmed bookings</div>
       </div>
       <div class="bk-summary-cats">
         ${cats.map(c=>`<div class="bk-summary-cat">
-          <div class="bk-summary-cat-dot" style="background:${c.color}"></div>
-          <span>${c.label}</span><strong>${c.count}</strong>
+          <div class="bk-summary-cat-ico" style="color:${c.color}">${catIcons[c.key]||catIcons.attraction}</div>
+          <div class="bk-summary-cat-text"><span>${c.label}</span><strong>${c.count}</strong><em>booking${c.count===1?'':'s'}</em></div>
         </div>`).join('')}
       </div>
     </div>
     <div class="bk-columns">
       <div class="bk-col">
-        <div class="bk-col-head" style="color:#0e7a87">Hotels <span class="bk-col-count">(${hotels.length})</span></div>
+        <div class="bk-col-head">
+          <div class="bk-col-head-ico" style="background:rgba(14,122,135,0.12);color:#0e7a87">${catIcons.hotel}</div>
+          <span>Hotels <span class="bk-col-count">(${hotels.length})</span></span>
+        </div>
         <div class="bk-list bk-list--col">${hotels.map(b => mkCard({...b, cat:'hotel'})).join('') || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
       </div>
       <div class="bk-col">
-        <div class="bk-col-head" style="color:#526B82">Transport</div>
+        <div class="bk-col-head">
+          <div class="bk-col-head-ico" style="background:rgba(217,123,10,0.12);color:#d97b0a">${catIcons.transport}</div>
+          <span>Transport <span class="bk-col-count">(${flights.length + transport.length + carhire.length})</span></span>
+        </div>
         ${flights.length ? `
           <div class="bk-col-subhead">Flights <span class="bk-col-count">(${flights.length})</span></div>
           <div class="bk-list bk-list--col">${flights.map(b => mkCard({...b, cat:'flight'})).join('')}</div>
         ` : ''}
         ${transportGroupRows ? `
-          <div class="bk-col-subhead">Other Transport</div>
-          <div class="bk-tgroup-list">${transportGroupRows}</div>
+          <div class="bk-tgroup-box">
+            <div class="bk-col-subhead">Other Transport <span class="bk-col-count">(${transport.length + carhire.length})</span></div>
+            <div class="bk-tgroup-list">${transportGroupRows}</div>
+          </div>
         ` : ''}
         ${!flights.length && !transportGroupRows ? '<div class="bk-col-empty">No transport booked yet.</div>' : ''}
       </div>
       <div class="bk-col">
-        <div class="bk-col-head" style="color:#5A8968">Attractions <span class="bk-col-count">(${paidAttractions.length})</span></div>
+        <div class="bk-col-head">
+          <div class="bk-col-head-ico" style="background:rgba(90,137,104,0.14);color:#5A8968">${catIcons.attraction}</div>
+          <span>Attractions <span class="bk-col-count">(${paidAttractions.length})</span></span>
+        </div>
         ${attractionRows ? `
           <div class="bk-attraction-list">${attractionRows}</div>
           <div class="bk-attraction-total-row">Total <span>${fmt(attractionsTotal)}</span></div>
         ` : '<div class="bk-col-empty">No paid attractions yet.</div>'}
       </div>
+    </div>
+    <div class="bk-closer ${pendingCount ? 'bk-closer--pending' : ''}">
+      <div class="bk-closer-ico">${briefcaseIco}</div>
+      <div class="bk-closer-text">
+        <strong>${pendingCount ? `${pendingCount} booking${pendingCount===1?'':'s'} still need confirming` : 'All set for your trip!'}</strong>
+        <span>${pendingCount ? 'Everything else is booked — just those left to lock in.' : `You have ${total} confirmed booking${total===1?'':'s'} across your itinerary. Sit back, relax and enjoy your adventure.`}</span>
+      </div>
+      <button class="bk-closer-btn" onclick="setView('itinerary')">View full itinerary →</button>
     </div>`;
 }
 
