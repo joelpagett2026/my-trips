@@ -4903,19 +4903,28 @@ function itemsToMap(state) {
       items.push({ ...it, _dayIdx: di, _dayDate: d.date, _dayLoc: d.loc });
     });
   });
-  // Hotels live in state.meta.hotels, not day.items — plot each one on
-  // every day of its stay (check-in through check-out inclusive, unlike
-  // breakfast's day-after-checkin rule, since you're physically at the
-  // hotel from the check-in day itself).
+  // Hotels live in state.meta.hotels, not day.items — one entry per
+  // hotel (not one per night), since it's a single fixed location, not
+  // a repeated day-by-day activity. _dayRange (rather than a single
+  // _dayIdx) lets the day filter still correctly show/hide it based on
+  // whether the selected day falls within the stay.
   (state.meta?.hotels || []).forEach(h => {
     if (!h || !h.name || !h._geo || !h._geo.lat) return;
     const ci = parseDate(h.checkin), co = parseDate(h.checkout);
     if (!ci || !co) return;
+    let firstIdx = null, lastIdx = null;
     (state.days||[]).forEach((d, di) => {
       const dt = parseDate(d.date);
       if (dt && dt >= ci && dt <= co) {
-        items.push({ title: h.name, type: 'hotel', _geo: h._geo, _dayIdx: di, _dayDate: d.date, _dayLoc: d.loc });
+        if (firstIdx === null) firstIdx = di;
+        lastIdx = di;
       }
+    });
+    if (firstIdx === null) return;
+    items.push({
+      title: h.name, type: 'hotel', _geo: h._geo,
+      _dayIdx: firstIdx, _dayRange: [firstIdx, lastIdx],
+      _address: h._geo.address || '',
     });
   });
   return items;
@@ -5003,7 +5012,11 @@ async function initMapView() {
 function renderMapView() {
   const allItems = itemsToMap(STATE);
   const filtered = allItems.filter(it => {
-    if (_mapDayFilter !== 'all' && it._dayIdx !== parseInt(_mapDayFilter)) return false;
+    if (_mapDayFilter !== 'all') {
+      const day = parseInt(_mapDayFilter);
+      const inRange = it._dayRange ? (day >= it._dayRange[0] && day <= it._dayRange[1]) : (it._dayIdx === day);
+      if (!inRange) return false;
+    }
     if (_mapCatFilter !== 'all' && !(MAP_CAT_GROUPS[_mapCatFilter]||[_mapCatFilter]).includes(it.type)) return false;
     return true;
   });
@@ -5042,7 +5055,7 @@ function renderMapView() {
       <div class="ml-dot" style="background:${MAP_CAT_COLORS[it.type]||'#888'}"></div>
       <div class="ml-info">
         <div class="ml-name">${it.title}</div>
-        <div class="ml-meta">Day ${it._dayIdx+1} · ${it._dayLoc||''}</div>
+        <div class="ml-meta">${it.type === 'hotel' ? (it._address || 'Accommodation') : `Day ${it._dayIdx+1} · ${it._dayLoc||''}`}</div>
       </div>
     </div>`).join('') : '<div class="ml-empty">No places to show for this filter.</div>';
 
@@ -5082,11 +5095,13 @@ function renderMapView() {
       }
     });
     marker.addListener('click', () => {
+      const metaLine = it.type === 'hotel'
+        ? (it._address ? `<div style="font-size:11px;color:#888;margin-bottom:8px">${it._address}</div>` : '')
+        : `<div style="font-size:11px;color:#888;margin-bottom:8px">Day ${it._dayIdx+1} · ${it._dayDate||''}</div>${it._geo.address ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">${it._geo.address}</div>` : ''}`;
       _mapInfoWin.setContent(`
         <div style="font-family:Montserrat,sans-serif;min-width:160px;max-width:220px;">
           <div style="font-size:13px;font-weight:700;color:#444;margin-bottom:4px">${it.title}</div>
-          <div style="font-size:11px;color:#888;margin-bottom:8px">Day ${it._dayIdx+1} · ${it._dayDate||''}</div>
-          ${it._geo.address ? `<div style="font-size:10px;color:#aaa;margin-bottom:8px">${it._geo.address}</div>` : ''}
+          ${metaLine}
           <button onclick="setView('itinerary');setDay(${it._dayIdx})" style="font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;background:#0e7a87;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;">View in itinerary</button>
         </div>`);
       _mapInfoWin.open(_mapInstance, marker);
