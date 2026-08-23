@@ -4880,7 +4880,7 @@ const MAP_CAT_COLORS = {
   ticket: '#5A8968',
   attraction: '#5A8968',
   meal:   '#d97b0a',
-  hotel:  '#1a8a52',
+  hotel:  '#0e7a87',
   move:   '#888888',
 };
 
@@ -4897,6 +4897,21 @@ function itemsToMap(state) {
       items.push({ ...it, _dayIdx: di, _dayDate: d.date, _dayLoc: d.loc });
     });
   });
+  // Hotels live in state.meta.hotels, not day.items — plot each one on
+  // every day of its stay (check-in through check-out inclusive, unlike
+  // breakfast's day-after-checkin rule, since you're physically at the
+  // hotel from the check-in day itself).
+  (state.meta?.hotels || []).forEach(h => {
+    if (!h || !h.name || !h._geo || !h._geo.lat) return;
+    const ci = parseDate(h.checkin), co = parseDate(h.checkout);
+    if (!ci || !co) return;
+    (state.days||[]).forEach((d, di) => {
+      const dt = parseDate(d.date);
+      if (dt && dt >= ci && dt <= co) {
+        items.push({ title: h.name, type: 'hotel', _geo: h._geo, _dayIdx: di, _dayDate: d.date, _dayLoc: d.loc });
+      }
+    });
+  });
   return items;
 }
 
@@ -4910,6 +4925,11 @@ function itemsNeedingGeo(state) {
       out.push({ dayIdx: di, itemIdx: ii, title: it.title, city: d.loc||dest });
     });
   });
+  (state.meta?.hotels || []).forEach((h, hi) => {
+    if (!h || !h.name) return;
+    if (h._geo && h._geo.lat) return;
+    out.push({ isHotel: true, hotelIdx: hi, title: h.name, city: state.meta?.dest || dest });
+  });
   return out;
 }
 
@@ -4918,14 +4938,14 @@ async function geocodeBatch(items) {
   status.style.display = 'block';
   let done = 0;
   for (const item of items) {
-    const it = STATE.days[item.dayIdx].items[item.itemIdx];
+    const it = item.isHotel ? (STATE.meta.hotels || [])[item.hotelIdx] : STATE.days[item.dayIdx].items[item.itemIdx];
     if (!it) continue;
-    status.innerHTML = `Locating places… ${done}/${items.length}<br><small style="opacity:.6">${it.title}</small>`;
+    status.innerHTML = `Locating places… ${done}/${items.length}<br><small style="opacity:.6">${it.title || it.name}</small>`;
     try {
       const r = await fetch('/api.php?action=geocode_item', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
-        body: JSON.stringify({ place: it.title, city: item.city }),
+        body: JSON.stringify({ place: item.title, city: item.city }),
       });
       const j = await r.json();
       if (j.ok && j.data?.geo) {
@@ -4993,10 +5013,10 @@ function renderMapView() {
 
   const catIcons = {
     all:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
-    act:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>',
-    meal:   ICO.utensils,
-    ticket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="13" y1="6" x2="13" y2="8"/><line x1="13" y1="11" x2="13" y2="13"/><line x1="13" y1="16" x2="13" y2="18"/></svg>',
-    hotel:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18V6"/><path d="M3 10h16a2 2 0 0 1 2 2v6"/><path d="M3 15h18"/><path d="M7 10V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2"/></svg>',
+    act:    ICO.pin,
+    meal:   ICO.dinner,
+    ticket: ICO.ticket,
+    hotel:  '<svg viewBox="0 0 50 50" fill="currentColor"><path d="m4.9211 27.8364v-15.6425c0-1.0828-.8778-1.9606-1.9605-1.9606-1.0828 0-1.9606.8778-1.9606 1.9606v25.612c0 1.0828.8778 1.9606 1.9606 1.9606s1.9605-.8778 1.9605-1.9606v-3.673l40.1579-.0944v3.673c0 1.0828.8778 1.9606 1.9605 1.9606s1.9605-.8779 1.9605-1.9607v-3.673-5.1285-1.168z"/><path d="m49 26.1569h-29.8042v-7.3876c0-2.1401 1.7349-3.875 3.875-3.875h18.1063c4.3205 0 7.8229 3.5024 7.8229 7.8229z"/><circle cx="12.219" cy="20.526" r="4.787"/></svg>',
   };
   const catBtn = (key, label, cls) => `<button type="button" class="mf-icon-btn ${cls} ${_mapCatFilter===key?'active':''}" onclick="setMapFilter('cat','${key}')" title="${label}">${catIcons[key]}</button>`;
 
