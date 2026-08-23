@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=314">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=315">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4749,9 +4749,6 @@ function renderBookingsView() {
     return `<span class="bk-badge ${cls}">${lbl}</span>`;
   };
 
-  // Summary
-  const total = all.length;
-
   // Next upcoming booking
   const today = new Date();
   const todayStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
@@ -4854,10 +4851,6 @@ function renderBookingsView() {
     </div>`).join('');
   const attractionsTotal = paidAttractions.reduce((s,a) => s + (a.price||0), 0);
 
-  // Everything confirmed vs still-pending, for the closing banner
-  const pendingCount = all.filter(b => b.status && b.status !== 'confirmed' && b.status !== 'booked').length;
-  const briefcaseIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
-
   el.innerHTML = `
     <div class="bk-columns">
       <div class="bk-col">
@@ -4894,14 +4887,6 @@ function renderBookingsView() {
           <div class="bk-attraction-total-row">Total <span>${fmt(attractionsTotal)}</span></div>
         ` : '<div class="bk-col-empty">No paid attractions yet.</div>'}
       </div>
-    </div>
-    <div class="bk-closer ${pendingCount ? 'bk-closer--pending' : ''}">
-      <div class="bk-closer-ico">${briefcaseIco}</div>
-      <div class="bk-closer-text">
-        <strong>${pendingCount ? `${pendingCount} booking${pendingCount===1?'':'s'} still need confirming` : 'All set for your trip!'}</strong>
-        <span>${pendingCount ? 'Everything else is booked — just those left to lock in.' : `You have ${total} confirmed booking${total===1?'':'s'} across your itinerary. Sit back, relax and enjoy your adventure.`}</span>
-      </div>
-      <button class="bk-closer-btn" onclick="setView('itinerary')">View full itinerary →</button>
     </div>`;
 }
 

@@ -1436,32 +1436,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   .bk-columns { grid-template-columns:1fr; }
 }
 
-/* Closing banner — dynamic: celebratory once everything's confirmed,
-   a gentle nudge if anything's still pending */
-.bk-closer {
-  display:flex; align-items:center; gap:16px; margin-top:18px; padding:18px 22px;
-  background:var(--teal-xdim); border-radius:var(--r); box-shadow:var(--shadow);
-}
-.bk-closer--pending { background:rgba(217,123,10,0.08); }
-.bk-closer-ico {
-  width:44px; height:44px; border-radius:50%; background:var(--teal); color:#fff; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.bk-closer--pending .bk-closer-ico { background:#d97b0a; }
-.bk-closer-ico svg { width:20px; height:20px; }
-.bk-closer-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-.bk-closer-text strong { font-size:14.5px; color:var(--text); }
-.bk-closer-text span { font-size:12.5px; color:var(--text2); }
-.bk-closer-btn {
-  flex-shrink:0; background:var(--teal); color:#fff; border:none; border-radius:9px;
-  padding:11px 18px; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer;
-  transition:opacity 0.13s; white-space:nowrap;
-}
-.bk-closer-btn:hover { opacity:0.9; }
-@media (max-width:640px) {
-  .bk-closer { flex-wrap:wrap; }
-  .bk-closer-btn { width:100%; }
-}
 .bk-card { background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); display:flex; gap:14px; padding:14px 16px; }
 .bk-card-ico { width:36px; height:36px; border-radius:10px; background:var(--teal-xdim); color:var(--teal); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
 .bk-card-ico svg { width:17px; height:17px; stroke:currentColor; fill:currentColor; }
