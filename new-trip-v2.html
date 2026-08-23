@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=310">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=311">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4874,13 +4874,19 @@ let _mapDayFilter = 'all';
 let _mapCatFilter = 'all';
 let _mapGeocoding = false;
 
+// Feeds both the map markers/list dots AND the filter buttons' --mf-c
+// (itinerary-v2-style.css, .mf-icon-btn.cat-*) — Google Maps' marker
+// API needs a literal hex string, not a CSS custom property, so these
+// two can't share one source; keep them matched by hand.
+//   act/place -> var(--teal), ticket/attraction -> var(--activity),
+//   meal -> #d97b0a (matches --amber's actual usage), hotel -> var(--carhire)
 const MAP_CAT_COLORS = {
   act:    '#0e7a87',
   place:  '#0e7a87',
   ticket: '#5A8968',
   attraction: '#5A8968',
   meal:   '#d97b0a',
-  hotel:  '#0e7a87',
+  hotel:  '#6E5090',
   move:   '#888888',
 };
 

@@ -1479,12 +1479,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .mf-icon-btn.cat-act    { --mf-c: #0e7a87; }
 .mf-icon-btn.cat-meal   { --mf-c: #d97b0a; }
 .mf-icon-btn.cat-ticket { --mf-c: #5A8968; }
-.mf-icon-btn.cat-hotel  { --mf-c: #1a8a52; }
+.mf-icon-btn.cat-hotel  { --mf-c: var(--carhire); }
 .mf-icon-btn.cat-all:hover    { background: rgba(85,85,85,0.10); }
 .mf-icon-btn.cat-act:hover    { background: rgba(14,122,135,0.10); }
 .mf-icon-btn.cat-meal:hover   { background: rgba(217,123,10,0.10); }
 .mf-icon-btn.cat-ticket:hover { background: rgba(90,137,104,0.10); }
-.mf-icon-btn.cat-hotel:hover  { background: rgba(26,138,82,0.10); }
+.mf-icon-btn.cat-hotel:hover  { background: var(--carhire-bg); }
 
 /* ── RIGHT PANEL COMPACT READINESS ── */
 .rp-readiness-section { padding: 10px 12px !important; }
