@@ -4770,7 +4770,7 @@ function renderBookingsView() {
     // Every other card opens the real drawer (photo, significance,
     // booking info, Edit/Remove) for that exact item.
     const clickable = b.cat !== 'hotel';
-    const openAttr = clickable ? ` onclick="setView('itinerary');setDay(${b.dayIdx});openDrawerItem(${b.dayIdx},${b.itemIdx});"` : '';
+    const openAttr = clickable ? ` onclick="openDrawerItem(${b.dayIdx},${b.itemIdx});"` : '';
     const chevron = clickable ? `<div class="bk-card-chevron">›</div>` : '';
     if (b.cat === 'carhire') {
       // Distinct layout — this is the vehicle rental itself, not a
@@ -4855,7 +4855,7 @@ function renderBookingsView() {
   // list (not grouped by day like Meals — just the date shown inline).
   const paidAttractions = attractions.filter(a => a.price);
   const attractionRows = paidAttractions.map(a => `
-    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${a.dayIdx||0});openDrawerItem(${a.dayIdx||0},${a.itemIdx});">
+    <div class="bk-attraction-row" onclick="openDrawerItem(${a.dayIdx||0},${a.itemIdx});">
       <span class="bk-attraction-name">${a.name}${a.date ? `<span class="bk-meal-time">${fmtShortDdmmyyyy(a.date) || a.date}</span>` : ''}</span>
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
@@ -4867,7 +4867,7 @@ function renderBookingsView() {
   const mealRows = sortedDining.map(m => {
     const dateStr = fmtShortDdmmyyyy(m.date) || m.date || '';
     return `
-    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${m.dayIdx||0});openDrawerItem(${m.dayIdx||0},${m.itemIdx});">
+    <div class="bk-attraction-row" onclick="openDrawerItem(${m.dayIdx||0},${m.itemIdx});">
       <span class="bk-attraction-name">
         ${dateStr ? `<span class="bk-meal-time">${dateStr}</span>` : ''}
         ${m.time ? `<span class="bk-meal-time">${m.time}</span>` : ''}
