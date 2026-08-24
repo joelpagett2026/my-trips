@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=325">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=326">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4868,6 +4868,39 @@ function renderBookingsView() {
     </div>`;
   };
 
+  // Flights get their own roomier two-line card (matching the approved
+  // bookings-transport-ui preview's dedicated .flight-row) — a labelled
+  // Date/Time/Reference/Route grid instead of a single meta line, since
+  // there's more worth surfacing on a flight than a bus/coach journey.
+  // Route shows the same From/To text as the title rather than IATA
+  // airport codes (matching the preview's 'LGW → OPO' style) — there's
+  // no dedicated airport-code field in the flight form (f-from/f-to are
+  // free text), and guessing codes from a city name risks showing a
+  // wrong one, which is worse than not showing one at all.
+  const flightRow = (f) => {
+    const title = [f.from, f.to].filter(Boolean).join(' → ') || f.name;
+    const dateStr = fmtDdMmmYyyy(f.date) || f.date || '';
+    const timeStr = f.depart && f.arrive ? `${f.depart}–${f.arrive}` : (f.depart||f.arrive||'');
+    const details = [
+      dateStr ? { label: 'Date', value: dateStr } : null,
+      timeStr ? { label: 'Time', value: timeStr } : null,
+      f.ref ? { label: 'Reference', value: f.ref } : null,
+      (f.from || f.to) ? { label: 'Route', value: title } : null,
+    ].filter(Boolean);
+    return `
+    <div class="bk-flight-row" onclick="openDrawerItem(${f.dayIdx||0},${f.itemIdx});">
+      <div class="bk-flight-ico">${ICO.plane}</div>
+      <div class="bk-flight-main">
+        <div class="bk-flight-title">${title}</div>
+        ${details.length ? `<div class="bk-flight-details">${details.map(d => `<div class="bk-flight-detail"><div class="bk-flight-label">${d.label}</div><div class="bk-flight-value">${d.value}</div></div>`).join('')}</div>` : ''}
+      </div>
+      <div class="bk-flight-side">
+        <div class="bk-flight-price">${f.price ? fmt(f.price) : ''}</div>
+        <div class="bk-flight-chev">›</div>
+      </div>
+    </div>`;
+  };
+
   const transportGroups = {};
   bookedTransport.forEach(t => {
     const key = t.kicker || 'Other';
@@ -4939,7 +4972,7 @@ function renderBookingsView() {
         </div>
         ${bookedFlights.length ? `
           <div class="bk-col-subhead">Flights</div>
-          <div class="bk-attraction-list">${bookedFlights.map(f => tRow(f, false)).join('')}</div>
+          <div class="bk-attraction-list">${bookedFlights.map(f => flightRow(f)).join('')}</div>
         ` : ''}
         ${transportGroupBlocks ? `
           ${transportGroupBlocks}

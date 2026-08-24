@@ -1426,6 +1426,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-t-price { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; }
 .bk-t-chev { font-size:20px; font-weight:400; color:#82939b; line-height:1; }
 
+/* Flights — a roomier two-line card (approved bookings-transport-ui
+   preview's .flight-row): title, then a labelled 2-column grid of
+   Date/Time/Reference/Route, rather than the single meta line used for
+   Other Transport's more compact rows. */
+.bk-flight-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px; align-items:start; padding:14px; cursor:pointer; transition:background 0.12s; }
+.bk-flight-row + .bk-flight-row { border-top:1px solid var(--line); }
+.bk-flight-row:hover { background:var(--bk-badge); }
+.bk-flight-ico { width:36px; height:36px; border-radius:9px; background:var(--bk-badge); color:var(--bk-c); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+.bk-flight-ico svg { width:17px; height:17px; }
+.bk-flight-main { min-width:0; }
+.bk-flight-title { font-size:13.5px; font-weight:700; line-height:1.3; margin-bottom:7px; }
+.bk-flight-details { display:grid; grid-template-columns:1fr 1fr; gap:5px 12px; }
+.bk-flight-detail { min-width:0; }
+.bk-flight-label { font-size:9px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px; }
+.bk-flight-value { font-size:10.5px; font-weight:600; color:var(--text2); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bk-flight-side { display:flex; align-items:center; gap:8px; padding-top:1px; }
+.bk-flight-price { font-size:13px; font-weight:700; color:var(--text); }
+.bk-flight-chev { font-size:20px; font-weight:400; color:#82939b; line-height:1; }
+
 /* Attractions — matches the approved bookings-attractions-ui preview:
    bold name, calendar icon + date underneath, price, chevron */
 .bk-attraction-list { display:flex; flex-direction:column; background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
