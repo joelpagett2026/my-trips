@@ -4942,7 +4942,6 @@ function renderBookingsView() {
           <div class="bk-attraction-list">${bookedFlights.map(f => tRow(f, false)).join('')}</div>
         ` : ''}
         ${transportGroupBlocks ? `
-          <div class="bk-col-subhead">Other Transport <span class="bk-col-count">(${bookedTransport.length + bookedCarhire.length})</span></div>
           ${transportGroupBlocks}
         ` : ''}
         ${!bookedFlights.length && !transportGroupBlocks ? '<div class="bk-col-empty">No transport booked yet.</div>' : ''}
