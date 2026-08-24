@@ -1437,10 +1437,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-flight-ico svg { width:17px; height:17px; }
 .bk-flight-main { min-width:0; }
 .bk-flight-title { font-size:13.5px; font-weight:700; line-height:1.3; margin-bottom:7px; }
-.bk-flight-details { display:grid; grid-template-columns:1fr 1fr; gap:5px 12px; }
-.bk-flight-detail { min-width:0; }
-.bk-flight-label { font-size:9px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px; }
-.bk-flight-value { font-size:10.5px; font-weight:600; color:var(--text2); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bk-flight-details { display:flex; flex-direction:column; gap:5px; }
+.bk-flight-detail { min-width:0; display:flex; align-items:baseline; gap:5px; }
+.bk-flight-label { font-size:9px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.04em; flex-shrink:0; width:60px; }
+.bk-flight-value { font-size:10.5px; font-weight:600; color:var(--text2); line-height:1.25; white-space:normal; overflow-wrap:break-word; min-width:0; }
 .bk-flight-side { display:flex; align-items:center; gap:8px; padding-top:1px; }
 .bk-flight-price { font-size:13px; font-weight:700; color:var(--text); }
 .bk-flight-chev { font-size:20px; font-weight:400; color:#82939b; line-height:1; }
