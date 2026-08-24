@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bookings Attractions UI Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--surface:#fff;--text:#1a2428;--text3:#9aacb0;--line:rgba(0,0,0,.07);--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);--r:14px;--green:#5A8968;--green-bg:rgba(90,137,104,.09);--green-badge:rgba(90,137,104,.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:#e8e8e8;font-family:Montserrat,Arial,sans-serif;color:var(--text);padding:40px}
+  .wrap{max-width:410px;margin:0 auto}
+  .panel{display:flex;flex-direction:column;gap:10px;background:var(--green-bg);border-radius:16px;padding:16px}
+  .head{font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;color:var(--green)}
+  .head-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--green-badge);color:var(--green)}
+  .head-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .count{font-size:12px;font-weight:600;color:var(--text3)}
+  .list{display:flex;flex-direction:column;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:11px 14px;min-height:64px;cursor:pointer;transition:background .12s}
+  .row+.row{border-top:1px solid var(--line)}
+  .row:hover{background:var(--green-badge)}
+  .name{font-size:13px;font-weight:700;line-height:1.25;color:var(--text);margin-bottom:5px}
+  .meta{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:500;color:var(--text3);white-space:nowrap}
+  .meta svg{width:12px;height:12px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .price{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap}
+  .chev{font-size:20px;font-weight:400;color:#82939b;line-height:1}
+  .note{margin:14px 2px 0;color:#6f7e8a;font-size:11px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <div class="head">
+      <div class="head-icon"><svg viewBox="0 0 24 24"><path d="M20 12 12 20 4 12 12 4l8 8Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <span>Attractions <span class="count">(5)</span></span>
+    </div>
+    <div class="list">
+      <div class="row"><div><div class="name">Palácio da Bolsa</div><div class="meta"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>30 Aug 2026</span></div></div><span class="price">£12</span><span class="chev">›</span></div>
+      <div class="row"><div><div class="name">Teleférico de Gaia</div><div class="meta"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>30 Aug 2026</span></div></div><span class="price">£6</span><span class="chev">›</span></div>
+      <div class="row"><div><div class="name">Real Companhia Velha</div><div class="meta"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>31 Aug 2026</span></div></div><span class="price">£18</span><span class="chev">›</span></div>
+      <div class="row"><div><div class="name">Penha Cable Car</div><div class="meta"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>3 Sep 2026</span></div></div><span class="price">£8</span><span class="chev">›</span></div>
+      <div class="row"><div><div class="name">Bom Jesus Funicular</div><div class="meta"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>4 Sep 2026</span></div></div><span class="price">£2</span><span class="chev">›</span></div>
+    </div>
+  </div>
+  <div class="note">Attractions preview on the test branch. The green outer panel styling matches the existing Bookings column; only the inner attraction rows are enhanced.</div>
+</div>
+</body>
+</html>
