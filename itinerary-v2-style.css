@@ -1391,58 +1391,63 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:10px; }
 
 /* Three-column layout: Hotels | Transport (Flights + mode totals) | Attractions */
-.bk-columns { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; align-items:start; }
-.bk-col { display:flex; flex-direction:column; gap:10px; min-width:0; }
-.bk-col-head { font-size:15px; font-weight:800; display:flex; align-items:center; gap:10px; }
-.bk-col-head-ico { width:32px; height:32px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.bk-columns { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; align-items:start; }
+.bk-col {
+  display:flex; flex-direction:column; gap:10px; min-width:0;
+  background:var(--bk-bg); border-radius:16px; padding:16px;
+}
+.bk-col--hotel      { --bk-c:#0e7a87; --bk-bg:rgba(14,122,135,0.07);  --bk-badge:rgba(14,122,135,0.15); }
+.bk-col--transport  { --bk-c:#1E5C94; --bk-bg:rgba(30,92,148,0.07);   --bk-badge:rgba(30,92,148,0.15); }
+.bk-col--attraction { --bk-c:#5A8968; --bk-bg:rgba(90,137,104,0.09);  --bk-badge:rgba(90,137,104,0.18); }
+.bk-col--meal        { --bk-c:#d97b0a; --bk-bg:rgba(217,123,10,0.08); --bk-badge:rgba(217,123,10,0.16); }
+.bk-col-head { font-size:15px; font-weight:800; display:flex; align-items:center; gap:10px; color:var(--bk-c); }
+.bk-col-head-ico { width:32px; height:32px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--bk-badge); color:var(--bk-c); }
 .bk-col-head-ico svg { width:16px; height:16px; }
 .bk-col-count { font-size:12px; font-weight:600; color:var(--text3); }
 .bk-col-subhead {
   font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
-  color:var(--text3); margin-top:4px;
+  color:var(--bk-c); margin-top:4px; opacity:0.85;
 }
 .bk-list--col { display:flex; flex-direction:column; gap:10px; }
 .bk-col-empty { font-size:12.5px; color:var(--text3); padding:10px 0; }
 
-/* Other Transport — tinted box (amber, matching the Transport column's
-   own colour), compact mode/count/total rows rather than full cards */
-.bk-tgroup-box { background:rgba(217,123,10,0.06); border-radius:var(--r); padding:10px 10px 4px; }
-.bk-tgroup-box .bk-col-subhead { margin-top:0; padding:0 4px; color:#d97b0a; }
+/* Other Transport — sits directly on the column's own tint, rows
+   themselves are white cards for contrast */
+.bk-tgroup-box { padding-top:2px; }
 .bk-tgroup-list { display:flex; flex-direction:column; background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; margin-top:8px; }
 .bk-tgroup-row { display:flex; align-items:center; gap:10px; padding:10px 14px; }
 .bk-tgroup-row + .bk-tgroup-row { border-top:1px solid var(--line); }
-.bk-tgroup-ico { width:22px; height:22px; flex-shrink:0; color:var(--transport); display:flex; align-items:center; justify-content:center; }
+.bk-tgroup-ico { width:22px; height:22px; flex-shrink:0; color:var(--bk-c); display:flex; align-items:center; justify-content:center; }
 .bk-tgroup-ico svg { width:16px; height:16px; }
 .bk-tgroup-label { font-size:13px; font-weight:700; color:var(--text); }
 .bk-tgroup-count { font-size:11px; color:var(--text3); margin-left:auto; }
 .bk-tgroup-total { font-size:13px; font-weight:700; color:var(--text); min-width:56px; text-align:right; }
 
-/* Attractions — name + price list, click through to the itinerary */
+/* Attractions / Meals — name + price list, click through to the itinerary */
 .bk-attraction-list { display:flex; flex-direction:column; background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; }
 .bk-attraction-row {
   display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; transition:background 0.12s;
 }
-.bk-attraction-row:hover { background:var(--activity-bg); }
+.bk-attraction-row:hover { background:var(--bk-badge); }
 .bk-attraction-row + .bk-attraction-row { border-top:1px solid var(--line); }
 .bk-attraction-name { font-size:13px; font-weight:600; color:var(--text); }
 .bk-attraction-price { font-size:13px; font-weight:700; color:var(--text); margin-left:auto; flex-shrink:0; }
 .bk-attraction-total-row {
   display:flex; justify-content:space-between; padding:10px 14px; font-size:12px; font-weight:700;
-  color:var(--text2); background:var(--activity-bg); border-radius:var(--r);
+  color:var(--text2); background:var(--surface); border-radius:var(--r);
 }
-.bk-attraction-total-row span { color:var(--activity); }
+.bk-attraction-total-row span { color:var(--bk-c); }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .bk-columns { grid-template-columns:repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
   .bk-columns { grid-template-columns:1fr; }
 }
 
 .bk-card { background:var(--surface); border-radius:var(--r); box-shadow:var(--shadow); display:flex; gap:14px; padding:14px 16px; }
-.bk-card-ico { width:36px; height:36px; border-radius:10px; background:var(--teal-xdim); color:var(--teal); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.bk-card-ico { width:36px; height:36px; border-radius:10px; background:var(--bk-badge, var(--teal-xdim)); color:var(--bk-c, var(--teal)); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
 .bk-card-ico svg { width:17px; height:17px; stroke:currentColor; fill:currentColor; }
-.bk-card-ico.flight { background:var(--transport-bg); color:var(--transport); }
-.bk-card-ico.transport { background:var(--transport-bg); color:var(--transport); }
-.bk-card-ico.attraction { background:var(--activity-bg); color:var(--activity); }
-.bk-card-ico.dining { background:rgba(147,51,234,0.1); color:#9333ea; }
 .bk-card-photo { width:88px; height:64px; border-radius:10px; background-size:cover; background-position:center; flex-shrink:0; background-color:var(--teal-xdim); }
 .bk-card-body { flex:1; min-width:0; }
 .bk-card-name { font-size:13.5px; font-weight:700; color:var(--text); line-height:1.3; }
