@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bookings Hotels UI Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface:#fff;--text:#1a2428;--text2:#5a6a70;--text3:#9aacb0;--line:rgba(0,0,0,.07);--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);--r:14px;
+    --hotel:#0e7a87;--hotel-bg:rgba(14,122,135,.07);--hotel-badge:rgba(14,122,135,.15);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e8e8e8;font-family:Montserrat,Arial,sans-serif;color:var(--text);padding:40px}
+  .wrap{max-width:410px;margin:0 auto}
+  .panel{display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--hotel-bg);border-radius:16px;padding:16px}
+  .head{font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;color:var(--hotel)}
+  .head-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--hotel-badge);color:var(--hotel);flex-shrink:0}
+  .head-icon svg{width:16px;height:16px;fill:currentColor}
+  .count{font-size:12px;font-weight:600;color:var(--text3)}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .hotel{display:grid;grid-template-columns:82px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 12px;cursor:pointer;transition:background .12s}
+  .hotel:hover{background:rgba(14,122,135,.06)}
+  .photo{width:82px;height:62px;border-radius:10px;object-fit:cover;background:#dbe6e8}
+  .name{font-size:13px;font-weight:700;line-height:1.25;color:var(--text);margin-bottom:5px}
+  .meta{font-size:10.5px;font-weight:500;color:var(--text3);line-height:1.45}
+  .meta strong{color:var(--text2);font-weight:600}
+  .price{font-size:13px;font-weight:800;color:var(--text);align-self:end;padding-bottom:1px}
+  .chev{font-size:20px;color:#82939b;line-height:1;margin-left:4px}
+  .right{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;height:100%;min-width:42px}
+  .badge{font-size:8px;font-weight:800;letter-spacing:.035em;padding:5px 7px;border-radius:6px;white-space:nowrap;background:#e3f3e7;color:#358447}
+  .note{margin:14px 2px 0;color:#6f7e8a;font-size:11px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <div class="head">
+      <div class="head-icon"><svg viewBox="0 0 50 50"><path d="m4.9211 27.8364v-15.6425c0-1.0828-.8778-1.9606-1.9605-1.9606-1.0828 0-1.9606.8778-1.9606 1.9606v25.612c0 1.0828.8778 1.9606 1.9606 1.9606s1.9605-.8778 1.9605-1.9606v-3.673l40.1579-.0944v3.673c0 1.0828.8778 1.9606 1.9605 1.9606s1.9605-.8779 1.9605-1.9607v-3.673-5.1285-1.168z"/><path d="m49 26.1569h-29.8042v-7.3876c0-2.1401 1.7349-3.875 3.875-3.875h18.1063c4.3205 0 7.8229 3.5024 7.8229 7.8229z"/><circle cx="12.219" cy="20.526" r="4.787"/></svg></div>
+      <span>Hotels <span class="count">(2)</span></span>
+    </div>
+    <div class="list">
+      <div class="hotel">
+        <img class="photo" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=300&q=80" alt="Hotel">
+        <div>
+          <div class="name">Fontinha Porto, Trademark Collection by Wyndham</div>
+          <div class="meta">29 Aug 2026 · 4 nights<br><strong>Ref:</strong> 90900EEQ4320</div>
+        </div>
+        <div class="right"><span class="badge">CONFIRMED</span><span class="price">£310</span></div>
+      </div>
+      <div class="hotel">
+        <img class="photo" src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=300&q=80" alt="Hotel">
+        <div>
+          <div class="name">INNSiDE Braga Centro</div>
+          <div class="meta">2 Sep 2026 · 2 nights<br>Breakfast incl.</div>
+        </div>
+        <div class="right"><span class="badge">CONFIRMED</span><span class="price">£208</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="note">Hotel preview for the test branch: same teal column styling, but cleaner booking cards with image, stay details, status and cost.</div>
+</div>
+</body>
+</html>
