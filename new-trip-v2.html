@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=319">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=320">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4691,7 +4691,7 @@ function extractBookings(state) {
           name: hire.company || 'Car Hire', cat:'carhire',
           status: hire.ref ? 'confirmed' : 'pending', ref: hire.ref||'',
           price: price || null, date: hire.pickup?.date || d.date,
-          dayIdx: state.days.indexOf(d),
+          dayIdx: state.days.indexOf(d), itemIdx: d.items.indexOf(it),
           pickupLoc: hire.pickup?.loc, pickupDate: hire.pickup?.date, pickupTime: hire.pickup?.time,
           dropoffLoc: hire.dropoff?.loc, dropoffDate: hire.dropoff?.date, dropoffTime: hire.dropoff?.time,
         });
@@ -4709,7 +4709,7 @@ function extractBookings(state) {
 
       const price = parsePr(b.price);
       const base = { name:it.title, date:d.date, status:st||'confirmed', ref:b.ref||'',
-                     price, rawPrice:b.price, url:b.url, dayIdx:state.days.indexOf(d) };
+                     price, rawPrice:b.price, url:b.url, dayIdx:state.days.indexOf(d), itemIdx:d.items.indexOf(it) };
 
       if (it.type==='move') {
         const k = it.kicker||(it.transport?.mode)||'';
@@ -4765,10 +4765,16 @@ function renderBookingsView() {
 
   const mkCard = (b) => {
     const ico = catIcons[b.cat] || catIcons.attraction;
+    // Hotels aren't clickable — nothing to open (they're not an edit-
+    // able itinerary item the way a flight/meal/attraction is). Every
+    // other card opens the real edit modal for that exact item.
+    const clickable = b.cat !== 'hotel';
+    const openAttr = clickable ? ` onclick="setView('itinerary');setDay(${b.dayIdx});openEditItem(${b.dayIdx},${b.itemIdx});"` : '';
+    const chevron = clickable ? `<div class="bk-card-chevron">›</div>` : '';
     if (b.cat === 'carhire') {
       // Distinct layout — this is the vehicle rental itself, not a
       // driving leg, so it reads as a pickup → drop-off journey.
-      return `<div class="bk-card bk-card--carhire">
+      return `<div class="bk-card bk-card--carhire"${openAttr}>
         <div class="bk-card-ico carhire">${ico}</div>
         <div class="bk-card-body">
           <div class="bk-card-name">${b.name}${b.vehicle ? ' · ' + b.vehicle : ''}</div>
@@ -4782,11 +4788,9 @@ function renderBookingsView() {
             ${b.price ? `<span class="bk-card-price">${fmt(b.price)}</span>` : ''}
           </div>
         </div>
+        ${chevron}
       </div>`;
     }
-    const actions = [
-      b.url ? `<a href="${b.url}" target="_blank" class="bk-action">View ticket →</a>` : null,
-    ].filter(Boolean).join('');
     const meta = [
       b.date, b.depart&&b.arrive ? b.depart+' – '+b.arrive : (b.depart||b.arrive||''),
       b.tickets, b.ref ? 'Ref: '+b.ref : null, b.nights ? b.nights+' nights' : null,
@@ -4798,14 +4802,19 @@ function renderBookingsView() {
     const thumb = (b.cat === 'hotel' && b.photo)
       ? `<div class="bk-card-photo" style="background-image:url('${b.photo}')"></div>`
       : `<div class="bk-card-ico ${b.cat}">${ico}</div>`;
-    return `<div class="bk-card">
+    // stopPropagation so this doesn't also trigger the card's own
+    // click-to-edit — clicking the ticket link should only open the
+    // ticket, not the ticket link AND the edit modal together.
+    const ticketLink = b.url ? `<a href="${b.url}" target="_blank" class="bk-action" onclick="event.stopPropagation()">View ticket →</a>` : '';
+    return `<div class="bk-card${clickable ? ' bk-card--clickable' : ''}"${openAttr}>
       ${thumb}
       <div class="bk-card-body">
         <div class="bk-card-name">${b.name}</div>
         ${meta ? `<div class="bk-card-meta">${meta}</div>` : ''}
         ${b.price ? `<div class="bk-card-row2"><span class="bk-card-price">${fmt(b.price)}</span></div>` : ''}
-        ${actions ? `<div class="bk-card-actions">${actions}</div>` : ''}
+        ${ticketLink ? `<div class="bk-card-actions">${ticketLink}</div>` : ''}
       </div>
+      ${chevron}
     </div>`;
   };
 
@@ -4814,8 +4823,13 @@ function renderBookingsView() {
   // getting around" view it belongs alongside Train/Coach/Bus rather
   // than off on its own. Doesn't need to be a full itemised list per the
   // brief — just mode, count, and a running total.
+  // Only genuinely prepaid transport counts here — "pay on use" items
+  // (a bus/taxi you pay for on the day, logged just as a placeholder
+  // with no advance cost attached) aren't real bookings and shouldn't
+  // show up as one.
+  const prepaidTransport = transport.filter(t => t.price);
   const transportGroups = {};
-  transport.forEach(t => {
+  prepaidTransport.forEach(t => {
     const key = t.kicker || 'Other';
     if (!transportGroups[key]) transportGroups[key] = { count: 0, total: 0, ico: TRANSPORT_ICONS[key] || ICO.plane };
     transportGroups[key].count++;
@@ -4840,7 +4854,7 @@ function renderBookingsView() {
   // list (not grouped by day like Meals — just the date shown inline).
   const paidAttractions = attractions.filter(a => a.price);
   const attractionRows = paidAttractions.map(a => `
-    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${a.dayIdx||0})">
+    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${a.dayIdx||0});openEditItem(${a.dayIdx||0},${a.itemIdx});">
       <span class="bk-attraction-name">${a.name}${a.date ? `<span class="bk-meal-time">${fmtShortDdmmyyyy(a.date) || a.date}</span>` : ''}</span>
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
@@ -4852,7 +4866,7 @@ function renderBookingsView() {
   const mealRows = sortedDining.map(m => {
     const dateStr = fmtShortDdmmyyyy(m.date) || m.date || '';
     return `
-    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${m.dayIdx||0})">
+    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${m.dayIdx||0});openEditItem(${m.dayIdx||0},${m.itemIdx});">
       <span class="bk-attraction-name">
         ${dateStr ? `<span class="bk-meal-time">${dateStr}</span>` : ''}
         ${m.time ? `<span class="bk-meal-time">${m.time}</span>` : ''}
@@ -4875,7 +4889,7 @@ function renderBookingsView() {
       <div class="bk-col bk-col--transport">
         <div class="bk-col-head">
           <div class="bk-col-head-ico">${catIcons.transport}</div>
-          <span>Transport <span class="bk-col-count">(${flights.length + transport.length + carhire.length})</span></span>
+          <span>Transport <span class="bk-col-count">(${flights.length + prepaidTransport.length + carhire.length})</span></span>
         </div>
         ${flights.length ? `
           <div class="bk-col-subhead">Flights <span class="bk-col-count">(${flights.length})</span></div>
@@ -4883,7 +4897,7 @@ function renderBookingsView() {
         ` : ''}
         ${transportGroupRows ? `
           <div class="bk-tgroup-box">
-            <div class="bk-col-subhead">Other Transport <span class="bk-col-count">(${transport.length + carhire.length})</span></div>
+            <div class="bk-col-subhead">Other Transport <span class="bk-col-count">(${prepaidTransport.length + carhire.length})</span></div>
             <div class="bk-tgroup-list">${transportGroupRows}</div>
           </div>
         ` : ''}
