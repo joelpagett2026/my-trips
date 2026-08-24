@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=316">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=317">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4717,7 +4717,7 @@ function extractBookings(state) {
         const obj = {...base, kicker:k, from:tr.from, to:tr.to, depart:tr.depart, arrive:tr.arrive };
         k==='Flight' ? flights.push(obj) : transport.push(obj);
       } else if (it.type==='meal' && (st==='booked'||st==='confirmed')) {
-        dining.push({...base, cat:'dining', sub:it.sub});
+        dining.push({...base, cat:'dining', sub:it.sub, kicker:it.kicker||'', time:it.time||''});
       } else if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
         attractions.push({...base, cat:'attraction', tickets:b.tickets, sub:it.sub});
       }
@@ -4844,13 +4844,34 @@ function renderBookingsView() {
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
 
-  // Meals — same compact list style as Attractions; a status badge
-  // stands in for price on the (common) reservation with no cost attached.
-  const mealRows = dining.map(m => `
-    <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${m.dayIdx||0})">
-      <span class="bk-attraction-name">${m.name}</span>
-      ${m.price ? `<span class="bk-attraction-price">${fmt(m.price)}</span>` : statusBadge(m.status)}
-    </div>`).join('');
+  // Meals — grouped by day, showing the meal type (Breakfast/Lunch/
+  // Dinner/etc, stored as kicker) and the booked time if there is one.
+  const mealsByDay = {};
+  dining.forEach(m => {
+    const key = m.dayIdx ?? -1;
+    if (!mealsByDay[key]) mealsByDay[key] = [];
+    mealsByDay[key].push(m);
+  });
+  const mealDayBlocks = Object.keys(mealsByDay)
+    .sort((a,b) => Number(a) - Number(b))
+    .map(dayIdx => {
+      const meals = mealsByDay[dayIdx];
+      const dayNum = Number(dayIdx) + 1;
+      const dateStr = fmtShortDdmmyyyy(meals[0].date) || meals[0].date || '';
+      const rows = meals.map(m => `
+        <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${m.dayIdx||0})">
+          <span class="bk-attraction-name">
+            ${m.kicker ? `<span class="bk-meal-kind">${m.kicker}</span>` : ''}
+            ${m.name}
+            ${m.time ? `<span class="bk-meal-time">${m.time}</span>` : ''}
+          </span>
+          ${m.price ? `<span class="bk-attraction-price">${fmt(m.price)}</span>` : statusBadge(m.status)}
+        </div>`).join('');
+      return `<div class="bk-meal-day">
+        <div class="bk-meal-day-head">Day ${dayNum}${dateStr ? ' · ' + dateStr : ''}</div>
+        <div class="bk-attraction-list">${rows}</div>
+      </div>`;
+    }).join('');
   const mealsTotal = dining.reduce((s,m) => s + (m.price||0), 0);
 
   el.innerHTML = `
@@ -4893,8 +4914,8 @@ function renderBookingsView() {
           <div class="bk-col-head-ico">${catIcons.dining}</div>
           <span>Meals <span class="bk-col-count">(${dining.length})</span></span>
         </div>
-        ${mealRows ? `
-          <div class="bk-attraction-list">${mealRows}</div>
+        ${mealDayBlocks ? `
+          ${mealDayBlocks}
           ${mealsTotal ? `<div class="bk-attraction-total-row">Total <span>${fmt(mealsTotal)}</span></div>` : ''}
         ` : '<div class="bk-col-empty">No meals booked yet.</div>'}
       </div>
