@@ -4843,7 +4843,6 @@ function renderBookingsView() {
       <span class="bk-attraction-name">${a.name}</span>
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
-  const attractionsTotal = paidAttractions.reduce((s,a) => s + (a.price||0), 0);
 
   // Meals — same compact list style as Attractions; a status badge
   // stands in for price on the (common) reservation with no cost attached.
@@ -4887,7 +4886,6 @@ function renderBookingsView() {
         </div>
         ${attractionRows ? `
           <div class="bk-attraction-list">${attractionRows}</div>
-          <div class="bk-attraction-total-row">Total <span>${fmt(attractionsTotal)}</span></div>
         ` : '<div class="bk-col-empty">No paid attractions yet.</div>'}
       </div>
       <div class="bk-col bk-col--meal">
