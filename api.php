@@ -130,8 +130,21 @@ if (in_array($slug, $reserved, true)) fail('That trip name is reserved — pleas
 // a `days` array — otherwise it discards any partial seed and falls back
 // to defaults, so we must write a complete, valid record here.
 if ($photo) {
+    $days = [];
+    $depDt = DateTime::createFromFormat('d/m/Y', $dep) ?: null;
+    $retDt = DateTime::createFromFormat('d/m/Y', $ret) ?: null;
+    if ($depDt && $retDt && $retDt >= $depDt) {
+        $dayCount = (int)$depDt->diff($retDt)->format('%a') + 1;
+        $cursor = clone $depDt;
+        for ($i = 0; $i < $dayCount; $i++) {
+            $days[] = ['date' => $cursor->format('d/m/Y'), 'loc' => $dest, 'title' => 'Day ' . ($i + 1), 'items' => []];
+            $cursor->modify('+1 day');
+        }
+    } else {
+        $days = [[ 'date' => $dep, 'loc' => $dest, 'title' => 'Day 1', 'items' => [] ]];
+    }
     $seed = [
-        'days' => [[ 'date' => $dep, 'loc' => $dest, 'title' => 'Day 1', 'items' => [] ]],
+        'days' => $days,
         'meta' => [
             'dest' => $dest, 'dep' => $dep, 'ret' => $ret, 'trav' => $trav, 'status' => $status,
             'hotel' => null, 'budget' => null, 'coverPhoto' => $photo,
