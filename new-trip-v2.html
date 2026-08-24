@@ -4716,7 +4716,7 @@ function extractBookings(state) {
         const tr = it.transport||{};
         const obj = {...base, kicker:k, from:tr.from, to:tr.to, depart:tr.depart, arrive:tr.arrive };
         k==='Flight' ? flights.push(obj) : transport.push(obj);
-      } else if (it.type==='meal' && (st==='booked'||st==='confirmed')) {
+      } else if (it.type==='meal' && (st==='booked'||st==='confirmed') && !isHotelBreakfastItem(it)) {
         dining.push({...base, cat:'dining', sub:it.sub, kicker:it.kicker||'', time:it.time||''});
       } else if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
         attractions.push({...base, cat:'attraction', tickets:b.tickets, sub:it.sub});
@@ -4865,7 +4865,7 @@ function renderBookingsView() {
             ${m.name}
             ${m.time ? `<span class="bk-meal-time">${m.time}</span>` : ''}
           </span>
-          ${m.price ? `<span class="bk-attraction-price">${fmt(m.price)}</span>` : statusBadge(m.status)}
+          ${m.price ? `<span class="bk-attraction-price">${fmt(m.price)}</span>` : ''}
         </div>`).join('');
       return `<div class="bk-meal-day">
         <div class="bk-meal-day-head">Day ${dayNum}${dateStr ? ' · ' + dateStr : ''}</div>
@@ -4912,7 +4912,7 @@ function renderBookingsView() {
       <div class="bk-col bk-col--meal">
         <div class="bk-col-head">
           <div class="bk-col-head-ico">${catIcons.dining}</div>
-          <span>Meals <span class="bk-col-count">(${dining.length})</span></span>
+          <span>Confirmed Meals Booked <span class="bk-col-count">(${dining.length})</span></span>
         </div>
         ${mealDayBlocks ? `
           ${mealDayBlocks}
