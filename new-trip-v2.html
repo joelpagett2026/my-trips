@@ -4778,17 +4778,14 @@ function renderBookingsView() {
             <div class="bk-ch-point"><span class="bk-ch-loc">${b.dropoffLoc||'—'}</span><span class="bk-ch-time">${[b.dropoffDate,b.dropoffTime].filter(Boolean).join(' — ')}</span></div>
           </div>
           <div class="bk-card-row2">
-            ${statusBadge(b.status)}
             ${b.ref ? `<span class="bk-card-ref">Ref: ${b.ref}</span>` : ''}
             ${b.price ? `<span class="bk-card-price">${fmt(b.price)}</span>` : ''}
           </div>
-          <div class="bk-card-actions"><button class="bk-action" onclick="setView('itinerary');setDay(${b.dayIdx||0})">View in itinerary</button></div>
         </div>
       </div>`;
     }
     const actions = [
       b.url ? `<a href="${b.url}" target="_blank" class="bk-action">View ticket →</a>` : null,
-      `<button class="bk-action" onclick="setView('itinerary');setDay(${b.dayIdx||0})">View in itinerary</button>`,
     ].filter(Boolean).join('');
     const meta = [
       b.date, b.depart&&b.arrive ? b.depart+' – '+b.arrive : (b.depart||b.arrive||''),
@@ -4806,10 +4803,7 @@ function renderBookingsView() {
       <div class="bk-card-body">
         <div class="bk-card-name">${b.name}</div>
         ${meta ? `<div class="bk-card-meta">${meta}</div>` : ''}
-        <div class="bk-card-row2">
-          ${statusBadge(b.status)}
-          ${b.price ? `<span class="bk-card-price">${fmt(b.price)}</span>` : ''}
-        </div>
+        ${b.price ? `<div class="bk-card-row2"><span class="bk-card-price">${fmt(b.price)}</span></div>` : ''}
         ${actions ? `<div class="bk-card-actions">${actions}</div>` : ''}
       </div>
     </div>`;
