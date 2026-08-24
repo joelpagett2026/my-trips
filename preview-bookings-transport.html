@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bookings Transport UI Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--surface:#fff;--text:#1a2428;--text2:#5a6a70;--text3:#9aacb0;--line:rgba(0,0,0,.07);--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);--r:14px;--c:#1E5C94;--bg:rgba(30,92,148,.07);--badge:rgba(30,92,148,.15)}
+  *{box-sizing:border-box} body{margin:0;background:#e8e8e8;font-family:Montserrat,Arial,sans-serif;color:var(--text);padding:40px}
+  .wrap{max-width:440px;margin:0 auto}.panel{display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:16px;padding:16px}
+  .head{font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;color:var(--c)}
+  .head-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--badge);color:var(--c)}
+  .head-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.count{font-size:12px;font-weight:600;color:var(--text3)}
+  .subhead{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c);margin-top:2px;text-transform:uppercase}.list{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:12px 14px;cursor:pointer;transition:background .12s}.row+.row{border-top:1px solid var(--line)}.row:hover{background:var(--badge)}
+  .ico{width:30px;height:30px;border-radius:8px;background:var(--badge);display:grid;place-items:center;color:var(--c);font-size:15px}.title{font-size:13px;font-weight:700;line-height:1.25}.meta{font-size:10.5px;font-weight:500;color:var(--text3);margin-top:4px;line-height:1.3}.price{font-size:13px;font-weight:700}.chev{font-size:20px;color:#82939b}.group{display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(30,92,148,.06);font-size:11px;font-weight:800;color:var(--c);text-transform:uppercase;letter-spacing:.04em}.group span{margin-left:auto;font-size:10px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0}
+  .note{margin:14px 2px 0;color:#6f7e8a;font-size:11px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="panel">
+  <div class="head"><div class="head-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M8 17v3M16 17v3M7 8h10M7 12h4"/></svg></div><span>Transport <span class="count">(7)</span></span></div>
+
+  <div class="subhead">Flights (2)</div>
+  <div class="list">
+    <div class="row"><div class="ico">✈</div><div><div class="title">London Gatwick → Porto</div><div class="meta">29 Aug 2026 · 16:20–19:05 · Ref: ZTQNBT</div></div><div class="price">£20</div><div class="chev">›</div></div>
+    <div class="row"><div class="ico">✈</div><div><div class="title">Porto → London Gatwick</div><div class="meta">04 Sep 2026 · 21:25–23:50 · Ref: ZTQNBT</div></div><div class="price">£20</div><div class="chev">›</div></div>
+  </div>
+
+  <div class="subhead">Other Transport (5)</div>
+  <div class="list">
+    <div class="group">Bus <span>2 bookings</span></div>
+    <div class="row"><div class="ico">🚌</div><div><div class="title">Porto Airport → City Centre</div><div class="meta">29 Aug 2026 · 20:10</div></div><div class="price">£3</div><div class="chev">›</div></div>
+    <div class="row"><div class="ico">🚌</div><div><div class="title">Porto → Gaia</div><div class="meta">30 Aug 2026 · 09:30</div></div><div class="price">£3</div><div class="chev">›</div></div>
+    <div class="group">Coach <span>3 bookings</span></div>
+    <div class="row"><div class="ico">🚍</div><div><div class="title">Porto → Braga</div><div class="meta">02 Sep 2026 · 08:15</div></div><div class="price">£4</div><div class="chev">›</div></div>
+    <div class="row"><div class="ico">🚍</div><div><div class="title">Braga → Bom Jesus</div><div class="meta">02 Sep 2026 · 12:45</div></div><div class="price">£2.50</div><div class="chev">›</div></div>
+    <div class="row"><div class="ico">🚍</div><div><div class="title">Braga → Porto</div><div class="meta">02 Sep 2026 · 18:30</div></div><div class="price">£4</div><div class="chev">›</div></div>
+  </div>
+</div><div class="note">Flights stay first. All remaining transport is grouped by method, with each individual journey listed underneath its group heading.</div></div>
+</body>
+</html>
