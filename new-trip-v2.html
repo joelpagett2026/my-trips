@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=318">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=319">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4845,19 +4845,18 @@ function renderBookingsView() {
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
 
-  // Meals — flat list matching Attractions' style: meal type, name, date
-  // and booked time all shown inline per row, sorted by day rather than
-  // grouped into separate day blocks.
+  // Meals — flat list matching Attractions' style: date, then time, then
+  // restaurant name, sorted by day. No meal-type pill — the time already
+  // makes it obvious enough (19:00 reads as dinner without a label).
   const sortedDining = [...dining].sort((a,b) => (a.dayIdx??0) - (b.dayIdx??0));
   const mealRows = sortedDining.map(m => {
     const dateStr = fmtShortDdmmyyyy(m.date) || m.date || '';
-    const when = [dateStr, m.time].filter(Boolean).join(' · ');
     return `
     <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${m.dayIdx||0})">
       <span class="bk-attraction-name">
-        ${m.kicker ? `<span class="bk-meal-kind">${m.kicker}</span>` : ''}
+        ${dateStr ? `<span class="bk-meal-time">${dateStr}</span>` : ''}
+        ${m.time ? `<span class="bk-meal-time">${m.time}</span>` : ''}
         ${m.name}
-        ${when ? `<span class="bk-meal-time">${when}</span>` : ''}
       </span>
       ${m.price ? `<span class="bk-attraction-price">${fmt(m.price)}</span>` : ''}
     </div>`;

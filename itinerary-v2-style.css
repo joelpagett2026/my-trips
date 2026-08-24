@@ -1438,12 +1438,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .bk-attraction-total-row span { color:var(--bk-c); }
 
-/* Meals — each row tagged with its type (Breakfast/Lunch/Dinner/etc)
-   and date/time shown inline, matching Attractions' flat list style */
-.bk-meal-kind {
-  font-size:9px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;
-  color:var(--bk-c); background:var(--bk-badge); padding:2px 6px; border-radius:4px; flex-shrink:0;
-}
+/* Meals — date and time shown inline before the name, matching
+   Attractions' flat list style */
 .bk-meal-time { font-size:11px; font-weight:500; color:var(--text3); }
 
 @media (max-width: 1100px) {
