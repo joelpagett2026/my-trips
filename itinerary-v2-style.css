@@ -1438,9 +1438,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .bk-attraction-total-row span { color:var(--bk-c); }
 
-/* Meals — date and time shown inline before the name, matching
-   Attractions' flat list style */
+/* Meals — date and time shown inline before the name (Attractions'
+   flat list style). Attractions still uses this. */
 .bk-meal-time { font-size:11px; font-weight:500; color:var(--text3); }
+
+/* Meal rows (bookings-meal-ui preview branch) — bold name, calendar
+   icon + full date/time underneath, a BOOKED/CONFIRMED status badge,
+   and a chevron. Colours reuse the column's own --bk-c/--bk-badge
+   rather than fixed hex, so this stays correct if the Meals column
+   colour ever changes; badge tints are fixed per-status though (booked
+   orange / confirmed green), independent of column colour, matching
+   the approved preview exactly. */
+.bk-meal-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; transition:background 0.12s; min-height:66px; }
+.bk-meal-row + .bk-meal-row { border-top:1px solid var(--line); }
+.bk-meal-row:hover { background:var(--bk-badge); }
+.bk-meal-name { font-size:13px; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:5px; white-space:normal; }
+.bk-meal-meta { display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:500; color:var(--text3); white-space:nowrap; }
+.bk-meal-meta svg { width:12px; height:12px; stroke:var(--bk-c); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.bk-meal-badge { font-size:8px; font-weight:800; letter-spacing:0.035em; padding:5px 7px; border-radius:6px; white-space:nowrap; }
+.bk-meal-badge--booked { background:#fff0de; color:#d97b0a; }
+.bk-meal-badge--confirmed { background:#e3f3e7; color:#358447; }
+.bk-meal-chev { font-size:20px; font-weight:400; color:#82939b; line-height:1; }
 
 @media (max-width: 1100px) {
   .bk-columns { grid-template-columns:repeat(2, 1fr); }

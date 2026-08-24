@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=320">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=321">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -1055,6 +1055,16 @@ function fmtShortDdmmyyyy(s) {
   if (!d) return '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return d.getDate() + ' ' + months[d.getMonth()];
+}
+
+// "29 Aug 2026" — day zero-padded, short month, full year. Used for the
+// Meals row date (Bookings tab), where the shorter no-year format used
+// elsewhere reads ambiguously across a trip spanning a year boundary.
+function fmtDdMmmYyyy(s) {
+  const d = ddmmyyyyToDate(s);
+  if (!d) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return String(d.getDate()).padStart(2,'0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
 }
 
 // Google Maps link for a hire pickup/drop-off location — prefers the
@@ -4860,20 +4870,23 @@ function renderBookingsView() {
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
 
-  // Meals — flat list matching Attractions' style: date, then time, then
-  // restaurant name, sorted by day. No meal-type pill — the time already
-  // makes it obvious enough (19:00 reads as dinner without a label).
+  // Meals — matches the approved bookings-meal-ui preview branch: name
+  // bold on its own line, a calendar icon + full "DD Mon YYYY · time"
+  // underneath, a BOOKED/CONFIRMED status badge, and a chevron.
   const sortedDining = [...dining].sort((a,b) => (a.dayIdx??0) - (b.dayIdx??0));
+  const mealCalIco = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   const mealRows = sortedDining.map(m => {
-    const dateStr = fmtShortDdmmyyyy(m.date) || m.date || '';
+    const dateStr = fmtDdMmmYyyy(m.date) || m.date || '';
+    const when = [dateStr, m.time].filter(Boolean).join(' · ');
+    const isConfirmed = m.status === 'confirmed';
     return `
-    <div class="bk-attraction-row" onclick="openDrawerItem(${m.dayIdx||0},${m.itemIdx});">
-      <span class="bk-attraction-name">
-        ${dateStr ? `<span class="bk-meal-time">${dateStr}</span>` : ''}
-        ${m.time ? `<span class="bk-meal-time">${m.time}</span>` : ''}
-        ${m.name}
-      </span>
-      ${m.price ? `<span class="bk-attraction-price">${fmt(m.price)}</span>` : ''}
+    <div class="bk-meal-row" onclick="openDrawerItem(${m.dayIdx||0},${m.itemIdx});">
+      <div>
+        <div class="bk-meal-name">${m.name}</div>
+        ${when ? `<div class="bk-meal-meta">${mealCalIco}<span>${when}</span></div>` : ''}
+      </div>
+      <span class="bk-meal-badge ${isConfirmed ? 'bk-meal-badge--confirmed' : 'bk-meal-badge--booked'}">${isConfirmed ? 'CONFIRMED' : 'BOOKED'}</span>
+      <span class="bk-meal-chev">›</span>
     </div>`;
   }).join('');
   const mealsTotal = dining.reduce((s,m) => s + (m.price||0), 0);
