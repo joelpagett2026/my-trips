@@ -1414,15 +1414,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 /* Transport — matches the approved bookings-transport-ui preview:
    Flights and every individual Other Transport journey share one row
    style (icon box, title, meta, price, chevron); Other Transport
-   journeys sit grouped under a mode header (label + count) rather than
-   collapsed into a single total, per that preview's own note that
-   "each individual journey [is] listed underneath its group heading". */
-.bk-tgroup-header {
-  display:flex; align-items:center; gap:8px; padding:9px 12px; margin-top:8px;
-  background:var(--bk-badge); font-size:11px; font-weight:800; color:var(--bk-c);
-  text-transform:uppercase; letter-spacing:0.04em; border-radius:8px 8px 0 0;
-}
-.bk-tgroup-header-count { margin-left:auto; font-size:10px; font-weight:600; color:var(--text3); text-transform:none; letter-spacing:0; }
+   journeys sit grouped under a mode sub-heading (reusing .bk-col-subhead,
+   same plain text style as "Other Transport" itself, no highlight box)
+   rather than collapsed into a single total. */
 .bk-t-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; transition:background 0.12s; }
 .bk-t-row + .bk-t-row { border-top:1px solid var(--line); }
 .bk-t-row:hover { background:var(--bk-badge); }

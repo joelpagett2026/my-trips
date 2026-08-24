@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=323">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=324">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4834,11 +4834,15 @@ function renderBookingsView() {
   // bookings-transport-ui preview exactly (previously these were
   // collapsed into a single count+total row per mode; the preview
   // itemises every booking, grouped under a mode header).
-  // Only genuinely prepaid transport counts here — "pay on use" items
-  // (a bus/taxi you pay for on the day, logged just as a placeholder
-  // with no advance cost attached) aren't real bookings and shouldn't
-  // show up as one.
-  const prepaidTransport = transport.filter(t => t.price);
+  // Only genuinely BOOKED transport counts here — a price alone isn't
+  // enough (an item can carry an estimated cost without actually being
+  // booked), and "pay on use" items (a bus/taxi you pay for on the day,
+  // logged just as a placeholder) aren't real bookings either. Applied
+  // uniformly across Flights, Other Transport, and Car Hire.
+  const isBookedTransport = t => t.price && (t.status === 'booked' || t.status === 'confirmed');
+  const bookedFlights = flights.filter(isBookedTransport);
+  const bookedTransport = transport.filter(isBookedTransport);
+  const bookedCarhire = carhire.filter(isBookedTransport);
 
   // One row renderer shared by Flights and every Other Transport item —
   // Car Hire uses its own pickup/dropoff field names (not from/to), so
@@ -4865,20 +4869,20 @@ function renderBookingsView() {
   };
 
   const transportGroups = {};
-  prepaidTransport.forEach(t => {
+  bookedTransport.forEach(t => {
     const key = t.kicker || 'Other';
     if (!transportGroups[key]) transportGroups[key] = { items: [], total: 0 };
     transportGroups[key].items.push(t);
     transportGroups[key].total += t.price;
   });
-  if (carhire.length) {
+  if (bookedCarhire.length) {
     transportGroups['Car Hire'] = {
-      items: carhire, isCarhire: true,
-      total: carhire.reduce((s,c) => s + (c.price||0), 0),
+      items: bookedCarhire, isCarhire: true,
+      total: bookedCarhire.reduce((s,c) => s + (c.price||0), 0),
     };
   }
   const transportGroupBlocks = Object.entries(transportGroups).map(([label, g]) => `
-    <div class="bk-tgroup-header"><span>${label}</span><span class="bk-tgroup-header-count">${g.items.length} booking${g.items.length===1?'':'s'}</span></div>
+    <div class="bk-col-subhead">${label} <span class="bk-col-count">(${g.items.length} booking${g.items.length===1?'':'s'})</span></div>
     <div class="bk-attraction-list">${g.items.map(t => tRow(t, g.isCarhire)).join('')}</div>`).join('');
 
   // Attractions with a price attached — matches the approved
@@ -4931,17 +4935,17 @@ function renderBookingsView() {
       <div class="bk-col bk-col--transport">
         <div class="bk-col-head">
           <div class="bk-col-head-ico">${catIcons.transport}</div>
-          <span>Transport <span class="bk-col-count">(${flights.length + prepaidTransport.length + carhire.length})</span></span>
+          <span>Transport <span class="bk-col-count">(${bookedFlights.length + bookedTransport.length + bookedCarhire.length})</span></span>
         </div>
-        ${flights.length ? `
-          <div class="bk-col-subhead">Flights <span class="bk-col-count">(${flights.length})</span></div>
-          <div class="bk-attraction-list">${flights.map(f => tRow(f, false)).join('')}</div>
+        ${bookedFlights.length ? `
+          <div class="bk-col-subhead">Flights <span class="bk-col-count">(${bookedFlights.length})</span></div>
+          <div class="bk-attraction-list">${bookedFlights.map(f => tRow(f, false)).join('')}</div>
         ` : ''}
         ${transportGroupBlocks ? `
-          <div class="bk-col-subhead">Other Transport <span class="bk-col-count">(${prepaidTransport.length + carhire.length})</span></div>
+          <div class="bk-col-subhead">Other Transport <span class="bk-col-count">(${bookedTransport.length + bookedCarhire.length})</span></div>
           ${transportGroupBlocks}
         ` : ''}
-        ${!flights.length && !transportGroupBlocks ? '<div class="bk-col-empty">No transport booked yet.</div>' : ''}
+        ${!bookedFlights.length && !transportGroupBlocks ? '<div class="bk-col-empty">No transport booked yet.</div>' : ''}
       </div>
       <div class="bk-col bk-col--attraction">        <div class="bk-col-head">
           <div class="bk-col-head-ico">${catIcons.attraction}</div>
