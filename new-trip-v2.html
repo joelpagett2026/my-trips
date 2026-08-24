@@ -4836,11 +4836,12 @@ function renderBookingsView() {
       <div class="bk-tgroup-total">${g.total ? fmt(g.total) : '—'}</div>
     </div>`).join('');
 
-  // Attractions with a price attached — name + cost, nothing else.
+  // Attractions with a price attached — name + date + cost, still a flat
+  // list (not grouped by day like Meals — just the date shown inline).
   const paidAttractions = attractions.filter(a => a.price);
   const attractionRows = paidAttractions.map(a => `
     <div class="bk-attraction-row" onclick="setView('itinerary');setDay(${a.dayIdx||0})">
-      <span class="bk-attraction-name">${a.name}</span>
+      <span class="bk-attraction-name">${a.name}${a.date ? `<span class="bk-meal-time">${fmtShortDdmmyyyy(a.date) || a.date}</span>` : ''}</span>
       <span class="bk-attraction-price">${fmt(a.price)}</span>
     </div>`).join('');
 
