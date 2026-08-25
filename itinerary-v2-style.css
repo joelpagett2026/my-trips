@@ -849,10 +849,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     flex: 1; display: flex; align-items: stretch;
     overflow-x: auto; scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    padding-left: 6px; /* Day 1 was sitting flush against the true screen
-      edge with zero margin, unlike every other panel on the page (which
-      all have consistent left/right padding) — reads as "cut off"
-      rather than just tightly spaced. */
+    /* Flush against the left edge, matching the header text directly
+       above it (the day bar moved to sit right under the teal header,
+       so the earlier "give it breathing room like the rest of the
+       page" padding — added when it was a floating bottom bar — no
+       longer applies the same way here). */
   }
   .mob-nav-days::-webkit-scrollbar { display: none; }
   .mob-day-btn {
@@ -863,8 +864,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     transition: all 0.13s; gap: 1px;
   }
   .mob-day-btn.active {
-    border-top: 3px solid var(--teal);
-    background: var(--teal);
+    border-top: 3px solid #3a3a3a;
+    background: #3a3a3a; /* dark grey rather than teal — sitting right
+      under the teal header, an active teal tab blended into it with no
+      visual separation. */
   }
   .mob-day-num {
     font-size: 9px; font-weight: 700; text-transform: uppercase;
