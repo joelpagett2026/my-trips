@@ -138,6 +138,52 @@ if ($count === 0) {
   exit;
 }
 
+// Enforce the accommodation lookup in the shared renderer itself. A hotel
+// covers nights from check-in up to, but not including, checkout. If no stay
+// covers the selected night, return null — never fall back to another hotel.
+$oldHotelLookup = <<<'JS'
+// Find the hotel covering the active day (checkin <= day <= checkout)
+function hotelForDay(dayIdx) {
+  if (STATE.days[dayIdx]?.noAccommodation) return null; // explicitly marked — staying with family/friends, or flying that day
+  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
+  if (!hotels.length) return null;
+  const dayDate = parseDate(STATE.days[dayIdx]?.date);
+  if (!dayDate) return hotels[0]; // no date — show first
+  for (const h of hotels) {
+    const ci = parseDate(h.checkin);
+    const co = parseDate(h.checkout);
+    if (ci && co && dayDate >= ci && dayDate <= co) return h;
+  }
+  // Fallback: closest upcoming
+  return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
+}
+JS;
+
+$newHotelLookup = <<<'JS'
+// Find the hotel covering the selected NIGHT (checkin <= day < checkout)
+function hotelForDay(dayIdx) {
+  if (STATE.days[dayIdx]?.noAccommodation) return null;
+  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
+  if (!hotels.length) return null;
+  const dayDate = parseDate(STATE.days[dayIdx]?.date);
+  if (!dayDate) return null;
+  for (const h of hotels) {
+    const ci = parseDate(h.checkin);
+    const co = parseDate(h.checkout);
+    if (ci && co && dayDate >= ci && dayDate < co) return h;
+  }
+  return null;
+}
+JS;
+
+$page = str_replace($oldHotelLookup, $newHotelLookup, $page, $hotelLookupCount);
+if ($hotelLookupCount === 0) {
+  // Keep rendering, but expose the drift in source so it cannot silently recur.
+  $page = str_replace('</head>', '<!-- hotel lookup patch marker not found -->\n</head>', $page);
+}
+
+// Force the latest shared auth/helper script after hotel logic changes.
+$page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
 
 echo $page;
