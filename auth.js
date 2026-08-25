@@ -201,3 +201,15 @@ if (IS_SHARE_VIEW) {
 } else {
     document.addEventListener('DOMContentLoaded', showPinOverlay);
 }
+
+// Itinerary-specific presentation enhancements are loaded conditionally so
+// auth.js can remain shared by the rest of the tools without affecting them.
+document.addEventListener('DOMContentLoaded', () => {
+    if (!document.getElementById('budget-main')) return;
+    if (document.querySelector('script[data-budget-live-redesign]')) return;
+    const s = document.createElement('script');
+    s.src = '/budget-live-redesign.js?v=1';
+    s.defer = true;
+    s.dataset.budgetLiveRedesign = '1';
+    document.head.appendChild(s);
+});
