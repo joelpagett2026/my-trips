@@ -9,9 +9,9 @@ Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Keep the Trips dashboard on one canonical URL. This also ensures any
-# dashboard-only front-card fixes run against /trips/ rather than a stale
-# /trips/index.html URL.
+# Serve the Trips dashboard through trips.php so dashboard presentation fixes
+# are applied server-side before the page reaches the browser.
+RewriteRule ^trips/?$ trips.php [L,QSA]
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
 
 # Retired share page.
