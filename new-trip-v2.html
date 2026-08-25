@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=329">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=330">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4921,12 +4921,18 @@ function renderBookingsView() {
     <div class="bk-col-subhead">${label}</div>
     <div class="bk-attraction-list">${g.items.map(t => tRow(t, g.isCarhire)).join('')}</div>`).join('');
 
-  // Attractions with a price attached — matches the approved
-  // bookings-attractions-ui preview: name bold, calendar icon + date
-  // underneath, price, chevron. Also reused by Meals below.
+  // Attractions — name bold, calendar icon + date underneath, a status
+  // pill (Booked/Confirmed/Walk in only) instead of price, chevron. No
+  // longer limited to only attractions with a price, since status is
+  // now what's shown — a walk-in attraction with no cost is just as
+  // relevant here as a paid, pre-booked one. Also reused by Meals below.
   const bkCalIco = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
-  const paidAttractions = attractions.filter(a => a.price);
-  const attractionRows = paidAttractions.map(a => {
+  const attrPill = (s) => {
+    if (s === 'prebookable') return `<span class="bk-attr-badge bk-attr-badge--walkin">NOT PRE-BOOKABLE</span>`;
+    if (s === 'notbooked') return `<span class="bk-attr-badge bk-attr-badge--walkin">NOT BOOKED</span>`;
+    return `<span class="bk-attr-badge bk-attr-badge--booked">BOOKED</span>`;
+  };
+  const attractionRows = attractions.map(a => {
     const dateStr = fmtDdMmmYyyy(a.date) || a.date || '';
     return `
     <div class="bk-attr-row" onclick="openDrawerItem(${a.dayIdx||0},${a.itemIdx});">
@@ -4934,7 +4940,7 @@ function renderBookingsView() {
         <div class="bk-attr-name">${a.name}</div>
         ${dateStr ? `<div class="bk-attr-meta">${bkCalIco}<span>${dateStr}</span></div>` : ''}
       </div>
-      <span class="bk-attr-price">${fmt(a.price)}</span>
+      ${attrPill(a.status)}
       <span class="bk-attr-chev">›</span>
     </div>`;
   }).join('');
