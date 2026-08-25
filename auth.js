@@ -219,3 +219,51 @@ if (document.readyState === 'loading') {
 } else {
     loadBudgetLiveRedesign();
 }
+
+// Hotel lookup fix: only a stay that genuinely covers the selected night may
+// be edited. Checkout is exclusive, and there is deliberately no "closest
+// hotel" fallback. This prevents Add / Edit on a new stay from opening and
+// overwriting an existing hotel.
+function installHotelLookupFix() {
+    if (!document.getElementById('rp-hotel')) return;
+    if (typeof STATE === 'undefined' || typeof parseDate !== 'function') return;
+
+    const strictHotelForDay = function(dayIdx) {
+        if (STATE.days[dayIdx]?.noAccommodation) return null;
+        const hotels = STATE.meta?.hotels || (STATE.meta?.hotel ? [STATE.meta.hotel] : []);
+        if (!hotels.length) return null;
+
+        const dayDate = parseDate(STATE.days[dayIdx]?.date);
+        if (!dayDate) return null;
+
+        for (const hotel of hotels) {
+            const checkin = parseDate(hotel.checkin);
+            const checkout = parseDate(hotel.checkout);
+            if (checkin && checkout && dayDate >= checkin && dayDate < checkout) return hotel;
+        }
+        return null;
+    };
+
+    // Replace the shared lookup used by the hotel panel, readiness stats,
+    // breakfast logic and the Add / Edit action.
+    window.hotelForDay = strictHotelForDay;
+    window.editHotelForCurrentDay = function() {
+        const hotel = strictHotelForDay(activeDay);
+        if (!hotel) {
+            openHotelModal();
+            return;
+        }
+        const idx = (STATE.meta?.hotels || []).indexOf(hotel);
+        openHotelModal(idx >= 0 ? idx : undefined);
+    };
+
+    // Re-render the current hotel/readiness panels with the corrected lookup.
+    if (typeof renderHotelPanel === 'function') renderHotelPanel();
+    if (typeof renderReadiness === 'function') renderReadiness();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installHotelLookupFix, { once:true });
+} else {
+    installHotelLookupFix();
+}
