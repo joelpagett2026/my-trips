@@ -1,17 +1,32 @@
 Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 
-# Dynamic v2 trip pages — clean-URL trips (e.g. /porto-2027) with no real
-# file or directory on disk are routed to trip.php, which renders them
-# fresh from new-trip-v2.html + the DB on every request. Existing baked
-# .html trips (real files) are left completely alone and win by default.
+# ══════════════════════════════════════════════════════════════════════
+# ONE SHARED ITINERARY TEMPLATE
+# Every itinerary now resolves to trip.php, which renders new-trip-v2.html.
+# Legacy baked .html URLs are kept only as redirects so old bookmarks still work.
+# This means Itinerary, Bookings, Map and Budget all come from the same template.
+# ══════════════════════════════════════════════════════════════════════
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# share.html was retired — old share links already carry ?t=TOKEN&share=1,
-# so a redirect straight to new-trip-v2.html (which now handles read-only
-# share views itself) keeps any previously-shared links working.
+# Retired share page.
 RewriteRule ^share\.html$ /new-trip-v2.html [R=301,L,QSA]
 
+# Legacy baked itinerary URLs -> canonical dynamic trip URL.
+# Match both root copies and /trips/ copies created by older deploys.
+RewriteRule ^(?:trips/)?china\.html$ /china-2026 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?dubai\.html$ /dubai-2025 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?costa-rica\.html$ /costa-rica-2025 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?canada\.html$ /canada-2027 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?hamburg\.html$ /hamburg [R=302,L,QSA]
+RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026-v2 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?porto-budget\.html$ /porto-2026-v2 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?graz-ljubljana-lake-bled-2027\.html$ /graz-ljubljana-lake-bled-2027 [R=302,L,QSA]
+
+# Canonical itinerary route. A clean trip slug always uses the dynamic renderer.
+# Files/directories such as /trips/, /icons/ and /api.php continue to work normally.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
@@ -31,7 +46,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   ExpiresByType font/woff              "access plus 1 year"
 </IfModule>
 
-# Prevent HTML pages from being cached (data changes frequently)
+# Prevent itinerary HTML from being cached (trip data changes frequently)
 <FilesMatch "\.html$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
