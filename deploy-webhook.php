@@ -95,16 +95,13 @@ $itineraries = [
     // at the clean URL /cyprus-2026. No longer regenerated here to avoid
     // a stale v1 cyprus-2026.html file.
     ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
-    ['slug' => 'porto-2026-v2',      'filename' => 'porto-budget.html',     'dest' => 'Porto',  'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
-    ['slug' => 'porto-2026-v2',     'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
+    ['slug' => 'porto-2026-v2',   'filename' => 'porto-budget.html',      'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
+    ['slug' => 'porto-2026-v2',   'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
     ['slug' => 'graz-ljubljana-lake-bled-2027', 'filename' => 'graz-ljubljana-lake-bled-2027.html', 'dest' => 'Graz, Ljubljana & Lake Bled', 'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'],
 ];
 
 // ── ENSURE SUBDIRECTORIES EXIST ──────────────────────────────────────
-// One-time cleanup: retired concerts year-log page
 @unlink(PUBLIC_HTML . '/concerts/log.html');
-// One-time cleanup: retired share.html — share links now open
-// new-trip-v2.html directly in read-only mode instead.
 @unlink(PUBLIC_HTML . '/share.html');
 
 foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks', 'icons', 'private'] as $dir) {
@@ -116,7 +113,7 @@ foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks'
 
 // ── REGENERATE ALL ITINERARY PAGES FROM TEMPLATE ─────────────────────
 $templateV1  = file_get_contents(REPO_PATH . '/new-trip.html');
-$templateV2      = file_get_contents(REPO_PATH . '/new-trip-v2.html');
+$templateV2  = file_get_contents(REPO_PATH . '/new-trip-v2.html');
 $templateBudget = file_get_contents(REPO_PATH . '/budget-template.html');
 $regenerated = [];
 $regen_failed = [];
@@ -135,7 +132,6 @@ const RECORD_ID = slug;";
 
 if ($templateV1) {
     foreach ($itineraries as $trip) {
-        // Pick template: v2 if specified, else v1
         if (!empty($trip['template']) && $trip['template'] === 'budget-template.html' && $templateBudget) {
             $useTemplate = $templateBudget;
         } elseif (!empty($trip['template']) && $trip['template'] === 'new-trip-v2.html' && $templateV2) {
@@ -143,7 +139,7 @@ if ($templateV1) {
         } else {
             $useTemplate = $templateV1;
         }
-        $placeholder  = $placeholderV1; // same placeholder in both templates
+        $placeholder = $placeholderV1;
 
         $baked = "// Baked-in trip data\n"
             . "const dest   = " . json_encode($trip['dest'])   . ";\n"
@@ -161,7 +157,7 @@ if ($templateV1) {
         $outPath     = PUBLIC_HTML . '/trips/' . $trip['filename'];
         $outPathRoot = PUBLIC_HTML . '/' . $trip['filename'];
         $written = file_put_contents($outPath, $page);
-        file_put_contents($outPathRoot, $page); // keep root copy in sync
+        file_put_contents($outPathRoot, $page);
         if ($written !== false) {
             $regenerated[] = $trip['filename'];
         } else {
@@ -174,6 +170,7 @@ if ($templateV1) {
 $coreFiles = [
     'api.php', 'db-config.php', 'trip.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'itinerary-v2-style.css', 'deploy-webhook.php',
+    'budget-live-redesign.js',
     'index.html', 'new-trip.html', 'new-trip-v2.html', 'budget-template.html', 'budget-style.css', 'settings.html',
     'robots.txt', '.htaccess', 'favicon.ico',
 ];
@@ -195,7 +192,6 @@ foreach ($coreFiles as $file) {
         $skipped[] = $file;
     }
 }
-
 
 // ── COPY SUBDIRECTORY INDEX FILES ────────────────────────────────────
 $subdirFiles = [
