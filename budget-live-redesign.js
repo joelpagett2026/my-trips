@@ -144,8 +144,9 @@
     const hero = root.querySelector('.bv-hero');
     if (!hero || hero.querySelector('.bv-live-stats')) return;
     const amount = moneyNumber(root.querySelector('.bv-hero-amount')?.textContent);
-    const travellers = Number((window.STATE && STATE.meta && STATE.meta.trav) || new URLSearchParams(location.search).get('trav') || 1) || 1;
-    const days = (window.STATE && Array.isArray(STATE.days)) ? STATE.days.length : 0;
+    const tripState = typeof STATE !== 'undefined' ? STATE : null;
+    const travellers = Number((tripState && tripState.meta && tripState.meta.trav) || new URLSearchParams(location.search).get('trav') || 1) || 1;
+    const days = (tripState && Array.isArray(tripState.days)) ? tripState.days.length : 0;
     const daily = days ? amount / days : 0;
     const stats = document.createElement('div');
     stats.className = 'bv-live-stats';
@@ -163,7 +164,8 @@
     const panel = root.querySelector('.bv-grid .bv-panel:nth-child(1)');
     if (!panel) return;
     const rows = [...panel.querySelectorAll('.bv-panel-body > .bv-row')];
-    const hotels = (window.STATE && STATE.meta && Array.isArray(STATE.meta.hotels)) ? STATE.meta.hotels : [];
+    const tripState = typeof STATE !== 'undefined' ? STATE : null;
+    const hotels = (tripState && tripState.meta && Array.isArray(tripState.meta.hotels)) ? tripState.meta.hotels : [];
     rows.forEach((row, i) => {
       if (row.classList.contains('bv-live-hotel-row')) return;
       row.classList.add('bv-live-hotel-row');
