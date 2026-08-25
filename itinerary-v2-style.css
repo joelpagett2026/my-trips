@@ -1418,20 +1418,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-hotel-photo { width:100%; height:140px; border-radius:12px; background-size:cover; background-position:center; background-color:var(--bk-badge); }
 .bk-hotel-photo--empty { display:flex; align-items:center; justify-content:center; color:var(--bk-c); }
 .bk-hotel-photo--empty svg { width:34px; height:34px; }
-.bk-hotel-name { font-size:16px; font-weight:800; line-height:1.25; letter-spacing:-0.2px; margin-bottom:9px; }
-.bk-hotel-meta { display:flex; flex-direction:column; gap:6px; color:var(--text2); font-size:11px; font-weight:500; }
+.bk-hotel-name { font-size:13px; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:5px; }
+.bk-hotel-meta-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.bk-hotel-meta { display:flex; flex-direction:column; gap:6px; color:var(--text2); font-size:11px; font-weight:500; min-width:0; }
 .bk-hotel-meta-item { display:flex; align-items:center; gap:6px; }
 .bk-hotel-meta-item svg { width:13px; height:13px; stroke:var(--bk-c); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.bk-hotel-price-pill { flex-shrink:0; background:var(--bk-badge); color:var(--bk-c); font-size:13px; font-weight:800; padding:7px 12px; border-radius:20px; white-space:nowrap; }
 .bk-hotel-divider { height:1px; background:var(--line); margin:11px 0; }
 .bk-hotel-pills { display:flex; flex-wrap:wrap; gap:7px; }
 .bk-hotel-pill { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:6px 9px; font-size:10.5px; font-weight:700; color:#35535a; }
 .bk-hotel-pill svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .bk-hotel-pill--confirmed { background:var(--bk-badge); border-color:transparent; color:var(--bk-c); }
-.bk-hotel-side { display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--line); padding-top:11px; cursor:pointer; }
-.bk-hotel-total { display:flex; align-items:baseline; gap:6px; }
-.bk-hotel-total-label { font-size:9px; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; }
-.bk-hotel-price { font-size:19px; font-weight:800; color:var(--bk-c); line-height:1; }
-.bk-hotel-chev { width:28px; height:28px; border-radius:8px; background:#f3f5f5; display:flex; align-items:center; justify-content:center; color:#52666d; font-size:18px; }
 
 /* Transport — matches the approved bookings-transport-ui preview:
    Flights and every individual Other Transport journey share one row

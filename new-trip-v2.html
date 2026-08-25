@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=331">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=332">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4885,23 +4885,21 @@ function renderBookingsView() {
       h.breakfast === 'included' ? `<span class="bk-hotel-pill">${bkBreakfastIco}Breakfast incl.</span>` : null,
     ].filter(Boolean).join('');
     const photo = h.photo ? `<div class="bk-hotel-photo" style="background-image:url('${h.photo}')"></div>` : `<div class="bk-hotel-photo bk-hotel-photo--empty">${catIcons.hotel}</div>`;
+    // Not clickable — no drawer/modal to open here, per request.
     return `
     <div class="bk-hotel-card">
       ${photo}
       <div class="bk-hotel-main">
         <div class="bk-hotel-name">${h.name}</div>
-        <div class="bk-hotel-meta">
-          ${dateRange ? `<div class="bk-hotel-meta-item">${bkCalIco}<span>${dateRange}</span></div>` : ''}
-          ${h.ref ? `<div class="bk-hotel-meta-item">${bkRefIco}<span>Ref: ${h.ref}</span></div>` : ''}
+        <div class="bk-hotel-meta-row">
+          <div class="bk-hotel-meta">
+            ${dateRange ? `<div class="bk-hotel-meta-item">${bkCalIco}<span>${dateRange}</span></div>` : ''}
+            ${h.ref ? `<div class="bk-hotel-meta-item">${bkRefIco}<span>Ref: ${h.ref}</span></div>` : ''}
+          </div>
+          ${h.price ? `<span class="bk-hotel-price-pill">${fmt(h.price)}</span>` : ''}
         </div>
         <div class="bk-hotel-divider"></div>
         <div class="bk-hotel-pills">${pills}</div>
-      </div>
-      <div class="bk-hotel-side" onclick="openHotelModal(${h.hotelIdx})">
-        <div class="bk-hotel-total">
-          ${h.price ? `<span class="bk-hotel-total-label">Total</span><span class="bk-hotel-price">${fmt(h.price)}</span>` : ''}
-        </div>
-        <div class="bk-hotel-chev">›</div>
       </div>
     </div>`;
   };
