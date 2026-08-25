@@ -267,3 +267,21 @@ if (document.readyState === 'loading') {
 } else {
     installHotelLookupFix();
 }
+
+// Front-card cleanup: "Travel Day" is an itinerary day label, not a city.
+// Keep it available in trip data, but never render it as a location chip on /trips/ cards.
+function removeTravelDayFrontCardTags() {
+    if (!/^\/trips\/?$/.test(window.location.pathname)) return;
+    document.querySelectorAll('.trip-card .city-tag').forEach(tag => {
+        if ((tag.textContent || '').trim().toLowerCase() === 'travel day') tag.remove();
+    });
+}
+
+if (/^\/trips\/?$/.test(window.location.pathname)) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeTravelDayFrontCardTags, { once:true });
+    } else {
+        removeTravelDayFrontCardTags();
+    }
+    new MutationObserver(removeTravelDayFrontCardTags).observe(document.documentElement, { childList:true, subtree:true });
+}
