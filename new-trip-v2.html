@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=336">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=337">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -85,6 +85,16 @@
 
   <!-- DAY SELECTOR -->
   <div class="day-selector" id="day-selector"></div>
+
+  <!-- MOBILE BOTTOM NAV — despite the name/id, this now sits right under
+       the header on mobile (moved from a fixed bottom bar per request),
+       taking the same visual slot .day-selector occupies on desktop. -->
+  <div class="mob-nav" id="mob-nav">
+    <div class="mob-nav-days" id="mob-nav-days"></div>
+    <button class="mob-nav-add" onclick="openAddItem()" title="Add activity">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
 
   <!-- DAY SUMMARY -->
 
@@ -776,12 +786,6 @@
 </div>
 
 <!-- MOBILE BOTTOM NAV (hidden on desktop via CSS) -->
-<div class="mob-nav" id="mob-nav">
-  <div class="mob-nav-days" id="mob-nav-days"></div>
-  <button class="mob-nav-add" onclick="openAddItem()" title="Add activity">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
-</div>
 
 <!-- MOBILE NAV MENU -->
 <div class="mob-menu-overlay" id="mob-menu-overlay" onclick="closeMobMenu()"></div>
