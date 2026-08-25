@@ -11,7 +11,7 @@ if (IS_SHARE_VIEW) document.documentElement.style.visibility = 'visible';
 const SESSION_KEY = 'jh_auth';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 
-// Pure JS SHA-256 — no crypto.subtle needed, works on HTTP
+// Pure JS SHA-256 — no crypto.subtle needed, works on HTTP and HTTPS
 function sha256(str) {
     function rightRotate(value, amount) {
         return (value >>> amount) | (value << (32 - amount));
@@ -192,7 +192,6 @@ function showPinOverlay() {
 }
 
 if (IS_SHARE_VIEW) {
-    // Read-only share link — no PIN prompt, page stays visible.
     document.documentElement.style.visibility = 'visible';
 } else if (isAuthed()) {
     document.documentElement.style.visibility = 'visible';
@@ -202,14 +201,21 @@ if (IS_SHARE_VIEW) {
     document.addEventListener('DOMContentLoaded', showPinOverlay);
 }
 
-// Itinerary-specific presentation enhancements are loaded conditionally so
-// auth.js can remain shared by the rest of the tools without affecting them.
-document.addEventListener('DOMContentLoaded', () => {
+// Load the V2 Budget presentation directly as soon as this deferred script runs.
+// At that point the document has already been parsed, so #budget-main is available.
+function loadBudgetLiveRedesign() {
     if (!document.getElementById('budget-main')) return;
     if (document.querySelector('script[data-budget-live-redesign]')) return;
     const s = document.createElement('script');
-    s.src = '/budget-live-redesign.js?v=1';
-    s.defer = true;
+    s.src = '/budget-live-redesign.js?v=3';
     s.dataset.budgetLiveRedesign = '1';
+    s.onload = () => document.documentElement.dataset.budgetRedesign = 'loaded';
+    s.onerror = () => console.error('Budget redesign asset failed to load');
     document.head.appendChild(s);
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadBudgetLiveRedesign, { once:true });
+} else {
+    loadBudgetLiveRedesign();
+}
