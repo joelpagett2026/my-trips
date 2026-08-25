@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=333">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=334">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -792,19 +792,19 @@
   </div>
   <nav class="mob-menu-nav">
     <button class="mob-menu-item active" id="mmb-itinerary" onclick="closeMobMenu();setView('itinerary')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-itinerary.png?v=2');mask-image:url('/icons/nav-itinerary.png?v=2');background:currentColor;"></span>
       Itinerary
     </button>
     <button class="mob-menu-item" id="mmb-budget" onclick="closeMobMenu();setView('budget')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-budget.png?v=3');mask-image:url('/icons/nav-budget.png?v=3');background:currentColor;"></span>
       Budget
     </button>
     <button class="mob-menu-item" id="mmb-bookings" onclick="closeMobMenu();setView('bookings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-bookings.png?v=2');mask-image:url('/icons/nav-bookings.png?v=2');background:currentColor;"></span>
       Bookings
     </button>
     <button class="mob-menu-item" id="mmb-map" onclick="closeMobMenu();setView('map')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+      <span class="sb-custom-ico" style="-webkit-mask-image:url('/icons/nav-map.png?v=2');mask-image:url('/icons/nav-map.png?v=2');background:currentColor;"></span>
       Map
     </button>
   </nav>
