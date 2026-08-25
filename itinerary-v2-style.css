@@ -1421,8 +1421,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-t-row:hover { background:var(--bk-badge); }
 .bk-t-ico { width:30px; height:30px; border-radius:8px; background:var(--bk-badge); color:var(--bk-c); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .bk-t-ico svg { width:15px; height:15px; }
-.bk-t-title { font-size:13px; font-weight:700; line-height:1.25; color:var(--text); }
-.bk-t-meta { font-size:10.5px; font-weight:500; color:var(--text3); margin-top:4px; line-height:1.3; }
+.bk-t-title { font-size:13px; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:5px; }
 .bk-t-chev { font-size:20px; font-weight:400; color:#82939b; line-height:1; }
 
 /* Flights — a roomier two-line card (approved bookings-transport-ui

@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=328">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=329">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4854,14 +4854,20 @@ function renderBookingsView() {
     const dateStr = fmtDdMmmYyyy(isCarhire ? t.pickupDate : t.date) || (isCarhire ? t.pickupDate : t.date) || '';
     const timeStr = isCarhire ? (t.pickupTime || '') :
       (t.depart && t.arrive ? `${t.depart}–${t.arrive}` : (t.depart||t.arrive||''));
-    const meta = [dateStr, timeStr].filter(Boolean).join(' · ');
+    // Same labelled Date/Time fields as Flights (.bk-flight-label/-value
+    // reused directly) instead of a single plain meta line, for visual
+    // consistency between the two.
+    const details = [
+      dateStr ? { label: 'Date', value: dateStr } : null,
+      timeStr ? { label: 'Time', value: timeStr } : null,
+    ].filter(Boolean);
     const ico = isCarhire ? ICO.car : (TRANSPORT_ICONS[t.kicker] || ICO.plane);
     return `
     <div class="bk-t-row" onclick="openDrawerItem(${t.dayIdx||0},${t.itemIdx});">
       <div class="bk-t-ico">${ico}</div>
       <div>
         <div class="bk-t-title">${title}</div>
-        ${meta ? `<div class="bk-t-meta">${meta}</div>` : ''}
+        ${details.length ? `<div class="bk-flight-details">${details.map(d => `<div class="bk-flight-detail"><div class="bk-flight-label">${d.label}</div><div class="bk-flight-value">${d.value}</div></div>`).join('')}</div>` : ''}
       </div>
       <div class="bk-t-chev">›</div>
     </div>`;
