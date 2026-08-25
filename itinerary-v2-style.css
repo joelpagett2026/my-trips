@@ -34,6 +34,11 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
+/* Belt-and-braces alongside the viewport meta tag's user-scalable=no —
+   iOS Safari (13+) has been known to ignore that meta tag for
+   accessibility reasons, so this CSS layer catches pinch-zoom gestures
+   even when the meta tag alone doesn't. */
+html{touch-action:pan-x pan-y;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;-webkit-font-smoothing:antialiased;display:flex;}
 
 /* SIDEBAR */
