@@ -1,16 +1,17 @@
 <?php
-// MY TRIPS — Dynamic trip renderer
-// Serves /{slug} for every v2 trip by reading new-trip-v2.html + this
-// trip's record from the DB fresh on every request. There is no baked
-// file for these trips, so an edit to new-trip-v2.html reaches every v2
-// trip (past and future) the moment it's deployed — no regeneration step.
+// ══════════════════════════════════════════════════════════════════════
+// MY TRIPS — Single dynamic itinerary renderer
 //
-// Routed here via .htaccess: any bare path with no matching real file
-// or directory falls through to trip.php?slug={path}.
+// EVERY itinerary uses this renderer and therefore the same
+// new-trip-v2.html template. The Itinerary, Bookings, Map and Budget tabs
+// are all part of that one shared template, so a template change applies
+// to every trip automatically.
+// ══════════════════════════════════════════════════════════════════════
 require_once __DIR__ . '/db-config.php';
 
 header('Content-Type: text/html; charset=UTF-8');
-header('Cache-Control: no-cache, must-revalidate');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
 
 $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_GET['slug'] ?? ''));
 if (!$slug) {
@@ -19,8 +20,48 @@ if (!$slug) {
   exit;
 }
 
-// The trip registry (id = 'trip-registry') holds the dest/dep/ret/trav/status
-// for every dashboard-created trip — the same record trips/index.html reads.
+// Legacy metadata fallback. The DB registry remains the source of truth,
+// but this keeps older trips renderable if they pre-date the registry.
+$legacyTrips = [
+  'china-2026' => [
+    'slug' => 'china-2026', 'dest' => 'China',
+    'dep' => '31/03/2026', 'ret' => '17/04/2026', 'trav' => '2', 'status' => 'past'
+  ],
+  'dubai-2025' => [
+    'slug' => 'dubai-2025', 'dest' => 'Dubai & Abu Dhabi',
+    'dep' => '26/12/2025', 'ret' => '09/01/2026', 'trav' => '2', 'status' => 'past'
+  ],
+  'costa-rica-2025' => [
+    'slug' => 'costa-rica-2025', 'dest' => 'Costa Rica',
+    'dep' => '04/04/2025', 'ret' => '21/04/2025', 'trav' => '2', 'status' => 'past'
+  ],
+  'canada-2027' => [
+    'slug' => 'canada-2027', 'dest' => 'Canada Road Trip',
+    'dep' => '25/09/2027', 'ret' => '10/10/2027', 'trav' => '2', 'status' => 'upcoming'
+  ],
+  'hk-taiwan-2027' => [
+    'slug' => 'hk-taiwan-2027', 'dest' => 'Hong Kong & Taiwan',
+    'dep' => '27/03/2027', 'ret' => '12/04/2027', 'trav' => '2', 'status' => 'planning'
+  ],
+  'porto-2026' => [
+    'slug' => 'porto-2026', 'dest' => 'Porto',
+    'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'
+  ],
+  'porto-2026-v2' => [
+    'slug' => 'porto-2026-v2', 'dest' => 'Porto',
+    'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'
+  ],
+  'hamburg' => [
+    'slug' => 'hamburg', 'dest' => 'Hamburg',
+    'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'
+  ],
+  'graz-ljubljana-lake-bled-2027' => [
+    'slug' => 'graz-ljubljana-lake-bled-2027', 'dest' => 'Graz, Ljubljana & Lake Bled',
+    'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'
+  ],
+];
+
+// The trip registry is the primary metadata source for current and future trips.
 $trip = null;
 try {
   $stmt = db()->prepare("SELECT data FROM itinerary WHERE id = ?");
@@ -29,13 +70,18 @@ try {
   if ($row && $row['data']) {
     $registry = json_decode($row['data'], true);
     foreach (($registry['trips'] ?? []) as $t) {
-      if (($t['slug'] ?? '') === $slug) { $trip = $t; break; }
+      if (($t['slug'] ?? '') === $slug) {
+        $trip = $t;
+        break;
+      }
     }
   }
 } catch (\Exception $e) {
-  http_response_code(500);
-  echo 'Could not load trip data.';
-  exit;
+  // Do not fail yet — older trips can still render from the fallback map.
+}
+
+if (!$trip && isset($legacyTrips[$slug])) {
+  $trip = $legacyTrips[$slug];
 }
 
 if (!$trip) {
@@ -50,21 +96,17 @@ $ret = $trip['ret'] ?? '';
 $trav = $trip['trav'] ?? '2';
 $status = $trip['status'] ?? 'upcoming';
 
-$template = file_get_contents(__DIR__ . '/new-trip-v2.html');
+// SINGLE SOURCE OF TRUTH FOR ALL ITINERARY UI.
+$templatePath = __DIR__ . '/new-trip-v2.html';
+$template = file_get_contents($templatePath);
 if ($template === false) {
   http_response_code(500);
   echo 'Template not found.';
   exit;
 }
 
-// Same bake point new-trip-v2.html defines for api.php's (now-retired)
-// one-time bake — reused here, just applied fresh on every request.
-// NOTE: this must match new-trip-v2.html's source byte-for-byte (including
-// indentation) or str_replace silently no-ops and the page falls back to
-// URL-param defaults. Verified against the live file — see $count check
-// below, which surfaces a loud warning instead of silently failing again.
-$page = str_replace(
-  "// Read URL params
+// Replace the generic URL-param bootstrap with this trip's metadata.
+$sourceBootstrap = "// Read URL params
 const params = new URLSearchParams(window.location.search);
 const dest   = params.get('dest') || 'New Trip';
 const dep    = params.get('dep')  || '';
@@ -74,8 +116,9 @@ const status = params.get('status') || 'upcoming';
 const slug   = params.get('slug') || 'new-trip';
 
 // Use slug as the database record ID
-const RECORD_ID = slug;",
-  "// Trip data (rendered dynamically from the DB on every request)
+const RECORD_ID = slug;";
+
+$tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)
 const dest   = " . json_encode($dest) . ";
 const dep    = " . json_encode($dep) . ";
 const ret    = " . json_encode($ret) . ";
@@ -84,17 +127,13 @@ const status = " . json_encode($status) . ";
 const slug   = " . json_encode($slug) . ";
 
 // Use slug as the database record ID
-const RECORD_ID = slug;",
-  $template,
-  $count
-  );
+const RECORD_ID = slug;";
+
+$page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
 
 if ($count === 0) {
-  // The bake point didn't match — new-trip-v2.html's source changed shape.
-  // Fail loudly (visible in view-source) rather than silently serving a
-  // page seeded with URL-param defaults instead of the real trip data.
   http_response_code(500);
-  echo '<!-- trip.php: bake point not found in new-trip-v2.html — template source has drifted, needs re-sync -->';
+  echo '<!-- trip.php: bootstrap marker not found in new-trip-v2.html -->';
   echo 'This trip could not be rendered right now. Please try again shortly.';
   exit;
 }
