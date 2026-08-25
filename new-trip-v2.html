@@ -7,7 +7,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=330">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=331">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -4676,11 +4676,11 @@ function extractBookings(state) {
     return m ? parseFloat(m[0]) * (pp ? numTrav : 1) : null;
   };
 
-  const hotels     = (state.meta?.hotels || []).map(h => ({
+  const hotels     = (state.meta?.hotels || []).map((h, i) => ({
     cat:'hotel', name:h.name, checkin:h.checkin, checkout:h.checkout,
     nights:h.nights, price:parsePr(h.nightly) && h.nights ? parsePr(h.nightly)*h.nights : null,
     ref:h.ref, breakfast:h.breakfast, photo:h.photo, status:'confirmed',
-    date:h.checkin,
+    date:h.checkin, hotelIdx:i,
   }));
 
   const flights=[], transport=[], attractions=[], dining=[], carhire=[];
@@ -4765,68 +4765,12 @@ function renderBookingsView() {
   const upcoming = all.filter(b => (b.date||'') >= todayStr).slice(0,3);
 
   const catIcons = {
-    hotel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    hotel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>',
     flight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
     transport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M8 17v3M16 17v3M7 8h10M7 12h4"/></svg>',
     attraction: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12 12 20 4 12 12 4l8 8Z"/><path d="m9 12 2 2 4-4"/></svg>',
     dining: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V7Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 3v2M11 3v2M15 3v2"/></svg>',
     carhire: ICO.car,
-  };
-
-  const mkCard = (b) => {
-    const ico = catIcons[b.cat] || catIcons.attraction;
-    // Hotels aren't clickable — nothing to open (they're not an
-    // itinerary item with a drawer the way a flight/meal/attraction is).
-    // Every other card opens the real drawer (photo, significance,
-    // booking info, Edit/Remove) for that exact item.
-    const clickable = b.cat !== 'hotel';
-    const openAttr = clickable ? ` onclick="openDrawerItem(${b.dayIdx},${b.itemIdx});"` : '';
-    const chevron = clickable ? `<div class="bk-card-chevron">›</div>` : '';
-    if (b.cat === 'carhire') {
-      // Distinct layout — this is the vehicle rental itself, not a
-      // driving leg, so it reads as a pickup → drop-off journey.
-      return `<div class="bk-card bk-card--carhire"${openAttr}>
-        <div class="bk-card-ico carhire">${ico}</div>
-        <div class="bk-card-body">
-          <div class="bk-card-name">${b.name}${b.vehicle ? ' · ' + b.vehicle : ''}</div>
-          <div class="bk-ch-route">
-            <div class="bk-ch-point"><span class="bk-ch-loc">${b.pickupLoc||'—'}</span><span class="bk-ch-time">${[b.pickupDate,b.pickupTime].filter(Boolean).join(' — ')}</span></div>
-            <div class="bk-ch-arrow">↓</div>
-            <div class="bk-ch-point"><span class="bk-ch-loc">${b.dropoffLoc||'—'}</span><span class="bk-ch-time">${[b.dropoffDate,b.dropoffTime].filter(Boolean).join(' — ')}</span></div>
-          </div>
-          <div class="bk-card-row2">
-            ${b.ref ? `<span class="bk-card-ref">Ref: ${b.ref}</span>` : ''}
-            ${b.price ? `<span class="bk-card-price">${fmt(b.price)}</span>` : ''}
-          </div>
-        </div>
-        ${chevron}
-      </div>`;
-    }
-    const meta = [
-      b.date, b.depart&&b.arrive ? b.depart+' – '+b.arrive : (b.depart||b.arrive||''),
-      b.tickets, b.ref ? 'Ref: '+b.ref : null, b.nights ? b.nights+' nights' : null,
-      b.breakfast==='included' ? 'Breakfast incl.' : null,
-    ].filter(Boolean).join(' · ');
-    // Hotels use their actual uploaded photo as the thumbnail (falls
-    // back to the generic bed icon if none's been added yet), matching
-    // how the Hotel card looks everywhere else in the app.
-    const thumb = (b.cat === 'hotel' && b.photo)
-      ? `<div class="bk-card-photo" style="background-image:url('${b.photo}')"></div>`
-      : `<div class="bk-card-ico ${b.cat}">${ico}</div>`;
-    // stopPropagation so this doesn't also trigger the card's own
-    // click-to-edit — clicking the ticket link should only open the
-    // ticket, not the ticket link AND the edit modal together.
-    const ticketLink = b.url ? `<a href="${b.url}" target="_blank" class="bk-action" onclick="event.stopPropagation()">View ticket →</a>` : '';
-    return `<div class="bk-card${clickable ? ' bk-card--clickable' : ''}"${openAttr}>
-      ${thumb}
-      <div class="bk-card-body">
-        <div class="bk-card-name">${b.name}</div>
-        ${meta ? `<div class="bk-card-meta">${meta}</div>` : ''}
-        ${b.price ? `<div class="bk-card-row2"><span class="bk-card-price">${fmt(b.price)}</span></div>` : ''}
-        ${ticketLink ? `<div class="bk-card-actions">${ticketLink}</div>` : ''}
-      </div>
-      ${chevron}
-    </div>`;
   };
 
   // Transport (non-flight) grouped by mode, each with its individual
@@ -4921,12 +4865,52 @@ function renderBookingsView() {
     <div class="bk-col-subhead">${label}</div>
     <div class="bk-attraction-list">${g.items.map(t => tRow(t, g.isCarhire)).join('')}</div>`).join('');
 
+  // Hotels — premium card matching the approved bookings-hotels-
+  // premium preview: big photo, large title, date range + ref meta,
+  // divider, pills (Confirmed / nights / breakfast), and a side panel
+  // with the total and a chevron opening the real hotel edit modal
+  // (openHotelModal) rather than the drawer — hotels aren't an
+  // itinerary item, they live in their own STATE.meta.hotels array, so
+  // that's the correct "relevant" thing to open here.
+  const bkCalIco = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  const bkRefIco = '<svg viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>';
+  const bkCheckIco = '<svg viewBox="0 0 24 24"><path d="m5 12 4 4 10-10"/></svg>';
+  const bkBedIco = '<svg viewBox="0 0 24 24"><path d="M3 18v-7h18v7M5 11V7h6a3 3 0 0 1 3 3v1M3 18v3M21 18v3"/></svg>';
+  const bkBreakfastIco = '<svg viewBox="0 0 24 24"><path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M15 3v18M15 3c3 0 5 3 5 7h-5"/></svg>';
+  const hotelCard = (h) => {
+    const dateRange = [fmtShortDdmmyyyy(h.checkin), fmtDdMmmYyyy(h.checkout)].filter(Boolean).join(' – ');
+    const pills = [
+      `<span class="bk-hotel-pill bk-hotel-pill--confirmed">${bkCheckIco}Confirmed</span>`,
+      h.nights ? `<span class="bk-hotel-pill">${bkBedIco}${h.nights} night${h.nights===1?'':'s'}</span>` : null,
+      h.breakfast === 'included' ? `<span class="bk-hotel-pill">${bkBreakfastIco}Breakfast incl.</span>` : null,
+    ].filter(Boolean).join('');
+    const photo = h.photo ? `<div class="bk-hotel-photo" style="background-image:url('${h.photo}')"></div>` : `<div class="bk-hotel-photo bk-hotel-photo--empty">${catIcons.hotel}</div>`;
+    return `
+    <div class="bk-hotel-card">
+      ${photo}
+      <div class="bk-hotel-main">
+        <div class="bk-hotel-name">${h.name}</div>
+        <div class="bk-hotel-meta">
+          ${dateRange ? `<div class="bk-hotel-meta-item">${bkCalIco}<span>${dateRange}</span></div>` : ''}
+          ${h.ref ? `<div class="bk-hotel-meta-item">${bkRefIco}<span>Ref: ${h.ref}</span></div>` : ''}
+        </div>
+        <div class="bk-hotel-divider"></div>
+        <div class="bk-hotel-pills">${pills}</div>
+      </div>
+      <div class="bk-hotel-side" onclick="openHotelModal(${h.hotelIdx})">
+        <div class="bk-hotel-total">
+          ${h.price ? `<span class="bk-hotel-total-label">Total</span><span class="bk-hotel-price">${fmt(h.price)}</span>` : ''}
+        </div>
+        <div class="bk-hotel-chev">›</div>
+      </div>
+    </div>`;
+  };
+
   // Attractions — name bold, calendar icon + date underneath, a status
   // pill (Booked/Confirmed/Walk in only) instead of price, chevron. No
   // longer limited to only attractions with a price, since status is
   // now what's shown — a walk-in attraction with no cost is just as
   // relevant here as a paid, pre-booked one. Also reused by Meals below.
-  const bkCalIco = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   const attrPill = (s) => {
     if (s === 'prebookable') return `<span class="bk-attr-badge bk-attr-badge--walkin">NOT PRE-BOOKABLE</span>`;
     if (s === 'notbooked') return `<span class="bk-attr-badge bk-attr-badge--walkin">NOT BOOKED</span>`;
@@ -4972,7 +4956,7 @@ function renderBookingsView() {
           <div class="bk-col-head-ico">${catIcons.hotel}</div>
           <span>Hotels</span>
         </div>
-        <div class="bk-list bk-list--col">${hotels.map(b => mkCard({...b, cat:'hotel'})).join('') || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
+        <div class="bk-hotel-list">${hotels.map(h => hotelCard(h)).join('') || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
       </div>
       <div class="bk-col bk-col--transport">
         <div class="bk-col-head">
