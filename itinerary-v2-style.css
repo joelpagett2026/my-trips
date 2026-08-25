@@ -848,6 +848,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     flex: 1; display: flex; align-items: stretch;
     overflow-x: auto; scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    padding-left: 6px; /* Day 1 was sitting flush against the true screen
+      edge with zero margin, unlike every other panel on the page (which
+      all have consistent left/right padding) — reads as "cut off"
+      rather than just tightly spaced. */
   }
   .mob-nav-days::-webkit-scrollbar { display: none; }
   .mob-day-btn {
