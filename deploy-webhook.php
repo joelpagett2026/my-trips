@@ -22,7 +22,10 @@ function deploySecret(): string {
 
 header('Content-Type: application/json');
 
-$providedKey = (string)($_GET['key'] ?? '');
+// Prefer a request header so the deploy credential does not appear in URLs,
+// proxy logs or browser history. Keep the query-string fallback temporarily
+// for manual recovery while the hosting-side secret is being migrated.
+$providedKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? ($_GET['key'] ?? ''));
 if (!$providedKey || !hash_equals(deploySecret(), $providedKey)) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
