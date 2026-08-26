@@ -4,14 +4,13 @@
 // ══════════════════════════════════════════════════════════════════════
 
 // Read-only share links bypass the PIN entirely — the itinerary page
-// itself loads sanitized, read-only data via a token instead.
+// itself loads read-only data via a token instead.
 const IS_SHARE_VIEW = new URLSearchParams(window.location.search).has('share');
 if (IS_SHARE_VIEW) document.documentElement.style.visibility = 'visible';
 
 const SESSION_KEY = 'jh_auth';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 
-// Pure JS SHA-256 — no crypto.subtle needed, works on HTTP and HTTPS
 function sha256(str) {
     function rightRotate(value, amount) {
         return (value >>> amount) | (value << (32 - amount));
@@ -48,7 +47,6 @@ function sha256(str) {
         var oldHash = hash.slice(0);
         hash = hash.slice(0, 8);
         for (i = 0; i < 64; i++) {
-            var i2 = i + j - 16;
             var w15 = w[i - 15], w2 = w[i - 2];
             var a = hash[0], e = hash[4];
             var temp1 = hash[7]
@@ -95,7 +93,6 @@ function clearSession() {
     localStorage.removeItem(SESSION_KEY);
 }
 
-// Block page immediately if not authed (share links are always visible)
 if (!isAuthed() && !IS_SHARE_VIEW) {
     document.documentElement.style.visibility = 'hidden';
 }
@@ -161,7 +158,12 @@ function showPinOverlay() {
             if (json.ok && json.data && json.data.token) {
                 storeSession(json.data.token);
                 document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => { d.style.background='#34c759'; });
-                setTimeout(() => { overlay.remove(); document.documentElement.style.visibility = 'visible'; window._mytripsAuthed = true; document.dispatchEvent(new Event('mytrips:authed')); }, 350);
+                setTimeout(() => {
+                    overlay.remove();
+                    document.documentElement.style.visibility = 'visible';
+                    window._mytripsAuthed = true;
+                    document.dispatchEvent(new Event('mytrips:authed'));
+                }, 350);
             } else {
                 throw new Error('bad pin');
             }
@@ -169,7 +171,8 @@ function showPinOverlay() {
             document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.add('error'));
             document.getElementById('pin-error').classList.add('show');
             setTimeout(() => {
-                entered = ''; updateDots();
+                entered = '';
+                updateDots();
                 document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.remove('error'));
                 document.getElementById('pin-error').classList.remove('show');
             }, 800);
@@ -179,15 +182,28 @@ function showPinOverlay() {
     overlay.querySelectorAll('.pin-btn[data-n]').forEach(btn => {
         btn.addEventListener('click', () => {
             if (entered.length >= 4) return;
-            entered += btn.dataset.n; updateDots();
+            entered += btn.dataset.n;
+            updateDots();
             if (entered.length === 4) setTimeout(checkPin, 80);
         });
     });
-    document.getElementById('pin-del').addEventListener('click', () => { entered = entered.slice(0,-1); updateDots(); });
+    document.getElementById('pin-del').addEventListener('click', () => {
+        entered = entered.slice(0,-1);
+        updateDots();
+    });
     document.addEventListener('keydown', function h(e) {
-        if (!document.getElementById('pin-overlay')) { document.removeEventListener('keydown',h); return; }
-        if (e.key>='0'&&e.key<='9'&&entered.length<4) { entered+=e.key; updateDots(); if(entered.length===4) setTimeout(checkPin,80); }
-        else if (e.key==='Backspace') { entered=entered.slice(0,-1); updateDots(); }
+        if (!document.getElementById('pin-overlay')) {
+            document.removeEventListener('keydown',h);
+            return;
+        }
+        if (e.key>='0'&&e.key<='9'&&entered.length<4) {
+            entered+=e.key;
+            updateDots();
+            if(entered.length===4) setTimeout(checkPin,80);
+        } else if (e.key==='Backspace') {
+            entered=entered.slice(0,-1);
+            updateDots();
+        }
     });
 }
 
@@ -201,75 +217,8 @@ if (IS_SHARE_VIEW) {
     document.addEventListener('DOMContentLoaded', showPinOverlay);
 }
 
-// Load the V2 Budget presentation directly as soon as this deferred script runs.
-// At that point the document has already been parsed, so #budget-main is available.
-function loadBudgetLiveRedesign() {
-    if (!document.getElementById('budget-main')) return;
-    if (document.querySelector('script[data-budget-live-redesign]')) return;
-    const s = document.createElement('script');
-    s.src = '/budget-live-redesign.js?v=4';
-    s.dataset.budgetLiveRedesign = '1';
-    s.onload = () => document.documentElement.dataset.budgetRedesign = 'loaded';
-    s.onerror = () => console.error('Budget redesign asset failed to load');
-    document.head.appendChild(s);
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadBudgetLiveRedesign, { once:true });
-} else {
-    loadBudgetLiveRedesign();
-}
-
-// Hotel lookup fix: only a stay that genuinely covers the selected night may
-// be edited. Checkout is exclusive, and there is deliberately no "closest
-// hotel" fallback. This prevents Add / Edit on a new stay from opening and
-// overwriting an existing hotel.
-function installHotelLookupFix() {
-    if (!document.getElementById('rp-hotel')) return;
-    if (typeof STATE === 'undefined' || typeof parseDate !== 'function') return;
-
-    const strictHotelForDay = function(dayIdx) {
-        if (STATE.days[dayIdx]?.noAccommodation) return null;
-        const hotels = STATE.meta?.hotels || (STATE.meta?.hotel ? [STATE.meta.hotel] : []);
-        if (!hotels.length) return null;
-
-        const dayDate = parseDate(STATE.days[dayIdx]?.date);
-        if (!dayDate) return null;
-
-        for (const hotel of hotels) {
-            const checkin = parseDate(hotel.checkin);
-            const checkout = parseDate(hotel.checkout);
-            if (checkin && checkout && dayDate >= checkin && dayDate < checkout) return hotel;
-        }
-        return null;
-    };
-
-    // Replace the shared lookup used by the hotel panel, readiness stats,
-    // breakfast logic and the Add / Edit action.
-    window.hotelForDay = strictHotelForDay;
-    window.editHotelForCurrentDay = function() {
-        const hotel = strictHotelForDay(activeDay);
-        if (!hotel) {
-            openHotelModal();
-            return;
-        }
-        const idx = (STATE.meta?.hotels || []).indexOf(hotel);
-        openHotelModal(idx >= 0 ? idx : undefined);
-    };
-
-    // Re-render the current hotel/readiness panels with the corrected lookup.
-    if (typeof renderHotelPanel === 'function') renderHotelPanel();
-    if (typeof renderReadiness === 'function') renderReadiness();
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installHotelLookupFix, { once:true });
-} else {
-    installHotelLookupFix();
-}
-
-// Front-card cleanup: "Travel Day" is an itinerary day label, not a city.
-// Keep it available in trip data, but never render it as a location chip on /trips/ cards.
+// Temporary dashboard compatibility cleanup. New itinerary saves now filter
+// this at source; keep this only so older stored registry values do not show.
 function removeTravelDayFrontCardTags() {
     if (!/^\/trips\/?$/.test(window.location.pathname)) return;
     document.querySelectorAll('.trip-card .city-tag').forEach(tag => {
