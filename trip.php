@@ -190,6 +190,24 @@ $standaloneHead = <<<'HTML'
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
+<style>
+/* iPhone standalone mode: paint the bottom safe-area instead of leaving
+   iOS's default grey strip visible behind the Home indicator. */
+@media (display-mode: standalone) and (max-width: 700px) {
+  html, body { background: #fff !important; }
+  body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background: #fff;
+    pointer-events: none;
+    z-index: 2147483646;
+  }
+}
+</style>
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 
