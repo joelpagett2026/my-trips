@@ -1,7 +1,11 @@
-/* Mobile drawer spacing fix.
+/* Mobile drawer spacing + image sizing fix.
    When a drawer has a hero photo, the image already occupies the iPhone
    top safe-area. Do not add that safe-area again to the drawer header. */
 @media (max-width: 700px) {
+  .dr-hero-photo {
+    height: 230px !important;
+  }
+
   .drawer:has(#dr-photo-slot[style*="display: block"]) .dr-head {
     padding-top: 22px !important;
   }
