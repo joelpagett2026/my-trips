@@ -85,7 +85,6 @@
 <div class="settings-left">
 <div class="settings-wrap">
 
-  <!-- BACKUP -->
   <div class="settings-group-label">Backup</div>
   <div class="settings-section">
     <div class="settings-row">
@@ -100,7 +99,6 @@
     </div>
   </div>
 
-  <!-- DATABASE -->
   <div class="settings-group-label">Database</div>
   <div class="settings-section">
     <div class="settings-row">
@@ -115,7 +113,6 @@
     </div>
   </div>
 
-  <!-- SECURITY -->
   <div class="settings-group-label">Security</div>
   <div class="settings-section">
     <div class="settings-row">
@@ -137,7 +134,6 @@
     </div>
   </div>
 
-  <!-- ABOUT -->
   <div class="settings-group-label">About</div>
   <div class="settings-section">
     <div class="settings-row">
@@ -154,37 +150,34 @@
       <span class="settings-row-label">Built with Claude</span>
       <span class="settings-row-value">Anthropic</span>
     </div>
-  </div><!-- end settings-section About -->
+  </div>
 
-</div><!-- end settings-wrap -->
-</div><!-- end settings-left -->
+</div>
+</div>
 
 <div class="settings-right">
   <div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.06em;opacity:0.5;margin-bottom:14px;">Info</div>
-
   <div style="background:#e8e8e8;border-radius:14px;padding:16px;margin-bottom:12px;">
     <div style="font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">Auto-deploy</div>
-    <div style="font-size:12px;color:#666;line-height:1.6;">Changes made by Claude are pushed to GitHub and deployed to this server automatically via GitHub Actions. No manual steps needed.</div>
+    <div style="font-size:12px;color:#666;line-height:1.6;">Changes are validated in GitHub Actions before the live deployment is triggered.</div>
   </div>
-
   <div style="background:#e8e8e8;border-radius:14px;padding:16px;margin-bottom:12px;">
     <div style="font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">Database</div>
-    <div style="font-size:12px;color:#666;line-height:1.6;">Itinerary data is stored in MySQL on 20i hosting. Credentials are set in <code style="background:#fff;padding:1px 5px;border-radius:4px;">api.php</code> on the server.</div>
+    <div style="font-size:12px;color:#666;line-height:1.6;">Itinerary data is stored in MySQL. Credentials are loaded from server-only configuration when available.</div>
   </div>
-
   <div style="background:#e8e8e8;border-radius:14px;padding:16px;">
     <div style="font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">PIN session</div>
-    <div style="font-size:12px;color:#666;line-height:1.6;">Your PIN unlocks the site for 12 hours. Use Change PIN above to update it anytime.</div>
+    <div style="font-size:12px;color:#666;line-height:1.6;">Your PIN unlocks the site for up to 12 hours. New logins use an expiring server session.</div>
   </div>
-</div><!-- end settings-right -->
+</div>
 
-</div><!-- end settings-layout -->
+</div>
 <div class="slide-panel" id="panel-supabase">
   <div class="slide-panel-overlay" onclick="closePanel('supabase')"></div>
   <div class="slide-panel-sheet">
     <div class="panel-handle"></div>
     <div class="panel-title">Database</div>
-    <div class="panel-sub">Your itinerary data is stored in MySQL via api.php on your server.</div>
+    <div class="panel-sub">Your itinerary data is stored in MySQL via the server API.</div>
     <div class="panel-body">
       <div id="sb-connected-badge" class="status-badge ok" style="display:none;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -195,7 +188,7 @@
         Cannot reach api.php
       </div>
       <p style="font-size:13px;color:#666666;opacity:0.6;margin-bottom:16px;line-height:1.6;">
-        To change database credentials, edit the constants at the top of <code>api.php</code> on your server. To recreate the tables, run <code>install.php</code> once.
+        Database credentials should be managed through server-only secrets or environment configuration rather than this page.
       </p>
       <button class="panel-btn" onclick="refreshSbStatus();event.target.textContent='✓ Checked';setTimeout(()=>{event.target.textContent='Check connection';},1500);">Check connection</button>
       <button class="panel-btn ghost" onclick="closePanel('supabase')" style="margin-top:4px;">Close</button>
@@ -203,7 +196,6 @@
   </div>
 </div>
 
-<!-- ── PIN CHANGE PANEL ── -->
 <div class="slide-panel" id="panel-pin">
   <div class="slide-panel-overlay" onclick="closePanel('pin')"></div>
   <div class="slide-panel-sheet">
@@ -213,24 +205,14 @@
     <div class="panel-body">
       <div class="pin-step" id="pin-step-label">Current PIN</div>
       <div class="pin-dots-preview" id="pin-dots-row">
-        <div class="pin-dot-p" id="pd0"></div>
-        <div class="pin-dot-p" id="pd1"></div>
-        <div class="pin-dot-p" id="pd2"></div>
-        <div class="pin-dot-p" id="pd3"></div>
+        <div class="pin-dot-p" id="pd0"></div><div class="pin-dot-p" id="pd1"></div><div class="pin-dot-p" id="pd2"></div><div class="pin-dot-p" id="pd3"></div>
       </div>
       <div class="pin-error-p" id="pin-panel-error"></div>
       <div class="pin-grid-p">
-        <button class="pin-btn-p" data-n="1">1</button>
-        <button class="pin-btn-p" data-n="2">2</button>
-        <button class="pin-btn-p" data-n="3">3</button>
-        <button class="pin-btn-p" data-n="4">4</button>
-        <button class="pin-btn-p" data-n="5">5</button>
-        <button class="pin-btn-p" data-n="6">6</button>
-        <button class="pin-btn-p" data-n="7">7</button>
-        <button class="pin-btn-p" data-n="8">8</button>
-        <button class="pin-btn-p" data-n="9">9</button>
-        <div></div>
-        <button class="pin-btn-p" data-n="0">0</button>
+        <button class="pin-btn-p" data-n="1">1</button><button class="pin-btn-p" data-n="2">2</button><button class="pin-btn-p" data-n="3">3</button>
+        <button class="pin-btn-p" data-n="4">4</button><button class="pin-btn-p" data-n="5">5</button><button class="pin-btn-p" data-n="6">6</button>
+        <button class="pin-btn-p" data-n="7">7</button><button class="pin-btn-p" data-n="8">8</button><button class="pin-btn-p" data-n="9">9</button>
+        <div></div><button class="pin-btn-p" data-n="0">0</button>
         <button class="pin-btn-p del" id="pp-del"><svg width="20" height="14" viewBox="0 0 24 18" fill="none" stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-6-6 6-6z"/><line x1="13" y1="7" x2="17" y2="11"/><line x1="17" y1="7" x2="13" y2="11"/></svg></button>
       </div>
       <button class="panel-btn ghost" onclick="closePanel('pin')" style="margin-top:8px;">Cancel</button>
@@ -239,14 +221,11 @@
 </div>
 
 <script>
-// ── CONNECTION STATUS ─────────────────────────────────────────────────
 const statusLabel = document.getElementById('sb-status-label');
 
 async function refreshSbStatus() {
   try {
-    const res = await fetch('/api.php?action=list', {
-      headers: { 'X-Auth-Token': getToken() }
-    });
+    const res = await fetch('/api.php?action=list', { headers: { 'X-Auth-Token': getToken() } });
     const json = await res.json();
     const connected = json.ok;
     statusLabel.textContent = connected ? 'Connected' : 'Error';
@@ -264,34 +243,36 @@ function getToken() {
   try { return JSON.parse(localStorage.getItem('jh_auth')||'null')?.token || ''; }
   catch { return ''; }
 }
+function getSessionToken() {
+  try {
+    const s = JSON.parse(localStorage.getItem('jh_auth')||'null') || {};
+    return s.sessionToken || s.token || '';
+  } catch { return ''; }
+}
 
-function signOut() {
+async function signOut() {
+  const token = getSessionToken();
+  try {
+    if (token) await fetch('/auth-v2.php?action=logout', { method:'POST', headers:{'Content-Type':'application/json','X-Auth-Token':token}, body:'{}' });
+  } catch {}
   localStorage.removeItem('jh_auth');
   window.location.href = '/';
 }
 
-// ── PANEL OPEN/CLOSE ─────────────────────────────────────────────────
 function openPanel(id) {
   if (id === 'supabase') refreshSbStatus();
   if (id === 'pin') initPinChange();
   requestAnimationFrame(() => document.getElementById('panel-' + id).classList.add('open'));
 }
-function closePanel(id) {
-  document.getElementById('panel-' + id).classList.remove('open');
-}
+function closePanel(id) { document.getElementById('panel-' + id).classList.remove('open'); }
 
-// ── PIN CHANGE ────────────────────────────────────────────────────────
-let pinStep = 'verify'; // verify → new → confirm
+let pinStep = 'verify';
 let pinEntered = '';
 let newPinCandidate = '';
 
 function initPinChange() {
-  pinStep = 'verify';
-  pinEntered = '';
-  newPinCandidate = '';
-  updatePinUI();
+  pinStep = 'verify'; pinEntered = ''; newPinCandidate = ''; updatePinUI();
 }
-
 function updatePinUI() {
   const labels = {
     verify:  { step: 'Current PIN', title: 'Change PIN', sub: 'Enter your current PIN to continue' },
@@ -309,94 +290,65 @@ function updatePinUI() {
     d.style.background = '';
   }
 }
-
 function flashDots(color, cb) {
   for (let i = 0; i < 4; i++) {
-    const d = document.getElementById('pd' + i);
-    d.classList.add('filled');
-    d.style.background = color;
+    const d = document.getElementById('pd' + i); d.classList.add('filled'); d.style.background = color;
   }
-  setTimeout(() => { pinEntered = ''; updatePinUI(); cb && cb(); }, 700);
+  setTimeout(() => { pinEntered = ''; updatePinUI(); if (cb) cb(); }, 700);
 }
 
 async function handlePinDigit(n) {
   if (pinEntered.length >= 4) return;
-  pinEntered += n;
-  updatePinUI();
+  pinEntered += n; updatePinUI();
   if (pinEntered.length < 4) return;
-
   await new Promise(r => setTimeout(r, 80));
-  const hash = await sha256(pinEntered);
-  const currentHash = localStorage.getItem(PIN_STORAGE_KEY) || PIN_HASH;
 
   if (pinStep === 'verify') {
-    // Verify current PIN against server
+    const hash = sha256(pinEntered);
     try {
-      const res = await fetch('/api.php?action=auth', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin_hash: hash })
+      const res = await fetch('/auth-v2.php?action=login', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ pin_hash:hash })
       });
       const json = await res.json();
-      if (json.ok) {
-        flashDots('#34c759', () => { pinStep = 'new'; updatePinUI(); });
-      } else { throw new Error(); }
+      if (!res.ok || !json.ok || !json.data?.session_token || !json.data?.legacy_token) throw new Error(json.error || 'Incorrect PIN');
+      localStorage.setItem('jh_auth', JSON.stringify({ sessionToken:json.data.session_token, token:json.data.legacy_token, ts:Date.now() }));
+      flashDots('#34c759', () => { pinStep = 'new'; updatePinUI(); });
     } catch {
-      flashDots('#ff3b30', () => {
-        document.getElementById('pin-panel-error').textContent = 'Incorrect PIN';
-      });
+      flashDots('#ff3b30', () => { document.getElementById('pin-panel-error').textContent = 'Incorrect PIN'; });
     }
-  } else if (pinStep === 'new') {
+    return;
+  }
+
+  if (pinStep === 'new') {
     newPinCandidate = pinEntered;
     flashDots('#007aff', () => { pinStep = 'confirm'; updatePinUI(); });
-  } else if (pinStep === 'confirm') {
-    if (pinEntered === newPinCandidate) {
-      const currentHash = await sha256(newPinCandidate); // already stored
-      const newHash = await sha256(pinEntered);
-      try {
-        // Update PIN on server (api.php stores new hash in settings table)
-        // We need to pass the session token — use current session
-        const token = getToken();
-        const res = await fetch('/api.php?action=auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
-          body: JSON.stringify({ pin_hash: token, new_hash: newHash })
-        });
-        // Re-auth with new PIN to get fresh token
-        const authRes = await fetch('/api.php?action=auth', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin_hash: newHash })
-        });
-        const authJson = await authRes.json();
-        if (authJson.ok) {
-          localStorage.setItem('jh_auth', JSON.stringify({ token: authJson.data.token, ts: Date.now() }));
-        }
-        flashDots('#34c759', () => {
-          closePanel('pin');
-          setTimeout(() => alert('PIN changed successfully!'), 300);
-        });
-      } catch {
-        flashDots('#ff3b30', () => {
-          document.getElementById('pin-panel-error').textContent = 'Error saving PIN';
-        });
-      }
-    } else {
-      flashDots('#ff3b30', () => {
-        document.getElementById('pin-panel-error').textContent = "PINs don't match — try again";
-        pinStep = 'new'; newPinCandidate = ''; updatePinUI();
-      });
-    }
+    return;
+  }
+
+  if (pinEntered !== newPinCandidate) {
+    flashDots('#ff3b30', () => {
+      document.getElementById('pin-panel-error').textContent = "PINs don't match — try again";
+      pinStep = 'new'; newPinCandidate = ''; updatePinUI();
+    });
+    return;
+  }
+
+  try {
+    const newHash = sha256(pinEntered);
+    await dbChangePin(newHash);
+    flashDots('#34c759', () => {
+      closePanel('pin');
+      setTimeout(() => alert('PIN changed successfully!'), 300);
+    });
+  } catch {
+    flashDots('#ff3b30', () => { document.getElementById('pin-panel-error').textContent = 'Error saving PIN'; });
   }
 }
 
-document.querySelectorAll('.pin-btn-p[data-n]').forEach(btn => {
-  btn.addEventListener('click', () => handlePinDigit(btn.dataset.n));
-});
-document.getElementById('pp-del').addEventListener('click', () => {
-  pinEntered = pinEntered.slice(0, -1);
-  updatePinUI();
-});
+document.querySelectorAll('.pin-btn-p[data-n]').forEach(btn => btn.addEventListener('click', () => handlePinDigit(btn.dataset.n)));
+document.getElementById('pp-del').addEventListener('click', () => { pinEntered = pinEntered.slice(0, -1); updatePinUI(); });
 </script>
-<!-- ── BACKUP PANEL ── -->
+
 <div class="slide-panel" id="panel-backup">
   <div class="slide-panel-overlay" onclick="closePanel('backup')"></div>
   <div class="slide-panel-sheet">
@@ -411,39 +363,26 @@ document.getElementById('pp-del').addEventListener('click', () => {
         <br><span style="opacity:0.6;">Code &amp; templates are backed up automatically via GitHub.</span>
       </div>
       <div id="backup-last" style="font-size:12px;color:#888;margin-bottom:16px;text-align:center;font-weight:500;"></div>
-      <button class="panel-btn" id="backup-btn" onclick="doBackup()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download backup.json
-      </button>
+      <button class="panel-btn" id="backup-btn" onclick="doBackup()">Download backup.json</button>
       <button class="panel-btn ghost" onclick="closePanel('backup')" style="margin-top:4px;">Close</button>
     </div>
   </div>
 </div>
 
-<!-- ── WEEKLY REMINDER MODAL ── -->
-<div id="backup-reminder" style="display:none;position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;">
+<div id="backup-reminder" style="display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;">
   <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);" onclick="dismissReminder(false)"></div>
   <div style="position:relative;background:#fff;border-radius:20px;padding:28px 24px 20px;max-width:320px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.2);text-align:center;">
-    <div style="width:56px;height:56px;background:#e8f8ed;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    </div>
-    <div style="font-size:17px;font-weight:700;color:#444;margin-bottom:8px;letter-spacing:-0.3px;">Time to back up</div>
-    <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px;" id="reminder-msg">It's been over a week since your last backup. Download a fresh copy to keep your data safe.</div>
-    <button onclick="dismissReminder(true)" style="width:100%;background:#34c759;color:#fff;border:none;border-radius:12px;padding:13px;font-family:Montserrat,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">Back up now</button>
-    <button onclick="dismissReminder(false)" style="width:100%;background:none;border:none;color:#aaa;font-family:Montserrat,sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:8px;">Remind me later</button>
+    <div style="font-size:17px;font-weight:700;color:#444;margin-bottom:8px;">Time to back up</div>
+    <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px;" id="reminder-msg">It's been over a week since your last backup.</div>
+    <button onclick="dismissReminder(true)" class="panel-btn">Back up now</button>
+    <button onclick="dismissReminder(false)" class="panel-btn ghost">Remind me later</button>
   </div>
 </div>
 
 <script>
-// ── BACKUP ────────────────────────────────────────────────────────────
 const BACKUP_KEY = 'mytrips_last_backup';
 const REMINDER_DAYS = 7;
-
-function getLastBackup() {
-  const ts = localStorage.getItem(BACKUP_KEY);
-  return ts ? new Date(parseInt(ts)) : null;
-}
-
+function getLastBackup() { const ts = localStorage.getItem(BACKUP_KEY); return ts ? new Date(parseInt(ts)) : null; }
 function formatLastBackup(date) {
   if (!date) return 'Never backed up';
   const days = Math.floor((Date.now() - date.getTime()) / 86400000);
@@ -451,115 +390,54 @@ function formatLastBackup(date) {
   if (days === 1) return 'Backed up yesterday';
   return `Backed up ${days} days ago`;
 }
-
 function updateBackupLabels() {
-  const last = getLastBackup();
-  const label = formatLastBackup(last);
-  const el = document.getElementById('last-backup-label');
-  if (el) el.textContent = last ? label : 'Never';
-  const panelEl = document.getElementById('backup-last');
-  if (panelEl) panelEl.textContent = label;
+  const last = getLastBackup(); const label = formatLastBackup(last);
+  const el = document.getElementById('last-backup-label'); if (el) el.textContent = last ? label : 'Never';
+  const panelEl = document.getElementById('backup-last'); if (panelEl) panelEl.textContent = label;
 }
 
 async function doBackup() {
   const btn = document.getElementById('backup-btn');
   const statusEl = document.getElementById('backup-status');
-  btn.textContent = 'Fetching data…';
-  btn.disabled = true;
-
+  btn.textContent = 'Fetching data…'; btn.disabled = true;
   try {
     const token = getToken();
-
-    // Fetch all itinerary records
-    const listRes = await fetch('/api.php?action=list', {
-      headers: { 'X-Auth-Token': token }
-    });
+    const listRes = await fetch('/api.php?action=list', { headers: { 'X-Auth-Token': token } });
     const listJson = await listRes.json();
+    if (!listRes.ok || !listJson.ok || !Array.isArray(listJson.data)) throw new Error('Could not list records');
 
-    // Fetch each record's full data
     const records = {};
-    if (listJson.ok && listJson.data) {
-      for (const id of listJson.data) {
-        try {
-          const r = await fetch(`/api.php?action=load&id=${encodeURIComponent(id)}`, {
-            headers: { 'X-Auth-Token': token }
-          });
-          const rj = await r.json();
-          if (rj.ok) records[id] = rj.data;
-        } catch {}
-      }
+    for (const row of listJson.data) {
+      const id = typeof row === 'string' ? row : row?.id;
+      if (!id) continue;
+      const r = await fetch(`/api.php?action=load&id=${encodeURIComponent(id)}`, { headers: { 'X-Auth-Token': token } });
+      const rj = await r.json();
+      if (!r.ok || !rj.ok) throw new Error(`Could not export ${id}`);
+      records[id] = rj.data;
     }
 
-    const backup = {
-      exported_at: new Date().toISOString(),
-      version: 1,
-      records
-    };
-
-    // Trigger download
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const date = new Date().toISOString().slice(0, 10);
-    a.href     = url;
-    a.download = `mytrips-backup-${date}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    // Save timestamp
-    localStorage.setItem(BACKUP_KEY, Date.now().toString());
-    updateBackupLabels();
-
-    statusEl.className = 'status-badge ok';
-    statusEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Backup downloaded successfully';
-    statusEl.style.display = 'flex';
-    btn.textContent = '✓ Downloaded';
-    setTimeout(() => {
-      btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download backup.json';
-      btn.disabled = false;
-    }, 3000);
-
+    const backup = { exported_at:new Date().toISOString(), version:2, record_count:Object.keys(records).length, records };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href = url; a.download = `mytrips-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+    localStorage.setItem(BACKUP_KEY, Date.now().toString()); updateBackupLabels();
+    statusEl.className='status-badge ok'; statusEl.textContent=`Backup downloaded successfully · ${backup.record_count} records`; statusEl.style.display='flex';
+    btn.textContent='✓ Downloaded'; setTimeout(()=>{ btn.textContent='Download backup.json'; btn.disabled=false; },3000);
   } catch(e) {
-    statusEl.className = 'status-badge not';
-    statusEl.innerHTML = 'Export failed — check connection';
-    statusEl.style.display = 'flex';
-    btn.textContent = 'Try again';
-    btn.disabled = false;
+    statusEl.className='status-badge not'; statusEl.textContent='Export failed — no partial backup was downloaded'; statusEl.style.display='flex';
+    btn.textContent='Try again'; btn.disabled=false;
   }
 }
 
-// ── WEEKLY REMINDER ───────────────────────────────────────────────────
 function checkBackupReminder() {
-  const last = getLastBackup();
-  const modal = document.getElementById('backup-reminder');
-  if (!modal) return;
-  if (!last) {
-    // Never backed up — show after a short delay
-    document.getElementById('reminder-msg').textContent = "You haven't backed up your trip data yet. Download a copy to keep it safe.";
-    setTimeout(() => { modal.style.display = 'flex'; }, 2000);
-    return;
-  }
-  const daysSince = (Date.now() - last.getTime()) / 86400000;
-  if (daysSince >= REMINDER_DAYS) {
-    const days = Math.floor(daysSince);
-    document.getElementById('reminder-msg').textContent = `It's been ${days} day${days !== 1 ? 's' : ''} since your last backup. Download a fresh copy to keep your data safe.`;
-    setTimeout(() => { modal.style.display = 'flex'; }, 1500);
-  }
+  const last=getLastBackup(); const modal=document.getElementById('backup-reminder'); if(!modal)return;
+  if(!last){ document.getElementById('reminder-msg').textContent="You haven't backed up your trip data yet. Download a copy to keep it safe."; setTimeout(()=>{modal.style.display='flex';},2000); return; }
+  const daysSince=(Date.now()-last.getTime())/86400000;
+  if(daysSince>=REMINDER_DAYS){ const days=Math.floor(daysSince); document.getElementById('reminder-msg').textContent=`It's been ${days} day${days!==1?'s':''} since your last backup.`; setTimeout(()=>{modal.style.display='flex';},1500); }
 }
-
-function dismissReminder(doBackupNow) {
-  document.getElementById('backup-reminder').style.display = 'none';
-  if (doBackupNow) {
-    openPanel('backup');
-    setTimeout(doBackup, 400);
-  }
-}
-
-updateBackupLabels();
-checkBackupReminder();
+function dismissReminder(doBackupNow) { document.getElementById('backup-reminder').style.display='none'; if(doBackupNow){ openPanel('backup'); setTimeout(doBackup,400); } }
+updateBackupLabels(); checkBackupReminder();
 </script>
-
 <script src="/datepicker.js"></script>
-
 </body>
 </html>
