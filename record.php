@@ -2,6 +2,7 @@
 // MY TRIPS — conflict-safe itinerary record API
 // Handles only load/save of whole JSON records. Other actions remain in api.php.
 require_once __DIR__ . '/db-config.php';
+require_once __DIR__ . '/auth-session.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -9,19 +10,6 @@ header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
-
-const FALLBACK_PIN_HASH = '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395';
-
-function activePinHash(): string {
-    try {
-        $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash'");
-        $stmt->execute();
-        $row = $stmt->fetch();
-        return $row ? (string)$row['value'] : FALLBACK_PIN_HASH;
-    } catch (Throwable $e) {
-        return FALLBACK_PIN_HASH;
-    }
-}
 
 function respondOk(mixed $data = null): never {
     echo json_encode(['ok' => true, 'data' => $data]);
@@ -37,8 +25,7 @@ function respondFail(string $message, int $status = 400, mixed $data = null): ne
 }
 
 $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
-$expectedToken = activePinHash();
-if (!$token || !hash_equals($expectedToken, $token)) respondFail('Unauthorised', 401);
+if (!isAuthorizedToken($token, true)) respondFail('Unauthorised', 401);
 
 $action = (string)($_GET['action'] ?? '');
 
