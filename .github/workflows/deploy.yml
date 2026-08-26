@@ -1,14 +1,45 @@
-name: Deploy to joelpagett.co.uk
+name: Validate and deploy joelpagett.co.uk
 
 on:
   push:
     branches:
       - main
+      - 'stability-hardening-*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check auth.js
+          node --check db.js
+          node --check datepicker.js
+          node --check budget-live-redesign.js
+
+      - name: Validate PHP syntax
+        run: |
+          php -l api.php
+          php -l db-config.php
+          php -l deploy-webhook.php
+          php -l trip.php
+
+      - name: Validate web app manifest JSON
+        run: |
+          python -m json.tool manifest.webmanifest >/dev/null
+
   deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy webhook
         run: |
-          curl -f "https://joelpagett.co.uk/deploy-webhook.php?key=${{ secrets.DEPLOY_KEY }}"
+          curl --fail --show-error --silent --retry 2 --retry-delay 3 \
+            "https://joelpagett.co.uk/deploy-webhook.php?key=${{ secrets.DEPLOY_KEY }}"
