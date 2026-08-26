@@ -182,6 +182,17 @@ if ($hotelLookupCount === 0) {
   $page = str_replace('</head>', '<!-- hotel lookup patch marker not found -->\n</head>', $page);
 }
 
+// Add full-screen/standalone web-app metadata for iPhone Home Screen launches.
+// The manifest scope is the whole site so navigating between itineraries keeps
+// the app in standalone mode instead of dropping back into Safari chrome.
+$standaloneHead = <<<'HTML'
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trip Planner">
+<meta name="theme-color" content="#0e7a87">
+<link rel="manifest" href="/manifest.webmanifest">
+HTML;
+$page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
+
 // Force the latest shared auth/helper script after hotel logic changes.
 $page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
