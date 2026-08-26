@@ -20,6 +20,7 @@ jobs:
         run: |
           node --check auth.js
           node --check db.js
+          node --check itinerary-state-guard.js
           node --check datepicker.js
           node --check budget-live-redesign.js
 
