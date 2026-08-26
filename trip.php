@@ -190,8 +190,6 @@ $standaloneHead = <<<'HTML'
 <link rel="manifest" href="/manifest.webmanifest">
 <script>
 (function () {
-  // iOS Safari does not reliably match the CSS `display-mode: standalone`
-  // media query, but it does expose navigator.standalone for Home Screen apps.
   if (window.navigator.standalone === true) {
     document.documentElement.classList.add('ios-standalone');
   }
@@ -202,25 +200,22 @@ $standaloneHead = <<<'HTML'
   html.ios-standalone,
   html.ios-standalone body {
     width: 100%;
-    height: 100%;
     min-height: 100%;
-    background: #fff !important;
+  }
+  /* Do not reserve or paint a separate bottom bar. Let the itinerary itself
+     continue underneath the iPhone Home-indicator safe area. */
+  html.ios-standalone body {
+    height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--bg, #e8e8e8) !important;
   }
   html.ios-standalone .v2-main,
   html.ios-standalone .v2-sidebar {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
+    height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
   }
   html.ios-standalone body::after {
-    content: "";
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: env(safe-area-inset-bottom, 34px);
-    background: #fff !important;
-    pointer-events: none;
-    z-index: 2147483646;
+    display: none !important;
+    content: none !important;
   }
 }
 </style>
