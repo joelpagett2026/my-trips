@@ -20,48 +20,18 @@ if (!$slug) {
   exit;
 }
 
-// Legacy metadata fallback. The DB registry remains the source of truth,
-// but this keeps older trips renderable if they pre-date the registry.
 $legacyTrips = [
-  'china-2026' => [
-    'slug' => 'china-2026', 'dest' => 'China',
-    'dep' => '31/03/2026', 'ret' => '17/04/2026', 'trav' => '2', 'status' => 'past'
-  ],
-  'dubai-2025' => [
-    'slug' => 'dubai-2025', 'dest' => 'Dubai & Abu Dhabi',
-    'dep' => '26/12/2025', 'ret' => '09/01/2026', 'trav' => '2', 'status' => 'past'
-  ],
-  'costa-rica-2025' => [
-    'slug' => 'costa-rica-2025', 'dest' => 'Costa Rica',
-    'dep' => '04/04/2025', 'ret' => '21/04/2025', 'trav' => '2', 'status' => 'past'
-  ],
-  'canada-2027' => [
-    'slug' => 'canada-2027', 'dest' => 'Canada Road Trip',
-    'dep' => '25/09/2027', 'ret' => '10/10/2027', 'trav' => '2', 'status' => 'upcoming'
-  ],
-  'hk-taiwan-2027' => [
-    'slug' => 'hk-taiwan-2027', 'dest' => 'Hong Kong & Taiwan',
-    'dep' => '27/03/2027', 'ret' => '12/04/2027', 'trav' => '2', 'status' => 'planning'
-  ],
-  'porto-2026' => [
-    'slug' => 'porto-2026', 'dest' => 'Porto',
-    'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'
-  ],
-  'porto-2026-v2' => [
-    'slug' => 'porto-2026-v2', 'dest' => 'Porto',
-    'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'
-  ],
-  'hamburg' => [
-    'slug' => 'hamburg', 'dest' => 'Hamburg',
-    'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'
-  ],
-  'graz-ljubljana-lake-bled-2027' => [
-    'slug' => 'graz-ljubljana-lake-bled-2027', 'dest' => 'Graz, Ljubljana & Lake Bled',
-    'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'
-  ],
+  'china-2026' => ['slug'=>'china-2026','dest'=>'China','dep'=>'31/03/2026','ret'=>'17/04/2026','trav'=>'2','status'=>'past'],
+  'dubai-2025' => ['slug'=>'dubai-2025','dest'=>'Dubai & Abu Dhabi','dep'=>'26/12/2025','ret'=>'09/01/2026','trav'=>'2','status'=>'past'],
+  'costa-rica-2025' => ['slug'=>'costa-rica-2025','dest'=>'Costa Rica','dep'=>'04/04/2025','ret'=>'21/04/2025','trav'=>'2','status'=>'past'],
+  'canada-2027' => ['slug'=>'canada-2027','dest'=>'Canada Road Trip','dep'=>'25/09/2027','ret'=>'10/10/2027','trav'=>'2','status'=>'upcoming'],
+  'hk-taiwan-2027' => ['slug'=>'hk-taiwan-2027','dest'=>'Hong Kong & Taiwan','dep'=>'27/03/2027','ret'=>'12/04/2027','trav'=>'2','status'=>'planning'],
+  'porto-2026' => ['slug'=>'porto-2026','dest'=>'Porto','dep'=>'29/08/2026','ret'=>'04/09/2026','trav'=>'2','status'=>'upcoming'],
+  'porto-2026-v2' => ['slug'=>'porto-2026-v2','dest'=>'Porto','dep'=>'29/08/2026','ret'=>'04/09/2026','trav'=>'2','status'=>'upcoming'],
+  'hamburg' => ['slug'=>'hamburg','dest'=>'Hamburg','dep'=>'18/09/2026','ret'=>'21/09/2026','trav'=>'4','status'=>'planning'],
+  'graz-ljubljana-lake-bled-2027' => ['slug'=>'graz-ljubljana-lake-bled-2027','dest'=>'Graz, Ljubljana & Lake Bled','dep'=>'28/05/2027','ret'=>'02/06/2027','trav'=>'2','status'=>'planning'],
 ];
 
-// The trip registry is the primary metadata source for current and future trips.
 $trip = null;
 try {
   $stmt = db()->prepare("SELECT data FROM itinerary WHERE id = ?");
@@ -70,25 +40,13 @@ try {
   if ($row && $row['data']) {
     $registry = json_decode($row['data'], true);
     foreach (($registry['trips'] ?? []) as $t) {
-      if (($t['slug'] ?? '') === $slug) {
-        $trip = $t;
-        break;
-      }
+      if (($t['slug'] ?? '') === $slug) { $trip = $t; break; }
     }
   }
-} catch (\Exception $e) {
-  // Do not fail yet — older trips can still render from the fallback map.
-}
+} catch (\Exception $e) {}
 
-if (!$trip && isset($legacyTrips[$slug])) {
-  $trip = $legacyTrips[$slug];
-}
-
-if (!$trip) {
-  http_response_code(404);
-  echo 'Trip not found.';
-  exit;
-}
+if (!$trip && isset($legacyTrips[$slug])) $trip = $legacyTrips[$slug];
+if (!$trip) { http_response_code(404); echo 'Trip not found.'; exit; }
 
 $dest = $trip['dest'] ?? 'Trip';
 $dep = $trip['dep'] ?? '';
@@ -96,32 +54,15 @@ $ret = $trip['ret'] ?? '';
 $trav = $trip['trav'] ?? '2';
 $status = $trip['status'] ?? 'upcoming';
 
-// SINGLE SOURCE OF TRUTH FOR ALL ITINERARY UI.
 $templatePath = __DIR__ . '/new-trip-v2.html';
 $template = file_get_contents($templatePath);
-if ($template === false) {
-  http_response_code(500);
-  echo 'Template not found.';
-  exit;
-}
+if ($template === false) { http_response_code(500); echo 'Template not found.'; exit; }
 
-// Replace the generic URL-param bootstrap with this trip's metadata.
 $sourceBootstrap = "// Read URL params\nconst params = new URLSearchParams(window.location.search);\nconst dest   = params.get('dest') || 'New Trip';\nconst dep    = params.get('dep')  || '';\nconst ret    = params.get('ret')  || '';\nconst trav   = params.get('trav') || '2';\nconst status = params.get('status') || 'upcoming';\nconst slug   = params.get('slug') || 'new-trip';\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
-
 $tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)\nconst dest   = " . json_encode($dest) . ";\nconst dep    = " . json_encode($dep) . ";\nconst ret    = " . json_encode($ret) . ";\nconst trav   = " . json_encode($trav) . ";\nconst status = " . json_encode($status) . ";\nconst slug   = " . json_encode($slug) . ";\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
-
 $page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
+if ($count === 0) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
 
-if ($count === 0) {
-  http_response_code(500);
-  echo '<!-- trip.php: bootstrap marker not found in new-trip-v2.html -->';
-  echo 'This trip could not be rendered right now. Please try again shortly.';
-  exit;
-}
-
-// Enforce the accommodation lookup in the shared renderer itself. A hotel
-// covers nights from check-in up to, but not including, checkout. If no stay
-// covers the selected night, return null — never fall back to another hotel.
 $oldHotelLookup = <<<'JS'
 // Find the hotel covering the active day (checkin <= day <= checkout)
 function hotelForDay(dayIdx) {
@@ -139,7 +80,6 @@ function hotelForDay(dayIdx) {
   return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
 }
 JS;
-
 $newHotelLookup = <<<'JS'
 // Find the hotel covering the selected NIGHT (checkin <= day < checkout)
 function hotelForDay(dayIdx) {
@@ -156,63 +96,32 @@ function hotelForDay(dayIdx) {
   return null;
 }
 JS;
-
 $page = str_replace($oldHotelLookup, $newHotelLookup, $page, $hotelLookupCount);
-if ($hotelLookupCount === 0) {
-  // Keep rendering, but expose the drift in source so it cannot silently recur.
-  $page = str_replace('</head>', '<!-- hotel lookup patch marker not found -->\n</head>', $page);
-}
 
-// Add full-screen/standalone web-app metadata for iPhone Home Screen launches.
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
 <script>
-(function () {
-  if (window.navigator.standalone === true) {
-    document.documentElement.classList.add('ios-standalone');
-  }
-})();
+(function () { if (window.navigator.standalone === true) document.documentElement.classList.add('ios-standalone'); })();
 </script>
 <style>
 @media (max-width: 700px) {
-  html.ios-standalone,
-  html.ios-standalone body {
-    width: 100%;
-    min-height: 100%;
-  }
-  html.ios-standalone body {
-    height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
-    background: var(--bg, #e8e8e8) !important;
-  }
-  html.ios-standalone .v2-main,
-  html.ios-standalone .v2-sidebar {
-    height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
-    min-height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
-  }
-  html.ios-standalone body::after {
-    display: none !important;
-    content: none !important;
-  }
+  html.ios-standalone, html.ios-standalone body { width:100%; min-height:100%; }
+  html.ios-standalone body { height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; background:var(--bg,#e8e8e8) !important; }
+  html.ios-standalone .v2-main, html.ios-standalone .v2-sidebar { height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; min-height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; }
+  html.ios-standalone body::after { display:none !important; content:none !important; }
 
-  /* The hero photo already occupies the status-bar safe area. The base mobile
-     drawer styles add env(safe-area-inset-top) to .dr-head again, which is the
-     large white band visible below the image. Override that directly here. */
-  #dr-photo-slot[style*="display: block"] + .dr-head {
-    padding-top: 26px !important;
-  }
-  #dr-photo-slot[style*="display: block"] + .dr-head::before {
-    top: 9px !important;
-  }
+  /* Mobile drawer hero: 180px desktop/base + 50px on mobile. */
+  .dr-hero-photo { height:230px !important; }
+
+  #dr-photo-slot[style*="display: block"] + .dr-head { padding-top:26px !important; }
+  #dr-photo-slot[style*="display: block"] + .dr-head::before { top:9px !important; }
 }
 </style>
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
-
-// Force the latest shared auth/helper script after hotel logic changes.
 $page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
-
 echo $page;
