@@ -4,20 +4,33 @@
 
 const API = '/api.php';
 const RECORD_API = '/record.php';
+const AUTH_API = '/auth-v2.php';
 
-function getToken() {
-    try {
-        const s = JSON.parse(localStorage.getItem('jh_auth') || 'null');
-        return s ? s.token : '';
-    } catch { return ''; }
+function getStoredAuth() {
+    try { return JSON.parse(localStorage.getItem('jh_auth') || 'null') || {}; }
+    catch { return {}; }
 }
 
-async function waitForToken(maxMs = 8000) {
+// Legacy token is retained temporarily for api.php actions that have not yet
+// migrated to shared server-side session validation.
+function getToken() {
+    return getStoredAuth().token || '';
+}
+
+// Conflict-safe itinerary reads/saves use the new random expiring session.
+// Old sessions transparently fall back to the legacy token during rollout.
+function getRecordToken() {
+    const s = getStoredAuth();
+    return s.sessionToken || s.token || '';
+}
+
+async function waitForToken(maxMs = 8000, useRecordToken = false) {
+    const read = useRecordToken ? getRecordToken : getToken;
     const start = Date.now();
-    let token = getToken();
+    let token = read();
     while (!token && Date.now() - start < maxMs) {
         await new Promise(r => setTimeout(r, 100));
-        token = getToken();
+        token = read();
     }
     return token;
 }
@@ -50,11 +63,23 @@ async function apiCall(action, params = {}, body = null, method = null, fetchOpt
     return parseJsonResponse(await fetch(url.toString(), options));
 }
 
+async function authCall(action, body = null, token = '') {
+    const url = new URL(AUTH_API, location.origin);
+    url.searchParams.set('action', action);
+    const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    };
+    if (token) options.headers['X-Auth-Token'] = token;
+    if (body) options.body = JSON.stringify(body);
+    return parseJsonResponse(await fetch(url.toString(), options));
+}
+
 async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
     const url = new URL(RECORD_API, location.origin);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    const token = await waitForToken();
+    const token = await waitForToken(8000, true);
     const options = {
         method: body ? 'POST' : 'GET',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
@@ -88,7 +113,6 @@ function dbSave(id, data, options = {}) {
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') saveOptions.keepalive = true;
 
     const run = previous.catch(() => {}).then(async () => {
-        // If this caller has never loaded the record, establish a baseline first.
         if (!_recordVersions.has(id)) await dbLoad(id);
         const expectedVersion = _recordVersions.get(id);
         try {
@@ -120,12 +144,20 @@ async function dbDelete(id) {
 }
 
 async function dbVerifyPin(pinHash) {
-    const result = await apiCall('auth', {}, { pin_hash: pinHash });
-    return result ? result.token : null;
+    const result = await authCall('login', { pin_hash: pinHash });
+    return result || null;
 }
 
-async function dbChangePin(currentHash, newHash) {
-    return apiCall('auth', {}, { pin_hash: currentHash, new_hash: newHash });
+async function dbChangePin(newHash) {
+    const result = await authCall('change_pin', { new_hash: newHash }, getRecordToken());
+    if (result?.session_token && result?.legacy_token) {
+        localStorage.setItem('jh_auth', JSON.stringify({
+            sessionToken: result.session_token,
+            token: result.legacy_token,
+            ts: Date.now(),
+        }));
+    }
+    return result;
 }
 
 async function dbLoadRegistry() {
