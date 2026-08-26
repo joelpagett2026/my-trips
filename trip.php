@@ -97,6 +97,11 @@ function hotelForDay(dayIdx) {
 }
 JS;
 $page = str_replace($oldHotelLookup, $newHotelLookup, $page, $hotelLookupCount);
+if ($hotelLookupCount === 0) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because the shared hotel logic changed unexpectedly.';
+  exit;
+}
 
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
@@ -154,5 +159,11 @@ HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 $page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
 $page = str_replace('/db.js?v=1', '/db.js?v=2', $page);
+$page = str_replace('</body>', '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n</body>", $page, $guardCount);
+if ($guardCount === 0) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because the page shell is incomplete.';
+  exit;
+}
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
 echo $page;
