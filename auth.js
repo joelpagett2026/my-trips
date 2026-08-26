@@ -82,11 +82,15 @@ function getStoredSession() {
 
 function isAuthed() {
     const s = getStoredSession();
-    return s && s.token && (Date.now() - s.ts) < SESSION_TTL;
+    return s && (s.sessionToken || s.token) && (Date.now() - s.ts) < SESSION_TTL;
 }
 
-function storeSession(token) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ token, ts: Date.now() }));
+function storeSession(sessionToken, legacyToken) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+        sessionToken: sessionToken || '',
+        token: legacyToken || '',
+        ts: Date.now(),
+    }));
 }
 
 function clearSession() {
@@ -149,14 +153,14 @@ function showPinOverlay() {
     async function checkPin() {
         const hash = sha256(entered);
         try {
-            const res = await fetch('/api.php?action=auth', {
+            const res = await fetch('/auth-v2.php?action=login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pin_hash: hash })
             });
             const json = await res.json();
-            if (json.ok && json.data && json.data.token) {
-                storeSession(json.data.token);
+            if (json.ok && json.data && json.data.session_token && json.data.legacy_token) {
+                storeSession(json.data.session_token, json.data.legacy_token);
                 document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => { d.style.background='#34c759'; });
                 setTimeout(() => {
                     overlay.remove();
@@ -165,7 +169,7 @@ function showPinOverlay() {
                     document.dispatchEvent(new Event('mytrips:authed'));
                 }, 350);
             } else {
-                throw new Error('bad pin');
+                throw new Error(json.error || 'bad pin');
             }
         } catch {
             document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.add('error'));
