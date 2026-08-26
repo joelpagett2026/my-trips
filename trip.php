@@ -191,10 +191,32 @@ $standaloneHead = <<<'HTML'
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
 <style>
-/* iPhone standalone mode: paint the bottom safe-area instead of leaving
-   iOS's default grey strip visible behind the Home indicator. */
+/* iPhone standalone mode: use the dynamic viewport height so the app fills
+   the actual screen including the Home-indicator safe area. The old 100vh
+   sizing could leave the body background (#e8e8e8) exposed as a grey strip. */
+@media (max-width: 700px) {
+  html {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    background: #fff !important;
+  }
+}
 @media (display-mode: standalone) and (max-width: 700px) {
-  html, body { background: #fff !important; }
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    height: 100dvh !important;
+    background: #fff !important;
+  }
+  body {
+    min-height: -webkit-fill-available;
+  }
+  .v2-main,
+  .v2-sidebar {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
   body::after {
     content: "";
     position: fixed;
