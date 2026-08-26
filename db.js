@@ -80,9 +80,16 @@ const _dbSaveQueues = new Map();
 function dbSave(id, data, options = {}) {
     const previous = _dbSaveQueues.get(id) || Promise.resolve();
     const snapshot = JSON.parse(JSON.stringify(data));
+    const saveOptions = { ...options };
+    // Browsers, especially iOS, may terminate ordinary fetches as soon as a
+    // Home Screen app is backgrounded. The itinerary flushes pending edits on
+    // visibilitychange/pagehide, so mark those final requests as keepalive.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        saveOptions.keepalive = true;
+    }
     const run = previous
         .catch(() => {})
-        .then(() => apiCall('save', {}, { id, data: snapshot }, null, options));
+        .then(() => apiCall('save', {}, { id, data: snapshot }, null, saveOptions));
 
     _dbSaveQueues.set(id, run);
     const cleanup = () => {
