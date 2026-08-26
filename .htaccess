@@ -14,15 +14,11 @@ RewriteRule ^share\.html$ /new-trip-v2.html [R=301,L,QSA]
 
 # Legacy baked itinerary URLs -> canonical dynamic trip URL.
 # Match both root copies and /trips/ copies created by older deploys.
-RewriteRule ^(?:trips/)?china\.html$ /china-2026 [R=302,L,QSA]
-RewriteRule ^(?:trips/)?dubai\.html$ /dubai-2025 [R=302,L,QSA]
-RewriteRule ^(?:trips/)?costa-rica\.html$ /costa-rica-2025 [R=302,L,QSA]
-RewriteRule ^(?:trips/)?canada\.html$ /canada-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
-RewriteRule ^(?:trips/)?hamburg\.html$ /hamburg [R=302,L,QSA]
-RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026-v2 [R=302,L,QSA]
-RewriteRule ^(?:trips/)?porto-budget\.html$ /porto-2026-v2 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
+RewriteRule ^(?:trips/)?porto-budget\.html$ /porto-2026 [R=302,L,QSA]
+RewriteRule ^porto-2026-v2/?$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?graz-ljubljana-lake-bled-2027\.html$ /graz-ljubljana-lake-bled-2027 [R=302,L,QSA]
 
 # Canonical itinerary route. A clean trip slug always uses the dynamic renderer.

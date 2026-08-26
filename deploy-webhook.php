@@ -81,28 +81,59 @@ echo json_encode([
 // All baked itinerary pages — add new trips here when created.
 // These will be regenerated from new-trip.html on every deploy,
 // so style/template changes automatically propagate to all pages.
+//
+// Removed entirely (confirmed zero database record under any of these
+// slugs, and none referenced anywhere in the homepage trip-registry —
+// verified via api.php?action=list and action=load before removing):
+//   china-2026, dubai-2025, costa-rica-2025, canada-2027 — never had
+//   any data in this system to begin with.
+//   porto-2026 (old v1 slug/page) and hamburg (old v1 slug/page) — also
+//   confirmed empty; the real Porto and Hamburg data live under
+//   porto-2026-v2 and hamburg-2026 respectively, unaffected by this.
 $itineraries = [
-    ['slug' => 'china-2026',      'filename' => 'china.html',             'dest' => 'China',              'dep' => '31/03/2026', 'ret' => '17/04/2026', 'trav' => '2', 'status' => 'past'],
-    ['slug' => 'dubai-2025',      'filename' => 'dubai.html',             'dest' => 'Dubai & Abu Dhabi',  'dep' => '26/12/2025', 'ret' => '09/01/2026', 'trav' => '2', 'status' => 'past'],
-    ['slug' => 'costa-rica-2025', 'filename' => 'costa-rica.html',        'dest' => 'Costa Rica',         'dep' => '04/04/2025', 'ret' => '21/04/2025', 'trav' => '2', 'status' => 'past'],
-    ['slug' => 'canada-2027',     'filename' => 'canada.html',            'dest' => 'Canada Road Trip',   'dep' => '25/09/2027', 'ret' => '10/10/2027', 'trav' => '2', 'status' => 'upcoming'],
     ['slug' => 'hk-taiwan-2027',  'filename' => 'hong-kong-taiwan.html',  'dest' => 'Hong Kong & Taiwan', 'dep' => '27/03/2027', 'ret' => '12/04/2027', 'trav' => '2', 'status' => 'planning'],
-    ['slug' => 'porto-2026',      'filename' => 'porto-2026.html',        'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming'],
     // 'gothenburg-2026' migrated to v2 — now served dynamically via trip.php
     // at the clean URL /gothenburg-2026 (see the v2 comment above). No
     // longer regenerated here to avoid a stale v1 gothenburg-2026.html file.
     // 'cyprus-2026' migrated to v2 — now served dynamically via trip.php
     // at the clean URL /cyprus-2026. No longer regenerated here to avoid
     // a stale v1 cyprus-2026.html file.
-    ['slug' => 'hamburg',         'filename' => 'hamburg.html',           'dest' => 'Hamburg',            'dep' => '18/09/2026', 'ret' => '21/09/2026', 'trav' => '4', 'status' => 'planning'],
-    ['slug' => 'porto-2026-v2',   'filename' => 'porto-budget.html',      'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'budget-template.html'],
-    ['slug' => 'porto-2026-v2',   'filename' => 'porto-v2.html',          'dest' => 'Porto',              'dep' => '29/08/2026', 'ret' => '04/09/2026', 'trav' => '2', 'status' => 'upcoming', 'template' => 'new-trip-v2.html'],
+    // 'porto-2026' migrated to v2 — now served dynamically via trip.php at
+    // the clean URL /porto-2026, same mechanism as Gothenburg/Cyprus. No
+    // longer baked here (previously two entries: porto-budget.html via
+    // budget-template.html, and porto-v2.html via new-trip-v2.html — both
+    // retired; budget-template.html itself removed too, since the Budget
+    // view lives inside new-trip-v2.html and this separate baked page was
+    // an unused leftover from before that consolidation).
     ['slug' => 'graz-ljubljana-lake-bled-2027', 'filename' => 'graz-ljubljana-lake-bled-2027.html', 'dest' => 'Graz, Ljubljana & Lake Bled', 'dep' => '28/05/2027', 'ret' => '02/06/2027', 'trav' => '2', 'status' => 'planning'],
 ];
 
 // ── ENSURE SUBDIRECTORIES EXIST ──────────────────────────────────────
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 @unlink(PUBLIC_HTML . '/share.html');
+
+// Retired static/baked files — removed from $itineraries and the core-file
+// copy list above, but deploy only copies/regenerates what IS listed; it
+// doesn't remove what's no longer listed, so these need explicit cleanup
+// or they'd sit on the live server indefinitely as stale orphaned copies.
+// china/dubai/costa-rica/canada: confirmed zero database record under any
+// of their slugs and absent from the homepage trip-registry before removal.
+// porto-2026(.html)/hamburg(.html): the old empty v1 slugs — the real data
+// lives under porto-2026 (now migrated in, see below) and hamburg-2026,
+// both unaffected. porto-v2.html/porto-budget.html: Porto migrated off the
+// static-bake mechanism onto the same dynamic trip.php system as
+// Gothenburg/Cyprus, now served at the clean URL /porto-2026 — no longer
+// baked, so nothing to regenerate here any more. budget-template.html/
+// budget-style.css: unused since the Budget view moved inside
+// new-trip-v2.html itself.
+foreach ([
+    'china.html', 'dubai.html', 'costa-rica.html', 'canada.html',
+    'porto-2026.html', 'hamburg.html', 'porto-v2.html', 'porto-budget.html',
+    'budget-template.html', 'budget-style.css',
+] as $retired) {
+    @unlink(PUBLIC_HTML . '/' . $retired);
+    @unlink(PUBLIC_HTML . '/trips/' . $retired);
+}
 
 foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks', 'icons', 'private'] as $dir) {
     $dirPath = PUBLIC_HTML . '/' . $dir;
@@ -114,7 +145,6 @@ foreach (['trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows', 'parks'
 // ── REGENERATE ALL ITINERARY PAGES FROM TEMPLATE ─────────────────────
 $templateV1  = file_get_contents(REPO_PATH . '/new-trip.html');
 $templateV2  = file_get_contents(REPO_PATH . '/new-trip-v2.html');
-$templateBudget = file_get_contents(REPO_PATH . '/budget-template.html');
 $regenerated = [];
 $regen_failed = [];
 
@@ -132,9 +162,7 @@ const RECORD_ID = slug;";
 
 if ($templateV1) {
     foreach ($itineraries as $trip) {
-        if (!empty($trip['template']) && $trip['template'] === 'budget-template.html' && $templateBudget) {
-            $useTemplate = $templateBudget;
-        } elseif (!empty($trip['template']) && $trip['template'] === 'new-trip-v2.html' && $templateV2) {
+        if (!empty($trip['template']) && $trip['template'] === 'new-trip-v2.html' && $templateV2) {
             $useTemplate = $templateV2;
         } else {
             $useTemplate = $templateV1;
@@ -171,7 +199,7 @@ $coreFiles = [
     'api.php', 'db-config.php', 'trip.php', 'auth.js', 'db.js', 'datepicker.js',
     'itinerary-style.css', 'itinerary-v2-style.css', 'deploy-webhook.php',
     'budget-live-redesign.js',
-    'index.html', 'new-trip.html', 'new-trip-v2.html', 'budget-template.html', 'budget-style.css', 'settings.html',
+    'index.html', 'new-trip.html', 'new-trip-v2.html', 'settings.html',
     'robots.txt', '.htaccess', 'favicon.ico',
 ];
 

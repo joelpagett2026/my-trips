@@ -114,7 +114,7 @@ switch ($action) {
         if (!$slug || !$dest) fail('Missing slug or dest');
 
         // Reserved paths that must never be shadowed by a dynamic trip slug
-    $reserved = ['index', 'settings', 'new-trip', 'new-trip-v2', 'budget-template',
+    $reserved = ['index', 'settings', 'new-trip', 'new-trip-v2',
     'api', 'deploy-webhook', 'trip', 'db-config', 'robots', 'favicon',
     'trips', 'holidays', 'icons', 'concerts', 'parks', 'shows', 'private'];
 if (in_array($slug, $reserved, true)) fail('That trip name is reserved — please choose another');
