@@ -85,9 +85,10 @@ function dbSave(id, data, options = {}) {
         .then(() => apiCall('save', {}, { id, data: snapshot }, null, options));
 
     _dbSaveQueues.set(id, run);
-    run.finally(() => {
+    const cleanup = () => {
         if (_dbSaveQueues.get(id) === run) _dbSaveQueues.delete(id);
-    });
+    };
+    run.then(cleanup, cleanup);
     return run;
 }
 
