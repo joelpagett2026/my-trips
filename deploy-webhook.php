@@ -32,7 +32,6 @@ if (!$providedKey || !hash_equals(deploySecret(), $providedKey)) {
     exit;
 }
 
-// ── PULL LATEST FROM GITHUB ──────────────────────────────────────────
 $output = [];
 $return = 0;
 $gitCmd = 'cd ' . escapeshellarg(REPO_PATH)
@@ -40,8 +39,6 @@ $gitCmd = 'cd ' . escapeshellarg(REPO_PATH)
     . ' && git reset --hard origin/main 2>&1';
 exec($gitCmd, $output, $return);
 
-// Fail closed. A failed Git update must not copy an old/mixed checkout into
-// the live directory.
 if ($return !== 0) {
     http_response_code(500);
     echo json_encode([
@@ -52,7 +49,6 @@ if ($return !== 0) {
     exit;
 }
 
-// ── ENSURE LIVE DIRECTORIES EXIST ────────────────────────────────────
 $directories = [
     'trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows',
     'parks', 'icons', 'private',
@@ -66,7 +62,6 @@ foreach ($directories as $dir) {
     }
 }
 
-// ── REMOVE RETIRED STATIC FILES ──────────────────────────────────────
 $retiredFiles = [
     'china.html', 'dubai.html', 'costa-rica.html', 'canada.html',
     'hong-kong-taiwan.html', 'graz-ljubljana-lake-bled-2027.html',
@@ -79,7 +74,6 @@ foreach ($retiredFiles as $retired) {
 }
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 
-// ── FILES DEPLOYED TO DOCUMENT ROOT ──────────────────────────────────
 $coreFiles = [
     'api.php',
     'record.php',
@@ -88,6 +82,7 @@ $coreFiles = [
     'auth.js',
     'db.js',
     'itinerary-state-guard.js',
+    'itinerary-ui.js',
     'datepicker.js',
     'itinerary-style.css',
     'itinerary-v2-style.css',
