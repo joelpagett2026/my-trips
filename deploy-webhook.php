@@ -22,9 +22,6 @@ function deploySecret(): string {
 
 header('Content-Type: application/json');
 
-// Prefer a request header so the deploy credential does not appear in URLs,
-// proxy logs or browser history. Keep the query-string fallback temporarily
-// for manual recovery while the hosting-side secret is being migrated.
 $providedKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? ($_GET['key'] ?? ''));
 if (!$providedKey || !hash_equals(deploySecret(), $providedKey)) {
     http_response_code(403);
@@ -76,6 +73,8 @@ foreach ($retiredFiles as $retired) {
 
 $coreFiles = [
     'api.php',
+    'auth-v2.php',
+    'auth-session.php',
     'record.php',
     'db-config.php',
     'trip.php',
