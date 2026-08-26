@@ -90,6 +90,7 @@ $coreFiles = [
     'trip.php',
     'auth.js',
     'db.js',
+    'itinerary-state-guard.js',
     'datepicker.js',
     'itinerary-style.css',
     'itinerary-v2-style.css',
