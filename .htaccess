@@ -9,16 +9,9 @@ Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Keep the Trips dashboard on one canonical URL. This also ensures any
-# dashboard-only front-card fixes run against /trips/ rather than a stale
-# /trips/index.html URL.
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
-
-# Retired share page.
 RewriteRule ^share\.html$ /new-trip-v2.html [R=301,L,QSA]
 
-# Legacy baked itinerary URLs -> canonical dynamic trip URL.
-# Match both root copies and /trips/ copies created by older deploys.
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
@@ -26,14 +19,11 @@ RewriteRule ^(?:trips/)?porto-budget\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^porto-2026-v2/?$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?graz-ljubljana-lake-bled-2027\.html$ /graz-ljubljana-lake-bled-2027 [R=302,L,QSA]
 
-# Canonical itinerary route. A clean trip slug always uses the dynamic renderer.
-# Files/directories such as /trips/, /icons/ and /api.php continue to work normally.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 </IfModule>
 
-# Browser caching for static assets
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/javascript        "access plus 7 days"
@@ -47,16 +37,15 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   ExpiresByType font/woff              "access plus 1 year"
 </IfModule>
 
-# These shared application scripts change frequently and directly control
-# authentication, saving and itinerary presentation. Do not let the generic
-# seven-day JavaScript expiry keep an older behavioural version in a browser.
-<FilesMatch "^(auth|db|budget-live-redesign|datepicker)\.js$">
+# Critical application behaviour changes frequently. These scripts control
+# authentication, record saving, conflict protection and itinerary presentation,
+# so never allow the generic seven-day JavaScript expiry to hide a new version.
+<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|budget-live-redesign|datepicker)\.js$">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
 </FilesMatch>
 
-# Prevent itinerary HTML from being cached (trip data changes frequently)
 <FilesMatch "\.html$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
