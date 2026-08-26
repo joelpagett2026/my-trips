@@ -118,6 +118,36 @@ $standaloneHead = <<<'HTML'
 
   #dr-photo-slot[style*="display: block"] + .dr-head { padding-top:26px !important; }
   #dr-photo-slot[style*="display: block"] + .dr-head::before { top:9px !important; }
+
+  /* Keep activity/edit modals vertically scrollable but lock out horizontal
+     panning and any child overflow that can make the sheet slide sideways. */
+  .modal-overlay {
+    overflow:hidden !important;
+    overscroll-behavior-x:none;
+    touch-action:pan-y;
+  }
+  .modal {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    touch-action:pan-y;
+  }
+  .modal-body,
+  #modal-body-single,
+  #modal-body-bulk {
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow-x:hidden !important;
+    overscroll-behavior-x:none;
+    touch-action:pan-y;
+  }
+  .field-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; min-width:0; }
+  .field-group,
+  .field-input,
+  .field-select,
+  .field-textarea { min-width:0 !important; max-width:100% !important; }
 }
 </style>
 HTML;
