@@ -42,4 +42,5 @@ jobs:
       - name: Trigger deploy webhook
         run: |
           curl --fail --show-error --silent --retry 2 --retry-delay 3 \
-            "https://joelpagett.co.uk/deploy-webhook.php?key=${{ secrets.DEPLOY_KEY }}"
+            --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+            "https://joelpagett.co.uk/deploy-webhook.php"
