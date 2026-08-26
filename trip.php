@@ -153,5 +153,6 @@ $standaloneHead = <<<'HTML'
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 $page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
+$page = str_replace('/db.js?v=1', '/db.js?v=2', $page);
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
 echo $page;
