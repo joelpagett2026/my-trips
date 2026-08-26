@@ -183,48 +183,42 @@ if ($hotelLookupCount === 0) {
 }
 
 // Add full-screen/standalone web-app metadata for iPhone Home Screen launches.
-// The manifest scope is the whole site so navigating between itineraries keeps
-// the app in standalone mode instead of dropping back into Safari chrome.
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
+<script>
+(function () {
+  // iOS Safari does not reliably match the CSS `display-mode: standalone`
+  // media query, but it does expose navigator.standalone for Home Screen apps.
+  if (window.navigator.standalone === true) {
+    document.documentElement.classList.add('ios-standalone');
+  }
+})();
+</script>
 <style>
-/* iPhone standalone mode: use the dynamic viewport height so the app fills
-   the actual screen including the Home-indicator safe area. The old 100vh
-   sizing could leave the body background (#e8e8e8) exposed as a grey strip. */
 @media (max-width: 700px) {
-  html {
+  html.ios-standalone,
+  html.ios-standalone body {
     width: 100%;
     height: 100%;
     min-height: 100%;
     background: #fff !important;
   }
-}
-@media (display-mode: standalone) and (max-width: 700px) {
-  html, body {
-    width: 100%;
-    min-height: 100%;
-    height: 100dvh !important;
-    background: #fff !important;
-  }
-  body {
-    min-height: -webkit-fill-available;
-  }
-  .v2-main,
-  .v2-sidebar {
+  html.ios-standalone .v2-main,
+  html.ios-standalone .v2-sidebar {
     height: 100dvh !important;
     min-height: 100dvh !important;
   }
-  body::after {
+  html.ios-standalone body::after {
     content: "";
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    height: env(safe-area-inset-bottom, 0px);
-    background: #fff;
+    height: env(safe-area-inset-bottom, 34px);
+    background: #fff !important;
     pointer-events: none;
     z-index: 2147483646;
   }
