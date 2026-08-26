@@ -5,7 +5,9 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -23,7 +25,7 @@
   .nav .nav-title, .nav .nav-back { color: #ffffff; }
   .nav .nav-back:hover { opacity: 0.85; }
 
-  .wrap { max-width: 900px; margin: 0 auto; padding: 18px 20px 48px; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: calc(18px + env(safe-area-inset-top)) 20px calc(48px + env(safe-area-inset-bottom)); }
 
   .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
   .search-wrap { position: relative; flex: 1; min-width: 180px; }
@@ -99,7 +101,7 @@
   }
 
   @media (max-width: 700px) {
-    .wrap { padding: 14px 14px 40px; }
+    .wrap { padding: calc(14px + env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom)); }
     .segmented { width: 100%; }
     .seg { flex: 1; padding: 8px 6px; }
   }
