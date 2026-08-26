@@ -23,6 +23,7 @@ template = read("new-trip-v2.html")
 record = read("record.php")
 db = read("db.js")
 ui = read("itinerary-ui.js")
+settings = read("settings.html")
 htaccess = read(".htaccess")
 
 require("new-trip-v2.html" in trip, "trip.php must render the shared V2 template")
@@ -53,8 +54,16 @@ require("AUTH_SESSION_TTL_SECONDS" in auth_session, "auth sessions must expire s
 require("AUTH_MAX_FAILURES" in auth_session and "auth_attempts" in auth_session, "PIN login must be rate limited")
 require("issueAuthSession" in auth_v2, "auth-v2 login must issue a server session")
 require("loginRateLimitRemaining" in auth_v2, "auth-v2 login must enforce throttling")
+require("revokeAllAuthSessions" in auth_v2, "changing PIN must invalidate older sessions")
 require("/auth-v2.php?action=login" in auth, "PIN overlay must use the v2 login endpoint")
 require("session_token" in auth and "legacy_token" in auth, "browser must retain both tokens during staged migration")
+
+# Settings must use the same security path and export every listed record ID.
+require("dbChangePin(newHash)" in settings, "Settings PIN change must use the v2 session endpoint")
+require("/auth-v2.php?action=login" in settings, "Settings current-PIN verification must use rate-limited login")
+require("/auth-v2.php?action=logout" in settings, "Settings sign-out must revoke the server session")
+require("const id = typeof row === 'string' ? row : row?.id" in settings, "Backup exporter must read IDs from list API rows")
+require("record_count" in settings, "Backup should record and surface its exported record count")
 
 for runtime_file in [
     "auth-v2.php",
