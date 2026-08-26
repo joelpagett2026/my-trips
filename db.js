@@ -5,8 +5,8 @@
 
 const API = '/api.php';
 
-// The active auth token is the PIN hash — set after login, read from
-// localStorage so it persists across pages.
+// The active auth token is stored after login and read from localStorage so
+// it persists across pages. The server remains the authority on validity.
 function getToken() {
     try {
         const s = JSON.parse(localStorage.getItem('jh_auth') || 'null');
@@ -16,9 +16,7 @@ function getToken() {
 
 // Wait for a token to appear in localStorage before firing authenticated
 // requests. Prevents a race where a page's initial data load fires before
-// the login gate (auth.js, or a page's own extra password gate) has
-// finished storing the session token — which previously caused a silent
-// 401 and an empty page that never retried.
+// the login gate has finished storing the session token.
 async function waitForToken(maxMs = 8000) {
     const start = Date.now();
     let token = getToken();
@@ -29,7 +27,7 @@ async function waitForToken(maxMs = 8000) {
     return token;
 }
 
-async function apiCall(action, params = {}, body = null, method = null) {
+async function apiCall(action, params = {}, body = null, method = null, fetchOptions = {}) {
     const url = new URL(API, location.origin);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -42,12 +40,24 @@ async function apiCall(action, params = {}, body = null, method = null) {
             'Content-Type': 'application/json',
             'X-Auth-Token': token,
         },
+        ...fetchOptions,
     };
     if (body) options.body = JSON.stringify(body);
 
     const res = await fetch(url.toString(), options);
-    const json = await res.json();
-    if (!json.ok && json.error) throw new Error(json.error);
+    const text = await res.text();
+    let json;
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(`Server returned an invalid response (${res.status})`);
+    }
+
+    if (!res.ok || json.ok === false) {
+        const err = new Error(json.error || `Request failed (${res.status})`);
+        err.status = res.status;
+        throw err;
+    }
     return json.data;
 }
 
@@ -59,9 +69,26 @@ async function dbLoad(id) {
     return result ? result.data : null;
 }
 
-/** Save an itinerary record. */
-async function dbSave(id, data) {
-    return apiCall('save', {}, { id, data });
+// Saves replace a whole itinerary JSON document, so overlapping requests for
+// the same record must never be allowed to overtake one another. Keep a
+// separate promise chain per record; a failed save is swallowed only for the
+// purpose of keeping the queue alive, while the caller still receives the
+// original rejection.
+const _dbSaveQueues = new Map();
+
+/** Save an itinerary record, serialized against any earlier save for that ID. */
+function dbSave(id, data, options = {}) {
+    const previous = _dbSaveQueues.get(id) || Promise.resolve();
+    const snapshot = JSON.parse(JSON.stringify(data));
+    const run = previous
+        .catch(() => {})
+        .then(() => apiCall('save', {}, { id, data: snapshot }, null, options));
+
+    _dbSaveQueues.set(id, run);
+    run.finally(() => {
+        if (_dbSaveQueues.get(id) === run) _dbSaveQueues.delete(id);
+    });
+    return run;
 }
 
 /** Delete a record. */
