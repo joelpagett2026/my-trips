@@ -67,8 +67,6 @@ foreach ($directories as $dir) {
 }
 
 // ── REMOVE RETIRED STATIC FILES ──────────────────────────────────────
-// Clean up old baked itinerary pages so Apache can never serve a stale copy
-// instead of the canonical dynamic trip.php route.
 $retiredFiles = [
     'china.html', 'dubai.html', 'costa-rica.html', 'canada.html',
     'hong-kong-taiwan.html', 'graz-ljubljana-lake-bled-2027.html',
@@ -82,10 +80,9 @@ foreach ($retiredFiles as $retired) {
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 
 // ── FILES DEPLOYED TO DOCUMENT ROOT ──────────────────────────────────
-// Keep this deliberately limited to runtime files. There is no itinerary
-// generation step; every clean trip URL is handled by trip.php.
 $coreFiles = [
     'api.php',
+    'record.php',
     'db-config.php',
     'trip.php',
     'auth.js',
@@ -157,34 +154,16 @@ $skipped = [];
 function copyDeployFile(string $src, string $dest, array &$copied, array &$failed, array &$skipped): void {
     $srcPath = REPO_PATH . '/' . $src;
     $destPath = PUBLIC_HTML . '/' . $dest;
-
-    if (!is_file($srcPath)) {
-        $skipped[] = $src;
-        return;
-    }
-
+    if (!is_file($srcPath)) { $skipped[] = $src; return; }
     $destDir = dirname($destPath);
-    if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) {
-        $failed[] = $dest;
-        return;
-    }
-
-    if (copy($srcPath, $destPath)) {
-        $copied[] = $dest;
-    } else {
-        $failed[] = $dest;
-    }
+    if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) { $failed[] = $dest; return; }
+    if (copy($srcPath, $destPath)) $copied[] = $dest; else $failed[] = $dest;
 }
 
-foreach ($coreFiles as $file) {
-    copyDeployFile($file, $file, $copied, $failed, $skipped);
-}
-foreach ($subdirFiles as $src => $dest) {
-    copyDeployFile($src, $dest, $copied, $failed, $skipped);
-}
+foreach ($coreFiles as $file) copyDeployFile($file, $file, $copied, $failed, $skipped);
+foreach ($subdirFiles as $src => $dest) copyDeployFile($src, $dest, $copied, $failed, $skipped);
 
 if ($failed) http_response_code(500);
-
 echo json_encode([
     'ok' => empty($failed),
     'copied' => $copied,
