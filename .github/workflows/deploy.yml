@@ -27,6 +27,7 @@ jobs:
       - name: Validate PHP syntax
         run: |
           php -l api.php
+          php -l record.php
           php -l db-config.php
           php -l deploy-webhook.php
           php -l trip.php
