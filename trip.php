@@ -118,14 +118,10 @@ $standaloneHead = <<<'HTML'
   html.ios-standalone .v2-main, html.ios-standalone .v2-sidebar { height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; min-height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; }
   html.ios-standalone body::after { display:none !important; content:none !important; }
 
-  /* Mobile drawer hero: 180px desktop/base + 50px on mobile. */
   .dr-hero-photo { height:230px !important; }
-
   #dr-photo-slot[style*="display: block"] + .dr-head { padding-top:26px !important; }
   #dr-photo-slot[style*="display: block"] + .dr-head::before { top:9px !important; }
 
-  /* Keep activity/edit modals vertically scrollable but lock out horizontal
-     panning and any child overflow that can make the sheet slide sideways. */
   .modal-overlay {
     overflow:hidden !important;
     overscroll-behavior-x:none;
@@ -157,9 +153,15 @@ $standaloneHead = <<<'HTML'
 </style>
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
-$page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
+$page = str_replace('/auth.js?v=1', '/auth.js?v=3', $page);
 $page = str_replace('/db.js?v=1', '/db.js?v=2', $page);
-$page = str_replace('</body>', '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n</body>", $page, $guardCount);
+$page = str_replace(
+  '</body>',
+  '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
+  . '<script src="/itinerary-ui.js?v=1"></script>' . "\n</body>",
+  $page,
+  $guardCount
+);
 if ($guardCount === 0) {
   http_response_code(500);
   echo 'This trip could not be rendered safely because the page shell is incomplete.';
