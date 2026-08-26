@@ -106,28 +106,9 @@ if ($template === false) {
 }
 
 // Replace the generic URL-param bootstrap with this trip's metadata.
-$sourceBootstrap = "// Read URL params
-const params = new URLSearchParams(window.location.search);
-const dest   = params.get('dest') || 'New Trip';
-const dep    = params.get('dep')  || '';
-const ret    = params.get('ret')  || '';
-const trav   = params.get('trav') || '2';
-const status = params.get('status') || 'upcoming';
-const slug   = params.get('slug') || 'new-trip';
+$sourceBootstrap = "// Read URL params\nconst params = new URLSearchParams(window.location.search);\nconst dest   = params.get('dest') || 'New Trip';\nconst dep    = params.get('dep')  || '';\nconst ret    = params.get('ret')  || '';\nconst trav   = params.get('trav') || '2';\nconst status = params.get('status') || 'upcoming';\nconst slug   = params.get('slug') || 'new-trip';\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
 
-// Use slug as the database record ID
-const RECORD_ID = slug;";
-
-$tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)
-const dest   = " . json_encode($dest) . ";
-const dep    = " . json_encode($dep) . ";
-const ret    = " . json_encode($ret) . ";
-const trav   = " . json_encode($trav) . ";
-const status = " . json_encode($status) . ";
-const slug   = " . json_encode($slug) . ";
-
-// Use slug as the database record ID
-const RECORD_ID = slug;";
+$tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)\nconst dest   = " . json_encode($dest) . ";\nconst dep    = " . json_encode($dep) . ";\nconst ret    = " . json_encode($ret) . ";\nconst trav   = " . json_encode($trav) . ";\nconst status = " . json_encode($status) . ";\nconst slug   = " . json_encode($slug) . ";\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
 
 $page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
 
@@ -188,6 +169,7 @@ $standaloneHead = <<<'HTML'
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/mobile-drawer-fix.css?v=1">
 <script>
 (function () {
   if (window.navigator.standalone === true) {
