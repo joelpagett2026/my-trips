@@ -169,7 +169,6 @@ $standaloneHead = <<<'HTML'
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="stylesheet" href="/mobile-drawer-fix.css?v=1">
 <script>
 (function () {
   if (window.navigator.standalone === true) {
@@ -184,8 +183,6 @@ $standaloneHead = <<<'HTML'
     width: 100%;
     min-height: 100%;
   }
-  /* Do not reserve or paint a separate bottom bar. Let the itinerary itself
-     continue underneath the iPhone Home-indicator safe area. */
   html.ios-standalone body {
     height: calc(100dvh + env(safe-area-inset-bottom, 0px)) !important;
     background: var(--bg, #e8e8e8) !important;
@@ -198,6 +195,16 @@ $standaloneHead = <<<'HTML'
   html.ios-standalone body::after {
     display: none !important;
     content: none !important;
+  }
+
+  /* The hero photo already occupies the status-bar safe area. The base mobile
+     drawer styles add env(safe-area-inset-top) to .dr-head again, which is the
+     large white band visible below the image. Override that directly here. */
+  #dr-photo-slot[style*="display: block"] + .dr-head {
+    padding-top: 26px !important;
+  }
+  #dr-photo-slot[style*="display: block"] + .dr-head::before {
+    top: 9px !important;
   }
 }
 </style>
