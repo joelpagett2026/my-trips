@@ -184,32 +184,6 @@
     });
   }
 
-  function groupTransport(root) {
-    const panel = root.querySelector('.bv-grid .bv-panel:nth-child(2)');
-    const body = panel && panel.querySelector('.bv-panel-body');
-    if (!body || body.dataset.liveGrouped === '1') return;
-    const rows = [...body.children].filter(el => el.classList.contains('bv-row'));
-    if (!rows.length) return;
-    const groups = new Map();
-    rows.forEach(row => {
-      const tag = (row.querySelector('.bv-row-tag')?.textContent || 'Other Transport').trim();
-      const key = /^flight$/i.test(tag) ? 'Flights' : tag;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(row);
-    });
-    const order = [...groups.keys()].sort((a,b) => (a==='Flights'?-1:b==='Flights'?1:0));
-    body.innerHTML = '';
-    order.forEach(name => {
-      const items = groups.get(name);
-      const g = document.createElement('div');
-      g.className = 'bv-live-group';
-      g.innerHTML = `<span>${name}</span><span class="bv-live-group-count">${items.length} booking${items.length===1?'':'s'}</span>`;
-      body.appendChild(g);
-      items.forEach(row => body.appendChild(row));
-    });
-    body.dataset.liveGrouped = '1';
-  }
-
   function addGrandTotal(root) {
     if (root.querySelector('.bv-live-grand')) return;
     const amount = root.querySelector('.bv-hero-amount')?.textContent || '—';
@@ -227,7 +201,6 @@
     if (!root || !root.querySelector('.bv-hero')) return;
     addHeroStats(root);
     enhanceHotels(root);
-    groupTransport(root);
     addGrandTotal(root);
   }
 

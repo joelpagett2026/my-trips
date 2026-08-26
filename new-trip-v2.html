@@ -5277,7 +5277,25 @@ function renderBudgetView() {
   if (!STATE || !STATE.days) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">No data</div>'; return; }
   const { hotels, flights, transport, attractions, numTrav } = extractBudget(STATE);
   const fmt = n => n ? '\xA3' + n.toFixed(2).replace(/\.00$/, '') : '\u2014';
-  const fmtShort = n => n ? '\xA3' + (n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : n.toFixed(0)) : '\u2014';
+  // fmtShort only abbreviates genuinely large values (>=1000) into "1.2k" —
+  // previously rounded every value to whole pounds regardless of size,
+  // which is why a transport total showing as "\xA379.50" in the hero
+  // pill above showed as "\xA380" in the tile below it: same number, two
+  // different formatters. Now both agree unless the value is large enough
+  // to actually need abbreviating.
+  const fmtShort = n => n ? (n >= 1000 ? '\xA3' + (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : fmt(n)) : '\u2014';
+  // A row's "raw" typed price (e.g. "\xA312.00") almost always differs from
+  // fmt()'s cleaned-up display (e.g. "\xA312") purely because fmt() strips
+  // a trailing ".00" \u2014 not because the raw text carries any extra
+  // information. Only show the raw text underneath when it genuinely adds
+  // something fmt() doesn't already say: a materially different amount, or
+  // a qualifier like "pp"/"per person" the clean number alone wouldn't show.
+  const rawAddsInfo = (rawCost, cost) => {
+    if (!rawCost) return false;
+    const rawNum = parseFloat(String(rawCost).replace(/[^\d.]/g, ''));
+    if (!isNaN(rawNum) && Math.abs(rawNum - (cost||0)) > 0.005) return true;
+    return /\bpp\b|per\s*person/i.test(String(rawCost));
+  };
   const hotelTotal  = hotels.reduce((a,h) => a+(h.total||0), 0);
   const flightTotal = flights.reduce((a,f) => a+(f.price||0), 0);
   const transTotal  = transport.reduce((a,t) => a+(t.price||0), 0);
@@ -5342,7 +5360,7 @@ function renderBudgetView() {
       </div>
       <div class="bv-row-right">
         <div class="bv-row-cost">${fmt(cost)}</div>
-        ${rawCost && rawCost !== fmt(cost) ? `<div class="bv-row-sub">${rawCost}</div>` : ''}
+        ${rawAddsInfo(rawCost, cost) ? `<div class="bv-row-sub">${rawCost}</div>` : ''}
       </div>
     </div>`;
 
@@ -5380,13 +5398,24 @@ function renderBudgetView() {
         : `<div class="bv-row-avios">\u2726 <input class="bv-avios-input" placeholder="Add Avios" value="${f.avios||''}" onchange="saveBudgetAvios(${i},this.value)"></div>`
     )
   ).join('');
-  const transRows = transport.map(t =>
-    mkRowWithIco(TRANSPORT_ICONS[t.kicker]||icoBus, 'rgba(82,107,130,0.08)', '#526B82',
-      t.title, t.date||'', t.kicker||'Transport',
-      t.price, t.rawPrice, ''
+  // Transport (non-flight) grouped by mode into a single total row each —
+  // "Tram Total \xA36", "Train Total \xA39" \u2014 rather than itemising
+  // every individual ticket, per request.
+  const transByMode = {};
+  transport.forEach(t => {
+    const key = t.kicker || 'Other';
+    if (!transByMode[key]) transByMode[key] = { total: 0, count: 0 };
+    transByMode[key].total += (t.price || 0);
+    transByMode[key].count++;
+  });
+  const transRows = Object.entries(transByMode).map(([kicker, g]) =>
+    mkRowWithIco(TRANSPORT_ICONS[kicker]||icoBus, 'rgba(82,107,130,0.08)', '#526B82',
+      `${kicker} Total`, `${g.count} booking${g.count!==1?'s':''}`, null,
+      g.total, null, ''
     )
   ).join('');
-  const travelRows = flightRows + transRows;
+  const travelRows = (flightRows ? `<div class="bv-live-group"><span>Flights</span><span class="bv-live-group-count">${flights.length} booking${flights.length!==1?'s':''}</span></div>${flightRows}` : '')
+    + (transRows ? `<div class="bv-live-group"><span>Other Transport</span></div>${transRows}` : '');
   const travelTotal = flightTotal + transTotal;
 
   // Activity rows

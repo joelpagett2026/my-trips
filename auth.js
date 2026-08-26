@@ -207,7 +207,7 @@ function loadBudgetLiveRedesign() {
     if (!document.getElementById('budget-main')) return;
     if (document.querySelector('script[data-budget-live-redesign]')) return;
     const s = document.createElement('script');
-    s.src = '/budget-live-redesign.js?v=3';
+    s.src = '/budget-live-redesign.js?v=4';
     s.dataset.budgetLiveRedesign = '1';
     s.onload = () => document.documentElement.dataset.budgetRedesign = 'loaded';
     s.onerror = () => console.error('Budget redesign asset failed to load');
