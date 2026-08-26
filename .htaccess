@@ -47,13 +47,14 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   ExpiresByType font/woff              "access plus 1 year"
 </IfModule>
 
-# auth.js carries small shared behaviour fixes used by the Trips dashboard.
-# Do not let a week-long JS cache hide newly deployed fixes.
-<Files "auth.js">
+# These shared application scripts change frequently and directly control
+# authentication, saving and itinerary presentation. Do not let the generic
+# seven-day JavaScript expiry keep an older behavioural version in a browser.
+<FilesMatch "^(auth|db|budget-live-redesign|datepicker)\.js$">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
-</Files>
+</FilesMatch>
 
 # Prevent itinerary HTML from being cached (trip data changes frequently)
 <FilesMatch "\.html$">
