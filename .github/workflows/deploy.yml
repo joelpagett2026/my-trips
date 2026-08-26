@@ -28,6 +28,8 @@ jobs:
       - name: Validate PHP syntax
         run: |
           php -l api.php
+          php -l auth-v2.php
+          php -l auth-session.php
           php -l record.php
           php -l db-config.php
           php -l deploy-webhook.php
