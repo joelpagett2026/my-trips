@@ -38,6 +38,7 @@ jobs:
           php -l share.php
           php -l trips.php
           php -l parks-map.php
+          php -l scripts/validate-renderers.php
 
       - name: Validate web app manifest JSON
         run: |
@@ -50,6 +51,10 @@ jobs:
       - name: Validate focused security contracts
         run: |
           python scripts/validate-security.py
+
+      - name: Execute renderer integration contracts
+        run: |
+          php scripts/validate-renderers.php
 
   deploy:
     needs: validate
