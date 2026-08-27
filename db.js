@@ -4,43 +4,46 @@
 
 const API = '/api.php';
 const RECORD_API = '/record.php';
-const AUTH_API = '/auth-v2.php';
 
 function getStoredAuth() {
     try { return JSON.parse(localStorage.getItem('jh_auth') || 'null') || {}; }
     catch { return {}; }
 }
 
-// Legacy token is retained temporarily for api.php actions that have not yet
-// migrated to shared server-side session validation.
 function getToken() {
     return getStoredAuth().token || '';
 }
 
-// Conflict-safe itinerary reads/saves use the new random expiring session.
-// Old sessions transparently fall back to the legacy token during rollout.
 function getRecordToken() {
     const s = getStoredAuth();
     return s.sessionToken || s.token || '';
 }
 
-async function waitForToken(maxMs = 8000, useRecordToken = false) {
-    const read = useRecordToken ? getRecordToken : getToken;
+async function waitForToken(maxMs = 8000, preferSession = false) {
     const start = Date.now();
-    let token = read();
+    let token = preferSession ? getRecordToken() : getToken();
     while (!token && Date.now() - start < maxMs) {
         await new Promise(r => setTimeout(r, 100));
-        token = read();
+        token = preferSession ? getRecordToken() : getToken();
     }
     return token;
+}
+
+function signalAuthExpired() {
+    if (typeof document === 'undefined') return;
+    document.dispatchEvent(new CustomEvent('mytrips:auth-expired'));
 }
 
 async function parseJsonResponse(res) {
     const text = await res.text();
     let json;
     try { json = text ? JSON.parse(text) : {}; }
-    catch { throw new Error(`Server returned an invalid response (${res.status})`); }
+    catch {
+        if (res.status === 401) signalAuthExpired();
+        throw new Error(`Server returned an invalid response (${res.status})`);
+    }
     if (!res.ok || json.ok === false) {
+        if (res.status === 401) signalAuthExpired();
         const err = new Error(json.error || `Request failed (${res.status})`);
         err.status = res.status;
         err.data = json.data || null;
@@ -59,18 +62,6 @@ async function apiCall(action, params = {}, body = null, method = null, fetchOpt
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
         ...fetchOptions,
     };
-    if (body) options.body = JSON.stringify(body);
-    return parseJsonResponse(await fetch(url.toString(), options));
-}
-
-async function authCall(action, body = null, token = '') {
-    const url = new URL(AUTH_API, location.origin);
-    url.searchParams.set('action', action);
-    const options = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-    };
-    if (token) options.headers['X-Auth-Token'] = token;
     if (body) options.body = JSON.stringify(body);
     return parseJsonResponse(await fetch(url.toString(), options));
 }
@@ -113,6 +104,7 @@ function dbSave(id, data, options = {}) {
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') saveOptions.keepalive = true;
 
     const run = previous.catch(() => {}).then(async () => {
+        // If this caller has never loaded the record, establish a baseline first.
         if (!_recordVersions.has(id)) await dbLoad(id);
         const expectedVersion = _recordVersions.get(id);
         try {
@@ -144,20 +136,12 @@ async function dbDelete(id) {
 }
 
 async function dbVerifyPin(pinHash) {
-    const result = await authCall('login', { pin_hash: pinHash });
-    return result || null;
+    const result = await apiCall('auth', {}, { pin_hash: pinHash });
+    return result ? result.token : null;
 }
 
-async function dbChangePin(newHash) {
-    const result = await authCall('change_pin', { new_hash: newHash }, getRecordToken());
-    if (result?.session_token && result?.legacy_token) {
-        localStorage.setItem('jh_auth', JSON.stringify({
-            sessionToken: result.session_token,
-            token: result.legacy_token,
-            ts: Date.now(),
-        }));
-    }
-    return result;
+async function dbChangePin(currentHash, newHash) {
+    return apiCall('auth', {}, { pin_hash: currentHash, new_hash: newHash });
 }
 
 async function dbLoadRegistry() {
