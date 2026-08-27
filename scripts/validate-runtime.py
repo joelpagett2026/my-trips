@@ -45,10 +45,11 @@ require("budget-live-redesign.js" in ui, "itinerary-ui.js must load the Budget p
 require("FOR UPDATE" in record, "record.php must lock a record while checking its version")
 require("expected_version" in record, "record.php must enforce expected versions")
 require("409" in record, "record.php must reject stale writes")
-require("isAuthorizedToken" in record, "record.php must use shared auth-session validation")
+require("isAuthorizedToken($token, false)" in record, "record.php must reject legacy PIN-hash bearer tokens")
 require("_dbSaveQueues" in db, "db.js must serialize saves per record")
 require("expected_version" in db, "db.js must send record versions")
-require("return s.sessionToken || s.token || ''" in db, "all browser API calls must prefer the random server session token")
+require("return getStoredAuth().sessionToken || ''" in db, "browser API calls must use only the random server session token")
+require("s.token" not in db, "db.js must not fall back to the PIN hash token")
 require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
 
 # Authentication v2 must issue random expiring sessions and throttle PIN guesses.
@@ -63,16 +64,20 @@ require("loginRateLimitRemaining" in auth_v2, "auth-v2 login must enforce thrott
 require("revokeAllAuthSessions" in auth_v2, "changing PIN must invalidate older sessions")
 require("$action === 'check'" in auth_v2 and "isValidAuthSession" in auth_v2, "auth-v2 must expose session validation")
 require("revokeAuthSession($token)" in auth_v2, "logout must revoke only the presented session")
+require("isAuthorizedToken($token, false)" in auth_v2, "PIN changes must require a real server session")
+require("legacy_token" not in auth_v2, "auth-v2 must never return the PIN hash as a bearer token")
 require("/auth-v2.php?action=login" in auth, "PIN overlay must use the v2 login endpoint")
-require("session_token" in auth and "legacy_token" in auth, "browser must retain both tokens during staged migration")
+require("legacy_token" not in auth and "s.token" not in auth, "browser auth state must not retain legacy PIN-hash tokens")
 require("mytrips:auth-expired" in auth and "relockForExpiredSession" in auth, "expired server sessions must relock the UI")
 
-# The general API must now accept the same random server session as record.php.
+# The general API must require the same random server session as record.php.
 require("require_once __DIR__ . '/auth-session.php'" in api, "api.php must load shared session validation")
-require("isAuthorizedToken($token, true)" in api, "normal api.php actions must accept secure server sessions")
-require("['auth', 'share_load']" in api, "only the intended migration/public actions may bypass the normal API auth gate")
-require("Use auth-v2.php to change the PIN" in api, "legacy api.php must not change PINs directly")
-require("AUTH_FALLBACK_PIN_HASH" in api, "legacy PIN compatibility must be explicitly tied to the shared migration fallback")
+require("isAuthorizedToken($token, false)" in api, "normal api.php actions must require secure server sessions")
+require("$publicActions = ['share_load'];" in api, "share_load must be the only unauthenticated general API action")
+require("case 'auth':" not in api and "case 'pin_hash':" not in api, "legacy PIN-hash API endpoints must be removed")
+require("AUTH_FALLBACK_PIN_HASH" not in api and "PIN_HASH" not in api, "api.php must not expose PIN-hash compatibility")
+require("case 'write_secret':" not in api, "production API must not write server secrets")
+require("case 'write_file':" not in api, "production API must not overwrite application files")
 
 # No literal Google API keys may be committed to the production API anymore.
 hardcoded_google_keys = re.findall(r"AIza[0-9A-Za-z_-]{20,}", api)
@@ -83,7 +88,9 @@ require("defined('PLACES_API_KEY') ? PLACES_API_KEY : ''" in api, "Places integr
 require("dbChangePin(newHash)" in settings, "Settings PIN change must use the v2 session endpoint")
 require("/auth-v2.php?action=login" in settings, "Settings current-PIN verification must use rate-limited login")
 require("/auth-v2.php?action=logout" in settings, "Settings sign-out must revoke the server session")
-require("const id = typeof row === 'string' ? row : row?.id" in settings, "Backup exporter must read IDs from list API rows")
+require("?.sessionToken || ''" in settings, "Settings must use only the server session token")
+require("legacy_token" not in settings, "Settings must not store the PIN hash as a bearer token")
+require("const id=typeof row==='string'?row:row?.id" in settings.replace(' ', ''), "Backup exporter must read IDs from list API rows")
 require("record_count" in settings, "Backup should record and surface its exported record count")
 
 for runtime_file in [
