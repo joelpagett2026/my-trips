@@ -158,24 +158,24 @@ async function dbDelete(id) {
     return result;
 }
 
-// Login remains available as a compatibility helper for older page code, but
-// it returns only the random session token and never exposes the PIN hash.
-async function dbVerifyPin(pinHash) {
+// Compatibility helper for older page code. The raw four-digit PIN is sent only
+// to the same-origin HTTPS auth endpoint; the server performs the hash comparison.
+async function dbVerifyPin(pin) {
     const res = await fetch('/auth-v2.php?action=login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin_hash: pinHash }),
+        body: JSON.stringify({ pin }),
     });
     const data = await parseJsonResponse(res);
     return data?.session_token || null;
 }
 
-async function dbChangePin(newHash) {
+async function dbChangePin(newPin) {
     const token = await waitForToken();
     const res = await fetch('/auth-v2.php?action=change_pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
-        body: JSON.stringify({ new_hash: newHash }),
+        body: JSON.stringify({ new_pin: newPin }),
     });
     const data = await parseJsonResponse(res);
     if (data?.session_token) {
