@@ -47,6 +47,11 @@ require("['trip-registry']" in record_delete and "str_ends_with(strtolower($id),
         'registry and snapshot records must be protected from generic deletion')
 require("trip['slug']" in record_delete and 'trip deletion endpoint' in record_delete,
         'active trip records must be rejected by generic deletion')
+require('beginTransaction()' in record_delete and "trip-registry' FOR UPDATE" in record_delete,
+        'generic deletion must serialize against trip creation/deletion')
+require('Trip registry not found; generic deletion is disabled' in record_delete
+        and 'Trip registry is invalid; generic deletion is disabled' in record_delete,
+        'generic deletion must fail closed when registry integrity cannot be verified')
 
 # Browser Google Maps keys are public by nature, but there should be one runtime
 # source for the active key so it can be restricted/rotated centrally.
