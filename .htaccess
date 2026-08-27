@@ -12,6 +12,12 @@ RewriteEngine On
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
 RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
 
+# Legacy whole-record writes bypass the conflict-safe record.php endpoint, and
+# generic setting writes could bypass the dedicated PIN/session lifecycle. No
+# current browser code uses either action, so fail them closed at the web edge.
+RewriteCond %{QUERY_STRING} (^|&)action=(save|set_setting)(&|$) [NC]
+RewriteRule ^api\.php$ - [R=410,L]
+
 # Existing share links used /new-trip-v2.html?share=1&t=TOKEN. Preserve them by
 # internally handing them to share.php, then deny every other direct template hit.
 RewriteCond %{QUERY_STRING} (^|&)share=1(&|$) [NC]
