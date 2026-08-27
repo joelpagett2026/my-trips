@@ -47,16 +47,23 @@ require("isAuthorizedToken" in record, "record.php must use shared auth-session 
 require("_dbSaveQueues" in db, "db.js must serialize saves per record")
 require("expected_version" in db, "db.js must send record versions")
 require("getRecordToken" in db and "sessionToken" in db, "record API must prefer the random server session token")
+require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
 
 # Authentication v2 must issue random expiring sessions and throttle PIN guesses.
 require("random_bytes(32)" in auth_session, "auth sessions must use cryptographically random tokens")
 require("AUTH_SESSION_TTL_SECONDS" in auth_session, "auth sessions must expire server-side")
 require("AUTH_MAX_FAILURES" in auth_session and "auth_attempts" in auth_session, "PIN login must be rate limited")
+require("authTokenHash" in auth_session, "session token hashing must be centralized")
+require("revokeAuthSession" in auth_session, "single-session logout helper must exist")
+require("last_seen_at = NOW()" in auth_session, "valid server sessions should record last-seen time")
 require("issueAuthSession" in auth_v2, "auth-v2 login must issue a server session")
 require("loginRateLimitRemaining" in auth_v2, "auth-v2 login must enforce throttling")
 require("revokeAllAuthSessions" in auth_v2, "changing PIN must invalidate older sessions")
+require("$action === 'check'" in auth_v2 and "isValidAuthSession" in auth_v2, "auth-v2 must expose session validation")
+require("revokeAuthSession($token)" in auth_v2, "logout must revoke only the presented session")
 require("/auth-v2.php?action=login" in auth, "PIN overlay must use the v2 login endpoint")
 require("session_token" in auth and "legacy_token" in auth, "browser must retain both tokens during staged migration")
+require("mytrips:auth-expired" in auth and "relockForExpiredSession" in auth, "expired server sessions must relock the UI")
 
 # Settings must use the same security path and export every listed record ID.
 require("dbChangePin(newHash)" in settings, "Settings PIN change must use the v2 session endpoint")
