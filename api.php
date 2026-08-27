@@ -5,10 +5,6 @@
 require_once __DIR__ . '/db-config.php'; // DB_HOST/DB_NAME/DB_USER/DB_PASS/PUBLIC_HTML + db()
 require_once __DIR__ . '/auth-session.php';
 
-// Temporary compatibility fallback for older browser sessions. New logins use
-// auth-v2.php and receive random server-side session tokens instead.
-define('PIN_HASH', AUTH_FALLBACK_PIN_HASH);
-
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 header('Access-Control-Allow-Origin: *');
@@ -18,16 +14,14 @@ header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
 // ── AUTH CHECK ────────────────────────────────────────────────────────
-// Public share loading remains unauthenticated. The legacy auth action is kept
-// temporarily for older clients, but every normal API action now validates the
-// same random, expiring server-side session used by record.php. Old PIN-hash
-// bearer tokens remain accepted only during the staged migration.
+// Public share loading is the only unauthenticated action. Everything else
+// requires a random, expiring server-side session token issued by auth-v2.php.
 $action = $_GET['action'] ?? '';
-$publicActions = ['auth', 'share_load'];
+$publicActions = ['share_load'];
 
 if (!in_array($action, $publicActions, true)) {
     $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
-    if (!isAuthorizedToken($token, true)) {
+    if (!isAuthorizedToken($token, false)) {
         http_response_code(401);
         echo json_encode(['ok' => false, 'error' => 'Unauthorised']);
         exit;
@@ -49,7 +43,8 @@ function fail(string $msg, int $code = 400): void {
 $body = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $raw = file_get_contents('php://input');
-    $body = json_decode($raw, true) ?? [];
+    $body = json_decode($raw ?: '{}', true);
+    if (!is_array($body)) fail('Invalid JSON body');
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -57,24 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ══════════════════════════════════════════════════════════════════════
 
 switch ($action) {
-
-    // ── LEGACY VERIFY PIN ────────────────────────────────────────────
-    // Kept only so an old cached client can recover during rollout. New code
-    // uses /auth-v2.php and never uses the PIN hash as its primary bearer token.
-    case 'auth':
-        $submitted = strtolower(trim((string)($body['pin_hash'] ?? '')));
-        if (isset($body['new_hash'])) {
-            fail('Use auth-v2.php to change the PIN', 410);
-        }
-        if (preg_match('/^[a-f0-9]{64}$/', $submitted) && hash_equals(activePinHash(), $submitted)) {
-            ok(['token' => activePinHash(), 'deprecated' => true]);
-        }
-        fail('Incorrect PIN', 401);
-
-    // Deprecated compatibility endpoint. It remains auth-gated and should not
-    // be used by new browser code.
-    case 'pin_hash':
-        ok(['hash' => activePinHash(), 'deprecated' => true]);
 
     // ── LOAD A RECORD ────────────────────────────────────────────────
     // Retained for Settings/backup compatibility. Itinerary runtime reads use
@@ -86,16 +63,18 @@ switch ($action) {
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         if (!$row) ok(null);
-        ok(['data' => json_decode($row['data'], true), 'updated_at' => $row['updated_at']]);
+        $decoded = json_decode((string)$row['data'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) fail('Stored record is invalid JSON', 500);
+        ok(['data' => $decoded, 'updated_at' => $row['updated_at']]);
 
     // ── LEGACY SAVE A RECORD ─────────────────────────────────────────
-    // Runtime saving now uses record.php. Keep this action temporarily for
-    // older non-itinerary pages while migration completes.
+    // Runtime saving uses record.php. This remains for older non-itinerary
+    // pages but is protected by the same secure server session.
     case 'save':
         $id   = $body['id']   ?? '';
         $data = $body['data'] ?? null;
         if (!$id || $data === null) fail('Missing id or data');
-        $json = json_encode($data);
+        $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($json === false) fail('Invalid data');
         db()->prepare("INSERT INTO itinerary (id, data, updated_at) VALUES (?, ?, NOW())
                        ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()")
@@ -140,7 +119,7 @@ switch ($action) {
                     'hotel' => null, 'budget' => null, 'coverPhoto' => $photo,
                 ],
             ];
-            $seedJson = json_encode($seed);
+            $seedJson = json_encode($seed, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             if ($seedJson === false) fail('Could not create initial trip data');
             db()->prepare("INSERT INTO itinerary (id, data, updated_at) VALUES (?, ?, NOW())
                            ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()")
@@ -187,7 +166,8 @@ switch ($action) {
         $stmt2->execute([$share['trip_id']]);
         $row = $stmt2->fetch();
         if (!$row) fail('Trip not found', 404);
-        $data = json_decode($row['data'], true);
+        $data = json_decode((string)$row['data'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) fail('Stored trip is invalid JSON', 500);
         ok(['data' => $data, 'trip_id' => $share['trip_id']]);
 
     // ── DELETE A RECORD ──────────────────────────────────────────────
@@ -218,35 +198,6 @@ switch ($action) {
         db()->prepare("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$key, $val, $val]);
         ok();
-
-    // ── WRITE SECRET (temporary administrative helper) ───────────────
-    // Still auth-gated. This is retained until hosting-side secret rotation is
-    // complete, then it should be removed from the production API entirely.
-    case 'write_secret':
-        $k = $body['k'] ?? '';
-        $v = $body['v'] ?? '';
-        if (!$k || !$v) fail('Missing k or v');
-        if (!in_array($k, ['ANTHROPIC_API_KEY', 'PLACES_API_KEY'], true)) fail('Unknown key');
-        $secrets = [];
-        $existing = @file_get_contents(__DIR__ . '/secrets.php');
-        if ($existing && preg_match_all("/define\('([^']+)',\s*'([^']+)'\)/", $existing, $m, PREG_SET_ORDER)) {
-            foreach ($m as $row) $secrets[$row[1]] = $row[2];
-        }
-        $secrets[$k] = $v;
-        $php = "<?php\n";
-        foreach ($secrets as $sk => $sv) $php .= "define('" . $sk . "', " . var_export($sv, true) . ");\n";
-        if (file_put_contents(__DIR__ . '/secrets.php', $php) === false) fail('Secret write failed', 500);
-        ok(['written' => true, 'keys' => array_keys($secrets)]);
-
-    // ── WRITE FILE (temporary emergency helper) ──────────────────────
-    case 'write_file':
-        $allowed = ['deploy-webhook.php', 'itinerary-v2-style.css', 'new-trip-v2.html'];
-        $fname = $body['file'] ?? '';
-        if (!in_array($fname, $allowed, true)) fail('Not allowed');
-        $decoded = base64_decode($body['content'] ?? '', true);
-        if ($decoded === false || $decoded === '') fail('Empty content');
-        if (file_put_contents(__DIR__ . '/' . $fname, $decoded) === false) fail('Write failed', 500);
-        ok(['written' => $fname]);
 
     // ── GEOCODE ITEM ─────────────────────────────────────────────────
     case 'geocode_item':
@@ -377,7 +328,7 @@ PROMPT;
         };
 
         $photo = null;
-        if (!$photo && $PLACES_KEY) {
+        if ($PLACES_KEY) {
             $findData = json_decode($fetchUrlFn('https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input='
                 . urlencode($q . ($city ? ', ' . $city : '')) . '&inputtype=textquery&fields=place_id,photos&key=' . $PLACES_KEY), true);
             $photoRef = $findData['candidates'][0]['photos'][0]['photo_reference'] ?? null;
@@ -424,8 +375,6 @@ PROMPT;
         ok(['photo' => $photo]);
 
     // ── PLACE PHOTO (legacy alias) ───────────────────────────────────
-    // Uses the same server-side key as every other Places action. There is no
-    // longer a literal Google key embedded in source control.
     case 'place_photo':
         $q = trim($_GET['q'] ?? '');
         if (!$q) ok(['photo' => null]);
@@ -600,10 +549,6 @@ PROMPT;
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────
-function getActivePinHash(): string {
-    return activePinHash();
-}
-
 function ensureSharesTable(): void {
     static $done = false;
     if ($done) return;
@@ -620,16 +565,4 @@ function ensureSharesTable(): void {
         }
     } catch (Throwable $e) { /* best effort */ }
     $done = true;
-}
-
-function stripBookingRefs(mixed $data): mixed {
-    if (!is_array($data)) return $data;
-    foreach ($data as $k => $v) {
-        if ($k === 'ref' || $k === 'ch_ref') {
-            $data[$k] = '';
-        } elseif (is_array($v)) {
-            $data[$k] = stripBookingRefs($v);
-        }
-    }
-    return $data;
 }
