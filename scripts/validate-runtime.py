@@ -87,6 +87,10 @@ require("budget-live-redesign.js" in ui, "itinerary-ui.js must load the Budget p
 # Conflict-safe saves.
 require("FOR UPDATE" in record, "record.php must lock a record while checking its version")
 require("expected_version" in record, "record.php must enforce expected versions")
+require("array_key_exists('expected_version', $body)" in record,
+        "record.php must reject writes that omit the concurrency precondition")
+require("Missing expected_version" in record and "428" in record,
+        "missing save preconditions must fail closed")
 require("409" in record, "record.php must reject stale writes")
 require("isAuthorizedToken($token, false)" in record, "record.php must reject legacy PIN-hash bearer tokens")
 require("_dbSaveQueues" in db, "db.js must serialize saves per record")
@@ -162,6 +166,7 @@ for runtime_file in [
     "trip.php",
     "share.php",
     "trips.php",
+    "parks-map.php",
     "itinerary-state-guard.js",
     "itinerary-ui.js",
     "budget-live-redesign.js",
