@@ -102,6 +102,7 @@ if (!isAuthed() && !IS_SHARE_VIEW) {
 }
 
 function showPinOverlay() {
+    if (IS_SHARE_VIEW || document.getElementById('pin-overlay')) return;
     document.documentElement.style.visibility = 'visible';
 
     const overlay = document.createElement('div');
@@ -210,6 +211,16 @@ function showPinOverlay() {
         }
     });
 }
+
+function relockForExpiredSession() {
+    if (IS_SHARE_VIEW) return;
+    clearSession();
+    window._mytripsAuthed = false;
+    if (document.body) showPinOverlay();
+    else document.addEventListener('DOMContentLoaded', showPinOverlay, { once: true });
+}
+
+document.addEventListener('mytrips:auth-expired', relockForExpiredSession);
 
 if (IS_SHARE_VIEW) {
     document.documentElement.style.visibility = 'visible';
