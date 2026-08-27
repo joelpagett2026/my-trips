@@ -5,6 +5,7 @@ require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/auth-session.php';
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token');
@@ -25,7 +26,7 @@ function respondFail(string $message, int $status = 400, mixed $data = null): ne
 }
 
 $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
-if (!isAuthorizedToken($token, true)) respondFail('Unauthorised', 401);
+if (!isAuthorizedToken($token, false)) respondFail('Unauthorised', 401);
 
 $action = (string)($_GET['action'] ?? '');
 
