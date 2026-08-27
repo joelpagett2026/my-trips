@@ -34,7 +34,7 @@ require("already exists', 409" in endpoint,
         "duplicate destination/year must be reported as a conflict")
 require("$registry['trips'][] = $registryEntry" in endpoint,
         "registry entry must be committed by the same endpoint")
-for reserved in ('trip-create', 'trip-delete', 'place-photo', 'auth-v2', 'record', 'parks-map', 'share'):
+for reserved in ('trip-create', 'trip-delete', 'place-photo', 'backup-export', 'auth-v2', 'record', 'record-delete', 'parks-map', 'share'):
     require(f"'{reserved}'" in endpoint,
             f"runtime route {reserved} must be reserved from trip slugs")
 
