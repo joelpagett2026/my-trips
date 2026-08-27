@@ -22,4 +22,15 @@ if (($diag['maps_key_rewritten'] ?? 0) !== 1
     exit;
 }
 
+// Override the legacy two-step dashboard creator only after its original script
+// has loaded. The replacement uses trip-create.php to commit the itinerary and
+// registry entry atomically.
+$createScript = '<script src="/trip-dashboard-create.js?v=1"></script>';
+$page = str_replace('</body>', $createScript . "\n</body>", $page, $createScriptCount);
+if ($createScriptCount !== 1) {
+    http_response_code(500);
+    echo 'Trips dashboard creation module could not be loaded.';
+    exit;
+}
+
 echo $page;
