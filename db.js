@@ -86,14 +86,33 @@ async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
 const _recordVersions = new Map();
 const _dbSaveQueues = new Map();
 
+// Keep the exact server state returned by dbLoad available to safety layers that
+// load after the itinerary's asynchronous request has already started. This
+// avoids mistaking the template's temporary/default STATE for persisted data.
+if (typeof window !== 'undefined' && !(window.__mytripsLoadedRecords instanceof Map)) {
+    window.__mytripsLoadedRecords = new Map();
+}
+
+function noteRecordLoaded(id, data) {
+    if (typeof window === 'undefined') return;
+    let snapshot = data;
+    try { snapshot = data == null ? null : JSON.parse(JSON.stringify(data)); } catch {}
+    window.__mytripsLoadedRecords.set(id, snapshot);
+    if (typeof document !== 'undefined') {
+        document.dispatchEvent(new CustomEvent('mytrips:record-loaded', { detail: { id, data: snapshot } }));
+    }
+}
+
 /** Load an itinerary record by ID. Returns null if not found. */
 async function dbLoad(id) {
     const result = await recordCall('load', { id });
     if (!result) {
         _recordVersions.set(id, null);
+        noteRecordLoaded(id, null);
         return null;
     }
     _recordVersions.set(id, result.version || null);
+    noteRecordLoaded(id, result.data);
     return result.data;
 }
 
@@ -133,6 +152,9 @@ function dbSave(id, data, options = {}) {
 async function dbDelete(id) {
     const result = await apiCall('delete', { id }, null, 'DELETE');
     _recordVersions.delete(id);
+    if (typeof window !== 'undefined' && window.__mytripsLoadedRecords instanceof Map) {
+        window.__mytripsLoadedRecords.delete(id);
+    }
     return result;
 }
 
