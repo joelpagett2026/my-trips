@@ -58,6 +58,9 @@ function ensureAuthTables(): void {
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
 
+    // Cleanup belongs on authentication/session-establishment traffic, not every
+    // normal API request. isValidAuthSession() deliberately avoids this function
+    // unless the auth table is actually missing.
     try {
         db()->exec("DELETE FROM auth_sessions WHERE expires_at < NOW()");
         db()->exec("DELETE FROM auth_attempts WHERE updated_at < DATE_SUB(NOW(), INTERVAL 1 DAY)");
@@ -140,19 +143,39 @@ function isValidAuthSession(string $token): bool {
     $hash = authTokenHash($token);
     if ($hash === null) return false;
 
-    ensureAuthTables();
-    $stmt = db()->prepare('SELECT (expires_at > NOW()) AS is_valid FROM auth_sessions WHERE token_hash = ? LIMIT 1');
-    $stmt->execute([$hash]);
-    $row = $stmt->fetch();
+    // Normal authenticated traffic must not execute CREATE TABLE / cleanup DML
+    // on every API call. Query the existing table directly and self-bootstrap
+    // only if the auth schema is genuinely missing.
+    $loadSession = static function(string $tokenHash): array|false {
+        $stmt = db()->prepare('SELECT (expires_at > NOW()) AS is_valid, last_seen_at FROM auth_sessions WHERE token_hash = ? LIMIT 1');
+        $stmt->execute([$tokenHash]);
+        return $stmt->fetch();
+    };
+
+    try {
+        $row = $loadSession($hash);
+    } catch (Throwable $e) {
+        try {
+            ensureAuthTables();
+            $row = $loadSession($hash);
+        } catch (Throwable $schemaError) {
+            return false;
+        }
+    }
+
     if (!$row) return false;
 
     if ((int)($row['is_valid'] ?? 0) !== 1) {
-        db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([$hash]);
+        try { db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([$hash]); }
+        catch (Throwable $e) {}
         return false;
     }
 
+    // last_seen_at is diagnostic only; a write on every API request creates
+    // unnecessary DB load. Refresh it at most once every five minutes.
     try {
-        db()->prepare('UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = ?')->execute([$hash]);
+        db()->prepare('UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = ? AND (last_seen_at IS NULL OR last_seen_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE))')
+            ->execute([$hash]);
     } catch (Throwable $e) {}
     return true;
 }
