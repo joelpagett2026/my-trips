@@ -21,6 +21,8 @@ park_renderer = read('parks-map.php')
 state_guard = read('itinerary-state-guard.js')
 db = read('db.js')
 auth = read('auth.js')
+auth_v2 = read('auth-v2.php')
+settings = read('settings.html')
 db_config = read('db-config.php')
 
 # Legacy write paths that bypass modern conflict/PIN handling must be unreachable.
@@ -43,6 +45,23 @@ require("'parks-map.php'" in deploy,
 # Auth should no longer be a catch-all home for unrelated visual fixes.
 require('MutationObserver' not in auth and 'TravelDayFrontCard' not in auth,
         'auth.js must stay authentication-only')
+
+# PIN-derived hashes must never be constructed or sent by browser code. The raw
+# four digits travel only over same-origin HTTPS and are hashed/compared server-side.
+require('sha256(' not in auth and 'pin_hash' not in auth,
+        'auth.js must not derive or transmit PIN hashes')
+require("JSON.stringify({ pin: entered })" in auth,
+        'PIN overlay must submit only the raw PIN to auth-v2')
+require('sha256(' not in settings and 'pin_hash' not in settings,
+        'Settings must not derive or transmit PIN hashes')
+require("JSON.stringify({pin:pinEntered})" in settings and "dbChangePin(pinEntered)" in settings,
+        'Settings PIN verification/change must submit raw four-digit PINs')
+require("JSON.stringify({ pin })" in db and "JSON.stringify({ new_pin: newPin })" in db,
+        'database auth helpers must submit raw PIN fields only')
+require("validatedPin" in auth_v2 and "hash('sha256', $pin)" in auth_v2 and "hash('sha256', $newPin)" in auth_v2,
+        'auth-v2 must validate and hash PINs on the server')
+require("$body['pin_hash']" not in auth_v2 and "$body['new_hash']" not in auth_v2,
+        'auth-v2 must not accept browser-supplied PIN hashes')
 
 # Snapshot baseline must come from the real server-loaded record, not whichever
 # temporary/default STATE happens to exist when the safety script loads.
