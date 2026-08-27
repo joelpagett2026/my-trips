@@ -21,7 +21,8 @@ function configuredPinHash(): ?string {
 
 function activePinHash(): string {
     // The database value is authoritative once a PIN has been set through the
-    // Settings screen. A server-only PIN_HASH can bootstrap a fresh install.
+    // Settings screen. A server-only PIN_HASH is only a bootstrap value for a
+    // healthy database that does not yet contain a valid PIN row.
     try {
         $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash'");
         $stmt->execute();
@@ -31,8 +32,10 @@ function activePinHash(): string {
             if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
         }
     } catch (Throwable $e) {
-        // If the DB itself is unavailable, callers will fail naturally. The
-        // optional server PIN below is only a bootstrap value, not a DB bypass.
+        // Never fall back to the bootstrap PIN when the authoritative settings
+        // store cannot be read. Doing so could temporarily resurrect an old PIN
+        // after the user has changed it.
+        throw new RuntimeException('Could not read the configured PIN', 0, $e);
     }
 
     $bootstrap = configuredPinHash();
