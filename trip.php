@@ -59,13 +59,13 @@ $templatePath = __DIR__ . '/new-trip-v2.html';
 $template = file_get_contents($templatePath);
 if ($template === false) { http_response_code(500); echo 'Template not found.'; exit; }
 
-// Remove the retired PIN-hash credential from the browser template and inject
-// only the public, HTTP-referrer-restricted Maps browser key at render time.
+// One central compatibility/safety pass is shared with read-only share pages.
 [$template, $runtimeDiag] = applyItineraryRuntimeSafety($template);
 if (($runtimeDiag['auth_const_removed'] ?? 0) !== 1
     || ($runtimeDiag['auth_headers_rewritten'] ?? 0) < 1
     || ($runtimeDiag['maps_key_rewritten'] ?? 0) !== 1
-    || ($runtimeDiag['share_url_rewritten'] ?? 0) !== 1) {
+    || ($runtimeDiag['share_url_rewritten'] ?? 0) !== 1
+    || ($runtimeDiag['hotel_lookup_rewritten'] ?? 0) !== 1) {
   http_response_code(500);
   echo 'This trip could not be rendered safely because the shared template changed unexpectedly.';
   exit;
@@ -75,46 +75,6 @@ $sourceBootstrap = "// Read URL params\nconst params = new URLSearchParams(windo
 $tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)\nconst dest   = " . json_encode($dest) . ";\nconst dep    = " . json_encode($dep) . ";\nconst ret    = " . json_encode($ret) . ";\nconst trav   = " . json_encode($trav) . ";\nconst status = " . json_encode($status) . ";\nconst slug   = " . json_encode($slug) . ";\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
 $page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
 if ($count === 0) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
-
-$oldHotelLookup = <<<'JS'
-// Find the hotel covering the active day (checkin <= day <= checkout)
-function hotelForDay(dayIdx) {
-  if (STATE.days[dayIdx]?.noAccommodation) return null; // explicitly marked — staying with family/friends, or flying that day
-  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
-  if (!hotels.length) return null;
-  const dayDate = parseDate(STATE.days[dayIdx]?.date);
-  if (!dayDate) return hotels[0]; // no date — show first
-  for (const h of hotels) {
-    const ci = parseDate(h.checkin);
-    const co = parseDate(h.checkout);
-    if (ci && co && dayDate >= ci && dayDate <= co) return h;
-  }
-  // Fallback: closest upcoming
-  return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
-}
-JS;
-$newHotelLookup = <<<'JS'
-// Find the hotel covering the selected NIGHT (checkin <= day < checkout)
-function hotelForDay(dayIdx) {
-  if (STATE.days[dayIdx]?.noAccommodation) return null;
-  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
-  if (!hotels.length) return null;
-  const dayDate = parseDate(STATE.days[dayIdx]?.date);
-  if (!dayDate) return null;
-  for (const h of hotels) {
-    const ci = parseDate(h.checkin);
-    const co = parseDate(h.checkout);
-    if (ci && co && dayDate >= ci && dayDate < co) return h;
-  }
-  return null;
-}
-JS;
-$page = str_replace($oldHotelLookup, $newHotelLookup, $page, $hotelLookupCount);
-if ($hotelLookupCount === 0) {
-  http_response_code(500);
-  echo 'This trip could not be rendered safely because the shared hotel logic changed unexpectedly.';
-  exit;
-}
 
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
