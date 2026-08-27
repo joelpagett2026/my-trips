@@ -37,6 +37,7 @@ jobs:
           php -l trip.php
           php -l share.php
           php -l trips.php
+          php -l parks-map.php
 
       - name: Validate web app manifest JSON
         run: |
