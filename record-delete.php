@@ -47,25 +47,40 @@ if (in_array(strtolower($id), $protected, true) || str_ends_with(strtolower($id)
 
 $pdo = db();
 try {
-    // If this ID is an active itinerary slug, force callers through
-    // trip-delete.php so the registry, snapshots and shares stay consistent.
-    $registryStmt = $pdo->prepare("SELECT data FROM itinerary WHERE id = 'trip-registry' LIMIT 1");
+    $pdo->beginTransaction();
+
+    // Lock the registry using the same first-lock order as trip-create.php and
+    // trip-delete.php. This prevents a concurrent trip creation from racing a
+    // generic delete of the same ID.
+    $registryStmt = $pdo->prepare("SELECT data FROM itinerary WHERE id = 'trip-registry' FOR UPDATE");
     $registryStmt->execute();
     $registryRow = $registryStmt->fetch();
-    if ($registryRow) {
-        $registry = json_decode((string)$registryRow['data'], true);
-        if (is_array($registry) && is_array($registry['trips'] ?? null)) {
-            foreach ($registry['trips'] as $trip) {
-                if (is_array($trip) && strtolower((string)($trip['slug'] ?? '')) === strtolower($id)) {
-                    recordDeleteFail('Trip records must be deleted through the trip deletion endpoint', 409);
-                }
-            }
+    if (!$registryRow) {
+        $pdo->rollBack();
+        recordDeleteFail('Trip registry not found; generic deletion is disabled until it is restored', 500);
+    }
+
+    $registry = json_decode((string)$registryRow['data'], true);
+    if (!is_array($registry) || !is_array($registry['trips'] ?? null)) {
+        $pdo->rollBack();
+        recordDeleteFail('Trip registry is invalid; generic deletion is disabled to protect itinerary data', 500);
+    }
+
+    // If this ID is an active itinerary slug, force callers through
+    // trip-delete.php so registry, snapshots and shares stay consistent.
+    foreach ($registry['trips'] as $trip) {
+        if (is_array($trip) && strtolower((string)($trip['slug'] ?? '')) === strtolower($id)) {
+            $pdo->rollBack();
+            recordDeleteFail('Trip records must be deleted through the trip deletion endpoint', 409);
         }
     }
 
     $stmt = $pdo->prepare('DELETE FROM itinerary WHERE id = ?');
     $stmt->execute([$id]);
-    recordDeleteOk(['id' => $id, 'deleted' => $stmt->rowCount() > 0]);
+    $deleted = $stmt->rowCount() > 0;
+    $pdo->commit();
+    recordDeleteOk(['id' => $id, 'deleted' => $deleted]);
 } catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
     recordDeleteFail('Record deletion failed', 500);
 }
