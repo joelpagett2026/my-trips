@@ -106,6 +106,12 @@ function clearFailedLogins(): void {
     } catch (Throwable $e) {}
 }
 
+function authTokenHash(string $token): ?string {
+    $token = strtolower(trim($token));
+    if (!preg_match('/^[a-f0-9]{64}$/', $token)) return null;
+    return hash('sha256', $token);
+}
+
 function issueAuthSession(): string {
     ensureAuthTables();
     $token = bin2hex(random_bytes(32));
@@ -117,17 +123,25 @@ function issueAuthSession(): string {
 }
 
 function isValidAuthSession(string $token): bool {
-    if (!preg_match('/^[a-f0-9]{64}$/i', $token)) return false;
+    $hash = authTokenHash($token);
+    if ($hash === null) return false;
+
     ensureAuthTables();
-    $hash = hash('sha256', strtolower($token));
     $stmt = db()->prepare('SELECT expires_at FROM auth_sessions WHERE token_hash = ? LIMIT 1');
     $stmt->execute([$hash]);
     $row = $stmt->fetch();
     if (!$row) return false;
+
     if ((strtotime((string)$row['expires_at']) ?: 0) <= time()) {
         db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([$hash]);
         return false;
     }
+
+    // last_seen_at is diagnostic only; expiry remains absolute (12 hours from
+    // login) rather than becoming an indefinitely sliding browser session.
+    try {
+        db()->prepare('UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = ?')->execute([$hash]);
+    } catch (Throwable $e) {}
     return true;
 }
 
@@ -137,7 +151,16 @@ function isAuthorizedToken(string $token, bool $allowLegacyPinHash = true): bool
 
     // Compatibility path for browser sessions created before this rollout.
     // Once all clients have received random sessions, this can be removed.
-    return $allowLegacyPinHash && hash_equals(activePinHash(), strtolower($token));
+    return $allowLegacyPinHash && hash_equals(activePinHash(), strtolower(trim($token)));
+}
+
+function revokeAuthSession(string $token): void {
+    $hash = authTokenHash($token);
+    if ($hash === null) return;
+    try {
+        ensureAuthTables();
+        db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([$hash]);
+    } catch (Throwable $e) {}
 }
 
 function revokeAllAuthSessions(): void {
