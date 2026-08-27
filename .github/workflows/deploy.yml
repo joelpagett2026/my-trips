@@ -23,6 +23,7 @@ jobs:
           node --check itinerary-state-guard.js
           node --check itinerary-ui.js
           node --check trip-dashboard-create.js
+          node --check trip-delete.js
           node --check datepicker.js
           node --check budget-live-redesign.js
 
@@ -33,6 +34,7 @@ jobs:
           php -l auth-session.php
           php -l record.php
           php -l trip-create.php
+          php -l trip-delete.php
           php -l db-config.php
           php -l template-runtime.php
           php -l deploy-webhook.php
@@ -57,6 +59,10 @@ jobs:
       - name: Validate atomic trip creation contracts
         run: |
           python scripts/validate-trip-create.py
+
+      - name: Validate atomic trip deletion contracts
+        run: |
+          python scripts/validate-trip-delete.py
 
       - name: Execute renderer integration contracts
         run: |
