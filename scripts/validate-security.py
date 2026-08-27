@@ -18,6 +18,7 @@ htaccess = read('.htaccess')
 deploy = read('deploy-webhook.php')
 runtime = read('template-runtime.php')
 park_renderer = read('parks-map.php')
+place_photo = read('place-photo.php')
 state_guard = read('itinerary-state-guard.js')
 db = read('db.js')
 auth = read('auth.js')
@@ -47,6 +48,20 @@ require("RewriteRule ^parks/map\\.html$ parks-map.php [L,QSA]" in htaccess,
         'public park map URL must route through parks-map.php')
 require("'parks-map.php'" in deploy,
         'park map renderer must deploy before the route is activated')
+
+# Google Places server keys must never be returned to the browser inside a photo
+# URL. Historical API action names are retained only as routes to the safe proxy.
+require('action=(place_photo_v2|place_photo)' in htaccess
+        and 'RewriteRule ^api\\.php$ place-photo.php [L,QSA]' in htaccess,
+        'legacy place-photo calls must be intercepted by the safe proxy')
+require("'place-photo.php'" in deploy,
+        'place-photo proxy must be part of the deployment manifest')
+require("str_contains($location, $key)" in place_photo and "str_contains($location, 'key=')" in place_photo,
+        'place-photo proxy must reject redirect URLs that expose the server key')
+require("optionalConfigValue('PLACES_API_KEY')" in place_photo,
+        'place-photo proxy must source the Places key only from server configuration')
+require("photoOk($photoUrl)" not in place_photo and "'key=' . $key" not in place_photo,
+        'place-photo proxy must not return a Google URL containing the server key')
 
 # Auth should no longer be a catch-all home for unrelated visual fixes.
 require('MutationObserver' not in auth and 'TravelDayFrontCard' not in auth,
@@ -84,8 +99,8 @@ require("date('Y-m-d H:i:s'" not in auth_session and 'strtotime(' not in auth_se
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
-require('<FilesMatch "^(api|auth-v2|record|trip-create|trip-delete)\\.php$">' in htaccess,
-        'authenticated API response header policy must include all write endpoints')
+require('<FilesMatch "^(api|auth-v2|record|trip-create|trip-delete|place-photo)\\.php$">' in htaccess,
+        'authenticated API response header policy must include all protected endpoints')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
 require('%{HTTP:Sec-Fetch-Site} ^cross-site$' in htaccess,
