@@ -21,10 +21,10 @@ RewriteRule ^new-trip\.html$ - [R=410,L]
 # requests without browser Origin/Sec-Fetch-Site headers remain available for
 # controlled administration with a valid bearer/deploy credential.
 RewriteCond %{HTTP:Sec-Fetch-Site} ^cross-site$ [NC]
-RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo)\.php$ - [F,L]
+RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$ - [F,L]
 RewriteCond %{HTTP:Origin} !^$
 RewriteCond %{HTTP:Origin} !^https://(?:www\.)?joelpagett\.co\.uk$ [NC]
-RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo)\.php$ - [F,L]
+RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$ - [F,L]
 
 # Intercept historical place-photo API actions before api.php executes. The
 # dedicated endpoint resolves Google's public image URL server-side so the
@@ -50,6 +50,11 @@ RewriteCond %{QUERY_STRING} (^|&)share=1(&|$) [NC]
 RewriteRule ^new-trip-v2\.html$ share.php [L,QSA]
 RewriteRule ^new-trip-v2\.html$ - [R=404,L]
 
+# Settings uses a tiny renderer so Settings-only runtime modules stay out of
+# auth.js/db.js while settings.html remains the presentation source.
+RewriteRule ^settings\.html$ settings.php [L,QSA]
+RewriteRule ^settings/?$ settings.php [L,QSA]
+
 # Public pages that need a browser Maps key are rendered through PHP so the key
 # can be centrally restricted/rotated without committing the active value again.
 RewriteRule ^trips/?$ trips.php [L,QSA]
@@ -71,7 +76,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   # The app uses bearer tokens in a custom header and has no supported
   # cross-origin API clients. Strip permissive PHP CORS headers at the web edge
   # so another origin cannot turn a leaked token into a browser-readable API.
-  <FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo)\.php$">
+  <FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$">
     Header always unset Access-Control-Allow-Origin
     Header always unset Access-Control-Allow-Credentials
   </FilesMatch>
@@ -93,7 +98,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 # Critical application behaviour changes frequently. These scripts control
 # authentication, record saving, conflict protection and itinerary presentation,
 # so never allow the generic seven-day JavaScript expiry to hide a new version.
-<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|trip-delete|budget-live-redesign|datepicker)\.js$">
+<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|trip-delete|budget-live-redesign|datepicker|settings-backup)\.js$">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
