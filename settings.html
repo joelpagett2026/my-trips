@@ -141,12 +141,11 @@ function flashDots(color,cb){for(let i=0;i<4;i++){const d=document.getElementByI
 async function handlePinDigit(n) {
   if(pinEntered.length>=4)return; pinEntered+=n; updatePinUI(); if(pinEntered.length<4)return; await new Promise(r=>setTimeout(r,80));
   if(pinStep==='verify'){
-    const hash=sha256(pinEntered);
-    try{const res=await fetch('/auth-v2.php?action=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin_hash:hash})});const json=await res.json();if(!res.ok||!json.ok||!json.data?.session_token)throw new Error(json.error||'Incorrect PIN');localStorage.setItem('jh_auth',JSON.stringify({sessionToken:json.data.session_token,ts:Date.now()}));flashDots('#34c759',()=>{pinStep='new';updatePinUI();});}catch{flashDots('#ff3b30',()=>{document.getElementById('pin-panel-error').textContent='Incorrect PIN';});}return;
+    try{const res=await fetch('/auth-v2.php?action=login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pinEntered})});const json=await res.json();if(!res.ok||!json.ok||!json.data?.session_token)throw new Error(json.error||'Incorrect PIN');localStorage.setItem('jh_auth',JSON.stringify({sessionToken:json.data.session_token,ts:Date.now()}));flashDots('#34c759',()=>{pinStep='new';updatePinUI();});}catch{flashDots('#ff3b30',()=>{document.getElementById('pin-panel-error').textContent='Incorrect PIN';});}return;
   }
   if(pinStep==='new'){newPinCandidate=pinEntered;flashDots('#007aff',()=>{pinStep='confirm';updatePinUI();});return;}
   if(pinEntered!==newPinCandidate){flashDots('#ff3b30',()=>{document.getElementById('pin-panel-error').textContent="PINs don't match — try again";pinStep='new';newPinCandidate='';updatePinUI();});return;}
-  try{const newHash=sha256(pinEntered);await dbChangePin(newHash);flashDots('#34c759',()=>{closePanel('pin');setTimeout(()=>alert('PIN changed successfully!'),300);});}catch{flashDots('#ff3b30',()=>{document.getElementById('pin-panel-error').textContent='Error saving PIN';});}
+  try{await dbChangePin(pinEntered);flashDots('#34c759',()=>{closePanel('pin');setTimeout(()=>alert('PIN changed successfully!'),300);});}catch{flashDots('#ff3b30',()=>{document.getElementById('pin-panel-error').textContent='Error saving PIN';});}
 }
 document.querySelectorAll('.pin-btn-p[data-n]').forEach(btn=>btn.addEventListener('click',()=>handlePinDigit(btn.dataset.n)));document.getElementById('pp-del').addEventListener('click',()=>{pinEntered=pinEntered.slice(0,-1);updatePinUI();});
 </script>
