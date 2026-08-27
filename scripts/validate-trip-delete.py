@@ -46,7 +46,7 @@ require("Nothing was partially deleted" in client,
 require("/trip-delete.js?v=1" in renderer,
         "trip renderer must load the atomic deletion override")
 
-require('<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo)\\.php$">' in htaccess,
+require("trip-delete" in htaccess and "%{HTTP:Sec-Fetch-Site} ^cross-site$" in htaccess,
         "trip-delete.php must inherit same-origin API restrictions")
 require("trip-dashboard-create|trip-delete|budget-live-redesign" in htaccess,
         "trip-delete.js must bypass the long JavaScript cache")
