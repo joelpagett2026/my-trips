@@ -22,8 +22,6 @@ function deploySecret(): string {
 }
 
 function deploymentPreflight(): array {
-    // These values must already exist in server-only secrets.php/environment
-    // before a hardened release is allowed to touch public_html.
     $required = [
         'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS',
         'ANTHROPIC_API_KEY', 'PLACES_API_KEY', 'MAPS_BROWSER_KEY',
@@ -34,8 +32,6 @@ function deploymentPreflight(): array {
     }
     if ($missing) return ['ok' => false, 'error' => 'Missing server configuration', 'missing' => $missing];
 
-    // Verify the exact DB credentials that the new release will use and ensure a
-    // PIN is available either from the DB setting or a server-only bootstrap.
     try {
         $pdo = new PDO(
             'mysql:host=' . serverConfig('DB_HOST') . ';dbname=' . serverConfig('DB_NAME') . ';charset=utf8mb4',
@@ -72,8 +68,6 @@ if ($expectedKey === '') {
     exit;
 }
 
-// Deployment credentials are accepted only in a header so they cannot leak via
-// browser history, access logs, analytics or copied URLs.
 $providedKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? '');
 if ($providedKey === '' || !hash_equals($expectedKey, $providedKey)) {
     http_response_code(403);
@@ -155,6 +149,7 @@ $coreFiles = [
     'trip.php',
     'share.php',
     'trips.php',
+    'parks-map.php',
     'api.php',
     'deploy-webhook.php',
     '.htaccess',
@@ -216,8 +211,6 @@ function copyDeployFile(string $src, string $dest, array &$copied, array &$faile
     $destDir = dirname($destPath);
     if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) { $failed[] = $dest; return; }
 
-    // Copy to a sibling temporary file and rename it into place. rename() on the
-    // same filesystem is atomic, so visitors never receive a half-written file.
     $tmpPath = $destPath . '.deploy-' . getmypid() . '-' . bin2hex(random_bytes(3));
     if (!copy($srcPath, $tmpPath)) { $failed[] = $dest; return; }
     @chmod($tmpPath, 0644);
