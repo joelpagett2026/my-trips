@@ -10,21 +10,24 @@ function getStoredAuth() {
     catch { return {}; }
 }
 
+// Primary API token. Prefer the new random server-side session; the old PIN
+// hash is retained only as a temporary fallback for browsers created before
+// the authentication migration is deployed.
 function getToken() {
-    return getStoredAuth().token || '';
-}
-
-function getRecordToken() {
     const s = getStoredAuth();
     return s.sessionToken || s.token || '';
 }
 
-async function waitForToken(maxMs = 8000, preferSession = false) {
+function getRecordToken() {
+    return getToken();
+}
+
+async function waitForToken(maxMs = 8000) {
     const start = Date.now();
-    let token = preferSession ? getRecordToken() : getToken();
+    let token = getToken();
     while (!token && Date.now() - start < maxMs) {
         await new Promise(r => setTimeout(r, 100));
-        token = preferSession ? getRecordToken() : getToken();
+        token = getToken();
     }
     return token;
 }
@@ -56,7 +59,7 @@ async function apiCall(action, params = {}, body = null, method = null, fetchOpt
     const url = new URL(API, location.origin);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    const token = (action === 'auth' || action === 'share_load') ? getToken() : await waitForToken();
+    const token = action === 'share_load' ? '' : await waitForToken();
     const options = {
         method: method || (body ? 'POST' : 'GET'),
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
@@ -70,7 +73,7 @@ async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
     const url = new URL(RECORD_API, location.origin);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    const token = await waitForToken(8000, true);
+    const token = await waitForToken();
     const options = {
         method: body ? 'POST' : 'GET',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
@@ -135,13 +138,37 @@ async function dbDelete(id) {
     return result;
 }
 
+// Deprecated compatibility helpers. Login and PIN changes now use auth-v2.php
+// directly; keep these names temporarily so any older page code fails safely
+// rather than throwing a missing-function error during the staged rollout.
 async function dbVerifyPin(pinHash) {
-    const result = await apiCall('auth', {}, { pin_hash: pinHash });
-    return result ? result.token : null;
+    const res = await fetch('/auth-v2.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin_hash: pinHash }),
+    });
+    const data = await parseJsonResponse(res);
+    return data?.session_token || null;
 }
 
-async function dbChangePin(currentHash, newHash) {
-    return apiCall('auth', {}, { pin_hash: currentHash, new_hash: newHash });
+async function dbChangePin(newHash) {
+    const token = await waitForToken();
+    const res = await fetch('/auth-v2.php?action=change_pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+        body: JSON.stringify({ new_hash: newHash }),
+    });
+    const data = await parseJsonResponse(res);
+    if (data?.session_token) {
+        const existing = getStoredAuth();
+        localStorage.setItem('jh_auth', JSON.stringify({
+            ...existing,
+            sessionToken: data.session_token,
+            token: data.legacy_token || existing.token || '',
+            ts: Date.now(),
+        }));
+    }
+    return data;
 }
 
 async function dbLoadRegistry() {
