@@ -22,6 +22,7 @@ state_guard = read('itinerary-state-guard.js')
 db = read('db.js')
 auth = read('auth.js')
 auth_v2 = read('auth-v2.php')
+auth_session = read('auth-session.php')
 settings = read('settings.html')
 db_config = read('db-config.php')
 
@@ -65,6 +66,17 @@ require("$body['pin_hash']" not in auth_v2 and "$body['new_hash']" not in auth_v
         'auth-v2 must not accept browser-supplied PIN hashes')
 require('Access-Control-Allow-Origin' not in auth_v2,
         'authentication endpoint must not emit permissive CORS headers itself')
+
+# Session expiry and brute-force windows must use one clock. Comparing MySQL
+# DATETIME values with PHP time()/strtotime() can drift when their timezones differ.
+require('DATE_ADD(NOW(), INTERVAL 12 HOUR)' in auth_session,
+        'session expiry must be created using database time')
+require('expires_at > NOW()' in auth_session,
+        'session validity must be checked using database time')
+require('TIMESTAMPDIFF(SECOND, window_started, NOW())' in auth_session,
+        'login rate-limit age must be measured using database time')
+require("date('Y-m-d H:i:s'" not in auth_session and 'strtotime(' not in auth_session,
+        'auth timing must not mix PHP and database clocks')
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
