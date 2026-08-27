@@ -48,10 +48,10 @@ if ($photo !== '' && strlen($photo) > 2_500_000) createTripFail('Cover photo is 
 // Prevent a trip slug from shadowing any application route or runtime endpoint.
 $reserved = [
     'index', 'settings', 'new-trip', 'new-trip-v2', 'api', 'auth-v2',
-    'auth-session', 'record', 'trip-create', 'trip-delete', 'place-photo',
-    'deploy-webhook', 'trip', 'db-config', 'robots', 'favicon', 'trips',
-    'holidays', 'icons', 'concerts', 'parks', 'parks-map', 'shows', 'private',
-    'share', 'template-runtime', 'manifest',
+    'auth-session', 'record', 'record-delete', 'trip-create', 'trip-delete',
+    'place-photo', 'backup-export', 'deploy-webhook', 'trip', 'db-config',
+    'robots', 'favicon', 'trips', 'holidays', 'icons', 'concerts', 'parks',
+    'parks-map', 'shows', 'private', 'share', 'template-runtime', 'manifest',
 ];
 if (in_array($slug, $reserved, true)) createTripFail('That trip name is reserved — please choose another');
 
