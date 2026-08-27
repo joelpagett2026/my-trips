@@ -131,7 +131,8 @@ $page = str_replace('/db.js?v=1', '/db.js?v=2', $page);
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
-  . '<script src="/itinerary-ui.js?v=1"></script>' . "\n</body>",
+  . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
+  . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
   $guardCount
 );
