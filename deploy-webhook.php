@@ -124,7 +124,7 @@ $retiredFiles = [
     'china.html', 'dubai.html', 'costa-rica.html', 'canada.html',
     'hong-kong-taiwan.html', 'graz-ljubljana-lake-bled-2027.html',
     'porto-2026.html', 'hamburg.html', 'porto-v2.html', 'porto-budget.html',
-    'budget-template.html', 'budget-style.css', 'share.html',
+    'budget-template.html', 'budget-style.css', 'share.html', 'new-trip.html',
 ];
 foreach ($retiredFiles as $retired) {
     @unlink(PUBLIC_HTML . '/' . $retired);
@@ -141,6 +141,7 @@ $coreFiles = [
     'record.php',
     'trip-create.php',
     'trip-delete.php',
+    'place-photo.php',
     'auth.js',
     'db.js',
     'itinerary-state-guard.js',
