@@ -27,7 +27,7 @@ function authFail(string $message, int $status = 400): never {
 }
 
 $raw = file_get_contents('php://input');
-$body = json_decode($raw ?: '', true);
+$body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) authFail('Invalid JSON body');
 
 $action = (string)($_GET['action'] ?? 'login');
@@ -51,6 +51,12 @@ if ($action === 'login') {
         'legacy_token' => activePinHash(),
         'expires_in' => AUTH_SESSION_TTL_SECONDS,
     ]);
+}
+
+if ($action === 'check') {
+    $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
+    if (!isValidAuthSession($token)) authFail('Session expired', 401);
+    authOk(['valid' => true, 'expires_in_max' => AUTH_SESSION_TTL_SECONDS]);
 }
 
 if ($action === 'change_pin') {
@@ -78,13 +84,8 @@ if ($action === 'change_pin') {
 }
 
 if ($action === 'logout') {
-    $token = strtolower((string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? ''));
-    if (preg_match('/^[a-f0-9]{64}$/', $token)) {
-        try {
-            ensureAuthTables();
-            db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([hash('sha256', $token)]);
-        } catch (Throwable $e) {}
-    }
+    $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
+    revokeAuthSession($token);
     authOk(['logged_out' => true]);
 }
 
