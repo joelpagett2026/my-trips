@@ -34,7 +34,8 @@ if ($template === false) {
 [$page, $diag] = applyItineraryRuntimeSafety($template);
 if (($diag['auth_const_removed'] ?? 0) !== 1
     || ($diag['auth_headers_rewritten'] ?? 0) < 1
-    || ($diag['maps_key_rewritten'] ?? 0) !== 1) {
+    || ($diag['maps_key_rewritten'] ?? 0) !== 1
+    || ($diag['hotel_lookup_rewritten'] ?? 0) !== 1) {
     http_response_code(500);
     echo 'Shared itinerary could not be rendered safely.';
     exit;
