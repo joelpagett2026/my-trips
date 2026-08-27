@@ -10,12 +10,10 @@ function getStoredAuth() {
     catch { return {}; }
 }
 
-// Primary API token. Prefer the new random server-side session; the old PIN
-// hash is retained only as a temporary fallback for browsers created before
-// the authentication migration is deployed.
+// All authenticated API calls use the random, expiring server session token.
+// The PIN hash is never stored or transmitted as a bearer credential.
 function getToken() {
-    const s = getStoredAuth();
-    return s.sessionToken || s.token || '';
+    return getStoredAuth().sessionToken || '';
 }
 
 function getRecordToken() {
@@ -138,9 +136,8 @@ async function dbDelete(id) {
     return result;
 }
 
-// Deprecated compatibility helpers. Login and PIN changes now use auth-v2.php
-// directly; keep these names temporarily so any older page code fails safely
-// rather than throwing a missing-function error during the staged rollout.
+// Login remains available as a compatibility helper for older page code, but
+// it returns only the random session token and never exposes the PIN hash.
 async function dbVerifyPin(pinHash) {
     const res = await fetch('/auth-v2.php?action=login', {
         method: 'POST',
@@ -160,11 +157,8 @@ async function dbChangePin(newHash) {
     });
     const data = await parseJsonResponse(res);
     if (data?.session_token) {
-        const existing = getStoredAuth();
         localStorage.setItem('jh_auth', JSON.stringify({
-            ...existing,
             sessionToken: data.session_token,
-            token: data.legacy_token || existing.token || '',
             ts: Date.now(),
         }));
     }
