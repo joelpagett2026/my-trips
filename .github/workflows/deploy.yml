@@ -33,6 +33,7 @@ jobs:
           php -l auth-v2.php
           php -l auth-session.php
           php -l record.php
+          php -l record-delete.php
           php -l trip-create.php
           php -l trip-delete.php
           php -l place-photo.php
