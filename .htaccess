@@ -12,6 +12,10 @@ RewriteEngine On
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
 RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
 
+# The V1 editor is retired. Even if a stale copy remains in public_html from an
+# older deployment, it must never be executable or reachable again.
+RewriteRule ^new-trip\.html$ - [R=410,L]
+
 # Browser API traffic is same-origin only. Block explicit cross-site fetches and
 # reject foreign Origin headers before authentication/rate-limit code runs. CLI
 # requests without browser Origin/Sec-Fetch-Site headers remain available for
@@ -78,7 +82,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 # Critical application behaviour changes frequently. These scripts control
 # authentication, record saving, conflict protection and itinerary presentation,
 # so never allow the generic seven-day JavaScript expiry to hide a new version.
-<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|trip-delete|budget-live-redesign|datepicker)\.js$">
+<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|budget-live-redesign|datepicker)\.js$">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
