@@ -54,6 +54,10 @@ jobs:
         run: |
           python scripts/validate-security.py
 
+      - name: Validate atomic trip creation contracts
+        run: |
+          python scripts/validate-trip-create.py
+
       - name: Execute renderer integration contracts
         run: |
           php scripts/validate-renderers.php
