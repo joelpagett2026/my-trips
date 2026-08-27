@@ -19,6 +19,18 @@ Required values:
 
 `PIN_HASH` is optional as a server-only bootstrap value. If the database already has a valid `settings.pin_hash`, that DB value is authoritative and a server `PIN_HASH` is not required.
 
+## Required deployment order
+
+PR #4 (`deploy-bootstrap-2026-08-27`) is a prerequisite for PR #3.
+
+1. Merge PR #4 first while the current production application is otherwise unchanged. The existing main-branch workflow can still call the currently live legacy webhook, and that webhook will copy only the transitional deployer because the rest of the application is unchanged.
+2. Confirm the bootstrap deployer is live before doing anything with PR #3.
+3. Configure and rotate the server-only values listed above. In particular, the hosting `DEPLOY_KEY` and GitHub Actions `DEPLOY_KEY` must match.
+4. Only then merge PR #3. The live bootstrap deployer accepts the new `X-Deploy-Key` header, performs the database/configuration preflight, knows every new runtime dependency, copies dependencies before entry points, and activates `.htaccess` last.
+5. PR #3 replaces the transitional bootstrap with the strict header-only deployer, removing the legacy query-string fallback.
+
+Do not merge PR #3 directly onto the current production deployer. The current live deployer does not know about the new runtime files and could otherwise create a partial deployment where an updated entry point is copied without its new dependency.
+
 ## Secrets that must be rotated
 
 Values that have existed in Git history must be treated as disclosed even though current branch source no longer uses them:
@@ -29,12 +41,9 @@ Values that have existed in Git history must be treated as disclosed even though
 4. After the hardened authentication release is live, change the site PIN once from Settings. This invalidates the historical PIN hash that exists in old Git history and revokes all pre-change sessions.
 5. Rotate Anthropic/other server API keys if they have ever been exposed outside the hosting secret store.
 
-## First deployment warning
-
-The first merge of this branch is triggered by the **currently live** deploy webhook, not the new hardened webhook contained in the branch. Therefore server-only DB/API configuration must be in place **before merging**. Do not rely on the new deployment preflight to protect that first transition.
-
 ## Pre-merge checks
 
+- PR #4 has been merged and its bootstrap deployer is confirmed live.
 - Download/retain a current data backup.
 - Confirm the new database credentials connect successfully from the hosting environment.
 - Confirm `settings.pin_hash` exists and is a 64-character SHA-256 hex value, or configure server-only `PIN_HASH`.
