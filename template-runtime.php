@@ -76,5 +76,18 @@ function applyTripsDashboardRuntimeSafety(string $html): array {
         1,
         $mapsCount
     );
-    return [$html, ['maps_key_rewritten' => $mapsCount]];
+
+    // Travel Day is an itinerary state label, not a city. Filter it where the
+    // dashboard card is constructed instead of relying on a DOM MutationObserver.
+    $html = str_replace(
+        ".filter((c,i,a) => a.indexOf(c) === i) // dedupe",
+        ".filter((c,i,a) => a.indexOf(c) === i && String(c).trim().toLowerCase() !== 'travel day') // dedupe + exclude non-location label",
+        $html,
+        $travelDayCount
+    );
+
+    return [$html, [
+        'maps_key_rewritten' => $mapsCount,
+        'travel_day_filter_rewritten' => $travelDayCount,
+    ]];
 }
