@@ -30,6 +30,10 @@ db_config = read('db-config.php')
 # must be unreachable.
 require('action=(save|set_setting|create_page)' in htaccess and 'RewriteRule ^api\\.php$ - [R=410,L]' in htaccess,
         'legacy api save/set_setting/create_page routes must be retired at the web edge')
+require(not (ROOT / 'new-trip.html').exists(),
+        'retired V1 itinerary editor must not remain in the repository')
+require('RewriteRule ^new-trip\\.html$ - [R=410,L]' in htaccess,
+        'a stale deployed V1 editor must be blocked at the web edge')
 
 # Browser Google Maps keys are public by nature, but there should be one runtime
 # source for the active key so it can be restricted/rotated centrally.
