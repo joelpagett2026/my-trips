@@ -32,8 +32,11 @@ jobs:
           php -l auth-session.php
           php -l record.php
           php -l db-config.php
+          php -l template-runtime.php
           php -l deploy-webhook.php
           php -l trip.php
+          php -l share.php
+          php -l trips.php
 
       - name: Validate web app manifest JSON
         run: |
