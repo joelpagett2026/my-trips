@@ -1,8 +1,7 @@
 <?php
 // MY TRIPS — authentication v2
-// Issues random, expiring server-side session tokens. During migration it also
-// returns the current PIN hash as a legacy API token so older api.php actions
-// continue to work until they are moved onto shared session validation.
+// Issues random, expiring server-side session tokens. The PIN hash is used only
+// to verify login and is never returned to the browser as a bearer credential.
 require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/auth-session.php';
 
@@ -44,11 +43,8 @@ if ($action === 'login') {
     }
 
     clearFailedLogins();
-    $sessionToken = issueAuthSession();
     authOk([
-        'session_token' => $sessionToken,
-        // Temporary compatibility token for api.php. Do not use for record.php.
-        'legacy_token' => activePinHash(),
+        'session_token' => issueAuthSession(),
         'expires_in' => AUTH_SESSION_TTL_SECONDS,
     ]);
 }
@@ -61,7 +57,7 @@ if ($action === 'check') {
 
 if ($action === 'change_pin') {
     $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
-    if (!isAuthorizedToken($token, true)) authFail('Unauthorised', 401);
+    if (!isAuthorizedToken($token, false)) authFail('Unauthorised', 401);
 
     $newHash = strtolower(trim((string)($body['new_hash'] ?? '')));
     if (!preg_match('/^[a-f0-9]{64}$/', $newHash)) authFail('Invalid new PIN hash');
@@ -70,15 +66,14 @@ if ($action === 'change_pin') {
     $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
         ->execute([$newHash, $newHash]);
 
-    // A PIN change must invalidate every previously issued session.
+    // A PIN change invalidates every previously issued session, including the
+    // current one, then immediately issues one fresh session for this browser.
     revokeAllAuthSessions();
     clearFailedLogins();
-    $newSession = issueAuthSession();
 
     authOk([
         'changed' => true,
-        'session_token' => $newSession,
-        'legacy_token' => $newHash,
+        'session_token' => issueAuthSession(),
         'expires_in' => AUTH_SESSION_TTL_SECONDS,
     ]);
 }
