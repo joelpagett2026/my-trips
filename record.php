@@ -62,9 +62,16 @@ if ($action === 'save') {
     $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) respondFail('Data could not be encoded');
 
-    $hasExpectedVersion = array_key_exists('expected_version', $body);
-    $expectedVersion = $body['expected_version'] ?? null;
+    // Every write must prove what version the browser last observed. Omitting the
+    // field would otherwise silently turn this endpoint back into last-write-wins.
+    if (!array_key_exists('expected_version', $body)) {
+        respondFail('Missing expected_version', 428);
+    }
+    $expectedVersion = $body['expected_version'];
     if ($expectedVersion !== null && !is_string($expectedVersion)) respondFail('Invalid expected_version');
+    if (is_string($expectedVersion) && !preg_match('/^[a-f0-9]{64}$/', $expectedVersion)) {
+        respondFail('Invalid expected_version');
+    }
 
     $pdo = db();
     try {
@@ -75,11 +82,9 @@ if ($action === 'save') {
 
         if ($row) {
             $currentVersion = hash('sha256', (string)$row['data']);
-            if ($hasExpectedVersion && !is_string($expectedVersion)) {
-                $pdo->rollBack();
-                respondFail('A newer version already exists', 409, ['current_version' => $currentVersion]);
-            }
-            if ($hasExpectedVersion && !hash_equals($currentVersion, $expectedVersion)) {
+            // null means the client previously observed "record did not exist";
+            // therefore an existing row is necessarily a conflict.
+            if ($expectedVersion === null || !hash_equals($currentVersion, $expectedVersion)) {
                 $pdo->rollBack();
                 respondFail('A newer version already exists', 409, ['current_version' => $currentVersion]);
             }
@@ -88,7 +93,7 @@ if ($action === 'save') {
         } else {
             // expected_version=null explicitly means the client loaded this ID and
             // observed that it did not yet exist. Any non-null expectation is stale.
-            if ($hasExpectedVersion && $expectedVersion !== null) {
+            if ($expectedVersion !== null) {
                 $pdo->rollBack();
                 respondFail('The record changed before it could be saved', 409);
             }
