@@ -233,21 +233,3 @@ if (IS_SHARE_VIEW) {
     clearSession();
     document.addEventListener('DOMContentLoaded', showPinOverlay);
 }
-
-// Temporary dashboard compatibility cleanup. New itinerary saves now filter
-// this at source; keep this only so older stored registry values do not show.
-function removeTravelDayFrontCardTags() {
-    if (!/^\/trips\/?$/.test(window.location.pathname)) return;
-    document.querySelectorAll('.trip-card .city-tag').forEach(tag => {
-        if ((tag.textContent || '').trim().toLowerCase() === 'travel day') tag.remove();
-    });
-}
-
-if (/^\/trips\/?$/.test(window.location.pathname)) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeTravelDayFrontCardTags, { once:true });
-    } else {
-        removeTravelDayFrontCardTags();
-    }
-    new MutationObserver(removeTravelDayFrontCardTags).observe(document.documentElement, { childList:true, subtree:true });
-}
