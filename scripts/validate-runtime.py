@@ -48,7 +48,7 @@ require("409" in record, "record.php must reject stale writes")
 require("isAuthorizedToken" in record, "record.php must use shared auth-session validation")
 require("_dbSaveQueues" in db, "db.js must serialize saves per record")
 require("expected_version" in db, "db.js must send record versions")
-require("getRecordToken" in db and "sessionToken" in db, "record API must prefer the random server session token")
+require("return s.sessionToken || s.token || ''" in db, "all browser API calls must prefer the random server session token")
 require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
 
 # Authentication v2 must issue random expiring sessions and throttle PIN guesses.
@@ -66,6 +66,18 @@ require("revokeAuthSession($token)" in auth_v2, "logout must revoke only the pre
 require("/auth-v2.php?action=login" in auth, "PIN overlay must use the v2 login endpoint")
 require("session_token" in auth and "legacy_token" in auth, "browser must retain both tokens during staged migration")
 require("mytrips:auth-expired" in auth and "relockForExpiredSession" in auth, "expired server sessions must relock the UI")
+
+# The general API must now accept the same random server session as record.php.
+require("require_once __DIR__ . '/auth-session.php'" in api, "api.php must load shared session validation")
+require("isAuthorizedToken($token, true)" in api, "normal api.php actions must accept secure server sessions")
+require("['auth', 'share_load']" in api, "only the intended migration/public actions may bypass the normal API auth gate")
+require("Use auth-v2.php to change the PIN" in api, "legacy api.php must not change PINs directly")
+require("AUTH_FALLBACK_PIN_HASH" in api, "legacy PIN compatibility must be explicitly tied to the shared migration fallback")
+
+# No literal Google API keys may be committed to the production API anymore.
+hardcoded_google_keys = re.findall(r"AIza[0-9A-Za-z_-]{20,}", api)
+require(not hardcoded_google_keys, "api.php must not contain literal Google API keys")
+require("defined('PLACES_API_KEY') ? PLACES_API_KEY : ''" in api, "Places integrations must use the server-side Places secret")
 
 # Settings must use the same security path and export every listed record ID.
 require("dbChangePin(newHash)" in settings, "Settings PIN change must use the v2 session endpoint")
@@ -88,13 +100,5 @@ for runtime_file in [
 require("REGENERATE ALL ITINERARY" not in deploy, "legacy baked-itinerary regeneration returned")
 require("$templateV1" not in deploy, "V1 itinerary regeneration returned")
 require("itinerary-state-guard|itinerary-ui" in htaccess, "critical itinerary scripts must bypass long browser cache")
-
-# Security debt guard: once literal Google API keys are removed from api.php,
-# CI must prevent them from being accidentally committed again. This check is
-# intentionally staged as a warning marker until the migration commit removes
-# the current legacy key.
-hardcoded_google_keys = re.findall(r"AIza[0-9A-Za-z_-]{20,}", api)
-if hardcoded_google_keys:
-    print("runtime contracts: warning — api.php still contains a legacy Google API key; removal remains pending")
 
 print("runtime contracts: ok")
