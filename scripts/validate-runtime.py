@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Static runtime contract checks for the My Trips deployment."""
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,6 +25,7 @@ record = read("record.php")
 db = read("db.js")
 ui = read("itinerary-ui.js")
 settings = read("settings.html")
+api = read("api.php")
 htaccess = read(".htaccess")
 
 require("new-trip-v2.html" in trip, "trip.php must render the shared V2 template")
@@ -86,5 +88,13 @@ for runtime_file in [
 require("REGENERATE ALL ITINERARY" not in deploy, "legacy baked-itinerary regeneration returned")
 require("$templateV1" not in deploy, "V1 itinerary regeneration returned")
 require("itinerary-state-guard|itinerary-ui" in htaccess, "critical itinerary scripts must bypass long browser cache")
+
+# Security debt guard: once literal Google API keys are removed from api.php,
+# CI must prevent them from being accidentally committed again. This check is
+# intentionally staged as a warning marker until the migration commit removes
+# the current legacy key.
+hardcoded_google_keys = re.findall(r"AIza[0-9A-Za-z_-]{20,}", api)
+if hardcoded_google_keys:
+    print("runtime contracts: warning — api.php still contains a legacy Google API key; removal remains pending")
 
 print("runtime contracts: ok")
