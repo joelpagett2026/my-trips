@@ -25,9 +25,10 @@ auth_v2 = read('auth-v2.php')
 settings = read('settings.html')
 db_config = read('db-config.php')
 
-# Legacy write paths that bypass modern conflict/PIN handling must be unreachable.
-require('action=(save|set_setting)' in htaccess and 'RewriteRule ^api\\.php$ - [R=410,L]' in htaccess,
-        'legacy api save/set_setting routes must be retired at the web edge')
+# Legacy write/creation paths that bypass modern conflict/PIN/registry handling
+# must be unreachable.
+require('action=(save|set_setting|create_page)' in htaccess and 'RewriteRule ^api\\.php$ - [R=410,L]' in htaccess,
+        'legacy api save/set_setting/create_page routes must be retired at the web edge')
 
 # Browser Google Maps keys are public by nature, but there should be one runtime
 # source for the active key so it can be restricted/rotated centrally.
@@ -67,8 +68,8 @@ require('Access-Control-Allow-Origin' not in auth_v2,
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
-require('<FilesMatch "^(api|auth-v2|record)\\.php$">' in htaccess,
-        'authenticated API response header policy must be explicit')
+require('<FilesMatch "^(api|auth-v2|record|trip-create)\\.php$">' in htaccess,
+        'authenticated API response header policy must include all write endpoints')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
 require('%{HTTP:Sec-Fetch-Site} ^cross-site$' in htaccess,
