@@ -82,7 +82,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 # Critical application behaviour changes frequently. These scripts control
 # authentication, record saving, conflict protection and itinerary presentation,
 # so never allow the generic seven-day JavaScript expiry to hide a new version.
-<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|budget-live-redesign|datepicker)\.js$">
+<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|trip-delete|budget-live-redesign|datepicker)\.js$">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
