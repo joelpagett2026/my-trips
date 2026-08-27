@@ -49,7 +49,7 @@ require("trip-dashboard-create.js?v=1" in renderer,
 
 require("action=(save|set_setting|create_page)" in htaccess,
         "unsafe legacy create_page action must be retired at the web edge")
-require("api|auth-v2|record|trip-create" in htaccess,
+require("trip-create" in htaccess and "%{HTTP:Sec-Fetch-Site} ^cross-site$" in htaccess,
         "trip-create.php must inherit same-origin API restrictions")
 require("'trip-create.php'" in deploy and "'trip-dashboard-create.js'" in deploy,
         "atomic creation endpoint/client must be deployed")
