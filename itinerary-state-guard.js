@@ -36,13 +36,28 @@
     persistSnapshots();
   }
 
-  function initializePersistedState() {
+  function initializeFromLoadedRecord() {
     if (initialized) return true;
-    if (typeof STATE === 'undefined' || !STATE || !Array.isArray(STATE.days)) return false;
-    lastPersistedState = clone(STATE);
+    if (typeof RECORD_ID === 'undefined' || typeof STATE === 'undefined' || !STATE) return false;
+    const loaded = window.__mytripsLoadedRecords;
+    if (!(loaded instanceof Map) || !loaded.has(RECORD_ID)) return false;
+
+    // Existing record: use the exact server response, even if loadData() has not
+    // yet assigned it to STATE. New record: null means the default STATE is the
+    // correct baseline for its first save.
+    const serverState = loaded.get(RECORD_ID);
+    lastPersistedState = serverState == null ? clone(STATE) : clone(serverState);
     initialized = true;
     return true;
   }
+
+  document.addEventListener('mytrips:record-loaded', (event) => {
+    if (initialized || typeof RECORD_ID === 'undefined') return;
+    if (!event.detail || event.detail.id !== RECORD_ID) return;
+    const serverState = event.detail.data;
+    lastPersistedState = serverState == null ? clone(STATE) : clone(serverState);
+    initialized = true;
+  });
 
   // Existing edit handlers call takeSnapshot() before some mutations. Snapshot
   // ownership now lives in saveData(), where we can reliably capture the last
@@ -50,7 +65,10 @@
   window.takeSnapshot = function () {};
 
   window.saveData = async function () {
-    if (!initializePersistedState()) return;
+    // Never establish an undo baseline from temporary template/default data while
+    // the initial DB load is still in flight. The caller's scheduled save can run
+    // again after loading; skipping here is safer than inventing history.
+    if (!initializeFromLoadedRecord()) return;
     const nextState = clone(STATE);
     const previousState = clone(lastPersistedState);
 
@@ -97,9 +115,7 @@
     return out.slice(0, 8);
   };
 
-  // Seed the persisted baseline once the async itinerary load has populated STATE.
-  const start = Date.now();
-  const timer = setInterval(() => {
-    if (initializePersistedState() || Date.now() - start > 10000) clearInterval(timer);
-  }, 100);
+  // If dbLoad completed before this script was injected, initialize immediately.
+  // Otherwise the record-loaded event above supplies the authoritative baseline.
+  initializeFromLoadedRecord();
 })();
