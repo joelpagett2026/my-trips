@@ -37,8 +37,31 @@ function deploymentPreflight(): array {
             'mysql:host=' . serverConfig('DB_HOST') . ';dbname=' . serverConfig('DB_NAME') . ';charset=utf8mb4',
             serverConfig('DB_USER'),
             serverConfig('DB_PASS'),
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]
         );
+
+        // Confirm the existing application schema is readable before changing any
+        // live files, then prove the DB user can create/read the new auth tables.
+        $pdo->query('SELECT id FROM itinerary LIMIT 1')->fetch();
+        $pdo->exec("CREATE TABLE IF NOT EXISTS auth_sessions (
+            token_hash CHAR(64) PRIMARY KEY,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            expires_at DATETIME NOT NULL,
+            last_seen_at DATETIME NULL
+        )");
+        $pdo->exec("CREATE TABLE IF NOT EXISTS auth_attempts (
+            ip_hash CHAR(64) PRIMARY KEY,
+            failures INT NOT NULL DEFAULT 0,
+            window_started DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )");
+        $pdo->query('SELECT token_hash FROM auth_sessions LIMIT 1')->fetch();
+        $pdo->query('SELECT ip_hash FROM auth_attempts LIMIT 1')->fetch();
+
         $stmt = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash' LIMIT 1");
         $stmt->execute();
         $row = $stmt->fetch();
@@ -48,7 +71,7 @@ function deploymentPreflight(): array {
             return ['ok' => false, 'error' => 'No valid server-side PIN hash is configured'];
         }
     } catch (Throwable $e) {
-        return ['ok' => false, 'error' => 'Database preflight failed'];
+        return ['ok' => false, 'error' => 'Database/auth schema preflight failed'];
     }
 
     if (!preg_match('/^AIza[0-9A-Za-z_-]{20,}$/', serverConfig('MAPS_BROWSER_KEY'))) {
