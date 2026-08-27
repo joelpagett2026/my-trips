@@ -82,13 +82,12 @@ function getStoredSession() {
 
 function isAuthed() {
     const s = getStoredSession();
-    return s && (s.sessionToken || s.token) && (Date.now() - s.ts) < SESSION_TTL;
+    return !!(s && s.sessionToken && s.ts && (Date.now() - s.ts) < SESSION_TTL);
 }
 
-function storeSession(sessionToken, legacyToken) {
+function storeSession(sessionToken) {
     localStorage.setItem(SESSION_KEY, JSON.stringify({
         sessionToken: sessionToken || '',
-        token: legacyToken || '',
         ts: Date.now(),
     }));
 }
@@ -160,8 +159,8 @@ function showPinOverlay() {
                 body: JSON.stringify({ pin_hash: hash })
             });
             const json = await res.json();
-            if (json.ok && json.data && json.data.session_token && json.data.legacy_token) {
-                storeSession(json.data.session_token, json.data.legacy_token);
+            if (json.ok && json.data && json.data.session_token) {
+                storeSession(json.data.session_token);
                 document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => { d.style.background='#34c759'; });
                 setTimeout(() => {
                     overlay.remove();
@@ -229,6 +228,9 @@ if (IS_SHARE_VIEW) {
     window._mytripsAuthed = true;
     document.addEventListener('DOMContentLoaded', () => document.dispatchEvent(new Event('mytrips:authed')));
 } else {
+    // Older cached sessions stored the PIN hash in `token` instead of a random
+    // server session. Clear them and require one fresh PIN entry after rollout.
+    clearSession();
     document.addEventListener('DOMContentLoaded', showPinOverlay);
 }
 
