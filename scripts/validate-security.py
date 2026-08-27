@@ -19,6 +19,7 @@ deploy = read('deploy-webhook.php')
 runtime = read('template-runtime.php')
 park_renderer = read('parks-map.php')
 place_photo = read('place-photo.php')
+record_delete = read('record-delete.php')
 state_guard = read('itinerary-state-guard.js')
 db = read('db.js')
 auth = read('auth.js')
@@ -35,6 +36,17 @@ require(not (ROOT / 'new-trip.html').exists(),
         'retired V1 itinerary editor must not remain in the repository')
 require('RewriteRule ^new-trip\\.html$ - [R=410,L]' in htaccess,
         'a stale deployed V1 editor must be blocked at the web edge')
+
+# Generic record deletion must not be able to orphan an itinerary or destroy the
+# shared registry/snapshot state.
+require('action=delete' in htaccess and 'RewriteRule ^api\\.php$ record-delete.php [L,QSA]' in htaccess,
+        'generic delete calls must be routed through the protected endpoint')
+require("'record-delete.php'" in deploy,
+        'protected generic deletion endpoint must be deployed')
+require("['trip-registry']" in record_delete and "str_ends_with(strtolower($id), '-snaps')" in record_delete,
+        'registry and snapshot records must be protected from generic deletion')
+require("trip['slug']" in record_delete and 'trip deletion endpoint' in record_delete,
+        'active trip records must be rejected by generic deletion')
 
 # Browser Google Maps keys are public by nature, but there should be one runtime
 # source for the active key so it can be restricted/rotated centrally.
@@ -99,7 +111,7 @@ require("date('Y-m-d H:i:s'" not in auth_session and 'strtotime(' not in auth_se
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
-require('<FilesMatch "^(api|auth-v2|record|trip-create|trip-delete|place-photo)\\.php$">' in htaccess,
+require('<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo)\\.php$">' in htaccess,
         'authenticated API response header policy must include all protected endpoints')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
