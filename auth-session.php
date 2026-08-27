@@ -1,7 +1,6 @@
 <?php
 // MY TRIPS — shared authentication/session helpers
-// Introduces expiring random bearer sessions while keeping a temporary
-// legacy-token compatibility path during rollout.
+// PINs are used only to establish a random, expiring server-side session.
 
 const AUTH_SESSION_TTL_SECONDS = 43200; // 12 hours
 const AUTH_MAX_FAILURES = 8;
@@ -17,8 +16,8 @@ function activePinHash(): string {
             return strtolower($row['value']);
         }
     } catch (Throwable $e) {
-        // Fall through to compatibility fallback. Removing this fallback is a
-        // separate hosting-secret rotation step after the live server is ready.
+        // Fall through to the PIN bootstrap fallback. This fallback is not an
+        // API bearer credential; it is used only if the stored PIN is unavailable.
     }
     return AUTH_FALLBACK_PIN_HASH;
 }
@@ -41,7 +40,6 @@ function ensureAuthTables(): void {
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
 
-    // Opportunistic cleanup keeps the small session table from growing forever.
     try {
         db()->exec("DELETE FROM auth_sessions WHERE expires_at < NOW()");
         db()->exec("DELETE FROM auth_attempts WHERE updated_at < DATE_SUB(NOW(), INTERVAL 1 DAY)");
@@ -53,8 +51,6 @@ function ensureAuthTables(): void {
 }
 
 function clientIpHash(): string {
-    // Do not trust forwarded headers here; REMOTE_ADDR is sufficient for a
-    // lightweight brute-force throttle and avoids spoofed client values.
     $ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
     return hash('sha256', $ip);
 }
@@ -95,7 +91,6 @@ function recordFailedLogin(): void {
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
-        // Rate-limit bookkeeping failure must not create an authentication outage.
     }
 }
 
@@ -137,21 +132,14 @@ function isValidAuthSession(string $token): bool {
         return false;
     }
 
-    // last_seen_at is diagnostic only; expiry remains absolute (12 hours from
-    // login) rather than becoming an indefinitely sliding browser session.
     try {
         db()->prepare('UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = ?')->execute([$hash]);
     } catch (Throwable $e) {}
     return true;
 }
 
-function isAuthorizedToken(string $token, bool $allowLegacyPinHash = true): bool {
-    if ($token === '') return false;
-    if (isValidAuthSession($token)) return true;
-
-    // Compatibility path for browser sessions created before this rollout.
-    // Once all clients have received random sessions, this can be removed.
-    return $allowLegacyPinHash && hash_equals(activePinHash(), strtolower(trim($token)));
+function isAuthorizedToken(string $token): bool {
+    return $token !== '' && isValidAuthSession($token);
 }
 
 function revokeAuthSession(string $token): void {
