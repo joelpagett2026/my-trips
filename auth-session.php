@@ -76,13 +76,13 @@ function clientIpHash(): string {
 function loginRateLimitRemaining(): int {
     ensureAuthTables();
     $ipHash = clientIpHash();
-    $stmt = db()->prepare('SELECT failures, window_started FROM auth_attempts WHERE ip_hash = ?');
+    $stmt = db()->prepare('SELECT failures, TIMESTAMPDIFF(SECOND, window_started, NOW()) AS age_seconds FROM auth_attempts WHERE ip_hash = ?');
     $stmt->execute([$ipHash]);
     $row = $stmt->fetch();
     if (!$row) return AUTH_MAX_FAILURES;
 
-    $started = strtotime((string)$row['window_started']) ?: 0;
-    if (time() - $started >= AUTH_FAILURE_WINDOW_SECONDS) return AUTH_MAX_FAILURES;
+    $ageSeconds = max(0, (int)($row['age_seconds'] ?? 0));
+    if ($ageSeconds >= AUTH_FAILURE_WINDOW_SECONDS) return AUTH_MAX_FAILURES;
     return max(0, AUTH_MAX_FAILURES - (int)$row['failures']);
 }
 
@@ -92,12 +92,12 @@ function recordFailedLogin(): void {
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        $stmt = $pdo->prepare('SELECT failures, window_started FROM auth_attempts WHERE ip_hash = ? FOR UPDATE');
+        $stmt = $pdo->prepare('SELECT failures, TIMESTAMPDIFF(SECOND, window_started, NOW()) AS age_seconds FROM auth_attempts WHERE ip_hash = ? FOR UPDATE');
         $stmt->execute([$ipHash]);
         $row = $stmt->fetch();
-        $now = time();
+        $ageSeconds = $row ? max(0, (int)($row['age_seconds'] ?? 0)) : AUTH_FAILURE_WINDOW_SECONDS;
 
-        if (!$row || $now - (strtotime((string)$row['window_started']) ?: 0) >= AUTH_FAILURE_WINDOW_SECONDS) {
+        if (!$row || $ageSeconds >= AUTH_FAILURE_WINDOW_SECONDS) {
             $upsert = $pdo->prepare("INSERT INTO auth_attempts (ip_hash, failures, window_started, updated_at)
                 VALUES (?, 1, NOW(), NOW())
                 ON DUPLICATE KEY UPDATE failures = 1, window_started = NOW(), updated_at = NOW()");
@@ -129,9 +129,10 @@ function issueAuthSession(): string {
     ensureAuthTables();
     $token = bin2hex(random_bytes(32));
     $hash = hash('sha256', $token);
-    $expiresAt = date('Y-m-d H:i:s', time() + AUTH_SESSION_TTL_SECONDS);
-    db()->prepare('INSERT INTO auth_sessions (token_hash, expires_at, last_seen_at) VALUES (?, ?, NOW())')
-        ->execute([$hash, $expiresAt]);
+    // Use database time for both creation and validation so PHP/DB timezone
+    // differences can never shorten or extend the 12-hour session unexpectedly.
+    db()->prepare('INSERT INTO auth_sessions (token_hash, expires_at, last_seen_at) VALUES (?, DATE_ADD(NOW(), INTERVAL 12 HOUR), NOW())')
+        ->execute([$hash]);
     return $token;
 }
 
@@ -140,12 +141,12 @@ function isValidAuthSession(string $token): bool {
     if ($hash === null) return false;
 
     ensureAuthTables();
-    $stmt = db()->prepare('SELECT expires_at FROM auth_sessions WHERE token_hash = ? LIMIT 1');
+    $stmt = db()->prepare('SELECT (expires_at > NOW()) AS is_valid FROM auth_sessions WHERE token_hash = ? LIMIT 1');
     $stmt->execute([$hash]);
     $row = $stmt->fetch();
     if (!$row) return false;
 
-    if ((strtotime((string)$row['expires_at']) ?: 0) <= time()) {
+    if ((int)($row['is_valid'] ?? 0) !== 1) {
         db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([$hash]);
         return false;
     }
