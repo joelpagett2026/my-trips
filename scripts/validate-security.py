@@ -62,13 +62,19 @@ require("validatedPin" in auth_v2 and "hash('sha256', $pin)" in auth_v2 and "has
         'auth-v2 must validate and hash PINs on the server')
 require("$body['pin_hash']" not in auth_v2 and "$body['new_hash']" not in auth_v2,
         'auth-v2 must not accept browser-supplied PIN hashes')
+require('Access-Control-Allow-Origin' not in auth_v2,
+        'authentication endpoint must not emit permissive CORS headers itself')
 
-# Authenticated APIs are same-origin only. Some PHP files retain compatibility
-# CORS headers internally, so Apache must strip them from the actual response.
+# Authenticated APIs are same-origin only. Apache strips any legacy API CORS
+# header and rejects explicit foreign browser origins before PHP executes.
 require('<FilesMatch "^(api|auth-v2|record)\\.php$">' in htaccess,
         'authenticated API response header policy must be explicit')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
+require('%{HTTP:Sec-Fetch-Site} ^cross-site$' in htaccess,
+        'cross-site Fetch Metadata requests must be rejected')
+require('%{HTTP:Origin} !^https://(?:www\\.)?joelpagett\\.co\\.uk$' in htaccess,
+        'foreign Origin headers must be rejected')
 
 # Snapshot baseline must come from the real server-loaded record, not whichever
 # temporary/default STATE happens to exist when the safety script loads.
