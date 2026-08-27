@@ -47,6 +47,10 @@ jobs:
         run: |
           python scripts/validate-runtime.py
 
+      - name: Validate focused security contracts
+        run: |
+          python scripts/validate-security.py
+
   deploy:
     needs: validate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
