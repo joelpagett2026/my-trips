@@ -99,7 +99,8 @@ require("return getStoredAuth().sessionToken || ''" in db, "browser API calls mu
 require("s.token" not in db, "db.js must not fall back to the PIN hash token")
 require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
 
-# Authentication v2 must issue random expiring sessions and throttle PIN guesses.
+# Authentication v2 must issue random expiring sessions, throttle PIN guesses, and
+# hash the four-digit PIN only on the server.
 require("random_bytes(32)" in auth_session, "auth sessions must use cryptographically random tokens")
 require("AUTH_SESSION_TTL_SECONDS" in auth_session, "auth sessions must expire server-side")
 require("AUTH_MAX_FAILURES" in auth_session and "auth_attempts" in auth_session, "PIN login must be rate limited")
@@ -110,14 +111,22 @@ require("revokeAuthSession" in auth_session, "single-session logout helper must 
 require("last_seen_at = NOW()" in auth_session, "valid server sessions should record last-seen time")
 require("issueAuthSession" in auth_v2, "auth-v2 login must issue a server session")
 require("loginRateLimitRemaining" in auth_v2, "auth-v2 login must enforce throttling")
+require("validatedPin" in auth_v2 and "hash('sha256', $pin)" in auth_v2 and "hash('sha256', $newPin)" in auth_v2,
+        "PIN validation and hashing must happen server-side")
+require("$body['pin_hash']" not in auth_v2 and "$body['new_hash']" not in auth_v2,
+        "auth-v2 must not accept browser-supplied PIN hashes")
 require("revokeAllAuthSessions" in auth_v2, "changing PIN must invalidate older sessions")
 require("$action === 'check'" in auth_v2 and "isValidAuthSession" in auth_v2, "auth-v2 must expose session validation")
 require("revokeAuthSession($token)" in auth_v2, "logout must revoke only the presented session")
 require("isAuthorizedToken($token, false)" in auth_v2, "PIN changes must require a real server session")
 require("legacy_token" not in auth_v2, "auth-v2 must never return the PIN hash as a bearer token")
 require("/auth-v2.php?action=login" in auth, "PIN overlay must use the v2 login endpoint")
+require("JSON.stringify({ pin: entered })" in auth and "sha256(" not in auth and "pin_hash" not in auth,
+        "PIN overlay must submit raw PIN digits and never derive a browser PIN hash")
 require("legacy_token" not in auth and "s.token" not in auth, "browser auth state must not retain legacy PIN-hash tokens")
 require("mytrips:auth-expired" in auth and "relockForExpiredSession" in auth, "expired server sessions must relock the UI")
+require("JSON.stringify({ pin })" in db and "JSON.stringify({ new_pin: newPin })" in db,
+        "database auth helpers must submit PINs for server-side hashing")
 
 # The general API must require the same random server session as record.php.
 require("require_once __DIR__ . '/auth-session.php'" in api, "api.php must load shared session validation")
@@ -140,7 +149,9 @@ require(not hardcoded_google_keys, "api.php must not contain literal Google API 
 require("defined('PLACES_API_KEY') ? PLACES_API_KEY : ''" in api, "Places integrations must use the server-side Places secret")
 
 # Settings must use the same security path and export every listed record ID.
-require("dbChangePin(newHash)" in settings, "Settings PIN change must use the v2 session endpoint")
+require("dbChangePin(pinEntered)" in settings, "Settings PIN change must use the v2 session endpoint with the raw PIN")
+require("JSON.stringify({pin:pinEntered})" in settings and "sha256(" not in settings and "pin_hash" not in settings,
+        "Settings current-PIN verification must leave hashing to the server")
 require("/auth-v2.php?action=login" in settings, "Settings current-PIN verification must use rate-limited login")
 require("/auth-v2.php?action=logout" in settings, "Settings sign-out must revoke the server session")
 require("?.sessionToken || ''" in settings, "Settings must use only the server session token")
