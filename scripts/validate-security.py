@@ -85,6 +85,10 @@ require('__mytripsLoadedRecords' in state_guard and 'mytrips:record-loaded' in s
         'snapshot guard must initialize from authoritative server state')
 require('temporary template/default data' in state_guard,
         'snapshot guard must explicitly avoid default-state baselines')
+require('pushSnapshot(lastPersistedState)' in state_guard,
+        'takeSnapshot must make the last persisted state immediately available for Undo')
+require('currentTopKey' in state_guard,
+        'snapshot history must de-duplicate against an already-loaded top snapshot')
 
 # Source-controlled DB credentials must never return.
 for name in ('DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS'):
