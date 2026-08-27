@@ -1,7 +1,7 @@
 <?php
 // MY TRIPS — authentication v2
-// Issues random, expiring server-side session tokens. The PIN hash is used only
-// to verify login and is never returned to the browser as a bearer credential.
+// Issues random, expiring server-side session tokens. The browser submits only
+// the four PIN digits over same-origin HTTPS; hashing and comparison happen here.
 require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/auth-session.php';
 
@@ -25,6 +25,12 @@ function authFail(string $message, int $status = 400): never {
     exit;
 }
 
+function validatedPin(array $body, string $field): string {
+    $pin = trim((string)($body[$field] ?? ''));
+    if (!preg_match('/^\d{4}$/', $pin)) authFail('Invalid PIN');
+    return $pin;
+}
+
 $raw = file_get_contents('php://input');
 $body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) authFail('Invalid JSON body');
@@ -36,8 +42,9 @@ if ($action === 'login') {
         authFail('Too many attempts. Try again in 15 minutes.', 429);
     }
 
-    $submitted = strtolower(trim((string)($body['pin_hash'] ?? '')));
-    if (!preg_match('/^[a-f0-9]{64}$/', $submitted) || !hash_equals(activePinHash(), $submitted)) {
+    $pin = validatedPin($body, 'pin');
+    $submittedHash = hash('sha256', $pin);
+    if (!hash_equals(activePinHash(), $submittedHash)) {
         recordFailedLogin();
         authFail('Incorrect PIN', 401);
     }
@@ -59,8 +66,8 @@ if ($action === 'change_pin') {
     $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
     if (!isAuthorizedToken($token, false)) authFail('Unauthorised', 401);
 
-    $newHash = strtolower(trim((string)($body['new_hash'] ?? '')));
-    if (!preg_match('/^[a-f0-9]{64}$/', $newHash)) authFail('Invalid new PIN hash');
+    $newPin = validatedPin($body, 'new_pin');
+    $newHash = hash('sha256', $newPin);
 
     $pdo = db();
     $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
