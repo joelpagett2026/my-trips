@@ -6,11 +6,8 @@ require_once __DIR__ . '/auth-session.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 function respondOk(mixed $data = null): never {
     echo json_encode(['ok' => true, 'data' => $data]);
