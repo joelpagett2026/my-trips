@@ -139,6 +139,7 @@ $coreFiles = [
     'template-runtime.php',
     'auth-v2.php',
     'record.php',
+    'record-delete.php',
     'trip-create.php',
     'trip-delete.php',
     'place-photo.php',
