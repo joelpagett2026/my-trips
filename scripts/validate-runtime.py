@@ -115,9 +115,11 @@ require("validatedPin" in auth_v2 and "hash('sha256', $pin)" in auth_v2 and "has
         "PIN validation and hashing must happen server-side")
 require("$body['pin_hash']" not in auth_v2 and "$body['new_hash']" not in auth_v2,
         "auth-v2 must not accept browser-supplied PIN hashes")
-require("revokeAllAuthSessions" in auth_v2, "changing PIN must invalidate older sessions")
+require("DELETE FROM auth_sessions" in auth_v2 and "INSERT INTO auth_sessions" in auth_v2,
+        "changing PIN must atomically revoke older sessions and issue a replacement")
 require("$action === 'check'" in auth_v2 and "isValidAuthSession" in auth_v2, "auth-v2 must expose session validation")
-require("revokeAuthSession($token)" in auth_v2, "logout must revoke only the presented session")
+require("DELETE FROM auth_sessions WHERE token_hash = ?" in auth_v2,
+        "logout must revoke only the presented session")
 require("isAuthorizedToken($token, false)" in auth_v2, "PIN changes must require a real server session")
 require("legacy_token" not in auth_v2, "auth-v2 must never return the PIN hash as a bearer token")
 require("/auth-v2.php?action=login" in auth, "PIN overlay must use the v2 login endpoint")
