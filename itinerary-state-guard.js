@@ -29,7 +29,11 @@
   function pushSnapshot(data) {
     if (!data || typeof snapshotList === 'undefined') return;
     const key = stateKey(data);
-    if (!key || key === lastSnapshotKey) return;
+    const currentTopKey = snapshotList.length ? stateKey(snapshotList[0]?.data) : '';
+    if (!key || key === lastSnapshotKey || key === currentTopKey) {
+      if (key) lastSnapshotKey = key;
+      return;
+    }
     snapshotList.unshift({ ts: Date.now(), data: clone(data) });
     if (snapshotList.length > 10) snapshotList.length = 10;
     lastSnapshotKey = key;
@@ -59,10 +63,15 @@
     initialized = true;
   });
 
-  // Existing edit handlers call takeSnapshot() before some mutations. Snapshot
-  // ownership now lives in saveData(), where we can reliably capture the last
-  // server-confirmed state for every edit path, so suppress those duplicates.
-  window.takeSnapshot = function () {};
+  // Existing handlers call takeSnapshot() around destructive edits. Capture the
+  // last server-confirmed state immediately so Undo is safe even if the user taps
+  // it before the asynchronous autosave finishes. saveData() also captures the
+  // same baseline for edit paths that never call takeSnapshot(); de-duplication in
+  // pushSnapshot() prevents the two paths from creating duplicate history rows.
+  window.takeSnapshot = function () {
+    if (!initializeFromLoadedRecord()) return;
+    pushSnapshot(lastPersistedState);
+  };
 
   window.saveData = async function () {
     // Never establish an undo baseline from temporary template/default data while
