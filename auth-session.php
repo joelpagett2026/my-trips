@@ -5,21 +5,39 @@
 const AUTH_SESSION_TTL_SECONDS = 43200; // 12 hours
 const AUTH_MAX_FAILURES = 8;
 const AUTH_FAILURE_WINDOW_SECONDS = 900; // 15 minutes
-const AUTH_FALLBACK_PIN_HASH = '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395';
+
+function configuredPinHash(): ?string {
+    if (defined('PIN_HASH')) {
+        $hash = strtolower(trim((string)PIN_HASH));
+        if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
+    }
+    $env = getenv('PIN_HASH');
+    if ($env !== false) {
+        $hash = strtolower(trim((string)$env));
+        if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
+    }
+    return null;
+}
 
 function activePinHash(): string {
+    // The database value is authoritative once a PIN has been set through the
+    // Settings screen. A server-only PIN_HASH can bootstrap a fresh install.
     try {
         $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash'");
         $stmt->execute();
         $row = $stmt->fetch();
-        if ($row && is_string($row['value']) && preg_match('/^[a-f0-9]{64}$/i', $row['value'])) {
-            return strtolower($row['value']);
+        if ($row && is_string($row['value'])) {
+            $hash = strtolower(trim($row['value']));
+            if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
         }
     } catch (Throwable $e) {
-        // Fall through to the PIN bootstrap fallback. This fallback is not an
-        // API bearer credential; it is used only if the stored PIN is unavailable.
+        // If the DB itself is unavailable, callers will fail naturally. The
+        // optional server PIN below is only a bootstrap value, not a DB bypass.
     }
-    return AUTH_FALLBACK_PIN_HASH;
+
+    $bootstrap = configuredPinHash();
+    if ($bootstrap !== null) return $bootstrap;
+    throw new RuntimeException('No PIN hash is configured on the server');
 }
 
 function ensureAuthTables(): void {
@@ -139,8 +157,8 @@ function isValidAuthSession(string $token): bool {
 }
 
 function isAuthorizedToken(string $token, bool $unusedLegacyFlag = false): bool {
-    // Second argument is accepted only so staged callers cannot break while
-    // being updated. It no longer enables PIN-hash bearer authentication.
+    // Second argument remains accepted while staged callers are migrated. It no
+    // longer enables any alternate credential path.
     return $token !== '' && isValidAuthSession($token);
 }
 
