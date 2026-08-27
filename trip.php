@@ -8,6 +8,7 @@
 // to every trip automatically.
 // ══════════════════════════════════════════════════════════════════════
 require_once __DIR__ . '/db-config.php';
+require_once __DIR__ . '/template-runtime.php';
 
 header('Content-Type: text/html; charset=UTF-8');
 header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -57,6 +58,18 @@ $status = $trip['status'] ?? 'upcoming';
 $templatePath = __DIR__ . '/new-trip-v2.html';
 $template = file_get_contents($templatePath);
 if ($template === false) { http_response_code(500); echo 'Template not found.'; exit; }
+
+// Remove the retired PIN-hash credential from the browser template and inject
+// only the public, HTTP-referrer-restricted Maps browser key at render time.
+[$template, $runtimeDiag] = applyItineraryRuntimeSafety($template);
+if (($runtimeDiag['auth_const_removed'] ?? 0) !== 1
+    || ($runtimeDiag['auth_headers_rewritten'] ?? 0) < 1
+    || ($runtimeDiag['maps_key_rewritten'] ?? 0) !== 1
+    || ($runtimeDiag['share_url_rewritten'] ?? 0) !== 1) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because the shared template changed unexpectedly.';
+  exit;
+}
 
 $sourceBootstrap = "// Read URL params\nconst params = new URLSearchParams(window.location.search);\nconst dest   = params.get('dest') || 'New Trip';\nconst dep    = params.get('dep')  || '';\nconst ret    = params.get('ret')  || '';\nconst trav   = params.get('trav') || '2';\nconst status = params.get('status') || 'upcoming';\nconst slug   = params.get('slug') || 'new-trip';\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
 $tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)\nconst dest   = " . json_encode($dest) . ";\nconst dep    = " . json_encode($dep) . ";\nconst ret    = " . json_encode($ret) . ";\nconst trav   = " . json_encode($trav) . ";\nconst status = " . json_encode($status) . ";\nconst slug   = " . json_encode($slug) . ";\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
