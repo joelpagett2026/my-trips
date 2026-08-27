@@ -39,13 +39,18 @@ require("template-runtime.php" in trip and "applyItineraryRuntimeSafety" in trip
         "trip.php must sanitize the shared template before output")
 require('/itinerary-state-guard.js?v=1' in trip, "trip.php must load the state safety layer")
 require('/itinerary-ui.js?v=1' in trip, "trip.php must load itinerary-only UI bootstrap")
-require("$hotelLookupCount === 0" in trip, "hotel source patch must fail closed if the template drifts")
-require("dayDate >= ci && dayDate < co" in trip, "hotel coverage must treat checkout as exclusive")
+require("hotel_lookup_rewritten" in trip, "trip.php must fail closed if the centralized hotel correction drifts")
 
 # The legacy hotel source remains only as a known compatibility target until the
-# very large shared template is split into modules; the renderer must correct it.
+# very large shared template is split into modules; one shared renderer corrects
+# it for both owner and share views.
 require("dayDate >= ci && dayDate <= co" in template, "shared template hotel compatibility source changed; update renderer deliberately")
 require("Fallback: closest upcoming" in template, "shared template hotel compatibility source changed unexpectedly")
+require("dayDate >= ci && dayDate < co" in runtime, "central hotel correction must treat checkout as exclusive")
+require("hotel_lookup_rewritten" in runtime and "hotel_lookup_rewritten" in share,
+        "owner and share renders must use the same hotel correction")
+require("$oldHotelLookup" not in trip and "$newHotelLookup" not in trip,
+        "hotel compatibility source must not be duplicated in trip.php")
 
 # Raw template compatibility credentials must be stripped from every public render.
 require("auth_const_removed" in runtime and "auth_headers_rewritten" in runtime,
@@ -56,10 +61,14 @@ require("MAPS_BROWSER_KEY" in runtime and "PLACES_API_KEY" not in runtime,
         "browser Maps injection must use its own restricted browser key")
 require("share.php?share=1&t=" in runtime, "new share links must use the sanitized share renderer")
 require("applyItineraryRuntimeSafety" in share, "share.php must sanitize the same shared template")
+require("Location: /share.php?share=1&t=" in share,
+        "share renderer must activate share mode before auth.js executes")
 require("applyTripsDashboardRuntimeSafety" in trips_renderer,
         "trips.php must inject safe dashboard runtime configuration")
 require("travel_day_filter_rewritten" in trips_renderer and "travel day" in runtime.lower(),
         "dashboard Travel Day filtering must happen at render source")
+require("removeTravelDayFrontCardTags" not in auth and "MutationObserver" not in auth,
+        "auth.js must not contain dashboard presentation patches")
 
 # Never expose the raw monolithic template directly over HTTP. Existing old share
 # URLs are internally routed to share.php before the catch-all 404 rule.
