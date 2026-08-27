@@ -1,16 +1,27 @@
 Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 
 # ══════════════════════════════════════════════════════════════════════
-# ONE SHARED ITINERARY TEMPLATE
-# Every itinerary now resolves to trip.php, which renders new-trip-v2.html.
-# Legacy baked .html URLs are kept only as redirects so old bookmarks still work.
-# This means Itinerary, Bookings, Map and Budget all come from the same template.
+# SHARED RENDERERS
+# Itineraries use trip.php + new-trip-v2.html. The raw shared template is never
+# served directly because it contains compatibility source that must be sanitized
+# and runtime browser configuration that must be injected server-side.
 # ══════════════════════════════════════════════════════════════════════
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
-RewriteRule ^share\.html$ /new-trip-v2.html [R=301,L,QSA]
+RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
+
+# Existing share links used /new-trip-v2.html?share=1&t=TOKEN. Preserve them by
+# internally handing them to share.php, then deny every other direct template hit.
+RewriteCond %{QUERY_STRING} (^|&)share=1(&|$) [NC]
+RewriteRule ^new-trip-v2\.html$ share.php [L,QSA]
+RewriteRule ^new-trip-v2\.html$ - [R=404,L]
+
+# /trips/ is a real directory, so route it explicitly before the generic slug
+# rule. trips.php exists and simply renders trips/index.html with safe runtime
+# browser configuration; this avoids exposing a browser key in deployed HTML.
+RewriteRule ^trips/?$ trips.php [L,QSA]
 
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
