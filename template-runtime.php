@@ -16,8 +16,9 @@ function browserMapsKey(): string {
 }
 
 /**
- * Remove legacy credentials from the shared itinerary source and inject only
- * the explicitly public browser Maps key. Returns [html, diagnostics].
+ * Remove legacy credentials from the shared itinerary source, apply the known
+ * hotel compatibility correction, and inject only the explicitly public browser
+ * Maps key. Returns [html, diagnostics].
  */
 function applyItineraryRuntimeSafety(string $html): array {
     $diagnostics = [];
@@ -62,6 +63,45 @@ function applyItineraryRuntimeSafety(string $html): array {
         $shareUrlCount
     );
     $diagnostics['share_url_rewritten'] = $shareUrlCount;
+
+    // Until the monolithic template is split into modules, correct its historical
+    // hotel lookup in one central renderer helper. Checkout is exclusive and a
+    // day outside all hotel stays must return null rather than another hotel.
+    $oldHotelLookup = <<<'JS'
+// Find the hotel covering the active day (checkin <= day <= checkout)
+function hotelForDay(dayIdx) {
+  if (STATE.days[dayIdx]?.noAccommodation) return null; // explicitly marked — staying with family/friends, or flying that day
+  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
+  if (!hotels.length) return null;
+  const dayDate = parseDate(STATE.days[dayIdx]?.date);
+  if (!dayDate) return hotels[0]; // no date — show first
+  for (const h of hotels) {
+    const ci = parseDate(h.checkin);
+    const co = parseDate(h.checkout);
+    if (ci && co && dayDate >= ci && dayDate <= co) return h;
+  }
+  // Fallback: closest upcoming
+  return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
+}
+JS;
+    $newHotelLookup = <<<'JS'
+// Find the hotel covering the selected NIGHT (checkin <= day < checkout)
+function hotelForDay(dayIdx) {
+  if (STATE.days[dayIdx]?.noAccommodation) return null;
+  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
+  if (!hotels.length) return null;
+  const dayDate = parseDate(STATE.days[dayIdx]?.date);
+  if (!dayDate) return null;
+  for (const h of hotels) {
+    const ci = parseDate(h.checkin);
+    const co = parseDate(h.checkout);
+    if (ci && co && dayDate >= ci && dayDate < co) return h;
+  }
+  return null;
+}
+JS;
+    $html = str_replace($oldHotelLookup, $newHotelLookup, $html, $hotelLookupCount);
+    $diagnostics['hotel_lookup_rewritten'] = $hotelLookupCount;
 
     return [$html, $diagnostics];
 }
