@@ -23,7 +23,6 @@ function browserMapsKey(): string {
 function applyItineraryRuntimeSafety(string $html): array {
     $diagnostics = [];
 
-    // The old PIN hash must never be emitted as a browser bearer credential.
     $html = preg_replace(
         "/const AUTH_TOKEN = '[a-f0-9]{64}';/",
         "const AUTH_TOKEN = ''; // legacy constant intentionally disabled",
@@ -33,8 +32,6 @@ function applyItineraryRuntimeSafety(string $html): array {
     );
     $diagnostics['auth_const_removed'] = $authConstCount;
 
-    // Direct API fetches inside the monolithic template must request the current
-    // random session at call time. Do not capture it during initial parsing.
     $html = str_replace(
         "'X-Auth-Token': AUTH_TOKEN",
         "'X-Auth-Token': (typeof getToken === 'function' ? getToken() : '')",
@@ -54,8 +51,6 @@ function applyItineraryRuntimeSafety(string $html): array {
     );
     $diagnostics['maps_key_rewritten'] = $mapsCount;
 
-    // New links use the PHP renderer. .htaccess also preserves old links that
-    // still point at new-trip-v2.html?share=1&t=...
     $html = str_replace(
         "return location.origin + '/new-trip-v2.html?share=1&t=' + token;",
         "return location.origin + '/share.php?share=1&t=' + token;",
@@ -64,9 +59,6 @@ function applyItineraryRuntimeSafety(string $html): array {
     );
     $diagnostics['share_url_rewritten'] = $shareUrlCount;
 
-    // Until the monolithic template is split into modules, correct its historical
-    // hotel lookup in one central renderer helper. Checkout is exclusive and a
-    // day outside all hotel stays must return null rather than another hotel.
     $oldHotelLookup = <<<'JS'
 // Find the hotel covering the active day (checkin <= day <= checkout)
 function hotelForDay(dayIdx) {
@@ -117,8 +109,6 @@ function applyTripsDashboardRuntimeSafety(string $html): array {
         $mapsCount
     );
 
-    // Travel Day is an itinerary state label, not a city. Filter it where the
-    // dashboard card is constructed instead of relying on a DOM MutationObserver.
     $html = str_replace(
         ".filter((c,i,a) => a.indexOf(c) === i) // dedupe",
         ".filter((c,i,a) => a.indexOf(c) === i && String(c).trim().toLowerCase() !== 'travel day') // dedupe + exclude non-location label",
@@ -130,4 +120,18 @@ function applyTripsDashboardRuntimeSafety(string $html): array {
         'maps_key_rewritten' => $mapsCount,
         'travel_day_filter_rewritten' => $travelDayCount,
     ]];
+}
+
+function applyGoogleMapsScriptRuntimeSafety(string $html): array {
+    $key = browserMapsKey();
+    $html = preg_replace_callback(
+        '/https:\/\/maps\.googleapis\.com\/maps\/api\/js\?key=AIza[0-9A-Za-z_-]+([^"\']*)/',
+        static function (array $m) use ($key): string {
+            return 'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode($key) . ($m[1] ?? '');
+        },
+        $html,
+        1,
+        $count
+    );
+    return [$html, ['maps_script_key_rewritten' => $count]];
 }
