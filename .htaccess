@@ -21,10 +21,16 @@ RewriteRule ^new-trip\.html$ - [R=410,L]
 # requests without browser Origin/Sec-Fetch-Site headers remain available for
 # controlled administration with a valid bearer/deploy credential.
 RewriteCond %{HTTP:Sec-Fetch-Site} ^cross-site$ [NC]
-RewriteRule ^(?:api|auth-v2|record|trip-create|trip-delete)\.php$ - [F,L]
+RewriteRule ^(?:api|auth-v2|record|trip-create|trip-delete|place-photo)\.php$ - [F,L]
 RewriteCond %{HTTP:Origin} !^$
 RewriteCond %{HTTP:Origin} !^https://(?:www\.)?joelpagett\.co\.uk$ [NC]
-RewriteRule ^(?:api|auth-v2|record|trip-create|trip-delete)\.php$ - [F,L]
+RewriteRule ^(?:api|auth-v2|record|trip-create|trip-delete|place-photo)\.php$ - [F,L]
+
+# Intercept both historical place-photo API actions before api.php executes. The
+# dedicated endpoint resolves Google's signed/public image URL server-side so the
+# server Places key never appears in browser JSON or an <img> URL.
+RewriteCond %{QUERY_STRING} (^|&)action=(place_photo_v2|place_photo)(&|$) [NC]
+RewriteRule ^api\.php$ place-photo.php [L,QSA]
 
 # Legacy whole-record writes bypass the conflict-safe record.php endpoint,
 # generic setting writes bypass the dedicated PIN/session lifecycle, and the old
@@ -60,7 +66,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   # The app uses bearer tokens in a custom header and has no supported
   # cross-origin API clients. Strip permissive PHP CORS headers at the web edge
   # so another origin cannot turn a leaked token into a browser-readable API.
-  <FilesMatch "^(api|auth-v2|record|trip-create|trip-delete)\.php$">
+  <FilesMatch "^(api|auth-v2|record|trip-create|trip-delete|place-photo)\.php$">
     Header always unset Access-Control-Allow-Origin
     Header always unset Access-Control-Allow-Credentials
   </FilesMatch>
