@@ -22,6 +22,7 @@ jobs:
           node --check db.js
           node --check itinerary-state-guard.js
           node --check itinerary-ui.js
+          node --check trip-dashboard-create.js
           node --check datepicker.js
           node --check budget-live-redesign.js
 
@@ -31,6 +32,7 @@ jobs:
           php -l auth-v2.php
           php -l auth-session.php
           php -l record.php
+          php -l trip-create.php
           php -l db-config.php
           php -l template-runtime.php
           php -l deploy-webhook.php
