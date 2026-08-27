@@ -90,7 +90,7 @@ require("/auth-v2.php?action=login" in settings, "Settings current-PIN verificat
 require("/auth-v2.php?action=logout" in settings, "Settings sign-out must revoke the server session")
 require("?.sessionToken || ''" in settings, "Settings must use only the server session token")
 require("legacy_token" not in settings, "Settings must not store the PIN hash as a bearer token")
-require("const id=typeof row==='string'?row:row?.id" in settings.replace(' ', ''), "Backup exporter must read IDs from list API rows")
+require("typeof row==='string'" in settings and "row?.id" in settings, "Backup exporter must read IDs from list API rows")
 require("record_count" in settings, "Backup should record and surface its exported record count")
 
 for runtime_file in [
