@@ -116,7 +116,7 @@ require("date('Y-m-d H:i:s'" not in auth_session and 'strtotime(' not in auth_se
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
-require('<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo)\\.php$">' in htaccess,
+require('<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\\.php$">' in htaccess,
         'authenticated API response header policy must include all protected endpoints')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
