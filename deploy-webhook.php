@@ -11,19 +11,71 @@
 const REPO_PATH   = '/home/sites/31a/d/dbd40dd264/my-trips';
 const PUBLIC_HTML = '/home/sites/31a/d/dbd40dd264/public_html';
 
+function serverConfig(string $name): string {
+    if (defined($name)) return trim((string)constant($name));
+    $env = getenv($name);
+    return $env !== false ? trim((string)$env) : '';
+}
+
 function deploySecret(): string {
-    if (defined('DEPLOY_KEY')) return (string)DEPLOY_KEY;
-    $env = getenv('DEPLOY_KEY');
-    if ($env !== false && $env !== '') return $env;
-    // Temporary compatibility fallback. Remove after DEPLOY_KEY has been
-    // installed in server-only secrets.php/environment and rotated.
-    return 'jt-deploy-k9x2m4p7q1';
+    return serverConfig('DEPLOY_KEY');
+}
+
+function deploymentPreflight(): array {
+    // These values must already exist in server-only secrets.php/environment
+    // before a hardened release is allowed to touch public_html.
+    $required = [
+        'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS',
+        'ANTHROPIC_API_KEY', 'PLACES_API_KEY', 'MAPS_BROWSER_KEY',
+    ];
+    $missing = [];
+    foreach ($required as $name) {
+        if (serverConfig($name) === '') $missing[] = $name;
+    }
+    if ($missing) return ['ok' => false, 'error' => 'Missing server configuration', 'missing' => $missing];
+
+    // Verify the exact DB credentials that the new release will use and ensure a
+    // PIN is available either from the DB setting or a server-only bootstrap.
+    try {
+        $pdo = new PDO(
+            'mysql:host=' . serverConfig('DB_HOST') . ';dbname=' . serverConfig('DB_NAME') . ';charset=utf8mb4',
+            serverConfig('DB_USER'),
+            serverConfig('DB_PASS'),
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+        );
+        $stmt = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash' LIMIT 1");
+        $stmt->execute();
+        $row = $stmt->fetch();
+        $storedPin = is_array($row) ? strtolower(trim((string)($row['value'] ?? ''))) : '';
+        $bootstrapPin = strtolower(serverConfig('PIN_HASH'));
+        if (!preg_match('/^[a-f0-9]{64}$/', $storedPin) && !preg_match('/^[a-f0-9]{64}$/', $bootstrapPin)) {
+            return ['ok' => false, 'error' => 'No valid server-side PIN hash is configured'];
+        }
+    } catch (Throwable $e) {
+        return ['ok' => false, 'error' => 'Database preflight failed'];
+    }
+
+    if (!preg_match('/^AIza[0-9A-Za-z_-]{20,}$/', serverConfig('MAPS_BROWSER_KEY'))) {
+        return ['ok' => false, 'error' => 'MAPS_BROWSER_KEY is not a valid Google browser key'];
+    }
+
+    return ['ok' => true];
 }
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
 
-$providedKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? ($_GET['key'] ?? ''));
-if (!$providedKey || !hash_equals(deploySecret(), $providedKey)) {
+$expectedKey = deploySecret();
+if ($expectedKey === '') {
+    http_response_code(503);
+    echo json_encode(['ok' => false, 'error' => 'Deployment secret is not configured on the server']);
+    exit;
+}
+
+// Deployment credentials are accepted only in a header so they cannot leak via
+// browser history, access logs, analytics or copied URLs.
+$providedKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? '');
+if ($providedKey === '' || !hash_equals($expectedKey, $providedKey)) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
     exit;
@@ -43,6 +95,13 @@ if ($return !== 0) {
         'error' => 'Git update failed; live files were left untouched',
         'git' => implode("\n", $output),
     ]);
+    exit;
+}
+
+$preflight = deploymentPreflight();
+if (!$preflight['ok']) {
+    http_response_code(503);
+    echo json_encode($preflight + ['live_files_untouched' => true]);
     exit;
 }
 
@@ -71,29 +130,34 @@ foreach ($retiredFiles as $retired) {
 }
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 
+// Dependencies are copied before their entry points. .htaccess is last so new
+// routes cannot become active until every renderer they reference is present.
 $coreFiles = [
-    'api.php',
-    'auth-v2.php',
-    'auth-session.php',
-    'record.php',
     'db-config.php',
-    'trip.php',
+    'auth-session.php',
+    'template-runtime.php',
+    'auth-v2.php',
+    'record.php',
     'auth.js',
     'db.js',
     'itinerary-state-guard.js',
     'itinerary-ui.js',
     'datepicker.js',
+    'budget-live-redesign.js',
     'itinerary-style.css',
     'itinerary-v2-style.css',
-    'deploy-webhook.php',
-    'budget-live-redesign.js',
-    'index.html',
     'new-trip-v2.html',
-    'settings.html',
     'manifest.webmanifest',
     'robots.txt',
-    '.htaccess',
     'favicon.ico',
+    'settings.html',
+    'index.html',
+    'trip.php',
+    'share.php',
+    'trips.php',
+    'api.php',
+    'deploy-webhook.php',
+    '.htaccess',
 ];
 
 $subdirFiles = [
@@ -151,7 +215,18 @@ function copyDeployFile(string $src, string $dest, array &$copied, array &$faile
     if (!is_file($srcPath)) { $skipped[] = $src; return; }
     $destDir = dirname($destPath);
     if (!is_dir($destDir) && !mkdir($destDir, 0755, true) && !is_dir($destDir)) { $failed[] = $dest; return; }
-    if (copy($srcPath, $destPath)) $copied[] = $dest; else $failed[] = $dest;
+
+    // Copy to a sibling temporary file and rename it into place. rename() on the
+    // same filesystem is atomic, so visitors never receive a half-written file.
+    $tmpPath = $destPath . '.deploy-' . getmypid() . '-' . bin2hex(random_bytes(3));
+    if (!copy($srcPath, $tmpPath)) { $failed[] = $dest; return; }
+    @chmod($tmpPath, 0644);
+    if (!rename($tmpPath, $destPath)) {
+        @unlink($tmpPath);
+        $failed[] = $dest;
+        return;
+    }
+    $copied[] = $dest;
 }
 
 foreach ($coreFiles as $file) copyDeployFile($file, $file, $copied, $failed, $skipped);
