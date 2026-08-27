@@ -12,6 +12,16 @@ RewriteEngine On
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
 RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
 
+# Browser API traffic is same-origin only. Block explicit cross-site fetches and
+# reject foreign Origin headers before authentication/rate-limit code runs. CLI
+# requests without browser Origin/Sec-Fetch-Site headers remain available for
+# controlled administration with a valid bearer/deploy credential.
+RewriteCond %{HTTP:Sec-Fetch-Site} ^cross-site$ [NC]
+RewriteRule ^(?:api|auth-v2|record)\.php$ - [F,L]
+RewriteCond %{HTTP:Origin} !^$
+RewriteCond %{HTTP:Origin} !^https://(?:www\.)?joelpagett\.co\.uk$ [NC]
+RewriteRule ^(?:api|auth-v2|record)\.php$ - [F,L]
+
 # Legacy whole-record writes bypass the conflict-safe record.php endpoint, and
 # generic setting writes could bypass the dedicated PIN/session lifecycle. No
 # current browser code uses either action, so fail them closed at the web edge.
