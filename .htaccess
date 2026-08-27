@@ -41,6 +41,16 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 </IfModule>
 
+<IfModule mod_headers.c>
+  # The app uses bearer tokens in a custom header and has no supported
+  # cross-origin API clients. Strip permissive PHP CORS headers at the web edge
+  # so another origin cannot turn a leaked token into a browser-readable API.
+  <FilesMatch "^(api|auth-v2|record)\.php$">
+    Header always unset Access-Control-Allow-Origin
+    Header always unset Access-Control-Allow-Credentials
+  </FilesMatch>
+</IfModule>
+
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/javascript        "access plus 7 days"
