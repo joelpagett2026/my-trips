@@ -138,7 +138,9 @@ function isValidAuthSession(string $token): bool {
     return true;
 }
 
-function isAuthorizedToken(string $token): bool {
+function isAuthorizedToken(string $token, bool $unusedLegacyFlag = false): bool {
+    // Second argument is accepted only so staged callers cannot break while
+    // being updated. It no longer enables PIN-hash bearer authentication.
     return $token !== '' && isValidAuthSession($token);
 }
 
