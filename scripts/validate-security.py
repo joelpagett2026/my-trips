@@ -68,7 +68,7 @@ require('Access-Control-Allow-Origin' not in auth_v2,
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
-require('<FilesMatch "^(api|auth-v2|record|trip-create)\\.php$">' in htaccess,
+require('<FilesMatch "^(api|auth-v2|record|trip-create|trip-delete)\\.php$">' in htaccess,
         'authenticated API response header policy must include all write endpoints')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
