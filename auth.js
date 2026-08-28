@@ -21,9 +21,6 @@ function clearSession() {
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
 }
 
-// Temporary recovery handoff. The token is placed in the URL fragment so it is
-// never sent in the HTTP request or server logs. Consume it before deciding
-// whether to show the PIN gate, then immediately remove it from the address bar.
 (function consumeRecoveryHandoff() {
     const m = window.location.hash.match(/^#jh_session=([a-f0-9]{64})$/i);
     if (!m) return;
@@ -116,9 +113,30 @@ function showPinOverlay() {
 function relockForExpiredSession() {
     if (IS_SHARE_VIEW) return;
     clearSession(); window._mytripsAuthed=false;
-    if (document.body) showPinOverlay(); else document.addEventListener('DOMContentLoaded',showPinOverlay,{once:true});
+    establishTemporaryAccess();
 }
 document.addEventListener('mytrips:auth-expired', relockForExpiredSession);
+
+async function establishTemporaryAccess() {
+    try {
+        const res = await fetch('/auth-v2.php?action=temporary_access', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            cache:'no-store',
+            credentials:'same-origin',
+            body:'{}'
+        });
+        const json = await res.json();
+        if (!res.ok || !json.ok || !json.data || !json.data.session_token) throw new Error('Temporary access failed');
+        storeSession(json.data.session_token);
+        document.documentElement.style.visibility='visible';
+        window._mytripsAuthed=true;
+        document.dispatchEvent(new Event('mytrips:authed'));
+    } catch (err) {
+        document.documentElement.style.visibility='visible';
+        showPinOverlay();
+    }
+}
 
 if (IS_SHARE_VIEW) {
     document.documentElement.style.visibility='visible';
@@ -129,6 +147,5 @@ if (IS_SHARE_VIEW) {
     else document.dispatchEvent(new Event('mytrips:authed'));
 } else {
     clearSession();
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',showPinOverlay,{once:true});
-    else showPinOverlay();
+    establishTemporaryAccess();
 }
