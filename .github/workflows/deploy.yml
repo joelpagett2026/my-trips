@@ -1,14 +1,34 @@
-name: Deploy to joelpagett.co.uk
+name: Validate deploy bootstrap
 
 on:
   push:
     branches:
-      - main
+      - 'stability-hardening-bootstrap-validation-*'
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy webhook
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Validate bootstrap PHP syntax
+        run: php -l deploy-webhook.php
+      - name: Validate bootstrap safety contract
         run: |
-          curl -f "https://joelpagett.co.uk/deploy-webhook.php?key=${{ secrets.DEPLOY_KEY }}"
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('deploy-webhook.php').read_text()
+          checks = {
+              'supports new deploy header': "HTTP_X_DEPLOY_KEY" in p,
+              'retains temporary legacy bridge': "LEGACY_DEPLOY_KEY" in p,
+              'preflights server config': "deploymentPreflight()" in p,
+              'preflights auth tables': "CREATE TABLE IF NOT EXISTS auth_sessions" in p and "CREATE TABLE IF NOT EXISTS auth_attempts" in p,
+              'knows hardened runtime files': all(x in p for x in ["auth-session.php", "record.php", "backup-export.php", "settings.php", "place-photo.php"]),
+              'copies dependencies before htaccess': p.find("'auth-session.php'") < p.find("'.htaccess'"),
+              'uses atomic rename': "rename($tmpPath, $destPath)" in p,
+          }
+          failed = [name for name, ok in checks.items() if not ok]
+          if failed:
+              raise SystemExit('bootstrap validation failed: ' + ', '.join(failed))
+          print('bootstrap validation: ok')
+          PY
