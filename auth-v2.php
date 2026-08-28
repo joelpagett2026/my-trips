@@ -28,7 +28,15 @@ function validatedPin(array $body, string $field): string {
     return $pin;
 }
 
-$raw = file_get_contents('php://input');
+// Authentication requests contain only a PIN/action payload. Refuse oversized
+// bodies before PHP reads them into memory so this endpoint cannot be used as an
+// easy memory-pressure target.
+const AUTH_MAX_REQUEST_BYTES = 16_384;
+$contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+if ($contentLength > AUTH_MAX_REQUEST_BYTES) authFail('Request too large', 413);
+$raw = file_get_contents('php://input', false, null, 0, AUTH_MAX_REQUEST_BYTES + 1);
+if ($raw === false) authFail('Could not read request body');
+if (strlen($raw) > AUTH_MAX_REQUEST_BYTES) authFail('Request too large', 413);
 $body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) authFail('Invalid JSON body');
 
