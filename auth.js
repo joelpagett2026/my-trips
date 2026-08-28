@@ -85,7 +85,7 @@ function showPinOverlay() {
                 headers:{'Content-Type':'application/json'},
                 cache:'no-store',
                 credentials:'same-origin',
-                body:JSON.stringify({pin:entered})
+                body: JSON.stringify({ pin: entered })
             });
             let json;
             try { json = await res.json(); } catch { throw new Error(`Authentication service returned HTTP ${res.status}`); }
