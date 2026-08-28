@@ -32,6 +32,7 @@ function deploymentPreflight(): array {
     }
     if ($missing) return ['ok' => false, 'error' => 'Missing server configuration', 'missing' => $missing];
 
+    $registryTripCount = 0;
     try {
         $pdo = new PDO(
             'mysql:host=' . serverConfig('DB_HOST') . ';dbname=' . serverConfig('DB_NAME') . ';charset=utf8mb4',
@@ -45,6 +46,32 @@ function deploymentPreflight(): array {
         );
 
         $pdo->query('SELECT id FROM itinerary LIMIT 1')->fetch();
+
+        // Production must be pointed at the database that actually contains this
+        // site's trip registry. A connection that merely succeeds is not enough:
+        // during recovery work, a wrong/empty schema would make the dashboard look
+        // as though every itinerary had disappeared. Fail before touching live
+        // files if the authoritative registry is missing, malformed or empty.
+        $registryStmt = $pdo->prepare("SELECT data FROM itinerary WHERE id = 'trip-registry' LIMIT 1");
+        $registryStmt->execute();
+        $registryRow = $registryStmt->fetch();
+        if (!$registryRow || !is_string($registryRow['data'] ?? null)) {
+            return ['ok' => false, 'error' => 'Trip registry is missing from the configured database'];
+        }
+        $registry = json_decode((string)$registryRow['data'], true);
+        if (!is_array($registry) || !is_array($registry['trips'] ?? null)) {
+            return ['ok' => false, 'error' => 'Trip registry is invalid in the configured database'];
+        }
+        foreach ($registry['trips'] as $trip) {
+            if (!is_array($trip)) continue;
+            if (!empty($trip['deleted'])) continue;
+            if (trim((string)($trip['slug'] ?? '')) === '') continue;
+            $registryTripCount++;
+        }
+        if ($registryTripCount < 1) {
+            return ['ok' => false, 'error' => 'Trip registry contains no active itineraries'];
+        }
+
         $pdo->exec("CREATE TABLE IF NOT EXISTS auth_sessions (
             token_hash CHAR(64) PRIMARY KEY,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +103,7 @@ function deploymentPreflight(): array {
         return ['ok' => false, 'error' => 'MAPS_BROWSER_KEY is not a valid Google browser key'];
     }
 
-    return ['ok' => true];
+    return ['ok' => true, 'registry_trip_count' => $registryTripCount];
 }
 
 header('Content-Type: application/json');
@@ -258,6 +285,7 @@ foreach ($subdirFiles as $src => $dest) copyDeployFile($src, $dest, $copied, $fa
 if ($failed) http_response_code(500);
 echo json_encode([
     'ok' => empty($failed),
+    'registry_trip_count' => $preflight['registry_trip_count'] ?? null,
     'copied' => $copied,
     'failed' => $failed,
     'skipped' => $skipped,
