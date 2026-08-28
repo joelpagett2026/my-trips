@@ -99,6 +99,24 @@ jobs:
             "https://joelpagett.co.uk/" \
             --output /tmp/home.html
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/home.html
+          grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/home.html
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/trips/" \
+            --output /tmp/trips.html
+          grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trips.html
+          grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trips.html
+          grep -q 'Your saved trips have not been changed' /tmp/trips.html
+          if grep -q 'try{ return await window.dbLoadRegistry(); }catch{ return \[\]; }' /tmp/trips.html; then
+            echo 'live dashboard is still swallowing registry failures as an empty trip list'
+            exit 1
+          fi
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/porto-2026" \
+            --output /tmp/trip.html
+          grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
+          grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
 
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/auth.js?verify-restored-gate=1" \
@@ -133,4 +151,4 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=check")
           test "$check_status" = "401"
 
-          echo 'restored PIN gate + protected APIs: ok'
+          echo 'PIN gate + dashboard session runtime + protected APIs: ok'
