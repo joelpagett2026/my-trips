@@ -20,6 +20,7 @@ require("Access-Control-Allow-Origin" not in api,
 retired = {
     "case 'save':": "whole-record save must use record.php",
     "case 'set_setting':": "generic settings writes must stay retired",
+    "case 'get_setting':": "generic settings reads could expose PIN/security hashes",
     "case 'create_page':": "trip creation must use trip-create.php",
     "case 'delete':": "record deletion must use record-delete.php/trip-delete.php",
     "case 'place_photo_v2':": "photo requests must use place-photo.php",
