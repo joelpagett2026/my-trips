@@ -55,11 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ══════════════════════════════════════════════════════════════════════
 //  ACTIONS
 // ══════════════════════════════════════════════════════════════════════
-// Deliberately absent here: save, set_setting, create_page, delete and legacy
-// photo actions. Those operations either have dedicated conflict-safe/atomic
-// endpoints or have been retired. Keeping them out of this file means an Apache
-// rewrite/configuration regression fails closed instead of restoring an unsafe
-// write path or exposing a server-side Google key.
+// Deliberately absent here: save, set_setting, get_setting, create_page, delete
+// and legacy photo actions. Those operations either have dedicated
+// conflict-safe/atomic endpoints or have been retired. Keeping them out of this
+// file means an Apache rewrite/configuration regression fails closed instead of
+// restoring an unsafe write path, exposing security settings, or leaking a
+// server-side Google key.
 switch ($action) {
 
     // ── LOAD A RECORD ────────────────────────────────────────────────
@@ -122,16 +123,6 @@ switch ($action) {
     case 'list':
         $stmt = db()->query("SELECT id, updated_at FROM itinerary ORDER BY updated_at DESC");
         ok($stmt->fetchAll());
-
-    // ── SETTINGS GET ─────────────────────────────────────────────────
-    // PIN changes use auth-v2.php and no generic settings write endpoint exists.
-    case 'get_setting':
-        $key = $_GET['key'] ?? '';
-        if (!$key) fail('Missing key');
-        $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = ?");
-        $stmt->execute([$key]);
-        $row = $stmt->fetch();
-        ok($row ? $row['value'] : null);
 
     // ── GEOCODE ITEM ─────────────────────────────────────────────────
     case 'geocode_item':
