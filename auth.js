@@ -56,7 +56,7 @@ function showPinOverlay() {
       .pin-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:500;color:#444444;box-shadow:0 1px 3px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06);transition:background 0.1s,transform 0.08s;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
       .pin-btn:active{background:#e5e5ea;transform:scale(0.94);}
       .pin-btn.del{background:transparent;box-shadow:none;}
-      #pin-error{margin-top:20px;font-size:13px;font-weight:600;color:#ff3b30;opacity:0;transition:opacity 0.2s;}
+      #pin-error{margin-top:20px;font-size:13px;font-weight:600;color:#ff3b30;opacity:0;transition:opacity 0.2s;max-width:320px;text-align:center;line-height:1.35;}
       #pin-error.show{opacity:1;}
     </style>
     <div id="pin-logo">
@@ -87,6 +87,19 @@ function showPinOverlay() {
         }
     }
 
+    function showPinError(message) {
+        document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.add('error'));
+        const errorEl = document.getElementById('pin-error');
+        errorEl.textContent = message || 'Authentication failed';
+        errorEl.classList.add('show');
+        setTimeout(() => {
+            entered = '';
+            updateDots();
+            document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.remove('error'));
+            errorEl.classList.remove('show');
+        }, 1800);
+    }
+
     async function checkPin() {
         try {
             const res = await fetch('/auth-v2.php?action=login', {
@@ -94,7 +107,9 @@ function showPinOverlay() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pin: entered })
             });
-            const json = await res.json();
+            let json;
+            try { json = await res.json(); }
+            catch { throw new Error(`Authentication service returned HTTP ${res.status}`); }
             if (json.ok && json.data && json.data.session_token) {
                 storeSession(json.data.session_token);
                 document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => { d.style.background='#34c759'; });
@@ -105,17 +120,10 @@ function showPinOverlay() {
                     document.dispatchEvent(new Event('mytrips:authed'));
                 }, 350);
             } else {
-                throw new Error(json.error || 'bad pin');
+                throw new Error(json.error || `Authentication failed (HTTP ${res.status})`);
             }
-        } catch {
-            document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.add('error'));
-            document.getElementById('pin-error').classList.add('show');
-            setTimeout(() => {
-                entered = '';
-                updateDots();
-                document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.remove('error'));
-                document.getElementById('pin-error').classList.remove('show');
-            }, 800);
+        } catch (err) {
+            showPinError(err && err.message ? err.message : 'Authentication failed');
         }
     }
 
