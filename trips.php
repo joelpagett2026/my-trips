@@ -22,6 +22,14 @@ if (($diag['maps_key_rewritten'] ?? 0) !== 1
     exit;
 }
 
+// The homepage already uses cache-busted authentication/database assets. The
+// dashboard must use the exact same current runtimes so navigation from the
+// homepage keeps the existing session instead of ever loading a stale PIN gate.
+$authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
+$dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
+$page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
+
 // Override the legacy two-step dashboard creator only after its original script
 // has loaded. The replacement uses trip-create.php to commit the itinerary and
 // registry entry atomically.
