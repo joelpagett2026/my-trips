@@ -29,34 +29,44 @@ function validatedPin(array $body, string $field): string {
 }
 
 /**
- * Recovery helper for a server-only bootstrap PIN hash.
- *
- * A configured PIN_HASH may be used exactly once to recover access if the DB
- * pin_hash is missing, stale or was written incorrectly during migration. On a
- * successful bootstrap login we synchronise the DB hash and permanently mark the
- * bootstrap as consumed, so the old server bootstrap cannot resurrect later
- * after the user changes their PIN.
+ * Return true when this exact server-only bootstrap hash has already been used.
+ * We store the consumed hash itself, not a boolean, so replacing PIN_HASH with a
+ * new recovery value creates one fresh recovery opportunity without re-enabling
+ * an older bootstrap PIN.
+ */
+function bootstrapHashWasConsumed(string $bootstrapHash): bool {
+    try {
+        $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_bootstrap_consumed_hash' LIMIT 1");
+        $stmt->execute();
+        $row = $stmt->fetch();
+        $used = $row && is_string($row['value']) ? strtolower(trim($row['value'])) : '';
+        return $used !== '' && hash_equals($used, strtolower($bootstrapHash));
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Recover access using the current server-only PIN_HASH exactly once per hash.
+ * On success the database PIN is synchronised, failed attempts/sessions are
+ * cleared, and this exact bootstrap hash is marked consumed.
  */
 function tryBootstrapPinRecovery(string $submittedHash): bool {
     $bootstrap = configuredPinHash();
     if ($bootstrap === null || !hash_equals($bootstrap, $submittedHash)) return false;
+    if (bootstrapHashWasConsumed($bootstrap)) return false;
 
     $pdo = db();
-    $pdo->beginTransaction();
     try {
-        $check = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_bootstrap_consumed' LIMIT 1 FOR UPDATE");
-        $check->execute();
-        $row = $check->fetch();
-        if ($row && trim((string)($row['value'] ?? '')) === '1') {
-            $pdo->rollBack();
-            return false;
-        }
-
+        $pdo->beginTransaction();
         $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$submittedHash, $submittedHash]);
-        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed', '1') ON DUPLICATE KEY UPDATE `value` = '1'")
-            ->execute();
+        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
+            ->execute([$bootstrap, $bootstrap]);
+        // Remove the old boolean marker from the first migration attempt.
+        $pdo->prepare("DELETE FROM settings WHERE `key` = 'pin_bootstrap_consumed'")->execute();
         $pdo->exec('DELETE FROM auth_attempts');
+        $pdo->exec('DELETE FROM auth_sessions');
         $pdo->commit();
         return true;
     } catch (Throwable $e) {
@@ -73,35 +83,30 @@ $action = (string)($_GET['action'] ?? 'login');
 
 if ($action === 'login') {
     try {
-        if (loginRateLimitRemaining() <= 0) {
-            authFail('Too many attempts. Try again in 15 minutes.', 429);
-        }
-
         $pin = validatedPin($body, 'pin');
         $submittedHash = hash('sha256', $pin);
+
+        // A matching server-only bootstrap hash is allowed to recover even when
+        // earlier bad attempts have triggered the normal rate limit. Wrong PINs
+        // still remain rate-limited, so this does not create a brute-force bypass.
+        $bootstrap = configuredPinHash();
+        $isFreshBootstrapMatch = $bootstrap !== null
+            && hash_equals($bootstrap, $submittedHash)
+            && !bootstrapHashWasConsumed($bootstrap);
+
+        if (!$isFreshBootstrapMatch && loginRateLimitRemaining() <= 0) {
+            authFail('Too many attempts. Try again in 15 minutes.', 429);
+        }
 
         $matched = false;
         try {
             $matched = hash_equals(activePinHash(), $submittedHash);
         } catch (Throwable $e) {
-            // A stale/missing settings row can be recovered only by the one-time
-            // server bootstrap path below.
             $matched = false;
         }
 
-        if (!$matched) {
+        if (!$matched && $isFreshBootstrapMatch) {
             $matched = tryBootstrapPinRecovery($submittedHash);
-        } else {
-            // If the normal DB PIN happens to equal the server bootstrap PIN,
-            // consume the bootstrap on this successful login as well so it can
-            // never become a later fallback after a PIN change.
-            $bootstrap = configuredPinHash();
-            if ($bootstrap !== null && hash_equals($bootstrap, $submittedHash)) {
-                try {
-                    db()->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed', '1') ON DUPLICATE KEY UPDATE `value` = '1'")
-                        ->execute();
-                } catch (Throwable $e) {}
-            }
         }
 
         if (!$matched) {
@@ -150,8 +155,6 @@ if ($action === 'change_pin') {
 
         $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$newHash, $newHash]);
-        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed', '1') ON DUPLICATE KEY UPDATE `value` = '1'")
-            ->execute();
 
         // PIN update + old-session revocation + replacement-session creation are
         // one transaction. A partial failure cannot leave a changed PIN with old
@@ -186,8 +189,6 @@ if ($action === 'logout') {
         db()->prepare('DELETE FROM auth_sessions WHERE token_hash = ?')->execute([$hash]);
         authOk(['logged_out' => true]);
     } catch (Throwable $e) {
-        // Do not claim the server token was revoked when the database operation
-        // failed. The browser can still clear its local copy and retry later.
         authFail('Could not revoke the server session', 503);
     }
 }
