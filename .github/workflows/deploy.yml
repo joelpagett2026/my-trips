@@ -9,12 +9,15 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Validate JavaScript syntax
         run: |
@@ -51,56 +54,51 @@ jobs:
           php -l scripts/validate-renderers.php
 
       - name: Validate web app manifest JSON
+        run: python -m json.tool manifest.webmanifest >/dev/null
+
+      - name: Validate source credential hygiene
+        run: python scripts/validate-source-hygiene.py
+
+      - name: Validate backup recovery readiness
         run: |
-          python -m json.tool manifest.webmanifest >/dev/null
+          python -m py_compile scripts/check-backup-recovery.py
+          python scripts/check-backup-recovery.py --self-test
 
       - name: Validate runtime contracts
-        run: |
-          python scripts/validate-runtime.py
+        run: python scripts/validate-runtime.py
 
       - name: Validate share privacy contracts
-        run: |
-          python scripts/validate-share.py
+        run: python scripts/validate-share.py
 
       - name: Validate focused security contracts
-        run: |
-          python scripts/validate-security.py
+        run: python scripts/validate-security.py
 
       - name: Validate request body limit contracts
-        run: |
-          python scripts/validate-request-limits.py
+        run: python scripts/validate-request-limits.py
 
       - name: Validate reduced API surface
-        run: |
-          python scripts/validate-api-surface.py
+        run: python scripts/validate-api-surface.py
 
       - name: Validate deployment database guard
-        run: |
-          python scripts/validate-deploy-data-guard.py
+        run: python scripts/validate-deploy-data-guard.py
 
       - name: Validate stale save conflict latching
-        run: |
-          python scripts/validate-save-conflicts.py
+        run: python scripts/validate-save-conflicts.py
 
       - name: Validate authentication atomicity contracts
-        run: |
-          python scripts/validate-auth-atomic.py
+        run: python scripts/validate-auth-atomic.py
 
       - name: Validate backup consistency contracts
-        run: |
-          python scripts/validate-backup.py
+        run: python scripts/validate-backup.py
 
       - name: Validate atomic trip creation contracts
-        run: |
-          python scripts/validate-trip-create.py
+        run: python scripts/validate-trip-create.py
 
       - name: Validate atomic trip deletion contracts
-        run: |
-          python scripts/validate-trip-delete.py
+        run: python scripts/validate-trip-delete.py
 
       - name: Execute renderer integration contracts
-        run: |
-          php scripts/validate-renderers.php
+        run: php scripts/validate-renderers.php
 
   deploy:
     needs: validate
