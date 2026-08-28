@@ -19,6 +19,16 @@ function backupFail(string $message, int $status = 400): never {
     exit;
 }
 
+function isSensitiveBackupSettingKey(string $key): bool {
+    $normalized = strtolower(trim($key));
+    if ($normalized === '') return true;
+    // Settings may gain new fields over time. Backups should fail on the side of
+    // privacy: never export values whose names indicate authentication, secrets,
+    // credentials or API keys, even if a future developer forgets to update a
+    // one-off blacklist.
+    return (bool)preg_match('/(?:^|[_-])(pin|password|passwd|secret|token|credential|api[_-]?key|auth)(?:$|[_-])/i', $normalized);
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') backupFail('GET required', 405);
 
 $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
@@ -44,11 +54,14 @@ try {
         $recordMeta[$id] = ['updated_at' => $row['updated_at'] ?? null];
     }
 
-    // Export ordinary application settings, but never PIN/security credentials.
+    // Export ordinary application settings only. Never put PINs, tokens, API
+    // keys or future security credentials into a downloadable browser file.
     $settings = [];
-    $settingStmt = $pdo->query("SELECT `key`, `value` FROM settings WHERE `key` <> 'pin_hash' ORDER BY `key`");
+    $settingStmt = $pdo->query("SELECT `key`, `value` FROM settings ORDER BY `key`");
     foreach ($settingStmt->fetchAll() as $row) {
-        $settings[(string)$row['key']] = (string)$row['value'];
+        $key = (string)$row['key'];
+        if (isSensitiveBackupSettingKey($key)) continue;
+        $settings[$key] = (string)$row['value'];
     }
 
     $pdo->commit();
@@ -61,7 +74,7 @@ try {
         'records' => $records,
         'record_meta' => $recordMeta,
         'settings' => $settings,
-        'excluded' => ['pin_hash', 'auth_sessions', 'auth_attempts', 'share_tokens'],
+        'excluded' => ['security-like settings', 'auth_sessions', 'auth_attempts', 'share_tokens'],
     ]);
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
