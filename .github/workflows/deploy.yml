@@ -66,6 +66,10 @@ jobs:
         run: |
           python scripts/validate-request-limits.py
 
+      - name: Validate reduced API surface
+        run: |
+          python scripts/validate-api-surface.py
+
       - name: Validate authentication atomicity contracts
         run: |
           python scripts/validate-auth-atomic.py
