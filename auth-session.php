@@ -6,24 +6,9 @@ const AUTH_SESSION_TTL_SECONDS = 43200; // 12 hours
 const AUTH_MAX_FAILURES = 8;
 const AUTH_FAILURE_WINDOW_SECONDS = 900; // 15 minutes
 
-// Retained as a server-only provisioning helper for fresh installs. Normal login
-// no longer falls back to this value once the application is configured.
-function configuredPinHash(): ?string {
-    if (defined('PIN_HASH')) {
-        $hash = strtolower(trim((string)PIN_HASH));
-        if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
-    }
-    $env = getenv('PIN_HASH');
-    if ($env !== false) {
-        $hash = strtolower(trim((string)$env));
-        if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
-    }
-    return null;
-}
-
 function activePinHash(): string {
     // The database value is authoritative. A missing/invalid row or database read
-    // error fails closed instead of reviving any old server bootstrap PIN.
+    // error fails closed; there is no server/bootstrap PIN fallback.
     try {
         $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash' LIMIT 1");
         $stmt->execute();
