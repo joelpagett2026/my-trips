@@ -1,24 +1,25 @@
 // ══════════════════════════════════════════════════════════════════════
 //  MY TRIPS — Database client (replaces Supabase)
-//  All pages include this instead of using localStorage for credentials.
 // ══════════════════════════════════════════════════════════════════════
 
 const API = '/api.php';
+const RECORD_API = '/record.php';
 
-// The active auth token is the PIN hash — set after login, read from
-// localStorage so it persists across pages.
-function getToken() {
-    try {
-        const s = JSON.parse(localStorage.getItem('jh_auth') || 'null');
-        return s ? s.token : '';
-    } catch { return ''; }
+function getStoredAuth() {
+    try { return JSON.parse(localStorage.getItem('jh_auth') || 'null') || {}; }
+    catch { return {}; }
 }
 
-// Wait for a token to appear in localStorage before firing authenticated
-// requests. Prevents a race where a page's initial data load fires before
-// the login gate (auth.js, or a page's own extra password gate) has
-// finished storing the session token — which previously caused a silent
-// 401 and an empty page that never retried.
+// All authenticated API calls use the random, expiring server session token.
+// The PIN hash is never stored or transmitted as a bearer credential.
+function getToken() {
+    return getStoredAuth().sessionToken || '';
+}
+
+function getRecordToken() {
+    return getToken();
+}
+
 async function waitForToken(maxMs = 8000) {
     const start = Date.now();
     let token = getToken();
@@ -29,112 +30,188 @@ async function waitForToken(maxMs = 8000) {
     return token;
 }
 
-async function apiCall(action, params = {}, body = null, method = null) {
-    const url = new URL(API, location.origin);
-    url.searchParams.set('action', action);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+function signalAuthExpired() {
+    if (typeof document === 'undefined') return;
+    document.dispatchEvent(new CustomEvent('mytrips:auth-expired'));
+}
 
-    const token = (action === 'auth' || action === 'share_load') ? getToken() : await waitForToken();
-
-    const options = {
-        method: method || (body ? 'POST' : 'GET'),
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Auth-Token': token,
-        },
-    };
-    if (body) options.body = JSON.stringify(body);
-
-    const res = await fetch(url.toString(), options);
-    const json = await res.json();
-    if (!json.ok && json.error) throw new Error(json.error);
+async function parseJsonResponse(res) {
+    const text = await res.text();
+    let json;
+    try { json = text ? JSON.parse(text) : {}; }
+    catch {
+        if (res.status === 401) signalAuthExpired();
+        throw new Error(`Server returned an invalid response (${res.status})`);
+    }
+    if (!res.ok || json.ok === false) {
+        if (res.status === 401) signalAuthExpired();
+        const err = new Error(json.error || `Request failed (${res.status})`);
+        err.status = res.status;
+        err.data = json.data || null;
+        throw err;
+    }
     return json.data;
 }
 
-// ── PUBLIC API ────────────────────────────────────────────────────────
+async function apiCall(action, params = {}, body = null, method = null, fetchOptions = {}) {
+    const url = new URL(API, location.origin);
+    url.searchParams.set('action', action);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const token = action === 'share_load' ? '' : await waitForToken();
+    const options = {
+        method: method || (body ? 'POST' : 'GET'),
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+        ...fetchOptions,
+    };
+    if (body) options.body = JSON.stringify(body);
+    return parseJsonResponse(await fetch(url.toString(), options));
+}
+
+async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
+    const url = new URL(RECORD_API, location.origin);
+    url.searchParams.set('action', action);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const token = await waitForToken();
+    const options = {
+        method: body ? 'POST' : 'GET',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+        ...fetchOptions,
+    };
+    if (body) options.body = JSON.stringify(body);
+    return parseJsonResponse(await fetch(url.toString(), options));
+}
+
+// Version observed when each record was last loaded/saved in this browser.
+// A null value means "loaded and did not exist"; absence means "not observed yet".
+const _recordVersions = new Map();
+const _dbSaveQueues = new Map();
+
+// Keep the exact server state returned by dbLoad available to safety layers that
+// load after the itinerary's asynchronous request has already started. This
+// avoids mistaking the template's temporary/default STATE for persisted data.
+if (typeof window !== 'undefined' && !(window.__mytripsLoadedRecords instanceof Map)) {
+    window.__mytripsLoadedRecords = new Map();
+}
+
+function noteRecordLoaded(id, data) {
+    if (typeof window === 'undefined') return;
+    let snapshot = data;
+    try { snapshot = data == null ? null : JSON.parse(JSON.stringify(data)); } catch {}
+    window.__mytripsLoadedRecords.set(id, snapshot);
+    if (typeof document !== 'undefined') {
+        document.dispatchEvent(new CustomEvent('mytrips:record-loaded', { detail: { id, data: snapshot } }));
+    }
+}
 
 /** Load an itinerary record by ID. Returns null if not found. */
 async function dbLoad(id) {
-    const result = await apiCall('load', { id });
-    return result ? result.data : null;
+    const result = await recordCall('load', { id });
+    if (!result) {
+        _recordVersions.set(id, null);
+        noteRecordLoaded(id, null);
+        return null;
+    }
+    _recordVersions.set(id, result.version || null);
+    noteRecordLoaded(id, result.data);
+    return result.data;
 }
 
-/** Save an itinerary record. */
-async function dbSave(id, data) {
-    return apiCall('save', {}, { id, data });
+/** Save a record, serialized locally and rejected server-side if another tab/device changed it first. */
+function dbSave(id, data, options = {}) {
+    const previous = _dbSaveQueues.get(id) || Promise.resolve();
+    const snapshot = JSON.parse(JSON.stringify(data));
+    const saveOptions = { ...options };
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') saveOptions.keepalive = true;
+
+    const run = previous.catch(() => {}).then(async () => {
+        // If this caller has never loaded the record, establish a baseline first.
+        if (!_recordVersions.has(id)) await dbLoad(id);
+        const expectedVersion = _recordVersions.get(id);
+        try {
+            const result = await recordCall('save', {}, {
+                id,
+                data: snapshot,
+                expected_version: expectedVersion,
+            }, saveOptions);
+            _recordVersions.set(id, result?.version || null);
+            return result;
+        } catch (err) {
+            if (err && err.status === 409 && typeof document !== 'undefined') {
+                document.dispatchEvent(new CustomEvent('mytrips:save-conflict', { detail: { id } }));
+            }
+            throw err;
+        }
+    });
+
+    _dbSaveQueues.set(id, run);
+    const cleanup = () => { if (_dbSaveQueues.get(id) === run) _dbSaveQueues.delete(id); };
+    run.then(cleanup, cleanup);
+    return run;
 }
 
-/** Delete a record. */
 async function dbDelete(id) {
-    return apiCall('delete', { id }, null, 'DELETE');
+    const result = await apiCall('delete', { id }, null, 'DELETE');
+    _recordVersions.delete(id);
+    if (typeof window !== 'undefined' && window.__mytripsLoadedRecords instanceof Map) {
+        window.__mytripsLoadedRecords.delete(id);
+    }
+    return result;
 }
 
-/** Verify a PIN hash against the server. Returns token on success. */
-async function dbVerifyPin(pinHash) {
-    const result = await apiCall('auth', {}, { pin_hash: pinHash });
-    return result ? result.token : null;
+// Compatibility helper for older page code. The raw four-digit PIN is sent only
+// to the same-origin HTTPS auth endpoint; the server performs the hash comparison.
+async function dbVerifyPin(pin) {
+    const res = await fetch('/auth-v2.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+    });
+    const data = await parseJsonResponse(res);
+    return data?.session_token || null;
 }
 
-/** Change the PIN. Requires current and new hash. */
-async function dbChangePin(currentHash, newHash) {
-    return apiCall('auth', {}, { pin_hash: currentHash, new_hash: newHash });
+async function dbChangePin(newPin) {
+    const token = await waitForToken();
+    const res = await fetch('/auth-v2.php?action=change_pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
+        body: JSON.stringify({ new_pin: newPin }),
+    });
+    const data = await parseJsonResponse(res);
+    if (data?.session_token) {
+        localStorage.setItem('jh_auth', JSON.stringify({
+            sessionToken: data.session_token,
+            ts: Date.now(),
+        }));
+    }
+    return data;
 }
 
-/** Load the trip registry. */
 async function dbLoadRegistry() {
     const result = await dbLoad('trip-registry');
     return result ? (result.trips || []) : [];
 }
 
-/** Save the trip registry. */
 async function dbSaveRegistry(trips) {
     return dbSave('trip-registry', { trips });
 }
 
-// ── SHARE LINKS ──────────────────────────────────────────────────────
-
-/** Create a new read-only share link for a trip. Anyone with the link
- *  gets full, unrestricted read access to every tab — there's no
- *  booking-refs toggle. Returns the token. */
 async function dbCreateShare(tripId) {
     const result = await apiCall('create_share', {}, { trip_id: tripId });
     return result ? result.token : null;
 }
+async function dbListShares(tripId) { return (await apiCall('list_shares', { trip_id: tripId })) || []; }
+async function dbRevokeShare(token) { return apiCall('revoke_share', { token }, null, 'DELETE'); }
+async function dbLoadShare(token) { return (await apiCall('share_load', { token })) || null; }
 
-/** List active share links for a trip. */
-async function dbListShares(tripId) {
-    const result = await apiCall('list_shares', { trip_id: tripId });
-    return result || [];
-}
-
-/** Revoke a share link. */
-async function dbRevokeShare(token) {
-    return apiCall('revoke_share', { token }, null, 'DELETE');
-}
-
-/** Load a shared (read-only, sanitized) itinerary by token. No auth needed. */
-async function dbLoadShare(token) {
-    const result = await apiCall('share_load', { token });
-    return result || null;
-}
-
-// ── CAR HIRE / ROAD TRIP ─────────────────────────────────────────────
-
-/** Places autocomplete predictions for a partial input string. */
 async function dbPlacesAutocomplete(input) {
     const result = await apiCall('places_autocomplete', { input });
     return result ? (result.predictions || []) : [];
 }
-
-/** Resolve a place_id to { place_id, name, address, lat, lng }. */
 async function dbPlaceDetails(placeId) {
     const result = await apiCall('places_details', { place_id: placeId });
     return result ? result.place : null;
 }
-
-/** Compute a driving route via the Google Routes API.
- *  origin/destination/waypoints: { placeId } or { lat, lng }.
- *  Returns { distanceMeters, durationSeconds, polyline, legs, error }. */
 async function dbComputeRoute(origin, destination, waypoints = []) {
     const result = await apiCall('routes_compute', {}, { origin, destination, waypoints });
     return result || null;

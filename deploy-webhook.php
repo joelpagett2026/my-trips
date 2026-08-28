@@ -1,24 +1,15 @@
 <?php
 // ══════════════════════════════════════════════════════════════════════
-// MY TRIPS — transitional deployment bootstrap
-//
-// This version exists only to bridge the current query-string deploy webhook to
-// the hardened header-only deployer. It can safely deploy the hardening release
-// because it knows the complete new runtime manifest and preflights server-only
-// configuration before touching public_html.
-//
-// IMPORTANT: the legacy query-string credential fallback must disappear when the
-// full hardening release replaces this file.
+// MY TRIPS — Deploy Webhook
+// Pulls the latest main branch and copies the live application files.
+// Dynamic itineraries are rendered by trip.php + new-trip-v2.html, so this
+// deployer must never regenerate baked itinerary HTML.
 // ══════════════════════════════════════════════════════════════════════
 
 @include_once __DIR__ . '/secrets.php';
 
 const REPO_PATH   = '/home/sites/31a/d/dbd40dd264/my-trips';
 const PUBLIC_HTML = '/home/sites/31a/d/dbd40dd264/public_html';
-
-// Existing live deploy credential. Retained only for the one bootstrap release;
-// it already exists in repository history and must be rotated after bootstrap.
-const LEGACY_DEPLOY_KEY = 'jt-deploy-k9x2m4p7q1';
 
 function serverConfig(string $name): string {
     if (defined($name)) return trim((string)constant($name));
@@ -27,8 +18,7 @@ function serverConfig(string $name): string {
 }
 
 function deploySecret(): string {
-    $configured = serverConfig('DEPLOY_KEY');
-    return $configured !== '' ? $configured : LEGACY_DEPLOY_KEY;
+    return serverConfig('DEPLOY_KEY');
 }
 
 function deploymentPreflight(): array {
@@ -54,6 +44,8 @@ function deploymentPreflight(): array {
             ]
         );
 
+        // Confirm the existing application schema is readable before changing any
+        // live files, then prove the DB user can create/read the new auth tables.
         $pdo->query('SELECT id FROM itinerary LIMIT 1')->fetch();
         $pdo->exec("CREATE TABLE IF NOT EXISTS auth_sessions (
             token_hash CHAR(64) PRIMARY KEY,
@@ -93,9 +85,13 @@ header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
 $expectedKey = deploySecret();
-$headerKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? '');
-$queryKey = (string)($_GET['key'] ?? '');
-$providedKey = $headerKey !== '' ? $headerKey : $queryKey;
+if ($expectedKey === '') {
+    http_response_code(503);
+    echo json_encode(['ok' => false, 'error' => 'Deployment secret is not configured on the server']);
+    exit;
+}
+
+$providedKey = (string)($_SERVER['HTTP_X_DEPLOY_KEY'] ?? '');
 if ($providedKey === '' || !hash_equals($expectedKey, $providedKey)) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Forbidden']);
@@ -119,8 +115,6 @@ if ($return !== 0) {
     exit;
 }
 
-// The bootstrap deployment itself is performed by the currently-running legacy
-// webhook before this file is loaded. Every later deployment must pass preflight.
 $preflight = deploymentPreflight();
 if (!$preflight['ok']) {
     http_response_code(503);
@@ -153,7 +147,8 @@ foreach ($retiredFiles as $retired) {
 }
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 
-// Dependencies are copied before entry points; .htaccess is activated last.
+// Dependencies are copied before their entry points. .htaccess is last so new
+// routes cannot become active until every renderer they reference is present.
 $coreFiles = [
     'db-config.php',
     'auth-session.php',

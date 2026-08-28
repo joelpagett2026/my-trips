@@ -1,14 +1,93 @@
-name: Deploy to joelpagett.co.uk
+name: Validate and deploy joelpagett.co.uk
 
 on:
   push:
     branches:
       - main
+      - 'stability-hardening-*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check auth.js
+          node --check db.js
+          node --check itinerary-state-guard.js
+          node --check itinerary-ui.js
+          node --check trip-dashboard-create.js
+          node --check trip-delete.js
+          node --check settings-backup.js
+          node --check datepicker.js
+          node --check budget-live-redesign.js
+
+      - name: Validate PHP syntax
+        run: |
+          php -l api.php
+          php -l auth-v2.php
+          php -l auth-session.php
+          php -l record.php
+          php -l record-delete.php
+          php -l trip-create.php
+          php -l trip-delete.php
+          php -l place-photo.php
+          php -l backup-export.php
+          php -l settings.php
+          php -l db-config.php
+          php -l template-runtime.php
+          php -l deploy-webhook.php
+          php -l trip.php
+          php -l share.php
+          php -l trips.php
+          php -l parks-map.php
+          php -l scripts/validate-renderers.php
+
+      - name: Validate web app manifest JSON
+        run: |
+          python -m json.tool manifest.webmanifest >/dev/null
+
+      - name: Validate runtime contracts
+        run: |
+          python scripts/validate-runtime.py
+
+      - name: Validate focused security contracts
+        run: |
+          python scripts/validate-security.py
+
+      - name: Validate authentication atomicity contracts
+        run: |
+          python scripts/validate-auth-atomic.py
+
+      - name: Validate backup consistency contracts
+        run: |
+          python scripts/validate-backup.py
+
+      - name: Validate atomic trip creation contracts
+        run: |
+          python scripts/validate-trip-create.py
+
+      - name: Validate atomic trip deletion contracts
+        run: |
+          python scripts/validate-trip-delete.py
+
+      - name: Execute renderer integration contracts
+        run: |
+          php scripts/validate-renderers.php
+
   deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy webhook
         run: |
-          curl -f "https://joelpagett.co.uk/deploy-webhook.php?key=${{ secrets.DEPLOY_KEY }}"
+          curl --fail --show-error --silent --retry 2 --retry-delay 3 \
+            --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+            "https://joelpagett.co.uk/deploy-webhook.php"
