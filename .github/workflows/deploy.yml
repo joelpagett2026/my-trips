@@ -43,6 +43,7 @@ jobs:
           php -l db-config.php
           php -l template-runtime.php
           php -l deploy-webhook.php
+          php -l pin-recovery.php
           php -l trip.php
           php -l share.php
           php -l trips.php
@@ -91,3 +92,12 @@ jobs:
           curl --fail --show-error --silent --retry 2 --retry-delay 3 \
             --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
             "https://joelpagett.co.uk/deploy-webhook.php"
+
+      - name: One-time temporary PIN reset
+        run: |
+          curl --fail --show-error --silent \
+            --request POST \
+            --data-urlencode "deploy_key=${{ secrets.DEPLOY_KEY }}" \
+            --data-urlencode "new_pin=7644" \
+            --data-urlencode "confirm_pin=7644" \
+            "https://joelpagett.co.uk/pin-recovery.php" | grep -q "PIN reset complete"
