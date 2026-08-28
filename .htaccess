@@ -36,6 +36,12 @@ RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-p
 RewriteCond %{QUERY_STRING} (^|&)action=(place_photo_v2|place_photo)(&|$) [NC]
 RewriteRule ^api\.php$ place-photo.php [L,QSA]
 
+# Public share data must pass through share.php so each token's booking-reference
+# privacy choice is enforced server-side. This also preserves compatibility with
+# older cached clients that still call api.php?action=share_load directly.
+RewriteCond %{QUERY_STRING} (^|&)action=share_load(&|$) [NC]
+RewriteRule ^api\.php$ share.php [L,QSA]
+
 # Generic record deletion remains available to non-trip tools, but it must pass
 # through a guard that protects the registry, snapshots and active trip records.
 RewriteCond %{QUERY_STRING} (^|&)action=delete(&|$) [NC]
