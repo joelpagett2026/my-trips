@@ -24,7 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') createTripFail('POST required', 405);
 $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
 if (!isAuthorizedToken($token, false)) createTripFail('Unauthorised', 401);
 
-$raw = file_get_contents('php://input');
+// The cover image is capped at 2.5 MB below, so a 3 MB JSON request leaves
+// enough headroom for the rest of the trip metadata while refusing unbounded
+// input before PHP reads it fully into memory.
+const TRIP_CREATE_MAX_REQUEST_BYTES = 3_000_000;
+$contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+if ($contentLength > TRIP_CREATE_MAX_REQUEST_BYTES) createTripFail('Request too large', 413);
+$raw = file_get_contents('php://input', false, null, 0, TRIP_CREATE_MAX_REQUEST_BYTES + 1);
+if ($raw === false) createTripFail('Could not read request body');
+if (strlen($raw) > TRIP_CREATE_MAX_REQUEST_BYTES) createTripFail('Request too large', 413);
 $body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) createTripFail('Invalid JSON body');
 
