@@ -12,12 +12,6 @@ function getStoredAuth() {
     } catch { return {}; }
 }
 
-function storeAuthSession(sessionToken) {
-    const payload = JSON.stringify({ sessionToken: sessionToken || '', ts: Date.now() });
-    try { localStorage.setItem('jh_auth', payload); } catch {}
-    try { sessionStorage.setItem('jh_auth', payload); } catch {}
-}
-
 // All authenticated API calls use the random, expiring server session token.
 // The PIN hash is never stored or transmitted as a bearer credential.
 function getToken() {
@@ -89,14 +83,9 @@ async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
     return parseJsonResponse(await fetch(url.toString(), options));
 }
 
-// Version observed when each record was last loaded/saved in this browser.
-// A null value means "loaded and did not exist"; absence means "not observed yet".
 const _recordVersions = new Map();
 const _dbSaveQueues = new Map();
 
-// Keep the exact server state returned by dbLoad available to safety layers that
-// load after the itinerary's asynchronous request has already started. This
-// avoids mistaking the template's temporary/default STATE for persisted data.
 if (typeof window !== 'undefined' && !(window.__mytripsLoadedRecords instanceof Map)) {
     window.__mytripsLoadedRecords = new Map();
 }
@@ -111,7 +100,6 @@ function noteRecordLoaded(id, data) {
     }
 }
 
-/** Load an itinerary record by ID. Returns null if not found. */
 async function dbLoad(id) {
     const result = await recordCall('load', { id });
     if (!result) {
@@ -124,7 +112,6 @@ async function dbLoad(id) {
     return result.data;
 }
 
-/** Save a record, serialized locally and rejected server-side if another tab/device changed it first. */
 function dbSave(id, data, options = {}) {
     const previous = _dbSaveQueues.get(id) || Promise.resolve();
     const snapshot = JSON.parse(JSON.stringify(data));
@@ -132,7 +119,6 @@ function dbSave(id, data, options = {}) {
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') saveOptions.keepalive = true;
 
     const run = previous.catch(() => {}).then(async () => {
-        // If this caller has never loaded the record, establish a baseline first.
         if (!_recordVersions.has(id)) await dbLoad(id);
         const expectedVersion = _recordVersions.get(id);
         try {
@@ -166,56 +152,33 @@ async function dbDelete(id) {
     return result;
 }
 
-// Compatibility helper for older page code. The raw four-digit PIN is sent only
-// to the same-origin HTTPS auth endpoint; the server performs the hash comparison.
 async function dbVerifyPin(pin) {
     const res = await fetch('/auth-v2.php?action=login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
         body: JSON.stringify({ pin }),
     });
     const data = await parseJsonResponse(res);
     return data?.session_token || null;
 }
 
-// Recovery-only helper. While the PIN gate is deliberately disabled, always make
-// sure Change PIN has a fresh valid server session instead of depending on an
-// earlier page-load race or one particular browser storage implementation.
-async function acquireTemporaryRecoverySession() {
-    const res = await fetch('/auth-v2.php?action=temporary_access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-        credentials: 'same-origin',
-        body: '{}',
-    });
-    const data = await parseJsonResponse(res);
-    const token = data?.session_token || '';
-    if (!/^[a-f0-9]{64}$/i.test(token)) throw new Error('Could not establish a recovery session');
-    storeAuthSession(token);
-    return token;
-}
-
 async function dbChangePin(newPin) {
-    let token = await waitForToken(1500);
-    if (!token) token = await acquireTemporaryRecoverySession();
-
-    const sendChange = currentToken => fetch('/auth-v2.php?action=change_pin', {
+    const token = await waitForToken();
+    const res = await fetch('/auth-v2.php?action=change_pin', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': currentToken },
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
         cache: 'no-store',
         credentials: 'same-origin',
         body: JSON.stringify({ new_pin: newPin }),
     });
-
-    let res = await sendChange(token);
-    if (res.status === 401) {
-        token = await acquireTemporaryRecoverySession();
-        res = await sendChange(token);
-    }
-
     const data = await parseJsonResponse(res);
-    if (data?.session_token) storeAuthSession(data.session_token);
+    if (data?.session_token) {
+        const payload = JSON.stringify({ sessionToken: data.session_token, ts: Date.now() });
+        try { localStorage.setItem('jh_auth', payload); } catch {}
+        try { sessionStorage.setItem('jh_auth', payload); } catch {}
+    }
     return data;
 }
 
@@ -249,10 +212,6 @@ async function dbComputeRoute(origin, destination, waypoints = []) {
     return result || null;
 }
 
-// Explicitly publish the helpers used by rendered/legacy pages. Relying on classic
-// script function-hoisting onto window is browser-sensitive and made dashboard
-// failures indistinguishable from an empty registry because older page code catches
-// lookup errors and returns an empty array.
 if (typeof window !== 'undefined') {
     Object.assign(window, {
         getToken,
