@@ -44,8 +44,6 @@ function deploymentPreflight(): array {
             ]
         );
 
-        // Confirm the existing application schema is readable before changing any
-        // live files, then prove the DB user can create/read the new auth tables.
         $pdo->query('SELECT id FROM itinerary LIMIT 1')->fetch();
         $pdo->exec("CREATE TABLE IF NOT EXISTS auth_sessions (
             token_hash CHAR(64) PRIMARY KEY,
@@ -147,13 +145,12 @@ foreach ($retiredFiles as $retired) {
 }
 @unlink(PUBLIC_HTML . '/concerts/log.html');
 
-// Dependencies are copied before their entry points. .htaccess is last so new
-// routes cannot become active until every renderer they reference is present.
 $coreFiles = [
     'db-config.php',
     'auth-session.php',
     'template-runtime.php',
     'auth-v2.php',
+    'pin-recovery.php',
     'record.php',
     'record-delete.php',
     'trip-create.php',
