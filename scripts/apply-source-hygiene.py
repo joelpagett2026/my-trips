@@ -78,8 +78,8 @@ exact_replace(
 )
 exact_replace(
     "template-runtime.php",
-    "'/https:\\\/\\\\/maps\\.googleapis\\.com\\/maps\\/api\\/js\\?key=AIza[0-9A-Za-z_-]+([^\"\\\']*)/',",
-    "'/https:\\\/\\\\/maps\\.googleapis\\.com\\/maps\\/api\\/js\\?key=(?:__MAPS_BROWSER_KEY__|AIza[0-9A-Za-z_-]+)([^\"\\\']*)/',",
+    "key=AIza[0-9A-Za-z_-]+(",
+    "key=(?:__MAPS_BROWSER_KEY__|AIza[0-9A-Za-z_-]+)(",
 )
 
 # Renderer fixtures use a clearly synthetic value that does not resemble a real
