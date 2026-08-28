@@ -63,7 +63,6 @@ function tryBootstrapPinRecovery(string $submittedHash): bool {
             ->execute([$submittedHash, $submittedHash]);
         $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$bootstrap, $bootstrap]);
-        // Remove the old boolean marker from the first migration attempt.
         $pdo->prepare("DELETE FROM settings WHERE `key` = 'pin_bootstrap_consumed'")->execute();
         $pdo->exec('DELETE FROM auth_attempts');
         $pdo->exec('DELETE FROM auth_sessions');
@@ -81,14 +80,29 @@ if (!is_array($body)) authFail('Invalid JSON body');
 
 $action = (string)($_GET['action'] ?? 'login');
 
+// TEMPORARY ACCESS MODE.
+// This intentionally removes the PIN gate while the broken browser handoff is
+// repaired. Normal APIs still require a random server session; this endpoint
+// simply creates that session without asking for a PIN. Remove this block as
+// soon as the owner has restored a new PIN from Settings.
+if ($action === 'temporary_access') {
+    try {
+        clearFailedLogins();
+        authOk([
+            'session_token' => issueAuthSession(),
+            'expires_in' => AUTH_SESSION_TTL_SECONDS,
+            'temporary_access' => true,
+        ]);
+    } catch (Throwable $e) {
+        authFail('Authentication service is temporarily unavailable', 503);
+    }
+}
+
 if ($action === 'login') {
     try {
         $pin = validatedPin($body, 'pin');
         $submittedHash = hash('sha256', $pin);
 
-        // A matching server-only bootstrap hash is allowed to recover even when
-        // earlier bad attempts have triggered the normal rate limit. Wrong PINs
-        // still remain rate-limited, so this does not create a brute-force bypass.
         $bootstrap = configuredPinHash();
         $isFreshBootstrapMatch = $bootstrap !== null
             && hash_equals($bootstrap, $submittedHash)
@@ -141,8 +155,6 @@ if ($action === 'change_pin') {
     $newPin = validatedPin($body, 'new_pin');
     $newHash = hash('sha256', $newPin);
 
-    // Provision/check the auth tables before the transaction. DDL inside the
-    // transaction could implicitly commit on MySQL and break atomic PIN changes.
     try {
         ensureAuthTables();
     } catch (Throwable $e) {
@@ -156,9 +168,6 @@ if ($action === 'change_pin') {
         $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$newHash, $newHash]);
 
-        // PIN update + old-session revocation + replacement-session creation are
-        // one transaction. A partial failure cannot leave a changed PIN with old
-        // sessions still valid, or report failure after silently changing the PIN.
         $pdo->exec('DELETE FROM auth_sessions');
         $pdo->exec('DELETE FROM auth_attempts');
 
