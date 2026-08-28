@@ -28,7 +28,13 @@ if (!isAuthorizedToken($token, false)) recordDeleteFail('Unauthorised', 401);
 
 $body = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $decoded = json_decode(file_get_contents('php://input') ?: '{}', true);
+    const RECORD_DELETE_MAX_REQUEST_BYTES = 65_536;
+    $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+    if ($contentLength > RECORD_DELETE_MAX_REQUEST_BYTES) recordDeleteFail('Request too large', 413);
+    $raw = file_get_contents('php://input', false, null, 0, RECORD_DELETE_MAX_REQUEST_BYTES + 1);
+    if ($raw === false) recordDeleteFail('Could not read request body');
+    if (strlen($raw) > RECORD_DELETE_MAX_REQUEST_BYTES) recordDeleteFail('Request too large', 413);
+    $decoded = json_decode($raw ?: '{}', true);
     if (!is_array($decoded)) recordDeleteFail('Invalid JSON body');
     $body = $decoded;
 }
