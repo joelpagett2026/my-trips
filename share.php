@@ -73,21 +73,29 @@ function validShareToken(string $token): bool {
     return (bool)preg_match('/^[a-f0-9]{24}$/i', $token);
 }
 
-function activeTripExists(string $tripId): bool {
+function shareableTripRecordExists(string $tripId): bool {
+    // Share creation is initiated from an already-rendered itinerary. Validate the
+    // exact record that would be exposed publicly rather than relying only on the
+    // current trip registry: migrated/legacy trips can still be valid renderer
+    // targets even when their older slug is absent from trip-registry.
+    if (!preg_match('/^[a-z0-9][a-z0-9-]{0,119}$/', $tripId)) return false;
+    if ($tripId === 'trip-registry' || str_starts_with($tripId, 'trip-registry-snapshot')) return false;
+
     try {
-        $stmt = db()->prepare("SELECT data FROM itinerary WHERE id = 'trip-registry' LIMIT 1");
-        $stmt->execute();
+        $stmt = db()->prepare('SELECT data FROM itinerary WHERE id = ? LIMIT 1');
+        $stmt->execute([$tripId]);
         $row = $stmt->fetch();
         if (!$row || !is_string($row['data'])) return false;
-        $registry = json_decode($row['data'], true);
-        if (!is_array($registry)) return false;
-        foreach (($registry['trips'] ?? []) as $trip) {
-            if (is_array($trip) && (string)($trip['slug'] ?? '') === $tripId) return true;
-        }
+
+        $decoded = json_decode((string)$row['data'], true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) return false;
+
+        // Fail closed on arbitrary/internal itinerary-table rows. A shareable trip
+        // must have the same core document shape consumed by the itinerary renderer.
+        return is_array($decoded['days'] ?? null) && is_array($decoded['meta'] ?? null);
     } catch (Throwable $e) {
         return false;
     }
-    return false;
 }
 
 function stripBookingReferences(mixed $value): mixed {
@@ -159,7 +167,7 @@ if (in_array($shareAction, ['share_load', 'create_share', 'list_shares', 'revoke
     if ($shareAction === 'create_share') {
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') shareFail('Method not allowed', 405);
         $tripId = trim((string)($body['trip_id'] ?? ''));
-        if ($tripId === '' || !activeTripExists($tripId)) shareFail('Trip not found', 404);
+        if ($tripId === '' || !shareableTripRecordExists($tripId)) shareFail('Trip not found', 404);
         $showRefs = !empty($body['show_refs']) ? 1 : 0;
         $token = bin2hex(random_bytes(12));
         db()->prepare('INSERT INTO shares (token, trip_id, show_refs, created_at) VALUES (?, ?, ?, NOW())')
