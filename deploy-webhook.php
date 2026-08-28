@@ -138,6 +138,7 @@ $retiredFiles = [
     'hong-kong-taiwan.html', 'graz-ljubljana-lake-bled-2027.html',
     'porto-2026.html', 'hamburg.html', 'porto-v2.html', 'porto-budget.html',
     'budget-template.html', 'budget-style.css', 'share.html', 'new-trip.html',
+    'pin-recovery.php', 'auth-diagnostic.php',
 ];
 foreach ($retiredFiles as $retired) {
     @unlink(PUBLIC_HTML . '/' . $retired);
@@ -150,8 +151,6 @@ $coreFiles = [
     'auth-session.php',
     'template-runtime.php',
     'auth-v2.php',
-    'pin-recovery.php',
-    'auth-diagnostic.php',
     'record.php',
     'record-delete.php',
     'trip-create.php',
