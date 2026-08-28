@@ -24,7 +24,7 @@ function applyItineraryRuntimeSafety(string $html): array {
     $diagnostics = [];
 
     $html = preg_replace(
-        "/const AUTH_TOKEN = '[a-f0-9]{64}';/",
+        "/const AUTH_TOKEN = '(?:__DISABLED_LEGACY_AUTH_TOKEN__|[a-f0-9]{64})';/",
         "const AUTH_TOKEN = ''; // legacy constant intentionally disabled",
         $html,
         1,
@@ -43,7 +43,7 @@ function applyItineraryRuntimeSafety(string $html): array {
     $mapsKey = browserMapsKey();
     $replacement = 'const MAPS_API_KEY = ' . json_encode($mapsKey, JSON_UNESCAPED_SLASHES) . ';';
     $html = preg_replace(
-        "/const MAPS_API_KEY = 'AIza[0-9A-Za-z_-]+';/",
+        "/const MAPS_API_KEY = '(?:__MAPS_BROWSER_KEY__|AIza[0-9A-Za-z_-]+)';/",
         $replacement,
         $html,
         1,
@@ -102,7 +102,7 @@ function applyTripsDashboardRuntimeSafety(string $html): array {
     $key = browserMapsKey();
     $replacement = 'const GOOGLE_MAPS_API_KEY = ' . json_encode($key, JSON_UNESCAPED_SLASHES) . ';';
     $html = preg_replace(
-        "/const GOOGLE_MAPS_API_KEY = 'AIza[0-9A-Za-z_-]+';/",
+        "/const GOOGLE_MAPS_API_KEY = '(?:__MAPS_BROWSER_KEY__|AIza[0-9A-Za-z_-]+)';/",
         $replacement,
         $html,
         1,
@@ -195,7 +195,7 @@ JS;
 function applyGoogleMapsScriptRuntimeSafety(string $html): array {
     $key = browserMapsKey();
     $html = preg_replace_callback(
-        '/https:\/\/maps\.googleapis\.com\/maps\/api\/js\?key=AIza[0-9A-Za-z_-]+([^"\']*)/',
+        '/https:\/\/maps\.googleapis\.com\/maps\/api\/js\?key=(?:__MAPS_BROWSER_KEY__|AIza[0-9A-Za-z_-]+)([^"\']*)/',
         static function (array $m) use ($key): string {
             return 'https://maps.googleapis.com/maps/api/js?key=' . rawurlencode($key) . ($m[1] ?? '');
         },
