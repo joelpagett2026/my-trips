@@ -35,6 +35,21 @@ for excluded in ("auth_sessions", "auth_attempts", "share_tokens"):
 require("record_count" in endpoint and "setting_count" in endpoint,
         "backup must report exported counts")
 
+# Large backups must not recreate the whole database as one PHP array. Build a
+# completed server-side temp stream incrementally and only send it after commit.
+require("php://temp/maxmemory:1048576" in endpoint,
+        "backup must spill large completed snapshots to a temporary stream")
+require("PDO::MYSQL_ATTR_USE_BUFFERED_QUERY" in endpoint,
+        "backup must disable PDO result buffering for large itinerary reads")
+require("$records = []" not in endpoint and "->fetchAll()" not in endpoint,
+        "backup must not materialise all itinerary/settings rows in PHP memory")
+require("json_decode($rawData, true, 512, JSON_THROW_ON_ERROR)" in endpoint,
+        "each stored itinerary must still be validated before export")
+require("fpassthru($snapshotStream)" in endpoint,
+        "completed snapshot must be streamed without rebuilding a giant JSON string")
+require(endpoint.index("$pdo->commit();") < endpoint.index("fpassthru($snapshotStream)"),
+        "no backup bytes may be sent before the repeatable-read snapshot commits")
+
 require("fetch('/backup-export.php'" in ui,
         "Settings must download the server-side consistent snapshot")
 require("api.php?action=list" not in ui and "api.php?action=load" not in ui,
