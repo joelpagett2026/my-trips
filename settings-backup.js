@@ -108,7 +108,7 @@
         cache: 'no-store',
       });
       let json;
-      try { json = await res.json(); } catch { throw new Error('Invalid backup response'); }
+      try { json = await res.json(); } catch { throw new Error('Backup service returned an invalid response'); }
       if (res.status === 401) document.dispatchEvent(new Event('mytrips:auth-expired'));
       if (!res.ok || !json?.ok || !json.data || typeof json.data !== 'object') {
         throw new Error(json?.error || 'Backup export failed');
@@ -137,8 +137,11 @@
       btn.textContent = '✓ Downloaded';
       setTimeout(() => { btn.textContent = 'Download backup.json'; btn.disabled = false; }, 3000);
     } catch (e) {
+      const detail = e && typeof e.message === 'string' && e.message.trim()
+        ? e.message.trim()
+        : 'Backup export failed';
       statusEl.className = 'status-badge not';
-      statusEl.textContent = 'Export failed — no partial backup was downloaded';
+      statusEl.textContent = `${detail} — no partial backup was downloaded`;
       statusEl.style.display = 'flex';
       btn.textContent = 'Try again';
       btn.disabled = false;
