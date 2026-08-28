@@ -26,8 +26,10 @@ require("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ" in endpoint and "begin
         "backup must read one repeatable database snapshot")
 require("SELECT id, data, updated_at FROM itinerary ORDER BY id" in endpoint,
         "backup must export every itinerary record including the registry")
-require("WHERE `key` <> 'pin_hash'" in endpoint,
-        "PIN hash must never be included in a backup")
+require("isSensitiveBackupSettingKey" in endpoint,
+        "backup must centrally classify security-like settings")
+for sensitive in ("pin", "password", "secret", "token", "credential", "api[_-]?key", "auth"):
+    require(sensitive in endpoint, f"backup sensitive-setting filter must cover {sensitive}")
 for excluded in ("auth_sessions", "auth_attempts", "share_tokens"):
     require(excluded in endpoint, f"backup must document exclusion of {excluded}")
 require("record_count" in endpoint and "setting_count" in endpoint,
