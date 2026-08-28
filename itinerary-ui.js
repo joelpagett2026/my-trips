@@ -14,6 +14,43 @@
     document.head.appendChild(script);
   }
 
+  function installMobileBrowserViewportFix() {
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    if (!isMobile) return;
+
+    // The installed web-app/standalone layout already has its own tuned viewport
+    // sizing in trip.php and must not be changed here. This fix is only for a trip
+    // opened in a normal mobile browser, where 100vh can extend underneath the
+    // browser toolbar and make the final Trip Planning Overview card look clipped.
+    const isStandalone = window.navigator.standalone === true
+      || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+      || (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches);
+    if (isStandalone) return;
+
+    if (document.getElementById('mobile-browser-viewport-fix')) return;
+    const style = document.createElement('style');
+    style.id = 'mobile-browser-viewport-fix';
+    style.textContent = `
+      @media (max-width: 768px) {
+        html, body {
+          height: 100vh !important;
+          height: 100dvh !important;
+          max-height: 100dvh !important;
+        }
+        .v2-main {
+          height: 100vh !important;
+          height: 100dvh !important;
+          max-height: 100dvh !important;
+          min-height: 0 !important;
+        }
+        .rp-col {
+          padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)) !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function installSharePrivacyControls() {
     const params = new URLSearchParams(window.location.search);
     if (params.has('share')) return; // Public shared copies must remain read-only.
@@ -194,6 +231,7 @@
   }
 
   function init() {
+    installMobileBrowserViewportFix();
     loadBudgetPresentation();
     installSharePrivacyControls();
   }
