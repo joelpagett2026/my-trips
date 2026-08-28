@@ -216,3 +216,28 @@ async function dbComputeRoute(origin, destination, waypoints = []) {
     const result = await apiCall('routes_compute', {}, { origin, destination, waypoints });
     return result || null;
 }
+
+// Explicitly publish the helpers used by rendered/legacy pages. Relying on classic
+// script function-hoisting onto window is browser-sensitive and made dashboard
+// failures indistinguishable from an empty registry because older page code catches
+// lookup errors and returns an empty array.
+if (typeof window !== 'undefined') {
+    Object.assign(window, {
+        getToken,
+        apiCall,
+        dbLoad,
+        dbSave,
+        dbDelete,
+        dbVerifyPin,
+        dbChangePin,
+        dbLoadRegistry,
+        dbSaveRegistry,
+        dbCreateShare,
+        dbListShares,
+        dbRevokeShare,
+        dbLoadShare,
+        dbPlacesAutocomplete,
+        dbPlaceDetails,
+        dbComputeRoute,
+    });
+}
