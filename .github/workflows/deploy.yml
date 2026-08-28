@@ -74,6 +74,10 @@ jobs:
         run: |
           python scripts/validate-deploy-data-guard.py
 
+      - name: Validate stale save conflict latching
+        run: |
+          python scripts/validate-save-conflicts.py
+
       - name: Validate authentication atomicity contracts
         run: |
           python scripts/validate-auth-atomic.py
