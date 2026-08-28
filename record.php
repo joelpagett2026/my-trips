@@ -48,7 +48,17 @@ if ($action === 'load') {
 
 if ($action === 'save') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') respondFail('POST required', 405);
-    $raw = file_get_contents('php://input');
+
+    // Itinerary records can legitimately be fairly large (for example when a
+    // compressed cover image is embedded), but there is no reason to accept an
+    // unbounded request. Reject oversized bodies before reading them fully.
+    const RECORD_MAX_REQUEST_BYTES = 8_000_000;
+    $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+    if ($contentLength > RECORD_MAX_REQUEST_BYTES) respondFail('Request too large', 413);
+    $raw = file_get_contents('php://input', false, null, 0, RECORD_MAX_REQUEST_BYTES + 1);
+    if ($raw === false) respondFail('Could not read request body');
+    if (strlen($raw) > RECORD_MAX_REQUEST_BYTES) respondFail('Request too large', 413);
+
     $body = json_decode($raw ?: '', true);
     if (!is_array($body)) respondFail('Invalid JSON body');
 
