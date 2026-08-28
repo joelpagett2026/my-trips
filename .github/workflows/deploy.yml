@@ -43,8 +43,6 @@ jobs:
           php -l db-config.php
           php -l template-runtime.php
           php -l deploy-webhook.php
-          php -l pin-recovery.php
-          php -l auth-diagnostic.php
           php -l trip.php
           php -l share.php
           php -l trips.php
@@ -94,29 +92,38 @@ jobs:
             --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
             "https://joelpagett.co.uk/deploy-webhook.php"
 
-      - name: Diagnose live auth database state
+      - name: Verify temporary access and protected data
         run: |
-          curl --fail --show-error --silent \
-            --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
-            "https://joelpagett.co.uk/auth-diagnostic.php"
-
-      - name: Test live auth endpoint
-        run: |
-          status=$(curl --show-error --silent \
-            --output /tmp/auth-response.json \
+          status=$(curl --fail --show-error --silent \
+            --output /tmp/temp-auth.json \
             --write-out "%{http_code}" \
             --request POST \
             --header "Content-Type: application/json" \
-            --data '{"pin":"7644"}' \
-            "https://joelpagett.co.uk/auth-v2.php?action=login")
+            --data '{}' \
+            "https://joelpagett.co.uk/auth-v2.php?action=temporary_access")
+          test "$status" = "200"
+
+          token=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('/tmp/temp-auth.json').read_text())
+          token = ((data.get('data') or {}).get('session_token') or '')
+          if not data.get('ok') or len(token) != 64:
+              raise SystemExit('temporary access did not return a valid session')
+          print(token)
+          PY
+          )
+
+          curl --fail --show-error --silent \
+            --header "X-Auth-Token: $token" \
+            "https://joelpagett.co.uk/record.php?action=load&id=trip-registry" \
+            --output /tmp/registry.json
+
           python - <<'PY'
           import json
           from pathlib import Path
-          p = Path('/tmp/auth-response.json')
-          try:
-              data = json.loads(p.read_text())
-          except Exception:
-              data = {'ok': False, 'error': 'non-json response'}
-          print(json.dumps({'ok': bool(data.get('ok')), 'error': data.get('error')}))
+          data = json.loads(Path('/tmp/registry.json').read_text())
+          if not data.get('ok'):
+              raise SystemExit('protected trip registry could not be loaded')
+          print('temporary access + protected trip registry: ok')
           PY
-          echo "HTTP $status"
