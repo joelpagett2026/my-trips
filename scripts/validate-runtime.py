@@ -114,12 +114,13 @@ require("s.token" not in db, "db.js must not fall back to the PIN hash token")
 require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
 
 # Authentication v2 must issue random expiring sessions, throttle PIN guesses, and
-# hash the four-digit PIN only on the server.
+# hash the four-digit PIN only on the server. The database PIN is authoritative;
+# no server/bootstrap PIN fallback is allowed in the runtime.
 require("random_bytes(32)" in auth_session, "auth sessions must use cryptographically random tokens")
 require("AUTH_SESSION_TTL_SECONDS" in auth_session, "auth sessions must expire server-side")
 require("AUTH_MAX_FAILURES" in auth_session and "auth_attempts" in auth_session, "PIN login must be rate limited")
-require("AUTH_FALLBACK_PIN_HASH" not in auth_session, "PIN hash fallback must not live in source control")
-require("configuredPinHash" in auth_session, "fresh installs may bootstrap PIN only from server-only configuration")
+require("AUTH_FALLBACK_PIN_HASH" not in auth_session and "PIN_HASH" not in auth_session and "configuredPinHash" not in auth_session,
+        "runtime authentication must not contain a server PIN bootstrap fallback")
 require("authTokenHash" in auth_session, "session token hashing must be centralized")
 require("revokeAuthSession" in auth_session, "single-session logout helper must exist")
 require("last_seen_at = NOW()" in auth_session, "valid server sessions should record last-seen time")
