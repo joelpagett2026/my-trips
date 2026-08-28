@@ -88,7 +88,7 @@ exact_replace(
     "scripts/validate-renderers.php",
     "AIzaRendererContractTestKey1234567890",
     "RendererContractTestKey1234567890",
-    expected=4,
+    expected=5,
 )
 
 print("source placeholder migration: ok")
