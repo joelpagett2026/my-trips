@@ -27,6 +27,22 @@ require("INSERT INTO shares (token, trip_id, show_refs, created_at)" in share,
 require("SELECT token, show_refs, created_at FROM shares" in share,
         "share management must report each link's reference mode")
 
+# Share creation must validate the exact itinerary record it will expose. Legacy
+# renderer-compatible trips may no longer appear in trip-registry, so creation
+# must not depend solely on registry membership; internal rows must still fail closed.
+require("function shareableTripRecordExists" in share,
+        "share creation must validate the actual itinerary record")
+require("SELECT data FROM itinerary WHERE id = ? LIMIT 1" in share,
+        "share creation must confirm the requested itinerary record exists")
+require("is_array($decoded['days'] ?? null)" in share and "is_array($decoded['meta'] ?? null)" in share,
+        "share creation must require a real itinerary document shape")
+require("trip-registry-snapshot" in share,
+        "share creation must explicitly reject registry/snapshot infrastructure rows")
+require("activeTripExists" not in share,
+        "share creation must not regress to registry-only validation")
+require("shareableTripRecordExists($tripId)" in share,
+        "create_share must use the record-level validation guard")
+
 # Hidden references must be removed server-side, not just hidden with CSS/JS.
 require("function stripBookingReferences" in share,
         "share renderer must have a server-side booking-reference redactor")
