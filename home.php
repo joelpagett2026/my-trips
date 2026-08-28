@@ -20,6 +20,22 @@ $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
 $html = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $html);
 $html = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $html);
 
+// index.html still references the retired generic "registry" record for the
+// Holiday Planner summary. The live planner uses trip-registry via dbLoadRegistry().
+// Rewrite that single compatibility call at render time so homepage counts match
+// the Trips dashboard without changing or seeding any stored data.
+$html = str_replace(
+    "const registry = await window.dbLoad('registry');",
+    "const registry = { trips: await window.dbLoadRegistry() };",
+    $html,
+    $registryCount
+);
+if ($registryCount !== 1) {
+    http_response_code(500);
+    echo '<!doctype html><title>Homepage unavailable</title><p>The trip summary could not be attached safely.</p>';
+    exit;
+}
+
 // Add an explicit homepage logout control. It sits alongside the existing
 // Private Log and Settings shortcuts, revokes the current server session, clears
 // both browser session stores, then immediately returns to the PIN gate.
