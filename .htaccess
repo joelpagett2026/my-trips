@@ -1,4 +1,6 @@
 Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
 # ══════════════════════════════════════════════════════════════════════
 # SHARED RENDERERS

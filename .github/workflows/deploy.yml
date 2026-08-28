@@ -73,6 +73,9 @@ jobs:
       - name: Validate focused security contracts
         run: python scripts/validate-security.py
 
+      - name: Validate response header contracts
+        run: python scripts/validate-response-headers.py
+
       - name: Validate request body limit contracts
         run: python scripts/validate-request-limits.py
 
@@ -129,10 +132,13 @@ jobs:
       - name: Verify restored PIN gate runtime
         run: |
           curl --fail --show-error --silent \
+            --dump-header /tmp/home.headers \
             "https://joelpagett.co.uk/" \
             --output /tmp/home.html
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/home.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/home.html
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff[[:space:]]*$' /tmp/home.headers
+          grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin[[:space:]]*$' /tmp/home.headers
 
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/trips/" \
@@ -184,4 +190,4 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=check")
           test "$check_status" = "401"
 
-          echo 'PIN gate + dashboard session runtime + protected APIs: ok'
+          echo 'PIN gate + response headers + dashboard session runtime + protected APIs: ok'
