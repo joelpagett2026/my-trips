@@ -39,6 +39,7 @@ jobs:
           php -l trip-delete.php
           php -l place-photo.php
           php -l backup-export.php
+          php -l home.php
           php -l settings.php
           php -l db-config.php
           php -l template-runtime.php
@@ -92,38 +93,44 @@ jobs:
             --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
             "https://joelpagett.co.uk/deploy-webhook.php"
 
-      - name: Verify temporary access and protected data
+      - name: Verify restored PIN gate runtime
         run: |
-          status=$(curl --fail --show-error --silent \
-            --output /tmp/temp-auth.json \
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/" \
+            --output /tmp/home.html
+          grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/home.html
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/auth.js?verify-restored-gate=1" \
+            --output /tmp/auth.js
+          grep -q 'Enter your PIN to continue' /tmp/auth.js
+          if grep -q 'temporary_access' /tmp/auth.js; then
+            echo 'temporary access code is still present in auth.js'
+            exit 1
+          fi
+
+          temp_status=$(curl --show-error --silent \
+            --output /tmp/temp-access.json \
             --write-out "%{http_code}" \
             --request POST \
             --header "Content-Type: application/json" \
             --data '{}' \
             "https://joelpagett.co.uk/auth-v2.php?action=temporary_access")
-          test "$status" = "200"
+          test "$temp_status" = "404"
 
-          token=$(python - <<'PY'
-          import json
-          from pathlib import Path
-          data = json.loads(Path('/tmp/temp-auth.json').read_text())
-          token = ((data.get('data') or {}).get('session_token') or '')
-          if not data.get('ok') or len(token) != 64:
-              raise SystemExit('temporary access did not return a valid session')
-          print(token)
-          PY
-          )
+          record_status=$(curl --show-error --silent \
+            --output /tmp/record-unauth.json \
+            --write-out "%{http_code}" \
+            "https://joelpagett.co.uk/record.php?action=load&id=trip-registry")
+          test "$record_status" = "401"
 
-          curl --fail --show-error --silent \
-            --header "X-Auth-Token: $token" \
-            "https://joelpagett.co.uk/record.php?action=load&id=trip-registry" \
-            --output /tmp/registry.json
+          check_status=$(curl --show-error --silent \
+            --output /tmp/check-unauth.json \
+            --write-out "%{http_code}" \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            "https://joelpagett.co.uk/auth-v2.php?action=check")
+          test "$check_status" = "401"
 
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          data = json.loads(Path('/tmp/registry.json').read_text())
-          if not data.get('ok'):
-              raise SystemExit('protected trip registry could not be loaded')
-          print('temporary access + protected trip registry: ok')
-          PY
+          echo 'restored PIN gate + protected APIs: ok'
