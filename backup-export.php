@@ -1,7 +1,7 @@
 <?php
 // MY TRIPS — consistent authenticated backup export
-// Reads the application data in one repeatable-read transaction so the downloaded
-// JSON cannot mix records from different points in time.
+// Builds one repeatable-read database snapshot incrementally so large itinerary
+// collections do not need to exist as one giant PHP array in memory.
 require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/auth-session.php';
 
@@ -16,17 +16,27 @@ function backupFail(string $message, int $status = 400, ?string $code = null): n
     exit;
 }
 
-function backupOk(array $backup): never {
+function backupEncode(mixed $value): string {
     try {
-        $json = json_encode(
-            ['ok' => true, 'data' => $backup],
+        return json_encode(
+            $value,
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
         );
     } catch (JsonException $e) {
-        backupFail('Backup data could not be encoded safely', 500, 'encode_failed');
+        throw new RuntimeException('Backup JSON encoding failed', 0, $e);
     }
-    echo $json;
-    exit;
+}
+
+function backupWrite($stream, string $chunk): void {
+    $length = strlen($chunk);
+    $offset = 0;
+    while ($offset < $length) {
+        $written = fwrite($stream, substr($chunk, $offset));
+        if ($written === false || $written === 0) {
+            throw new RuntimeException('Could not write the backup snapshot');
+        }
+        $offset += $written;
+    }
 }
 
 function isSensitiveBackupSettingKey(string $key): bool {
@@ -47,53 +57,99 @@ if (!isAuthorizedToken($token, false)) backupFail('Your session has expired. Ple
 $pdo = db();
 $stage = 'snapshot';
 $failedRecordId = '';
+$snapshotStream = null;
 try {
+    // php://temp keeps a small prefix in memory and automatically spills larger
+    // snapshots to a server-side temporary file. Nothing is sent to the browser
+    // until every record has been validated and the transaction has committed.
+    $snapshotStream = fopen('php://temp/maxmemory:1048576', 'w+b');
+    if (!is_resource($snapshotStream)) {
+        throw new RuntimeException('Could not create backup snapshot stream');
+    }
+
     // MySQL/MariaDB repeatable-read gives every SELECT in this export the same
     // database snapshot without blocking normal itinerary saves.
     $pdo->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
     $pdo->beginTransaction();
 
-    $stage = 'records';
-    $records = [];
-    $recordMeta = [];
-    $rows = $pdo->query('SELECT id, data, updated_at FROM itinerary ORDER BY id')->fetchAll();
-    foreach ($rows as $row) {
-        $id = (string)$row['id'];
-        $decoded = json_decode((string)$row['data'], true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $failedRecordId = $id;
-            throw new RuntimeException('Stored record is invalid JSON');
-        }
-        $records[$id] = $decoded;
-        $recordMeta[$id] = ['updated_at' => $row['updated_at'] ?? null];
+    // Prevent the PDO MySQL driver from buffering the complete result set in PHP
+    // memory before we can stream it into the completed snapshot.
+    $bufferedQueryAttr = defined('PDO::MYSQL_ATTR_USE_BUFFERED_QUERY')
+        ? constant('PDO::MYSQL_ATTR_USE_BUFFERED_QUERY')
+        : null;
+    if ($bufferedQueryAttr !== null) {
+        $pdo->setAttribute($bufferedQueryAttr, false);
     }
 
+    backupWrite(
+        $snapshotStream,
+        '{"ok":true,"data":{"exported_at":' . backupEncode(gmdate('c')) . ',"version":3,"records":{'
+    );
+
+    $stage = 'records';
+    $recordCount = 0;
+    $recordMeta = [];
+    $firstRecord = true;
+    $rows = $pdo->query('SELECT id, data, updated_at FROM itinerary ORDER BY id');
+    while ($row = $rows->fetch()) {
+        $id = (string)$row['id'];
+        $rawData = (string)$row['data'];
+
+        // Validate each stored JSON document before copying its already-encoded
+        // representation into the snapshot. Only one itinerary is decoded at a
+        // time, avoiding the old all-records-in-memory expansion.
+        try {
+            json_decode($rawData, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            $failedRecordId = $id;
+            throw new RuntimeException('Stored record is invalid JSON', 0, $e);
+        }
+
+        backupWrite(
+            $snapshotStream,
+            ($firstRecord ? '' : ',') . backupEncode($id) . ':' . $rawData
+        );
+        $firstRecord = false;
+        $recordCount++;
+        $recordMeta[$id] = ['updated_at' => $row['updated_at'] ?? null];
+    }
+    $rows->closeCursor();
+
+    backupWrite(
+        $snapshotStream,
+        '},"record_meta":' . backupEncode($recordMeta) . ',"settings":{'
+    );
+
     $stage = 'settings';
-    // Export ordinary application settings only. Never put PINs, tokens, API
-    // keys or future security credentials into a downloadable browser file.
-    $settings = [];
+    $settingCount = 0;
+    $firstSetting = true;
     $settingStmt = $pdo->query("SELECT `key`, `value` FROM settings ORDER BY `key`");
-    foreach ($settingStmt->fetchAll() as $row) {
+    while ($row = $settingStmt->fetch()) {
         $key = (string)$row['key'];
         if (isSensitiveBackupSettingKey($key)) continue;
-        $settings[$key] = (string)$row['value'];
+
+        backupWrite(
+            $snapshotStream,
+            ($firstSetting ? '' : ',') . backupEncode($key) . ':' . backupEncode((string)$row['value'])
+        );
+        $firstSetting = false;
+        $settingCount++;
     }
+    $settingStmt->closeCursor();
+
+    backupWrite(
+        $snapshotStream,
+        '},"record_count":' . $recordCount
+        . ',"setting_count":' . $settingCount
+        . ',"excluded":' . backupEncode(['security-like settings', 'auth_sessions', 'auth_attempts', 'share_tokens'])
+        . '}}'
+    );
 
     $stage = 'commit';
     $pdo->commit();
-
-    backupOk([
-        'exported_at' => gmdate('c'),
-        'version' => 3,
-        'record_count' => count($records),
-        'setting_count' => count($settings),
-        'records' => $records,
-        'record_meta' => $recordMeta,
-        'settings' => $settings,
-        'excluded' => ['security-like settings', 'auth_sessions', 'auth_attempts', 'share_tokens'],
-    ]);
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
+    if (is_resource($snapshotStream)) fclose($snapshotStream);
 
     if ($stage === 'snapshot') {
         backupFail('Could not start a consistent backup snapshot', 500, 'snapshot_start_failed');
@@ -112,3 +168,18 @@ try {
     }
     backupFail('Backup export failed', 500, 'backup_failed');
 }
+
+// The snapshot is complete and committed before any response bytes are sent.
+// This preserves fail-closed behaviour while avoiding a second giant JSON copy.
+if (!is_resource($snapshotStream)) {
+    backupFail('Completed backup snapshot is unavailable', 500, 'snapshot_unavailable');
+}
+$downloadBytes = ftell($snapshotStream);
+if ($downloadBytes === false || !rewind($snapshotStream)) {
+    fclose($snapshotStream);
+    backupFail('Could not prepare the completed backup download', 500, 'snapshot_prepare_failed');
+}
+header('Content-Length: ' . $downloadBytes);
+fpassthru($snapshotStream);
+fclose($snapshotStream);
+exit;
