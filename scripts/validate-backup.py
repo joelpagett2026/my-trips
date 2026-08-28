@@ -39,7 +39,7 @@ require("api.php?action=list" not in ui and "api.php?action=load" not in ui,
         "new backup UI must not reconstruct backups from many API reads")
 require("backup.record_count" in ui and "record_count < 1" in ui,
         "browser must reject an unexpectedly empty backup")
-require("settings-backup.js?v=1" in renderer,
+require("settings-backup.js?v=" in renderer,
         "Settings renderer must attach the isolated backup UI module")
 require("RewriteRule ^settings\\.html$ settings.php [L,QSA]" in htaccess,
         "settings.html must route through the Settings renderer")
