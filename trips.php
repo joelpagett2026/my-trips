@@ -16,7 +16,9 @@ if ($template === false) {
 
 [$page, $diag] = applyTripsDashboardRuntimeSafety($template);
 if (($diag['maps_key_rewritten'] ?? 0) !== 1
-    || ($diag['travel_day_filter_rewritten'] ?? 0) !== 1) {
+    || ($diag['travel_day_filter_rewritten'] ?? 0) !== 1
+    || ($diag['registry_error_handling_rewritten'] ?? 0) !== 1
+    || ($diag['countdown_registry_error_rewritten'] ?? 0) !== 1) {
     http_response_code(500);
     echo 'Trips dashboard could not be rendered safely.';
     exit;
