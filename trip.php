@@ -126,8 +126,14 @@ $standaloneHead = <<<'HTML'
 </style>
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
-$page = str_replace('/auth.js?v=1', '/auth.js?v=3', $page);
-$page = str_replace('/db.js?v=1', '/db.js?v=2', $page);
+
+// Keep the current authenticated session when navigating from the homepage or
+// dashboard into a trip. Dynamic version URLs prevent an older cached auth.js or
+// db.js from relocking the page and asking for the PIN a second time.
+$authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
+$dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
+$page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
