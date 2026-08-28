@@ -70,6 +70,10 @@ jobs:
         run: |
           python scripts/validate-api-surface.py
 
+      - name: Validate deployment database guard
+        run: |
+          python scripts/validate-deploy-data-guard.py
+
       - name: Validate authentication atomicity contracts
         run: |
           python scripts/validate-auth-atomic.py
@@ -95,11 +99,26 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy webhook
+      - name: Trigger deploy webhook and verify production database
         run: |
           curl --fail --show-error --silent --retry 2 --retry-delay 3 \
             --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+            --output /tmp/deploy.json \
             "https://joelpagett.co.uk/deploy-webhook.php"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/deploy.json').read_text())
+          if payload.get('ok') is not True:
+              raise SystemExit('deploy webhook did not report success')
+          count = payload.get('registry_trip_count')
+          if not isinstance(count, int) or count < 1:
+              raise SystemExit('deploy webhook did not verify a non-empty production trip registry')
+          failed = payload.get('failed')
+          if failed:
+              raise SystemExit('deploy webhook reported failed file copies')
+          print(f'deployed against verified database with {count} active itineraries')
+          PY
 
       - name: Verify restored PIN gate runtime
         run: |
