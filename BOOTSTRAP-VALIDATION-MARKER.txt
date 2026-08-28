@@ -1,0 +1,1 @@
+Validation-only marker for the deploy bootstrap branch. No runtime behavior.
