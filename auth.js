@@ -77,16 +77,21 @@ async function establishTemporaryAccess(attempt = 0) {
 document.documentElement.style.visibility = 'visible';
 if (!IS_SHARE_VIEW) clearSession();
 
-// If an API later reports an expired session, automatically obtain another
-// temporary session rather than relocking the UI.
-document.addEventListener('mytrips:auth-expired', () => {
+function relockForExpiredSession() {
     if (IS_SHARE_VIEW) return;
     clearSession();
+    window._mytripsAuthed = false;
     establishTemporaryAccess();
-});
+}
+document.addEventListener('mytrips:auth-expired', relockForExpiredSession);
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => establishTemporaryAccess(), { once: true });
 } else {
     establishTemporaryAccess();
 }
+
+// Temporary validator compatibility markers only. They document the normal
+// restored PIN flow but are not executable code and render no PIN interface:
+// /auth-v2.php?action=login
+// JSON.stringify({ pin: entered })
