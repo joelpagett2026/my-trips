@@ -7,11 +7,8 @@ require_once __DIR__ . '/auth-session.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 // ── AUTH CHECK ────────────────────────────────────────────────────────
 // Public share loading is the only unauthenticated action. Everything else
@@ -40,9 +37,17 @@ function fail(string $msg, int $code = 400): void {
 }
 
 // ── BODY ──────────────────────────────────────────────────────────────
+// General API POST actions carry only small metadata/query payloads. Whole-record
+// saves, trip creation/deletion and photos use dedicated endpoints with their own
+// limits, so accepting an unbounded body here is unnecessary.
+const API_MAX_REQUEST_BYTES = 262_144;
 $body = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $raw = file_get_contents('php://input');
+    $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+    if ($contentLength > API_MAX_REQUEST_BYTES) fail('Request too large', 413);
+    $raw = file_get_contents('php://input', false, null, 0, API_MAX_REQUEST_BYTES + 1);
+    if ($raw === false) fail('Could not read request body');
+    if (strlen($raw) > API_MAX_REQUEST_BYTES) fail('Request too large', 413);
     $body = json_decode($raw ?: '{}', true);
     if (!is_array($body)) fail('Invalid JSON body');
 }
@@ -50,7 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ══════════════════════════════════════════════════════════════════════
 //  ACTIONS
 // ══════════════════════════════════════════════════════════════════════
-
+// Deliberately absent here: save, set_setting, create_page, delete and legacy
+// photo actions. Those operations either have dedicated conflict-safe/atomic
+// endpoints or have been retired. Keeping them out of this file means an Apache
+// rewrite/configuration regression fails closed instead of restoring an unsafe
+// write path or exposing a server-side Google key.
 switch ($action) {
 
     // ── LOAD A RECORD ────────────────────────────────────────────────
@@ -66,67 +75,6 @@ switch ($action) {
         $decoded = json_decode((string)$row['data'], true);
         if (json_last_error() !== JSON_ERROR_NONE) fail('Stored record is invalid JSON', 500);
         ok(['data' => $decoded, 'updated_at' => $row['updated_at']]);
-
-    // ── LEGACY SAVE A RECORD ─────────────────────────────────────────
-    // Runtime saving uses record.php. This remains for older non-itinerary
-    // pages but is protected by the same secure server session.
-    case 'save':
-        $id   = $body['id']   ?? '';
-        $data = $body['data'] ?? null;
-        if (!$id || $data === null) fail('Missing id or data');
-        $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if ($json === false) fail('Invalid data');
-        db()->prepare("INSERT INTO itinerary (id, data, updated_at) VALUES (?, ?, NOW())
-                       ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()")
-            ->execute([$id, $json]);
-        ok(['id' => $id]);
-
-    // ── CREATE TRIP PAGE ─────────────────────────────────────────────
-    case 'create_page':
-        $slug   = preg_replace('/[^a-z0-9\-]/', '', strtolower($body['slug'] ?? ''));
-        $dest   = $body['dest'] ?? '';
-        $dep    = $body['dep']  ?? '';
-        $ret    = $body['ret']  ?? '';
-        $trav   = $body['trav'] ?? '2';
-        $status = $body['status'] ?? 'upcoming';
-        $photo  = $body['photo'] ?? '';
-        if (!$slug || !$dest) fail('Missing slug or dest');
-
-        $reserved = ['index', 'settings', 'new-trip', 'new-trip-v2',
-            'api', 'auth-v2', 'auth-session', 'record', 'deploy-webhook', 'trip',
-            'db-config', 'robots', 'favicon', 'trips', 'holidays', 'icons',
-            'concerts', 'parks', 'shows', 'private'];
-        if (in_array($slug, $reserved, true)) fail('That trip name is reserved — please choose another');
-
-        if ($photo) {
-            $days = [];
-            $depDt = DateTime::createFromFormat('d/m/Y', $dep) ?: null;
-            $retDt = DateTime::createFromFormat('d/m/Y', $ret) ?: null;
-            if ($depDt && $retDt && $retDt >= $depDt) {
-                $dayCount = (int)$depDt->diff($retDt)->format('%a') + 1;
-                $cursor = clone $depDt;
-                for ($i = 0; $i < $dayCount; $i++) {
-                    $days[] = ['date' => $cursor->format('d/m/Y'), 'loc' => $dest, 'title' => 'Day ' . ($i + 1), 'items' => []];
-                    $cursor->modify('+1 day');
-                }
-            } else {
-                $days = [[ 'date' => $dep, 'loc' => $dest, 'title' => 'Day 1', 'items' => [] ]];
-            }
-            $seed = [
-                'days' => $days,
-                'meta' => [
-                    'dest' => $dest, 'dep' => $dep, 'ret' => $ret, 'trav' => $trav, 'status' => $status,
-                    'hotel' => null, 'budget' => null, 'coverPhoto' => $photo,
-                ],
-            ];
-            $seedJson = json_encode($seed, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            if ($seedJson === false) fail('Could not create initial trip data');
-            db()->prepare("INSERT INTO itinerary (id, data, updated_at) VALUES (?, ?, NOW())
-                           ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = NOW()")
-                ->execute([$slug, $seedJson]);
-        }
-
-        ok(['slug' => $slug, 'url' => '/' . $slug]);
 
     // ── SHARE: CREATE A SHARE LINK ───────────────────────────────────
     case 'create_share':
@@ -170,19 +118,13 @@ switch ($action) {
         if (json_last_error() !== JSON_ERROR_NONE) fail('Stored trip is invalid JSON', 500);
         ok(['data' => $data, 'trip_id' => $share['trip_id']]);
 
-    // ── DELETE A RECORD ──────────────────────────────────────────────
-    case 'delete':
-        $id = $_GET['id'] ?? $body['id'] ?? '';
-        if (!$id) fail('Missing id');
-        db()->prepare("DELETE FROM itinerary WHERE id = ?")->execute([$id]);
-        ok();
-
     // ── LIST ALL RECORDS ─────────────────────────────────────────────
     case 'list':
         $stmt = db()->query("SELECT id, updated_at FROM itinerary ORDER BY updated_at DESC");
         ok($stmt->fetchAll());
 
-    // ── SETTINGS GET / SET ───────────────────────────────────────────
+    // ── SETTINGS GET ─────────────────────────────────────────────────
+    // PIN changes use auth-v2.php and no generic settings write endpoint exists.
     case 'get_setting':
         $key = $_GET['key'] ?? '';
         if (!$key) fail('Missing key');
@@ -190,14 +132,6 @@ switch ($action) {
         $stmt->execute([$key]);
         $row = $stmt->fetch();
         ok($row ? $row['value'] : null);
-
-    case 'set_setting':
-        $key = $body['key'] ?? '';
-        $val = $body['value'] ?? '';
-        if (!$key) fail('Missing key');
-        db()->prepare("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = ?")
-            ->execute([$key, $val, $val]);
-        ok();
 
     // ── GEOCODE ITEM ─────────────────────────────────────────────────
     case 'geocode_item':
@@ -307,111 +241,6 @@ PROMPT;
         $about = json_decode(trim($text), true);
         if (!$about) ok(['about' => null, 'raw' => substr($text, 0, 300), 'error' => 'parse_failed']);
         ok(['about' => $about]);
-
-    // ── PLACE PHOTO V2 ───────────────────────────────────────────────
-    case 'place_photo_v2':
-        $PLACES_KEY = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
-        $q = trim($_GET['q'] ?? '');
-        $city = trim($_GET['city'] ?? '');
-        if (!$q) ok(['photo' => null]);
-
-        $fetchUrlFn = function(string $url): string {
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 8,
-                CURLOPT_HTTPHEADER => ['User-Agent: MyTripsApp/1.0'],
-            ]);
-            $r = curl_exec($ch);
-            curl_close($ch);
-            return $r ?: '';
-        };
-
-        $photo = null;
-        if ($PLACES_KEY) {
-            $findData = json_decode($fetchUrlFn('https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input='
-                . urlencode($q . ($city ? ', ' . $city : '')) . '&inputtype=textquery&fields=place_id,photos&key=' . $PLACES_KEY), true);
-            $photoRef = $findData['candidates'][0]['photos'][0]['photo_reference'] ?? null;
-            if (!$photoRef) {
-                $textData = json_decode($fetchUrlFn('https://maps.googleapis.com/maps/api/place/textsearch/json?query='
-                    . urlencode($q . ($city ? ' ' . $city : '')) . '&key=' . $PLACES_KEY), true);
-                $photoRef = $textData['results'][0]['photos'][0]['photo_reference'] ?? null;
-            }
-            if ($photoRef) {
-                $photo = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference='
-                    . urlencode($photoRef) . '&key=' . $PLACES_KEY;
-            }
-        }
-
-        if (!$photo) {
-            $query = $q . ($city && strpos($q, $city) === false ? ' ' . $city : '');
-            $data = json_decode($fetchUrlFn('https://commons.wikimedia.org/w/api.php?action=query'
-                . '&generator=search&gsrnamespace=6&gsrsearch=' . urlencode($query)
-                . '&gsrlimit=5&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=800&format=json'), true);
-            $bestW = 0;
-            foreach (($data['query']['pages'] ?? []) as $page) {
-                $ii = $page['imageinfo'][0] ?? [];
-                $mime = $ii['mime'] ?? '';
-                $w = $ii['width'] ?? 0;
-                $url = $ii['thumburl'] ?? '';
-                if ($url && strpos($mime, 'image') === 0 && strpos($mime, 'svg') === false && $w > $bestW && $w >= 400) {
-                    $photo = $url;
-                    $bestW = $w;
-                }
-            }
-        }
-
-        if (!$photo) {
-            $wData = json_decode($fetchUrlFn('https://en.wikipedia.org/w/api.php?action=query&titles='
-                . urlencode($q) . '&prop=pageimages&pithumbsize=800&format=json&redirects=1'), true);
-            foreach (($wData['query']['pages'] ?? []) as $page) {
-                if (!empty($page['thumbnail']['source'])) {
-                    $photo = $page['thumbnail']['source'];
-                    break;
-                }
-            }
-        }
-
-        ok(['photo' => $photo]);
-
-    // ── PLACE PHOTO (legacy alias) ───────────────────────────────────
-    case 'place_photo':
-        $q = trim($_GET['q'] ?? '');
-        if (!$q) ok(['photo' => null]);
-        $key = defined('PLACES_API_KEY') ? PLACES_API_KEY : '';
-        if (!$key) ok(['photo' => null, 'error' => 'No Places API key']);
-
-        $searchUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json'
-            . '?input=' . urlencode($q)
-            . '&inputtype=textquery'
-            . '&fields=place_id,photos'
-            . '&key=' . $key;
-        $searchRes = json_decode(@file_get_contents($searchUrl), true);
-        $photoRef = $searchRes['candidates'][0]['photos'][0]['photo_reference'] ?? null;
-
-        if (!$photoRef) {
-            $textUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
-                . '?query=' . urlencode($q)
-                . '&key=' . $key;
-            $textRes = json_decode(@file_get_contents($textUrl), true);
-            $photoRef = $textRes['results'][0]['photos'][0]['photo_reference'] ?? null;
-        }
-        if (!$photoRef) ok(['photo' => null]);
-
-        $photoUrl = 'https://maps.googleapis.com/maps/api/place/photo'
-            . '?maxwidth=800'
-            . '&photo_reference=' . urlencode($photoRef)
-            . '&key=' . $key;
-        $ctx = stream_context_create(['http' => ['method' => 'GET', 'follow_location' => 0, 'ignore_errors' => true]]);
-        @file_get_contents($photoUrl, false, $ctx);
-        $finalUrl = null;
-        foreach ($http_response_header ?? [] as $hdr) {
-            if (stripos($hdr, 'Location:') === 0) {
-                $finalUrl = trim(substr($hdr, 9));
-                break;
-            }
-        }
-        ok(['photo' => $finalUrl ?: $photoUrl]);
 
     // ── PLACES AUTOCOMPLETE ──────────────────────────────────────────
     case 'places_autocomplete':
