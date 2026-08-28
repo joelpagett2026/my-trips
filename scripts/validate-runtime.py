@@ -25,6 +25,8 @@ auth_session = read("auth-session.php")
 deploy = read("deploy-webhook.php")
 template = read("new-trip-v2.html")
 dashboard = read("trips/index.html")
+home = read("home.php")
+homepage = read("index.html")
 record = read("record.php")
 db = read("db.js")
 db_config = read("db-config.php")
@@ -75,6 +77,10 @@ require("Couldn’t load itineraries. Your saved trips have not been changed." i
         "rendered dashboard must surface registry failures instead of pretending the registry is empty")
 require("Couldn’t save itinerary changes. Nothing was overwritten." in runtime and "throw err" in runtime,
         "rendered dashboard must surface registry save failures instead of swallowing them")
+require("const registry = await window.dbLoad('registry');" in homepage,
+        "homepage compatibility source changed; update its trip-registry rewrite deliberately")
+require("const registry = { trips: await window.dbLoadRegistry() };" in home and "registryCount !== 1" in home,
+        "homepage renderer must load Holiday Planner stats from the authoritative trip registry")
 require("removeTravelDayFrontCardTags" not in auth and "MutationObserver" not in auth,
         "auth.js must not contain dashboard presentation patches")
 
@@ -176,7 +182,7 @@ require("$_GET['key']" not in deploy, "deploy key must not be accepted in URLs")
 require("deploymentPreflight" in deploy and "live_files_untouched" in deploy,
         "deployment must preflight server configuration before copying live files")
 for required in ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASS", "ANTHROPIC_API_KEY", "PLACES_API_KEY", "MAPS_BROWSER_KEY"]:
-    require(f"'{required}'" in deploy, f"deployment preflight must require {required}")
+    require(f"'{required}'" in deploy, f"{required} must come from server configuration before deployment")
 require("rename($tmpPath, $destPath)" in deploy, "deploy files must be atomically renamed into place")
 
 for runtime_file in [
