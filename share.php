@@ -235,6 +235,11 @@ $payloadJson = json_encode(
     $shared,
     JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
 );
+if ($payloadJson === false) {
+    http_response_code(500);
+    echo 'Shared itinerary data could not be encoded safely.';
+    exit;
+}
 $page = str_replace(
     'const result = await dbLoadShare(SHARE_TOKEN);',
     'const result = ' . $payloadJson . ';',
