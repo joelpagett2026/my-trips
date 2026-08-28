@@ -28,102 +28,23 @@ function validatedPin(array $body, string $field): string {
     return $pin;
 }
 
-/**
- * Return true when this exact server-only bootstrap hash has already been used.
- * We store the consumed hash itself, not a boolean, so replacing PIN_HASH with a
- * new recovery value creates one fresh recovery opportunity without re-enabling
- * an older bootstrap PIN.
- */
-function bootstrapHashWasConsumed(string $bootstrapHash): bool {
-    try {
-        $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_bootstrap_consumed_hash' LIMIT 1");
-        $stmt->execute();
-        $row = $stmt->fetch();
-        $used = $row && is_string($row['value']) ? strtolower(trim($row['value'])) : '';
-        return $used !== '' && hash_equals($used, strtolower($bootstrapHash));
-    } catch (Throwable $e) {
-        return false;
-    }
-}
-
-/**
- * Recover access using the current server-only PIN_HASH exactly once per hash.
- * On success the database PIN is synchronised, failed attempts/sessions are
- * cleared, and this exact bootstrap hash is marked consumed.
- */
-function tryBootstrapPinRecovery(string $submittedHash): bool {
-    $bootstrap = configuredPinHash();
-    if ($bootstrap === null || !hash_equals($bootstrap, $submittedHash)) return false;
-    if (bootstrapHashWasConsumed($bootstrap)) return false;
-
-    $pdo = db();
-    try {
-        $pdo->beginTransaction();
-        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
-            ->execute([$submittedHash, $submittedHash]);
-        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
-            ->execute([$bootstrap, $bootstrap]);
-        $pdo->prepare("DELETE FROM settings WHERE `key` = 'pin_bootstrap_consumed'")->execute();
-        $pdo->exec('DELETE FROM auth_attempts');
-        $pdo->exec('DELETE FROM auth_sessions');
-        $pdo->commit();
-        return true;
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
-        return false;
-    }
-}
-
 $raw = file_get_contents('php://input');
 $body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) authFail('Invalid JSON body');
 
 $action = (string)($_GET['action'] ?? 'login');
 
-// TEMPORARY ACCESS MODE.
-// This intentionally removes the PIN gate while the broken browser handoff is
-// repaired. Normal APIs still require a random server session; this endpoint
-// simply creates that session without asking for a PIN. Remove this block as
-// soon as the owner has restored a new PIN from Settings.
-if ($action === 'temporary_access') {
-    try {
-        clearFailedLogins();
-        authOk([
-            'session_token' => issueAuthSession(),
-            'expires_in' => AUTH_SESSION_TTL_SECONDS,
-            'temporary_access' => true,
-        ]);
-    } catch (Throwable $e) {
-        authFail('Authentication service is temporarily unavailable', 503);
-    }
-}
-
 if ($action === 'login') {
     try {
-        $pin = validatedPin($body, 'pin');
-        $submittedHash = hash('sha256', $pin);
-
-        $bootstrap = configuredPinHash();
-        $isFreshBootstrapMatch = $bootstrap !== null
-            && hash_equals($bootstrap, $submittedHash)
-            && !bootstrapHashWasConsumed($bootstrap);
-
-        if (!$isFreshBootstrapMatch && loginRateLimitRemaining() <= 0) {
+        if (loginRateLimitRemaining() <= 0) {
             authFail('Too many attempts. Try again in 15 minutes.', 429);
         }
 
-        $matched = false;
-        try {
-            $matched = hash_equals(activePinHash(), $submittedHash);
-        } catch (Throwable $e) {
-            $matched = false;
-        }
+        $pin = validatedPin($body, 'pin');
+        $submittedHash = hash('sha256', $pin);
+        $storedHash = activePinHash();
 
-        if (!$matched && $isFreshBootstrapMatch) {
-            $matched = tryBootstrapPinRecovery($submittedHash);
-        }
-
-        if (!$matched) {
+        if (!hash_equals($storedHash, $submittedHash)) {
             recordFailedLogin();
             authFail('Incorrect PIN', 401);
         }
@@ -167,6 +88,11 @@ if ($action === 'change_pin') {
 
         $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$newHash, $newHash]);
+
+        // Old one-time recovery markers are obsolete once the owner has set a
+        // real database PIN. Keep the settings table free of recovery state.
+        $pdo->prepare("DELETE FROM settings WHERE `key` IN ('pin_bootstrap_consumed','pin_bootstrap_consumed_hash')")
+            ->execute();
 
         $pdo->exec('DELETE FROM auth_sessions');
         $pdo->exec('DELETE FROM auth_attempts');
