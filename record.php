@@ -7,6 +7,8 @@ require_once __DIR__ . '/auth-session.php';
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
+const RECORD_MAX_REQUEST_BYTES = 8_000_000;
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 function respondOk(mixed $data = null): never {
@@ -52,7 +54,6 @@ if ($action === 'save') {
     // Itinerary records can legitimately be fairly large (for example when a
     // compressed cover image is embedded), but there is no reason to accept an
     // unbounded request. Reject oversized bodies before reading them fully.
-    const RECORD_MAX_REQUEST_BYTES = 8_000_000;
     $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
     if ($contentLength > RECORD_MAX_REQUEST_BYTES) respondFail('Request too large', 413);
     $raw = file_get_contents('php://input', false, null, 0, RECORD_MAX_REQUEST_BYTES + 1);
