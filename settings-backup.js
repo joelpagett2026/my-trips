@@ -7,13 +7,38 @@
   // Override it on the supported rendered route so every Settings request uses
   // the random, expiring server session stored by auth.js/db.js.
   window.getToken = function getToken() {
-    try { return JSON.parse(localStorage.getItem('jh_auth') || 'null')?.sessionToken || ''; }
-    catch { return ''; }
+    try {
+      const raw = localStorage.getItem('jh_auth') || sessionStorage.getItem('jh_auth') || 'null';
+      return JSON.parse(raw)?.sessionToken || '';
+    } catch { return ''; }
   };
 
+  // TEMPORARY RECOVERY MODE: the site-wide PIN gate is disabled, so the Change
+  // PIN panel must not ask for the broken old PIN first. Opening the panel starts
+  // directly at the new-PIN step. dbChangePin still requires the temporary random
+  // server session established by auth.js, so the write goes through the normal
+  // authenticated PIN-change transaction.
+  if (typeof window.openPanel === 'function') {
+    const originalOpenPanel = window.openPanel;
+    window.openPanel = function openPanel(name) {
+      originalOpenPanel(name);
+      if (name === 'pin') {
+        pinStep = 'new';
+        pinEntered = '';
+        newPinCandidate = '';
+        updatePinUI();
+        const sub = document.querySelector('#panel-pin .panel-sub');
+        if (sub) sub.textContent = 'Choose a new 4-digit PIN. The old PIN is temporarily not required while access recovery is active.';
+        const err = document.getElementById('pin-panel-error');
+        if (err) err.textContent = '';
+      }
+    };
+  }
+
   // Replace the legacy PIN hash flow with the v2 raw-PIN/same-origin flow.
-  // The existing panel state/UI variables live in the page's global lexical scope
-  // and are intentionally reused here to avoid duplicating the Settings UI.
+  // During temporary recovery the verify step is skipped by openPanel() above;
+  // the normal verify branch is retained so restoring the gate does not require
+  // rebuilding this keypad code from scratch.
   window.handlePinDigit = async function handlePinDigit(n) {
     if (pinEntered.length >= 4) return;
     pinEntered += String(n);
@@ -55,7 +80,7 @@
         await dbChangePin(newPinCandidate);
         flashDots('#34c759', () => {
           closePanel('pin');
-          setTimeout(() => alert('PIN changed successfully!'), 300);
+          setTimeout(() => alert('PIN saved successfully. Keep this page open and tell ChatGPT “PIN reset” so the temporary bypass can be removed and the PIN gate restored.'), 300);
         });
       } catch {
         flashDots('#ff3b30', () => {
