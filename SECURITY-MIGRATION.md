@@ -1,12 +1,26 @@
-# Production hardening rollout
+# Production hardening and operations
 
-This document is intentionally kept with the stability branch so the security changes cannot be merged without the hosting prerequisites being explicit.
+This document describes the **current production security/reliability model** for `joelpagett.co.uk`.
+The earlier bootstrap/stability migration is complete; do not use the old PR/bootstrap procedure as an operating guide.
 
-## Do not merge the stability PR until the server is ready
+## Current production model
 
-The hardened application deliberately has no source-code fallbacks for database credentials, the PIN hash, or the deploy key. The live hosting account must therefore have server-only configuration in `secrets.php` (gitignored) or environment variables before PR #3 is merged.
+### Authentication
 
-Required values:
+- The site uses a four-digit PIN only to establish a random server session.
+- PIN hashing and comparison happen server-side in `auth-v2.php`.
+- The authoritative PIN hash is stored only in the database at `settings.pin_hash`.
+- There is **no runtime `PIN_HASH` bootstrap/fallback**. A missing or invalid database PIN fails closed.
+- Browser auth state contains only a random session token, never the PIN hash.
+- Sessions are stored server-side as token hashes, expire after 12 hours, and are revoked on logout.
+- Changing the PIN revokes all older sessions and issues a replacement session in the same transaction.
+- Repeated incorrect PIN attempts are rate-limited by IP hash.
+
+If a `PIN_HASH` line still exists in hosting `secrets.php`, it is obsolete and should be removed during the next hosting-maintenance pass. The runtime no longer reads it.
+
+### Server-only configuration
+
+Production secrets belong in `public_html/secrets.php` (not committed) or hosting environment variables:
 
 - `DB_HOST`
 - `DB_NAME`
@@ -14,63 +28,145 @@ Required values:
 - `DB_PASS`
 - `DEPLOY_KEY`
 - `ANTHROPIC_API_KEY`
-- `PLACES_API_KEY` — server-side Google Places/Routes key; never expose this to browser HTML
-- `MAPS_BROWSER_KEY` — browser Maps JavaScript key; this is visible to browsers by design and must be restricted in Google Cloud to `https://joelpagett.co.uk/*` (and any deliberately supported subdomains) and only the Maps JavaScript API
+- `PLACES_API_KEY` — server-only Google Places/Routes key
+- `MAPS_BROWSER_KEY` — browser-visible Maps JavaScript key, restricted by referrer and API
 
-`PIN_HASH` is optional as a server-only bootstrap value. If the database already has a valid `settings.pin_hash`, that DB value is authoritative and a server `PIN_HASH` is not required.
+Never commit literal credentials to this repository.
 
-## Required deployment order
+### Database protection
 
-PR #4 (`deploy-bootstrap-2026-08-27`) is a prerequisite for PR #3.
+- `trip-registry` is the authoritative itinerary index.
+- Itinerary saves use `record.php` with optimistic version checks and `SELECT ... FOR UPDATE` locking.
+- Stale writes return HTTP 409 instead of silently overwriting a newer version.
+- Browser saves are serialized per record.
+- Trip creation and deletion update the itinerary record, registry and related data transactionally.
+- Generic deletion cannot remove active trip records, the registry or snapshot records.
+- Deployment preflight refuses to proceed if the configured database is missing, has an invalid registry, or has no active itineraries.
 
-1. Merge PR #4 first while the current production application is otherwise unchanged. The existing main-branch workflow can still call the currently live legacy webhook, and that webhook will copy only the transitional deployer because the rest of the application is unchanged.
-2. Confirm the bootstrap deployer is live before doing anything with PR #3.
-3. Configure and rotate the server-only values listed above. In particular, the hosting `DEPLOY_KEY` and GitHub Actions `DEPLOY_KEY` must match.
-4. Rotate the site PIN **before** PR #3 is deployed. A historical SHA-256 PIN hash has existed in Git history and a four-digit PIN hash is cheap to brute-force offline; the hardened browser no longer sends PIN hashes, but that cannot make the historical hash safe again. Use the current production Change PIN flow if it is working, or update `settings.pin_hash` directly from a trusted server/admin path. Confirm the new PIN works before continuing.
-5. Only then merge PR #3. The live bootstrap deployer accepts the new `X-Deploy-Key` header, performs the database/configuration preflight, knows every new runtime dependency, copies dependencies before entry points, and activates `.htaccess` last.
-6. PR #3 replaces the transitional bootstrap with the strict header-only deployer, removing the legacy query-string fallback.
+The deploy workflow also checks the deploy webhook response and refuses to declare success unless the production registry is non-empty and no file copies failed.
 
-Do not merge PR #3 directly onto the current production deployer. The current live deployer does not know about the new runtime files and could otherwise create a partial deployment where an updated entry point is copied without its new dependency.
+### API surface
 
-## Secrets that must be rotated
+`api.php` is intentionally narrow. It no longer contains the retired whole-record save, generic setting write, legacy trip creation/deletion or place-photo implementations.
 
-Values that have existed in Git history must be treated as disclosed even though current branch source no longer uses them:
+Dedicated endpoints are used for sensitive operations:
 
-1. Rotate the MySQL password and put the new value in server-only `DB_PASS` before the hardened release is deployed.
-2. Generate a new random deploy key, put the same value in the hosting `DEPLOY_KEY` and the GitHub Actions `DEPLOY_KEY` repository secret.
-3. Verify/restrict or rotate the Google keys. The server Places/Routes key must not be usable from browsers. The browser Maps key must have HTTP-referrer and API restrictions.
-4. Rotate the site PIN before deploying PR #3, as described above, so the PIN represented by the historical Git hash is no longer valid when the hardened authentication endpoint becomes live.
-5. Rotate Anthropic/other server API keys if they have ever been exposed outside the hosting secret store.
+- `record.php` — conflict-safe record load/save
+- `record-delete.php` — guarded generic deletion
+- `trip-create.php` — atomic trip creation
+- `trip-delete.php` — atomic trip deletion
+- `auth-v2.php` — login/session/PIN lifecycle
+- `place-photo.php` — server-side Places photo proxy
+- `backup-export.php` — authenticated consistent backup export
 
-## Pre-merge checks
+The web edge blocks explicit cross-site requests to protected PHP endpoints. The general API does not emit permissive CORS headers.
 
-- PR #4 has been merged and its bootstrap deployer is confirmed live.
-- Download/retain a current data backup.
-- Confirm the new database credentials connect successfully from the hosting environment.
-- Confirm `settings.pin_hash` contains the **newly rotated** PIN's 64-character SHA-256 hex value, or configure a newly rotated server-only `PIN_HASH` bootstrap value.
-- Confirm the newly rotated site PIN successfully unlocks the current production site.
-- Confirm `DEPLOY_KEY` on hosting exactly matches the GitHub Actions repository secret.
-- Confirm `MAPS_BROWSER_KEY` loads Maps JavaScript from the production domain and is blocked from unrelated domains/APIs.
-- Confirm `PLACES_API_KEY` supports the server-side Places and Routes calls used by `api.php`.
-- Confirm the stability PR CI is green and the branch is not behind `main`.
+### Request size limits
 
-## Post-deploy smoke tests
+Sensitive JSON endpoints reject oversized requests before parsing them. Current limits are deliberate and covered by CI:
 
-Test these in order before making further changes:
+- Authentication: 16 KB
+- Whole itinerary save: 8 MB
+- Trip creation: 3 MB
+- Trip deletion: 64 KB
+- Generic record deletion: 64 KB
 
-1. `/` unlocks with the newly rotated PIN and creates a random server session.
-2. `/trips/` loads the dashboard.
-3. Open at least two existing itineraries and confirm Itinerary, Bookings, Map and Budget tabs load.
-4. Make a small itinerary edit, wait for Saved, reload and confirm it persisted.
-5. Open the same trip in a second browser/device and confirm a stale edit is rejected rather than overwriting newer data.
-6. Add/edit two hotels that meet at a checkout/check-in boundary and verify the first hotel is not shown on its checkout night.
-7. Create and open a read-only share link without being signed in.
-8. Confirm `/new-trip-v2.html` without a share token is not directly accessible.
-9. Confirm the park map and itinerary maps load with the restricted browser key.
-10. Download a new backup and verify the reported record count is non-zero and expected records are present.
-11. Use Change PIN once more only if desired as an additional session-revocation test; confirm previously issued sessions are revoked and the new PIN works.
-12. Check GitHub Actions deployment result and the deploy webhook response before declaring the release complete.
+The trip-creation cover-photo field also retains its independent 2.5 MB cap.
 
-## Rollback
+### Backups
 
-If a production smoke test fails, revert `main` to the pre-hardening commit and restore the prior live files before troubleshooting. Do not attempt several unrelated fixes directly on production. Preserve the new rotated credentials and rotated PIN; do not reintroduce disclosed source-code secrets as a rollback mechanism.
+`backup-export.php` reads one repeatable-read database snapshot so records cannot come from different points in time.
+
+Backups include itinerary records and ordinary application settings, but exclude security-sensitive settings. Filtering is defensive: setting names associated with PINs, passwords, secrets, credentials, tokens, authentication or API keys are excluded automatically.
+
+Authentication sessions, failed-login records and share tokens are not exported.
+
+### Rendering and browser caching
+
+- Individual itineraries are rendered by `trip.php` from the shared `new-trip-v2.html` source.
+- Read-only shares render through `share.php`.
+- The raw shared template is not directly served.
+- `/trips/` is rendered through `trips.php`.
+- `/` is rendered through `home.php`.
+- Settings is rendered through `settings.php`.
+- Critical authentication/database/runtime scripts use current versioned URLs and no-cache headers.
+
+This prevents different parts of the site from accidentally loading different generations of auth/session code.
+
+### Maps and third-party APIs
+
+- `PLACES_API_KEY` stays server-side and is used by server API calls.
+- `MAPS_BROWSER_KEY` is intentionally browser-visible and must remain restricted to the production domain and required Maps JavaScript API(s).
+- Place-photo requests are proxied server-side so the server Places key is not exposed in browser image URLs.
+- Anthropic calls are made server-side only.
+
+## Deployment process
+
+Pushes to `main` run the full validation suite before production deployment.
+
+The deploy webhook:
+
+1. Authenticates using the `X-Deploy-Key` header.
+2. Fetches and hard-resets the server checkout to `origin/main`.
+3. Preflights required server configuration and database/auth state.
+4. Verifies the configured database contains a valid, non-empty `trip-registry`.
+5. Copies runtime files atomically.
+6. Returns a structured deploy result including the verified active-trip count and any failed/skipped files.
+
+GitHub Actions then performs public production smoke checks for the PIN gate, current auth/database script versions, Trips renderer, an itinerary renderer and unauthenticated API rejection.
+
+A successful GitHub commit alone is **not** enough to call a release live; the deploy job must also complete successfully.
+
+## CI contracts
+
+The current workflow validates:
+
+- JavaScript syntax
+- PHP syntax
+- web-app manifest JSON
+- runtime rendering contracts
+- focused security contracts
+- request-body limits
+- reduced API surface
+- production database deployment guard
+- authentication transaction/session contracts
+- backup consistency and secret filtering
+- atomic trip creation
+- atomic trip deletion
+- renderer integration
+
+When changing one of these subsystems, update the corresponding contract deliberately rather than weakening or removing it to make CI pass.
+
+## Production smoke-test checklist
+
+After a material release, use this order:
+
+1. Unlock `/` with the current PIN.
+2. Open `/trips/` without another PIN prompt.
+3. Open at least two itineraries and check Itinerary, Bookings, Map and Budget.
+4. Make a harmless edit, wait for **Saved**, reload and confirm it persists.
+5. Open the same itinerary in a second tab/device, save from one, then confirm the stale tab is rejected rather than overwriting the newer state.
+6. Verify a hotel checkout/check-in boundary displays the correct hotel on each night.
+7. Create a read-only share link and open it while signed out/incognito.
+8. Confirm raw `/new-trip-v2.html` is not directly accessible.
+9. Confirm itinerary maps and the park map load.
+10. Download a backup and verify its record count is non-zero and expected records are present.
+11. Use the homepage Logout control and confirm the PIN gate returns.
+12. Check the GitHub Actions deploy result before declaring the release complete.
+
+## Remaining maintenance work
+
+The main architectural debt is the monolithic `new-trip-v2.html` template. It works behind validated renderers, but should eventually be split into smaller itinerary/bookings/map/budget modules with shared utilities. Treat that as a separate refactor with regression tests; do not combine it with unrelated production changes.
+
+Also periodically review:
+
+- hosting `secrets.php` for obsolete values such as old `PIN_HASH`;
+- Google API restrictions;
+- server/API key rotation status;
+- backup downloads;
+- stale/unused deployment files;
+- CI failures or contract drift.
+
+## Rollback rule
+
+If a material production smoke test fails, stop making unrelated production changes. Revert the specific bad commit or restore the previous known-good runtime, preserve current rotated credentials/PINs, and diagnose from the failed subsystem. Never restore disclosed source-code credentials as a rollback mechanism.
