@@ -1,0 +1,19 @@
+name: Validate source credential hygiene
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  source-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate source credential hygiene
+        run: python scripts/validate-source-hygiene.py
