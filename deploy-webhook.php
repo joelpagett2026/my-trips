@@ -60,13 +60,13 @@ function deploymentPreflight(): array {
         $pdo->query('SELECT token_hash FROM auth_sessions LIMIT 1')->fetch();
         $pdo->query('SELECT ip_hash FROM auth_attempts LIMIT 1')->fetch();
 
+        // After initial setup, the database PIN is the only login credential.
         $stmt = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash' LIMIT 1");
         $stmt->execute();
         $row = $stmt->fetch();
         $storedPin = is_array($row) ? strtolower(trim((string)($row['value'] ?? ''))) : '';
-        $bootstrapPin = strtolower(serverConfig('PIN_HASH'));
-        if (!preg_match('/^[a-f0-9]{64}$/', $storedPin) && !preg_match('/^[a-f0-9]{64}$/', $bootstrapPin)) {
-            return ['ok' => false, 'error' => 'No valid server-side PIN hash is configured'];
+        if (!preg_match('/^[a-f0-9]{64}$/', $storedPin)) {
+            return ['ok' => false, 'error' => 'No valid database PIN hash is configured'];
         }
     } catch (Throwable $e) {
         return ['ok' => false, 'error' => 'Database/auth schema preflight failed'];
@@ -174,6 +174,7 @@ $coreFiles = [
     'favicon.ico',
     'settings.html',
     'settings.php',
+    'home.php',
     'index.html',
     'trip.php',
     'share.php',
