@@ -8,6 +8,8 @@ require_once __DIR__ . '/auth-session.php';
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
+const RECORD_DELETE_MAX_REQUEST_BYTES = 65_536;
+
 function recordDeleteOk(mixed $data = null): never {
     echo json_encode(['ok' => true, 'data' => $data]);
     exit;
@@ -28,7 +30,6 @@ if (!isAuthorizedToken($token, false)) recordDeleteFail('Unauthorised', 401);
 
 $body = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    const RECORD_DELETE_MAX_REQUEST_BYTES = 65_536;
     $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
     if ($contentLength > RECORD_DELETE_MAX_REQUEST_BYTES) recordDeleteFail('Request too large', 413);
     $raw = file_get_contents('php://input', false, null, 0, RECORD_DELETE_MAX_REQUEST_BYTES + 1);
