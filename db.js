@@ -6,8 +6,16 @@ const API = '/api.php';
 const RECORD_API = '/record.php';
 
 function getStoredAuth() {
-    try { return JSON.parse(localStorage.getItem('jh_auth') || 'null') || {}; }
-    catch { return {}; }
+    try {
+        const raw = localStorage.getItem('jh_auth') || sessionStorage.getItem('jh_auth') || 'null';
+        return JSON.parse(raw) || {};
+    } catch { return {}; }
+}
+
+function storeAuthSession(sessionToken) {
+    const payload = JSON.stringify({ sessionToken: sessionToken || '', ts: Date.now() });
+    try { localStorage.setItem('jh_auth', payload); } catch {}
+    try { sessionStorage.setItem('jh_auth', payload); } catch {}
 }
 
 // All authenticated API calls use the random, expiring server session token.
@@ -170,20 +178,44 @@ async function dbVerifyPin(pin) {
     return data?.session_token || null;
 }
 
-async function dbChangePin(newPin) {
-    const token = await waitForToken();
-    const res = await fetch('/auth-v2.php?action=change_pin', {
+// Recovery-only helper. While the PIN gate is deliberately disabled, always make
+// sure Change PIN has a fresh valid server session instead of depending on an
+// earlier page-load race or one particular browser storage implementation.
+async function acquireTemporaryRecoverySession() {
+    const res = await fetch('/auth-v2.php?action=temporary_access', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
-        body: JSON.stringify({ new_pin: newPin }),
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        credentials: 'same-origin',
+        body: '{}',
     });
     const data = await parseJsonResponse(res);
-    if (data?.session_token) {
-        localStorage.setItem('jh_auth', JSON.stringify({
-            sessionToken: data.session_token,
-            ts: Date.now(),
-        }));
+    const token = data?.session_token || '';
+    if (!/^[a-f0-9]{64}$/i.test(token)) throw new Error('Could not establish a recovery session');
+    storeAuthSession(token);
+    return token;
+}
+
+async function dbChangePin(newPin) {
+    let token = await waitForToken(1500);
+    if (!token) token = await acquireTemporaryRecoverySession();
+
+    const sendChange = currentToken => fetch('/auth-v2.php?action=change_pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': currentToken },
+        cache: 'no-store',
+        credentials: 'same-origin',
+        body: JSON.stringify({ new_pin: newPin }),
+    });
+
+    let res = await sendChange(token);
+    if (res.status === 401) {
+        token = await acquireTemporaryRecoverySession();
+        res = await sendChange(token);
     }
+
+    const data = await parseJsonResponse(res);
+    if (data?.session_token) storeAuthSession(data.session_token);
     return data;
 }
 
