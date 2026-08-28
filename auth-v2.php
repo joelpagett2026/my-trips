@@ -28,6 +28,43 @@ function validatedPin(array $body, string $field): string {
     return $pin;
 }
 
+/**
+ * Recovery helper for a server-only bootstrap PIN hash.
+ *
+ * A configured PIN_HASH may be used exactly once to recover access if the DB
+ * pin_hash is missing, stale or was written incorrectly during migration. On a
+ * successful bootstrap login we synchronise the DB hash and permanently mark the
+ * bootstrap as consumed, so the old server bootstrap cannot resurrect later
+ * after the user changes their PIN.
+ */
+function tryBootstrapPinRecovery(string $submittedHash): bool {
+    $bootstrap = configuredPinHash();
+    if ($bootstrap === null || !hash_equals($bootstrap, $submittedHash)) return false;
+
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $check = $pdo->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_bootstrap_consumed' LIMIT 1 FOR UPDATE");
+        $check->execute();
+        $row = $check->fetch();
+        if ($row && trim((string)($row['value'] ?? '')) === '1') {
+            $pdo->rollBack();
+            return false;
+        }
+
+        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
+            ->execute([$submittedHash, $submittedHash]);
+        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed', '1') ON DUPLICATE KEY UPDATE `value` = '1'")
+            ->execute();
+        $pdo->exec('DELETE FROM auth_attempts');
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        return false;
+    }
+}
+
 $raw = file_get_contents('php://input');
 $body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) authFail('Invalid JSON body');
@@ -42,7 +79,32 @@ if ($action === 'login') {
 
         $pin = validatedPin($body, 'pin');
         $submittedHash = hash('sha256', $pin);
-        if (!hash_equals(activePinHash(), $submittedHash)) {
+
+        $matched = false;
+        try {
+            $matched = hash_equals(activePinHash(), $submittedHash);
+        } catch (Throwable $e) {
+            // A stale/missing settings row can be recovered only by the one-time
+            // server bootstrap path below.
+            $matched = false;
+        }
+
+        if (!$matched) {
+            $matched = tryBootstrapPinRecovery($submittedHash);
+        } else {
+            // If the normal DB PIN happens to equal the server bootstrap PIN,
+            // consume the bootstrap on this successful login as well so it can
+            // never become a later fallback after a PIN change.
+            $bootstrap = configuredPinHash();
+            if ($bootstrap !== null && hash_equals($bootstrap, $submittedHash)) {
+                try {
+                    db()->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed', '1') ON DUPLICATE KEY UPDATE `value` = '1'")
+                        ->execute();
+                } catch (Throwable $e) {}
+            }
+        }
+
+        if (!$matched) {
             recordFailedLogin();
             authFail('Incorrect PIN', 401);
         }
@@ -88,6 +150,8 @@ if ($action === 'change_pin') {
 
         $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_hash', ?) ON DUPLICATE KEY UPDATE `value` = ?")
             ->execute([$newHash, $newHash]);
+        $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('pin_bootstrap_consumed', '1') ON DUPLICATE KEY UPDATE `value` = '1'")
+            ->execute();
 
         // PIN update + old-session revocation + replacement-session creation are
         // one transaction. A partial failure cannot leave a changed PIN with old
