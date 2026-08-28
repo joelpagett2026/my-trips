@@ -6,6 +6,8 @@ const AUTH_SESSION_TTL_SECONDS = 43200; // 12 hours
 const AUTH_MAX_FAILURES = 8;
 const AUTH_FAILURE_WINDOW_SECONDS = 900; // 15 minutes
 
+// Retained as a server-only provisioning helper for fresh installs. Normal login
+// no longer falls back to this value once the application is configured.
 function configuredPinHash(): ?string {
     if (defined('PIN_HASH')) {
         $hash = strtolower(trim((string)PIN_HASH));
@@ -20,11 +22,10 @@ function configuredPinHash(): ?string {
 }
 
 function activePinHash(): string {
-    // The database value is authoritative once a PIN has been set through the
-    // Settings screen. A server-only PIN_HASH is only a bootstrap value for a
-    // healthy database that does not yet contain a valid PIN row.
+    // The database value is authoritative. A missing/invalid row or database read
+    // error fails closed instead of reviving any old server bootstrap PIN.
     try {
-        $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash'");
+        $stmt = db()->prepare("SELECT `value` FROM settings WHERE `key` = 'pin_hash' LIMIT 1");
         $stmt->execute();
         $row = $stmt->fetch();
         if ($row && is_string($row['value'])) {
@@ -32,15 +33,10 @@ function activePinHash(): string {
             if (preg_match('/^[a-f0-9]{64}$/', $hash)) return $hash;
         }
     } catch (Throwable $e) {
-        // Never fall back to the bootstrap PIN when the authoritative settings
-        // store cannot be read. Doing so could temporarily resurrect an old PIN
-        // after the user has changed it.
         throw new RuntimeException('Could not read the configured PIN', 0, $e);
     }
 
-    $bootstrap = configuredPinHash();
-    if ($bootstrap !== null) return $bootstrap;
-    throw new RuntimeException('No PIN hash is configured on the server');
+    throw new RuntimeException('No valid database PIN is configured');
 }
 
 function ensureAuthTables(): void {
@@ -135,8 +131,6 @@ function issueAuthSession(): string {
     ensureAuthTables();
     $token = bin2hex(random_bytes(32));
     $hash = hash('sha256', $token);
-    // Use database time for both creation and validation so PHP/DB timezone
-    // differences can never shorten or extend the 12-hour session unexpectedly.
     db()->prepare('INSERT INTO auth_sessions (token_hash, expires_at, last_seen_at) VALUES (?, DATE_ADD(NOW(), INTERVAL 12 HOUR), NOW())')
         ->execute([$hash]);
     return $token;
@@ -174,8 +168,6 @@ function isValidAuthSession(string $token): bool {
         return false;
     }
 
-    // last_seen_at is diagnostic only; a write on every API request creates
-    // unnecessary DB load. Refresh it at most once every five minutes.
     try {
         db()->prepare('UPDATE auth_sessions SET last_seen_at = NOW() WHERE token_hash = ? AND (last_seen_at IS NULL OR last_seen_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE))')
             ->execute([$hash]);
@@ -184,8 +176,6 @@ function isValidAuthSession(string $token): bool {
 }
 
 function isAuthorizedToken(string $token, bool $unusedLegacyFlag = false): bool {
-    // Second argument remains accepted while staged callers are migrated. It no
-    // longer enables any alternate credential path.
     return $token !== '' && isValidAuthSession($token);
 }
 
