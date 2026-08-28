@@ -10,6 +10,11 @@
     } catch { return ''; }
   };
 
+  function pinErrorMessage(error, fallback) {
+    const message = error && typeof error.message === 'string' ? error.message.trim() : '';
+    return message || fallback;
+  }
+
   // Normal Change PIN flow: verify the current PIN first, then collect and confirm
   // the replacement. All PIN comparison/hashing happens on the server.
   window.handlePinDigit = async function handlePinDigit(n) {
@@ -25,9 +30,10 @@
         const verified = await dbVerifyPin(pinEntered);
         if (!verified) throw new Error('Incorrect PIN');
         flashDots('#34c759', () => { pinStep = 'new'; updatePinUI(); });
-      } catch {
+      } catch (e) {
+        const message = pinErrorMessage(e, 'Could not verify PIN');
         flashDots('#ff3b30', () => {
-          document.getElementById('pin-panel-error').textContent = 'Incorrect PIN';
+          document.getElementById('pin-panel-error').textContent = message;
         });
       }
       return;
@@ -55,9 +61,10 @@
           closePanel('pin');
           setTimeout(() => alert('PIN changed successfully!'), 300);
         });
-      } catch {
+      } catch (e) {
+        const message = pinErrorMessage(e, 'Could not save the new PIN');
         flashDots('#ff3b30', () => {
-          document.getElementById('pin-panel-error').textContent = 'Error saving PIN';
+          document.getElementById('pin-panel-error').textContent = message;
         });
       }
     }
