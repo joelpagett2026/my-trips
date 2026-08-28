@@ -15,6 +15,7 @@ def require(condition: bool, message: str) -> None:
 
 
 checks = {
+    "api.php": ("API_MAX_REQUEST_BYTES", 262_144),
     "auth-v2.php": ("AUTH_MAX_REQUEST_BYTES", 16_384),
     "record.php": ("RECORD_MAX_REQUEST_BYTES", 8_000_000),
     "trip-create.php": ("TRIP_CREATE_MAX_REQUEST_BYTES", 3_000_000),
@@ -37,5 +38,9 @@ require("expected_version" in record and "FOR UPDATE" in record,
 trip_create = read("trip-create.php")
 require("2_500_000" in trip_create,
         "trip creation must retain the independent cover-photo size cap")
+
+api = read("api.php")
+require("case 'save':" not in api and "case 'create_page':" not in api,
+        "general API body limits must not revive retired whole-record/trip creation writes")
 
 print("request body limit contracts: ok")
