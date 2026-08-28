@@ -24,7 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') deleteTripFail('POST required', 405);
 $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
 if (!isAuthorizedToken($token, false)) deleteTripFail('Unauthorised', 401);
 
-$body = json_decode(file_get_contents('php://input') ?: '{}', true);
+const TRIP_DELETE_MAX_REQUEST_BYTES = 65_536;
+$contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+if ($contentLength > TRIP_DELETE_MAX_REQUEST_BYTES) deleteTripFail('Request too large', 413);
+$raw = file_get_contents('php://input', false, null, 0, TRIP_DELETE_MAX_REQUEST_BYTES + 1);
+if ($raw === false) deleteTripFail('Could not read request body');
+if (strlen($raw) > TRIP_DELETE_MAX_REQUEST_BYTES) deleteTripFail('Request too large', 413);
+$body = json_decode($raw ?: '{}', true);
 if (!is_array($body)) deleteTripFail('Invalid JSON body');
 
 $id = strtolower(trim((string)($body['id'] ?? '')));
