@@ -62,6 +62,10 @@ jobs:
         run: |
           python scripts/validate-security.py
 
+      - name: Validate request body limit contracts
+        run: |
+          python scripts/validate-request-limits.py
+
       - name: Validate authentication atomicity contracts
         run: |
           python scripts/validate-auth-atomic.py
