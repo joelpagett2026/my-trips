@@ -9,10 +9,9 @@ Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# TEMPORARY PIN RECOVERY: render the homepage through settings.php so the HTML
-# receives a cache-busted no-gate auth.js URL. Remove this rule when the new PIN
-# has been saved and the normal gate is restored.
-RewriteRule ^$ settings.php?view=home [L,QSA]
+# Render the homepage through a small PHP shell so critical auth/database assets
+# always receive fresh version URLs after a security deployment.
+RewriteRule ^$ home.php [L,QSA]
 
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
 RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
@@ -78,9 +77,6 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 </IfModule>
 
 <IfModule mod_headers.c>
-  # The app uses bearer tokens in a custom header and has no supported
-  # cross-origin API clients. Strip permissive PHP CORS headers at the web edge
-  # so another origin cannot turn a leaked token into a browser-readable API.
   <FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$">
     Header always unset Access-Control-Allow-Origin
     Header always unset Access-Control-Allow-Credentials
