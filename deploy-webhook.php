@@ -151,6 +151,7 @@ $coreFiles = [
     'template-runtime.php',
     'auth-v2.php',
     'pin-recovery.php',
+    'auth-diagnostic.php',
     'record.php',
     'record-delete.php',
     'trip-create.php',
