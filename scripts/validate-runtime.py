@@ -67,6 +67,14 @@ require("applyTripsDashboardRuntimeSafety" in trips_renderer,
         "trips.php must inject safe dashboard runtime configuration")
 require("travel_day_filter_rewritten" in trips_renderer and "travel day" in runtime.lower(),
         "dashboard Travel Day filtering must happen at render source")
+require("registry_error_handling_rewritten" in trips_renderer and "countdown_registry_error_rewritten" in trips_renderer,
+        "trips.php must fail closed if dashboard registry reliability rewrites drift")
+require("try{ return await window.dbLoadRegistry(); }catch{ return []; }" in dashboard,
+        "dashboard compatibility source changed; update the registry reliability rewrite deliberately")
+require("Couldn’t load itineraries. Your saved trips have not been changed." in runtime,
+        "rendered dashboard must surface registry failures instead of pretending the registry is empty")
+require("Couldn’t save itinerary changes. Nothing was overwritten." in runtime and "throw err" in runtime,
+        "rendered dashboard must surface registry save failures instead of swallowing them")
 require("removeTravelDayFrontCardTags" not in auth and "MutationObserver" not in auth,
         "auth.js must not contain dashboard presentation patches")
 
