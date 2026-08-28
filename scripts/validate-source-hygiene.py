@@ -15,8 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 SKIP_DIRS = {".git", "node_modules", "vendor", "__pycache__"}
 SKIP_FILES = {
-    # This validator itself necessarily contains the detection regexes below.
+    # The validator contains its own detection regexes. The disposable migration
+    # helper contains generic old-pattern/test-fixture text and is deleted before
+    # the cleanup commit is made.
     Path("scripts/validate-source-hygiene.py"),
+    Path("scripts/apply-source-hygiene.py"),
 }
 TEXT_EXTENSIONS = {
     ".html", ".htm", ".js", ".mjs", ".cjs", ".css", ".php", ".py",
