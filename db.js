@@ -85,6 +85,7 @@ async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
 
 const _recordVersions = new Map();
 const _dbSaveQueues = new Map();
+const _recordConflicts = new Set();
 
 if (typeof window !== 'undefined' && !(window.__mytripsLoadedRecords instanceof Map)) {
     window.__mytripsLoadedRecords = new Map();
@@ -100,14 +101,23 @@ function noteRecordLoaded(id, data) {
     }
 }
 
+function staleRecordError(id) {
+    const err = new Error('A newer version exists. Reload before saving again.');
+    err.status = 409;
+    err.data = { id, reload_required: true };
+    return err;
+}
+
 async function dbLoad(id) {
     const result = await recordCall('load', { id });
     if (!result) {
         _recordVersions.set(id, null);
+        _recordConflicts.delete(id);
         noteRecordLoaded(id, null);
         return null;
     }
     _recordVersions.set(id, result.version || null);
+    _recordConflicts.delete(id);
     noteRecordLoaded(id, result.data);
     return result.data;
 }
@@ -120,6 +130,12 @@ function dbSave(id, data, options = {}) {
 
     const run = previous.catch(() => {}).then(async () => {
         if (!_recordVersions.has(id)) await dbLoad(id);
+
+        // Once the server has rejected a stale write, do not keep sending queued
+        // autosaves based on the same stale version. A deliberate dbLoad (normally
+        // a page reload) clears this latch after observing the authoritative state.
+        if (_recordConflicts.has(id)) throw staleRecordError(id);
+
         const expectedVersion = _recordVersions.get(id);
         try {
             const result = await recordCall('save', {}, {
@@ -128,10 +144,15 @@ function dbSave(id, data, options = {}) {
                 expected_version: expectedVersion,
             }, saveOptions);
             _recordVersions.set(id, result?.version || null);
+            _recordConflicts.delete(id);
             return result;
         } catch (err) {
-            if (err && err.status === 409 && typeof document !== 'undefined') {
-                document.dispatchEvent(new CustomEvent('mytrips:save-conflict', { detail: { id } }));
+            if (err && err.status === 409) {
+                const firstConflict = !_recordConflicts.has(id);
+                _recordConflicts.add(id);
+                if (firstConflict && typeof document !== 'undefined') {
+                    document.dispatchEvent(new CustomEvent('mytrips:save-conflict', { detail: { id } }));
+                }
             }
             throw err;
         }
@@ -146,6 +167,7 @@ function dbSave(id, data, options = {}) {
 async function dbDelete(id) {
     const result = await apiCall('delete', { id }, null, 'DELETE');
     _recordVersions.delete(id);
+    _recordConflicts.delete(id);
     if (typeof window !== 'undefined' && window.__mytripsLoadedRecords instanceof Map) {
         window.__mytripsLoadedRecords.delete(id);
     }
