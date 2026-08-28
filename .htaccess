@@ -9,6 +9,11 @@ Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
+# TEMPORARY PIN RECOVERY: render the homepage through settings.php so the HTML
+# receives a cache-busted no-gate auth.js URL. Remove this rule when the new PIN
+# has been saved and the normal gate is restored.
+RewriteRule ^$ settings.php?view=home [L,QSA]
+
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
 RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
 
