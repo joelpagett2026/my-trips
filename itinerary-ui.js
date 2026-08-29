@@ -57,7 +57,11 @@
     if (window.__itineraryCompletionInstalled) return;
     window.__itineraryCompletionInstalled = true;
 
-    const eligibleTypes = new Set(['act', 'ticket', 'attraction']);
+    // `place` is the current Point of Interest type; `act` is retained for
+    // legacy POIs. Ticket/attraction are the green attraction records.
+    const eligibleTypes = new Set(['place', 'act', 'ticket', 'attraction']);
+    const isEligible = item => !!item && eligibleTypes.has(item.type);
+
     const style = document.createElement('style');
     style.id = 'itinerary-completion-style';
     style.textContent = `
@@ -83,12 +87,78 @@
       .tl-item.tl-completed .badge {opacity:.52;filter:grayscale(.28);}
       .tl-item.tl-completed .tl-dot {background:#aeb8bb !important;box-shadow:none !important;}
       .tl-item.tl-completed .tl-title {color:var(--text2);}
+      #ts-completion-reset .ts-completion-copy {font-size:10.5px;color:var(--text3);line-height:1.5;margin-bottom:8px;}
+      #ts-completion-reset .ts-completion-status {font-size:10.5px;color:var(--text3);margin-top:7px;}
       @media (max-width:700px) {
         .tl-complete-btn {width:34px;height:34px;flex-basis:34px;margin-left:0;}
         .tl-complete-btn svg {width:15px;height:15px;}
       }
     `;
     document.head.appendChild(style);
+
+    function completedCount() {
+      if (typeof STATE === 'undefined' || !Array.isArray(STATE.days)) return 0;
+      let count = 0;
+      STATE.days.forEach(day => (day.items || []).forEach(item => {
+        if (isEligible(item) && item.completed === true) count++;
+      }));
+      return count;
+    }
+
+    function updateResetControl(message) {
+      const button = document.getElementById('ts-reset-completed-btn');
+      const status = document.getElementById('ts-completion-status');
+      if (!button || !status) return;
+      const count = completedCount();
+      button.disabled = count === 0;
+      button.style.opacity = count === 0 ? '.55' : '1';
+      button.style.cursor = count === 0 ? 'default' : 'pointer';
+      if (message) {
+        status.textContent = message;
+      } else if (count === 0) {
+        status.textContent = 'No Points of Interest or Attractions are currently marked complete.';
+      } else {
+        status.textContent = `${count} item${count === 1 ? '' : 's'} currently marked complete.`;
+      }
+    }
+
+    function resetCompletedItems() {
+      const count = completedCount();
+      if (!count) return;
+      const confirmed = confirm(`Reset ${count} completed item${count === 1 ? '' : 's'}? This will mark all Points of Interest and Attractions as not done.`);
+      if (!confirmed) return;
+
+      if (typeof takeSnapshot === 'function') takeSnapshot();
+      STATE.days.forEach(day => (day.items || []).forEach(item => {
+        if (isEligible(item) && item.completed === true) delete item.completed;
+      }));
+      if (typeof scheduleSave === 'function') scheduleSave();
+      if (typeof renderTimeline === 'function') renderTimeline();
+      updateResetControl('All completed Points of Interest and Attractions have been reset.');
+    }
+
+    function installResetControl() {
+      const overlay = document.getElementById('trip-settings-overlay');
+      const body = overlay?.querySelector('.modal-body');
+      if (!body || document.getElementById('ts-completion-reset')) return;
+
+      const dangerLabel = [...body.querySelectorAll('.field-label')]
+        .find(label => label.textContent.trim().toLowerCase() === 'danger zone');
+      const dangerGroup = dangerLabel?.closest('.field-group');
+      const group = document.createElement('div');
+      group.className = 'field-group';
+      group.id = 'ts-completion-reset';
+      group.style.cssText = 'border-top:1px solid var(--line);padding-top:13px;';
+      group.innerHTML = `
+        <label class="field-label">Completed itinerary items</label>
+        <div class="ts-completion-copy">Reset all completed Points of Interest and Attractions back to their normal, unticked state. This does not remove or change any itinerary items.</div>
+        <button class="modal-btn secondary" id="ts-reset-completed-btn" type="button" style="width:100%;">Reset completed items</button>
+        <div class="ts-completion-status" id="ts-completion-status"></div>`;
+      if (dangerGroup) body.insertBefore(group, dangerGroup);
+      else body.appendChild(group);
+      group.querySelector('#ts-reset-completed-btn')?.addEventListener('click', resetCompletedItems);
+      updateResetControl();
+    }
 
     function itemForRow(row) {
       if (typeof STATE === 'undefined' || typeof activeDay === 'undefined') return null;
@@ -112,7 +182,7 @@
 
       root.querySelectorAll('.tl-item').forEach(row => {
         const item = itemForRow(row);
-        if (!item || !eligibleTypes.has(item.type)) {
+        if (!isEligible(item)) {
           row.classList.remove('tl-completed');
           row.querySelector('.tl-complete-btn')?.remove();
           return;
@@ -128,10 +198,11 @@
             event.preventDefault();
             event.stopPropagation();
             const latest = itemForRow(row);
-            if (!latest || !eligibleTypes.has(latest.type)) return;
+            if (!isEligible(latest)) return;
             if (typeof takeSnapshot === 'function') takeSnapshot();
             latest.completed = latest.completed !== true;
             syncState(row, button, latest);
+            updateResetControl();
             if (typeof scheduleSave === 'function') scheduleSave();
           });
 
@@ -142,7 +213,10 @@
         }
         syncState(row, button, item);
       });
+      updateResetControl();
     }
+
+    installResetControl();
 
     const root = document.getElementById('tl-col');
     if (!root) return;
