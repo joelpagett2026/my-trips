@@ -93,8 +93,9 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 
 <IfModule mod_expires.c>
   ExpiresActive On
-  ExpiresByType text/javascript        "access plus 7 days"
-  ExpiresByType text/css               "access plus 7 days"
+  ExpiresByType text/javascript        "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/css               "access plus 1 year"
   ExpiresByType image/png              "access plus 30 days"
   ExpiresByType image/jpeg             "access plus 30 days"
   ExpiresByType image/webp             "access plus 30 days"
@@ -104,15 +105,18 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   ExpiresByType font/woff              "access plus 1 year"
 </IfModule>
 
-# Critical application behaviour changes frequently. These scripts control
-# authentication, record saving, conflict protection and itinerary presentation,
-# so never allow the generic seven-day JavaScript expiry to hide a new version.
-<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|trip-delete|budget-live-redesign|datepicker|settings-backup)\.js$">
-  Header set Cache-Control "no-cache, no-store, must-revalidate"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+# Static application assets are versioned in the renderer (for example ?v=<mtime>).
+# This lets repeat visits reuse local files without risking stale code after a deploy:
+# when a file changes, its URL changes and the browser fetches the new copy.
+<FilesMatch "\.(?:js|css)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
 </FilesMatch>
 
+<FilesMatch "\.(?:png|jpe?g|webp|svg|ico|woff2?|webmanifest)$">
+  Header set Cache-Control "public, max-age=2592000, stale-while-revalidate=86400"
+</FilesMatch>
+
+# HTML remains revalidated because it can contain fresh trip/runtime state.
 <FilesMatch "\.html$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
