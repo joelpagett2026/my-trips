@@ -59,7 +59,7 @@
       /* Keep the completion control crisp while gently receding the finished item. */
       .tl-item.tl-completed { background: rgba(0,0,0,.018); }
       .tl-item.tl-completed .tl-time,
-      .tl-item.tl-completed .tl-info,
+      .tl-item.tl-completed .tl-text,
       .tl-item.tl-completed .tl-ico,
       .tl-item.tl-completed .tl-price,
       .tl-item.tl-completed .tl-ticket-status,
