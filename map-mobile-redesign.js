@@ -1,10 +1,9 @@
 // MY TRIPS — mobile map presentation layer
-// Keeps the existing Google Maps/data logic intact while giving the map view a
-// mobile-first layout: day tabs are the source of truth, category controls are
-// compact, the location list is hidden, and one selected-place card floats over
-// the bottom of the map.
+// Mobile map UX: compact filters, map-first layout, one bottom preview banner,
+// and the banner opens the item's existing detail drawer/modal.
 (function () {
   const MOBILE = '(max-width: 768px)';
+  let selectedMapListItem = null;
 
   function isMobile() {
     return window.matchMedia && window.matchMedia(MOBILE).matches;
@@ -13,6 +12,15 @@
   function mapVisible() {
     const view = document.getElementById('view-map');
     return !!view && getComputedStyle(view).display !== 'none';
+  }
+
+  function closeNativeMapPopup() {
+    if (!isMobile()) return;
+    try {
+      if (typeof _mapInfoWin !== 'undefined' && _mapInfoWin && typeof _mapInfoWin.close === 'function') {
+        _mapInfoWin.close();
+      }
+    } catch (_) {}
   }
 
   function injectStyles() {
@@ -28,10 +36,8 @@
           background: #fff !important;
         }
 
-        /* The day strip already controls the day. Remove the duplicate dropdown. */
         #view-map .mf-select { display: none !important; }
 
-        /* Controls become a single lightweight strip above the map. */
         #view-map .map-sidebar {
           width: 100% !important;
           height: 84px !important;
@@ -87,10 +93,8 @@
         }
         #view-map .mf-icon-wrap:has(.mf-icon-btn.active) { color: var(--mf-c); }
 
-        /* The old permanent card carousel is no longer part of the mobile layout. */
         #view-map .map-list { display: none !important; }
 
-        /* The map gets all remaining space. */
         #view-map #map-canvas {
           flex: 1 1 auto !important;
           min-height: 0 !important;
@@ -98,7 +102,6 @@
           height: auto !important;
         }
 
-        /* Single selected-place bottom sheet. */
         #map-mobile-place-card {
           position: absolute;
           left: 12px;
@@ -117,8 +120,11 @@
           box-shadow: 0 8px 28px rgba(21,45,55,.18);
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
         }
         #map-mobile-place-card.is-visible { display: flex; }
+        #map-mobile-place-card:active { transform: translateY(1px); }
         .mmc-accent {
           width: 42px;
           height: 42px;
@@ -158,7 +164,7 @@
           color: var(--text3);
           font-weight: 500;
         }
-        .mmc-close {
+        .mmc-open {
           width: 34px;
           height: 34px;
           flex: 0 0 34px;
@@ -169,9 +175,9 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
+          pointer-events: none;
         }
-        .mmc-close svg { width: 16px; height: 16px; }
+        .mmc-open svg { width: 16px; height: 16px; }
       }
     `;
     document.head.appendChild(style);
@@ -215,7 +221,9 @@
 
     card = document.createElement('div');
     card.id = 'map-mobile-place-card';
-    card.setAttribute('role', 'status');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', 'Open location details');
     card.innerHTML = `
       <div class="mmc-accent" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.2"></circle></svg>
@@ -225,10 +233,18 @@
         <div class="mmc-name"></div>
         <div class="mmc-meta"></div>
       </div>
-      <button class="mmc-close" type="button" aria-label="Close location card">
+      <div class="mmc-open" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg>
-      </button>`;
-    card.querySelector('.mmc-close').addEventListener('click', () => card.classList.remove('is-visible'));
+      </div>`;
+
+    const open = () => openSelectedItemDetails();
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open();
+      }
+    });
     view.appendChild(card);
     return card;
   }
@@ -250,6 +266,7 @@
     if (!card) return;
     const name = item.querySelector('.ml-name')?.textContent?.trim();
     if (!name) return;
+    selectedMapListItem = item;
     const meta = item.querySelector('.ml-meta')?.textContent?.trim() || '';
     const [type, color] = typeFromItem(item);
     card.querySelector('.mmc-name').textContent = name;
@@ -258,6 +275,51 @@
     card.querySelector('.mmc-type').style.color = color;
     card.querySelector('.mmc-accent').style.background = color;
     card.classList.add('is-visible');
+    closeNativeMapPopup();
+    setTimeout(closeNativeMapPopup, 0);
+  }
+
+  function resolveSelectedItem() {
+    if (!selectedMapListItem) return null;
+    const name = selectedMapListItem.querySelector('.ml-name')?.textContent?.trim() || '';
+    const meta = selectedMapListItem.querySelector('.ml-meta')?.textContent?.trim() || '';
+    if (!name) return null;
+
+    const dayMatch = meta.match(/Day\s+(\d+)/i);
+    if (dayMatch) {
+      const dayIdx = Math.max(0, parseInt(dayMatch[1], 10) - 1);
+      const items = (typeof STATE !== 'undefined' && STATE.days?.[dayIdx]?.items) || [];
+      const itemIdx = items.findIndex(it => it && it.title === name);
+      if (itemIdx >= 0) return { kind: 'item', dayIdx, itemIdx };
+    }
+
+    const hotels = (typeof STATE !== 'undefined' && STATE.meta?.hotels) || [];
+    const hotelIdx = hotels.findIndex(h => h && h.name === name);
+    if (hotelIdx >= 0) return { kind: 'hotel', hotelIdx };
+    return null;
+  }
+
+  function openSelectedItemDetails() {
+    const resolved = resolveSelectedItem();
+    if (!resolved) return;
+    closeNativeMapPopup();
+
+    if (resolved.kind === 'item') {
+      try {
+        if (typeof openDrawerItem === 'function') {
+          openDrawerItem(resolved.dayIdx, resolved.itemIdx);
+          return;
+        }
+      } catch (_) {}
+    }
+
+    if (resolved.kind === 'hotel') {
+      try {
+        if (typeof openHotelModal === 'function') {
+          openHotelModal(resolved.hotelIdx);
+        }
+      } catch (_) {}
+    }
   }
 
   function syncSelectedCard() {
@@ -279,8 +341,10 @@
     if (typeof window.setMapFilter !== 'function' && typeof setMapFilter !== 'function') return;
     const day = currentDayIndex();
     try { (window.setMapFilter || setMapFilter)('day', String(day)); } catch (_) {}
+    selectedMapListItem = null;
     const card = document.getElementById('map-mobile-place-card');
     card?.classList.remove('is-visible');
+    closeNativeMapPopup();
   }
 
   function installObservers() {
