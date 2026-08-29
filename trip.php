@@ -128,10 +128,11 @@ HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 
 // Keep the current authenticated session when navigating from the homepage or
-// dashboard into a trip. Dynamic version URLs prevent an older cached auth.js or
-// db.js from relocking the page and asking for the PIN a second time.
+// dashboard into a trip. Dynamic version URLs prevent older cached scripts from
+// relocking the page or leaving the mobile map redesign stale.
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$mapVersion = @filemtime(__DIR__ . '/map-mobile-redesign.js') ?: time();
 $completionVersion = @filemtime(__DIR__ . '/itinerary-completion.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
@@ -139,7 +140,7 @@ $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
-  . '<script src="/map-mobile-redesign.js?v=1"></script>' . "\n"
+  . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
