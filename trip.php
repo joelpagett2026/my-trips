@@ -139,6 +139,7 @@ $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
+  . '<script src="/map-mobile-redesign.js?v=1"></script>' . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
