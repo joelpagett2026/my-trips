@@ -1443,18 +1443,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .bk-hotel-pill svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .bk-hotel-pill--confirmed { background:var(--bk-badge); border-color:transparent; color:var(--bk-c); }
 
-/* Transport — matches the approved bookings-transport-ui preview:
-   Flights and every individual Other Transport journey share one row
-   style (icon box, title, meta, price, chevron); Other Transport
-   journeys sit grouped under a mode sub-heading (reusing .bk-col-subhead,
-   same plain text style as "Other Transport" itself, no highlight box)
-   rather than collapsed into a single total. */
-.bk-t-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; transition:background 0.12s; }
-.bk-t-row + .bk-t-row { border-top:1px solid var(--line); }
-.bk-t-row:hover { background:var(--bk-badge); }
-.bk-t-ico { width:30px; height:30px; border-radius:8px; background:var(--bk-badge); color:var(--bk-c); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.bk-t-ico svg { width:15px; height:15px; }
-.bk-t-title { font-size:13px; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:5px; }
+/* Transport — Flights use their own .bk-flight-row layout (roomier card);
+   Other Transport journeys use .bk-attr-row (same as Attractions) matching
+   the other columns' consistent style. Old .bk-t-row removed. */
 .bk-t-chev { font-size:20px; font-weight:400; color:#82939b; line-height:1; }
 
 /* Flights — a roomier two-line card (approved bookings-transport-ui
