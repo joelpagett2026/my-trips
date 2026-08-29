@@ -1,14 +1,193 @@
-name: Deploy to joelpagett.co.uk
+name: Validate and deploy joelpagett.co.uk
 
 on:
   push:
     branches:
       - main
+      - 'stability-hardening-*'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy webhook
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Validate JavaScript syntax
         run: |
-          curl -f "https://joelpagett.co.uk/deploy-webhook.php?key=${{ secrets.DEPLOY_KEY }}"
+          node --check auth.js
+          node --check db.js
+          node --check itinerary-state-guard.js
+          node --check itinerary-ui.js
+          node --check trip-dashboard-create.js
+          node --check trip-delete.js
+          node --check settings-backup.js
+          node --check datepicker.js
+          node --check budget-live-redesign.js
+
+      - name: Validate PHP syntax
+        run: |
+          php -l api.php
+          php -l auth-v2.php
+          php -l auth-session.php
+          php -l record.php
+          php -l record-delete.php
+          php -l trip-create.php
+          php -l trip-delete.php
+          php -l place-photo.php
+          php -l backup-export.php
+          php -l home.php
+          php -l settings.php
+          php -l db-config.php
+          php -l template-runtime.php
+          php -l deploy-webhook.php
+          php -l trip.php
+          php -l share.php
+          php -l trips.php
+          php -l parks-map.php
+          php -l scripts/validate-renderers.php
+
+      - name: Validate web app manifest JSON
+        run: python -m json.tool manifest.webmanifest >/dev/null
+
+      - name: Validate source credential hygiene
+        run: python scripts/validate-source-hygiene.py
+
+      - name: Validate backup recovery readiness
+        run: |
+          python -m py_compile scripts/check-backup-recovery.py
+          python scripts/check-backup-recovery.py --self-test
+
+      - name: Validate runtime contracts
+        run: python scripts/validate-runtime.py
+
+      - name: Validate share privacy contracts
+        run: python scripts/validate-share.py
+
+      - name: Validate focused security contracts
+        run: python scripts/validate-security.py
+
+      - name: Validate response header contracts
+        run: python scripts/validate-response-headers.py
+
+      - name: Validate request body limit contracts
+        run: python scripts/validate-request-limits.py
+
+      - name: Validate reduced API surface
+        run: python scripts/validate-api-surface.py
+
+      - name: Validate deployment database guard
+        run: python scripts/validate-deploy-data-guard.py
+
+      - name: Validate stale save conflict latching
+        run: python scripts/validate-save-conflicts.py
+
+      - name: Validate authentication atomicity contracts
+        run: python scripts/validate-auth-atomic.py
+
+      - name: Validate backup consistency contracts
+        run: python scripts/validate-backup.py
+
+      - name: Validate atomic trip creation contracts
+        run: python scripts/validate-trip-create.py
+
+      - name: Validate atomic trip deletion contracts
+        run: python scripts/validate-trip-delete.py
+
+      - name: Execute renderer integration contracts
+        run: php scripts/validate-renderers.php
+
+  deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy webhook and verify production database
+        run: |
+          curl --fail --show-error --silent --retry 2 --retry-delay 3 \
+            --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+            --output /tmp/deploy.json \
+            "https://joelpagett.co.uk/deploy-webhook.php"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/deploy.json').read_text())
+          if payload.get('ok') is not True:
+              raise SystemExit('deploy webhook did not report success')
+          count = payload.get('registry_trip_count')
+          if not isinstance(count, int) or count < 1:
+              raise SystemExit('deploy webhook did not verify a non-empty production trip registry')
+          failed = payload.get('failed')
+          if failed:
+              raise SystemExit('deploy webhook reported failed file copies')
+          print(f'deployed against verified database with {count} active itineraries')
+          PY
+
+      - name: Verify restored PIN gate runtime
+        run: |
+          curl --fail --show-error --silent \
+            --dump-header /tmp/home.headers \
+            "https://joelpagett.co.uk/" \
+            --output /tmp/home.html
+          grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/home.html
+          grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/home.html
+          grep -Eiq '^x-content-type-options:[[:space:]]*nosniff[[:space:]]*$' /tmp/home.headers
+          grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin[[:space:]]*$' /tmp/home.headers
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/trips/" \
+            --output /tmp/trips.html
+          grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trips.html
+          grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trips.html
+          grep -q 'Your saved trips have not been changed' /tmp/trips.html
+          if grep -q 'try{ return await window.dbLoadRegistry(); }catch{ return \[\]; }' /tmp/trips.html; then
+            echo 'live dashboard is still swallowing registry failures as an empty trip list'
+            exit 1
+          fi
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/porto-2026" \
+            --output /tmp/trip.html
+          grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
+          grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/auth.js?verify-restored-gate=1" \
+            --output /tmp/auth.js
+          grep -q 'Enter your PIN to continue' /tmp/auth.js
+          if grep -q 'temporary_access' /tmp/auth.js; then
+            echo 'temporary access code is still present in auth.js'
+            exit 1
+          fi
+
+          temp_status=$(curl --show-error --silent \
+            --output /tmp/temp-access.json \
+            --write-out "%{http_code}" \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            "https://joelpagett.co.uk/auth-v2.php?action=temporary_access")
+          test "$temp_status" = "404"
+
+          record_status=$(curl --show-error --silent \
+            --output /tmp/record-unauth.json \
+            --write-out "%{http_code}" \
+            "https://joelpagett.co.uk/record.php?action=load&id=trip-registry")
+          test "$record_status" = "401"
+
+          check_status=$(curl --show-error --silent \
+            --output /tmp/check-unauth.json \
+            --write-out "%{http_code}" \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            "https://joelpagett.co.uk/auth-v2.php?action=check")
+          test "$check_status" = "401"
+
+          echo 'PIN gate + response headers + dashboard session runtime + protected APIs: ok'

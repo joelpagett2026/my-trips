@@ -1,0 +1,25 @@
+name: Validate backup recovery readiness
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  recovery-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Validate recovery checker syntax
+        run: python -m py_compile scripts/check-backup-recovery.py
+
+      - name: Exercise recovery checker fixtures
+        run: python scripts/check-backup-recovery.py --self-test

@@ -863,7 +863,7 @@ const SHARE_VIEW_ACTIVE = _shareParams.has('share') && !!SHARE_TOKEN;
 // ────────────────────────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────────────────────────
-const AUTH_TOKEN = '06843e3f58776ec2eb5e0cc7a44a3c3fc1b4b9af2e75504da3d299dc566cc395';
+const AUTH_TOKEN = '__DISABLED_LEGACY_AUTH_TOKEN__';
 let STATE = { days: [], meta: { dest, dep, ret, trav, status, hotel: null, budget: null } };
 let activeDay = 0;
 let currentMode = 'plan';
@@ -5002,7 +5002,7 @@ function setBookingsFilter(key) {
 }
 
 // ── MAP VIEW ─────────────────────────────────────────────────────────
-const MAPS_API_KEY = 'AIzaSyCHugrVDRAxQqa7Sd45KICrLMWRoJmR7U8';
+const MAPS_API_KEY = '__MAPS_BROWSER_KEY__';
 let _mapInstance = null;
 let _mapMarkers  = [];
 let _mapInfoWin  = null;

@@ -8,6 +8,7 @@
 // to every trip automatically.
 // ══════════════════════════════════════════════════════════════════════
 require_once __DIR__ . '/db-config.php';
+require_once __DIR__ . '/template-runtime.php';
 
 header('Content-Type: text/html; charset=UTF-8');
 header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -58,45 +59,22 @@ $templatePath = __DIR__ . '/new-trip-v2.html';
 $template = file_get_contents($templatePath);
 if ($template === false) { http_response_code(500); echo 'Template not found.'; exit; }
 
+// One central compatibility/safety pass is shared with read-only share pages.
+[$template, $runtimeDiag] = applyItineraryRuntimeSafety($template);
+if (($runtimeDiag['auth_const_removed'] ?? 0) !== 1
+    || ($runtimeDiag['auth_headers_rewritten'] ?? 0) < 1
+    || ($runtimeDiag['maps_key_rewritten'] ?? 0) !== 1
+    || ($runtimeDiag['share_url_rewritten'] ?? 0) !== 1
+    || ($runtimeDiag['hotel_lookup_rewritten'] ?? 0) !== 1) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because the shared template changed unexpectedly.';
+  exit;
+}
+
 $sourceBootstrap = "// Read URL params\nconst params = new URLSearchParams(window.location.search);\nconst dest   = params.get('dest') || 'New Trip';\nconst dep    = params.get('dep')  || '';\nconst ret    = params.get('ret')  || '';\nconst trav   = params.get('trav') || '2';\nconst status = params.get('status') || 'upcoming';\nconst slug   = params.get('slug') || 'new-trip';\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
 $tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)\nconst dest   = " . json_encode($dest) . ";\nconst dep    = " . json_encode($dep) . ";\nconst ret    = " . json_encode($ret) . ";\nconst trav   = " . json_encode($trav) . ";\nconst status = " . json_encode($status) . ";\nconst slug   = " . json_encode($slug) . ";\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
 $page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
 if ($count === 0) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
-
-$oldHotelLookup = <<<'JS'
-// Find the hotel covering the active day (checkin <= day <= checkout)
-function hotelForDay(dayIdx) {
-  if (STATE.days[dayIdx]?.noAccommodation) return null; // explicitly marked — staying with family/friends, or flying that day
-  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
-  if (!hotels.length) return null;
-  const dayDate = parseDate(STATE.days[dayIdx]?.date);
-  if (!dayDate) return hotels[0]; // no date — show first
-  for (const h of hotels) {
-    const ci = parseDate(h.checkin);
-    const co = parseDate(h.checkout);
-    if (ci && co && dayDate >= ci && dayDate <= co) return h;
-  }
-  // Fallback: closest upcoming
-  return hotels.find(h => parseDate(h.checkin) >= dayDate) || hotels[hotels.length-1];
-}
-JS;
-$newHotelLookup = <<<'JS'
-// Find the hotel covering the selected NIGHT (checkin <= day < checkout)
-function hotelForDay(dayIdx) {
-  if (STATE.days[dayIdx]?.noAccommodation) return null;
-  const hotels = STATE.meta.hotels || (STATE.meta.hotel ? [STATE.meta.hotel] : []);
-  if (!hotels.length) return null;
-  const dayDate = parseDate(STATE.days[dayIdx]?.date);
-  if (!dayDate) return null;
-  for (const h of hotels) {
-    const ci = parseDate(h.checkin);
-    const co = parseDate(h.checkout);
-    if (ci && co && dayDate >= ci && dayDate < co) return h;
-  }
-  return null;
-}
-JS;
-$page = str_replace($oldHotelLookup, $newHotelLookup, $page, $hotelLookupCount);
 
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
@@ -113,15 +91,61 @@ $standaloneHead = <<<'HTML'
   html.ios-standalone .v2-main, html.ios-standalone .v2-sidebar { height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; min-height:calc(100dvh + env(safe-area-inset-bottom,0px)) !important; }
   html.ios-standalone body::after { display:none !important; content:none !important; }
 
-  /* Mobile drawer hero: 180px desktop/base + 50px on mobile. */
   .dr-hero-photo { height:230px !important; }
-
   #dr-photo-slot[style*="display: block"] + .dr-head { padding-top:26px !important; }
   #dr-photo-slot[style*="display: block"] + .dr-head::before { top:9px !important; }
+
+  .modal-overlay {
+    overflow:hidden !important;
+    overscroll-behavior-x:none;
+    touch-action:pan-y;
+  }
+  .modal {
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    touch-action:pan-y;
+  }
+  .modal-body,
+  #modal-body-single,
+  #modal-body-bulk {
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow-x:hidden !important;
+    overscroll-behavior-x:none;
+    touch-action:pan-y;
+  }
+  .field-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; min-width:0; }
+  .field-group,
+  .field-input,
+  .field-select,
+  .field-textarea { min-width:0 !important; max-width:100% !important; }
 }
 </style>
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
-$page = str_replace('/auth.js?v=1', '/auth.js?v=2', $page);
+
+// Keep the current authenticated session when navigating from the homepage or
+// dashboard into a trip. Dynamic version URLs prevent an older cached auth.js or
+// db.js from relocking the page and asking for the PIN a second time.
+$authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
+$dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
+$page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
+$page = str_replace(
+  '</body>',
+  '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
+  . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
+  . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
+  $page,
+  $guardCount
+);
+if ($guardCount === 0) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because the page shell is incomplete.';
+  exit;
+}
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
 echo $page;

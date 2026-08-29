@@ -1,287 +1,173 @@
 // ══════════════════════════════════════════════════════════════════════
-//  MY TRIPS — Auth (PIN gate)
-//  Uses pure-JS SHA-256 so it works on HTTP and HTTPS
+// MY TRIPS — Auth (PIN gate)
+// The browser submits only the four PIN digits to the same-origin HTTPS auth
+// endpoint. The server hashes the PIN and issues a random expiring session token.
 // ══════════════════════════════════════════════════════════════════════
 
-// Read-only share links bypass the PIN entirely — the itinerary page
-// itself loads sanitized, read-only data via a token instead.
 const IS_SHARE_VIEW = new URLSearchParams(window.location.search).has('share');
-if (IS_SHARE_VIEW) document.documentElement.style.visibility = 'visible';
-
 const SESSION_KEY = 'jh_auth';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 
-// Pure JS SHA-256 — no crypto.subtle needed, works on HTTP and HTTPS
-function sha256(str) {
-    function rightRotate(value, amount) {
-        return (value >>> amount) | (value << (32 - amount));
-    }
-    var mathPow = Math.pow;
-    var maxWord = mathPow(2, 32);
-    var lengthProperty = 'length';
-    var i, j;
-    var result = '';
-    var words = [];
-    var asciiBitLength = str[lengthProperty] * 8;
-    var hash = sha256.h = sha256.h || [];
-    var k = sha256.k = sha256.k || [];
-    var primeCounter = k[lengthProperty];
-    var isComposite = {};
-    for (var candidate = 2; primeCounter < 64; candidate++) {
-        if (!isComposite[candidate]) {
-            for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
-            hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
-            k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
-        }
-    }
-    str += '\x80';
-    while (str[lengthProperty] % 64 - 56) str += '\x00';
-    for (i = 0; i < str[lengthProperty]; i++) {
-        j = str.charCodeAt(i);
-        if (j >> 8) return;
-        words[i >> 2] |= j << ((3 - i) % 4) * 8;
-    }
-    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
-    words[words[lengthProperty]] = (asciiBitLength);
-    for (j = 0; j < words[lengthProperty];) {
-        var w = words.slice(j, j += 16);
-        var oldHash = hash.slice(0);
-        hash = hash.slice(0, 8);
-        for (i = 0; i < 64; i++) {
-            var i2 = i + j - 16;
-            var w15 = w[i - 15], w2 = w[i - 2];
-            var a = hash[0], e = hash[4];
-            var temp1 = hash[7]
-                + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
-                + ((e & hash[5]) ^ (~e & hash[6]))
-                + k[i]
-                + (w[i] = (i < 16) ? w[i] : (
-                    w[i - 16]
-                    + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
-                    + w[i - 7]
-                    + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
-                ) | 0);
-            var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
-                + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-            hash = [(temp1 + temp2) | 0].concat(hash);
-            hash[4] = (hash[4] + temp1) | 0;
-        }
-        for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
-    }
-    for (i = 0; i < 8; i++) {
-        for (j = 3; j + 1; j--) {
-            var b = (hash[i] >> (j * 8)) & 255;
-            result += ((b < 16) ? 0 : '') + b.toString(16);
-        }
-    }
-    return result;
+function getStoredSession() {
+    try {
+        const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY) || 'null';
+        return JSON.parse(raw);
+    } catch { return null; }
 }
 
-function getStoredSession() {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
-    catch { return null; }
+function storeSession(sessionToken) {
+    const payload = JSON.stringify({ sessionToken: sessionToken || '', ts: Date.now() });
+    try { localStorage.setItem(SESSION_KEY, payload); } catch {}
+    try { sessionStorage.setItem(SESSION_KEY, payload); } catch {}
+}
+
+function clearSession() {
+    try { localStorage.removeItem(SESSION_KEY); } catch {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch {}
 }
 
 function isAuthed() {
     const s = getStoredSession();
-    return s && s.token && (Date.now() - s.ts) < SESSION_TTL;
+    return !!(
+        s &&
+        /^[a-f0-9]{64}$/i.test(String(s.sessionToken || '')) &&
+        Number.isFinite(Number(s.ts)) &&
+        (Date.now() - Number(s.ts)) < SESSION_TTL
+    );
 }
 
-function storeSession(token) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ token, ts: Date.now() }));
+function announceAuthed() {
+    document.documentElement.style.visibility = 'visible';
+    window._mytripsAuthed = true;
+    document.dispatchEvent(new Event('mytrips:authed'));
 }
 
-function clearSession() {
-    localStorage.removeItem(SESSION_KEY);
-}
-
-// Block page immediately if not authed (share links are always visible)
-if (!isAuthed() && !IS_SHARE_VIEW) {
-    document.documentElement.style.visibility = 'hidden';
-}
+if (IS_SHARE_VIEW || isAuthed()) document.documentElement.style.visibility = 'visible';
+else document.documentElement.style.visibility = 'hidden';
 
 function showPinOverlay() {
+    if (IS_SHARE_VIEW || document.getElementById('pin-overlay')) return;
     document.documentElement.style.visibility = 'visible';
 
     const overlay = document.createElement('div');
     overlay.id = 'pin-overlay';
     overlay.innerHTML = `
     <style>
-      #pin-overlay{position:fixed;inset:0;z-index:9999;background:#e8e8e8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;touch-action:manipulation;}
-      #pin-logo{width:64px;height:64px;background:linear-gradient(135deg,#0a6570,#0e7a87);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(10,124,110,0.3);}
-      #pin-title{font-size:19px;font-weight:700;color:#444444;letter-spacing:-0.3px;margin-bottom:6px;text-align:center;max-width:300px;line-height:1.25;}
-      #pin-sub{font-size:14px;color:#666666;opacity:0.5;font-weight:500;margin-bottom:36px;}
-      #pin-dots{display:flex;gap:14px;margin-bottom:36px;}
-      .pin-dot{width:14px;height:14px;border-radius:50%;background:#b8b8b8;transition:background 0.15s;}
-      .pin-dot.filled{background:#0e7a87;}.pin-dot.error{background:#ff3b30;}
-      #pin-grid{display:grid;grid-template-columns:repeat(3,72px);gap:12px;touch-action:manipulation;}
-      .pin-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:500;color:#444444;box-shadow:0 1px 3px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06);transition:background 0.1s,transform 0.08s;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
-      .pin-btn:active{background:#e5e5ea;transform:scale(0.94);}
-      .pin-btn.del{background:transparent;box-shadow:none;}
-      #pin-error{margin-top:20px;font-size:13px;font-weight:600;color:#ff3b30;opacity:0;transition:opacity 0.2s;}
-      #pin-error.show{opacity:1;}
+      #pin-overlay{position:fixed;inset:0;z-index:9999;background:#e8e8e8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;touch-action:manipulation}
+      #pin-logo{width:64px;height:64px;background:linear-gradient(135deg,#0a6570,#0e7a87);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(10,124,110,.3)}
+      #pin-title{font-size:19px;font-weight:700;color:#444;letter-spacing:-.3px;margin-bottom:6px;text-align:center;max-width:300px;line-height:1.25}
+      #pin-sub{font-size:14px;color:#666;opacity:.5;font-weight:500;margin-bottom:36px}
+      #pin-dots{display:flex;gap:14px;margin-bottom:36px}.pin-dot{width:14px;height:14px;border-radius:50%;background:#b8b8b8}.pin-dot.filled{background:#0e7a87}.pin-dot.error{background:#ff3b30}
+      #pin-grid{display:grid;grid-template-columns:repeat(3,72px);gap:12px}.pin-btn{width:72px;height:72px;border-radius:50%;background:#fff;border:0;cursor:pointer;font:500 22px 'Montserrat',sans-serif;color:#444;box-shadow:0 1px 3px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center}.pin-btn:active{background:#e5e5ea;transform:scale(.94)}.pin-btn.del{background:transparent;box-shadow:none}
+      #pin-error{margin-top:20px;font-size:13px;font-weight:600;color:#ff3b30;opacity:0;max-width:320px;text-align:center;line-height:1.35}#pin-error.show{opacity:1}
     </style>
-    <div id="pin-logo">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg>
-    </div>
+    <div id="pin-logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v13l-9 4-9-4z"/><path d="M12 3v18"/><path d="M3 7l9 4 9-4"/></svg></div>
     <div id="pin-title">Joel Pagett's Tracker &amp; Tools</div>
     <div id="pin-sub">Enter your PIN to continue</div>
-    <div id="pin-dots">
-      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
-      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
-    </div>
-    <div id="pin-grid">
-      ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-btn" data-n="${n}">${n}</button>`).join('')}
-      <div></div>
-      <button class="pin-btn" data-n="0">0</button>
-      <button class="pin-btn del" id="pin-del">
-        <svg width="22" height="16" viewBox="0 0 24 18" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-6-6 6-6z"/><line x1="13" y1="7" x2="17" y2="11"/><line x1="17" y1="7" x2="13" y2="11"/></svg>
-      </button>
-    </div>
-    <div id="pin-error">Incorrect PIN — try again</div>`;
+    <div id="pin-dots"><div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div><div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div></div>
+    <div id="pin-grid">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pin-btn" data-n="${n}">${n}</button>`).join('')}<div></div><button class="pin-btn" data-n="0">0</button><button class="pin-btn del" id="pin-del" aria-label="Delete">⌫</button></div>
+    <div id="pin-error">Incorrect PIN</div>`;
 
     document.body.appendChild(overlay);
     let entered = '';
+    let busy = false;
 
     function updateDots() {
         for (let i = 0; i < 4; i++) {
-            document.getElementById('d'+i).className = 'pin-dot' + (i < entered.length ? ' filled' : '');
+            document.getElementById('d' + i).className = 'pin-dot' + (i < entered.length ? ' filled' : '');
         }
+    }
+
+    function showPinError(message) {
+        overlay.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+        const el = document.getElementById('pin-error');
+        el.textContent = message || 'Authentication failed';
+        el.classList.add('show');
+        setTimeout(() => {
+            entered = '';
+            busy = false;
+            updateDots();
+            overlay.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error'));
+            el.classList.remove('show');
+        }, 1600);
     }
 
     async function checkPin() {
-        const hash = sha256(entered);
+        if (busy || entered.length !== 4) return;
+        busy = true;
         try {
-            const res = await fetch('/api.php?action=auth', {
+            const res = await fetch('/auth-v2.php?action=login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pin_hash: hash })
+                cache: 'no-store',
+                credentials: 'same-origin',
+                body: JSON.stringify({ pin: entered })
             });
-            const json = await res.json();
-            if (json.ok && json.data && json.data.token) {
-                storeSession(json.data.token);
-                document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => { d.style.background='#34c759'; });
-                setTimeout(() => { overlay.remove(); document.documentElement.style.visibility = 'visible'; window._mytripsAuthed = true; document.dispatchEvent(new Event('mytrips:authed')); }, 350);
-            } else {
-                throw new Error('bad pin');
+            let json;
+            try { json = await res.json(); }
+            catch { throw new Error(`Authentication service returned HTTP ${res.status}`); }
+            if (!res.ok || !json.ok || !json.data || !json.data.session_token) {
+                throw new Error(json.error || `Authentication failed (HTTP ${res.status})`);
             }
-        } catch {
-            document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.add('error'));
-            document.getElementById('pin-error').classList.add('show');
+            storeSession(json.data.session_token);
+            overlay.querySelectorAll('.pin-dot').forEach(d => { d.style.background = '#34c759'; });
             setTimeout(() => {
-                entered = ''; updateDots();
-                document.querySelectorAll('#pin-overlay .pin-dot').forEach(d => d.classList.remove('error'));
-                document.getElementById('pin-error').classList.remove('show');
-            }, 800);
+                overlay.remove();
+                announceAuthed();
+            }, 250);
+        } catch (err) {
+            showPinError(err && err.message ? err.message : 'Authentication failed');
         }
     }
 
-    overlay.querySelectorAll('.pin-btn[data-n]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (entered.length >= 4) return;
-            entered += btn.dataset.n; updateDots();
-            if (entered.length === 4) setTimeout(checkPin, 80);
-        });
-    });
-    document.getElementById('pin-del').addEventListener('click', () => { entered = entered.slice(0,-1); updateDots(); });
-    document.addEventListener('keydown', function h(e) {
-        if (!document.getElementById('pin-overlay')) { document.removeEventListener('keydown',h); return; }
-        if (e.key>='0'&&e.key<='9'&&entered.length<4) { entered+=e.key; updateDots(); if(entered.length===4) setTimeout(checkPin,80); }
-        else if (e.key==='Backspace') { entered=entered.slice(0,-1); updateDots(); }
-    });
-}
+    function addDigit(n) {
+        if (busy || entered.length >= 4) return;
+        entered += String(n);
+        updateDots();
+        if (entered.length === 4) setTimeout(checkPin, 50);
+    }
 
-if (IS_SHARE_VIEW) {
-    document.documentElement.style.visibility = 'visible';
-} else if (isAuthed()) {
-    document.documentElement.style.visibility = 'visible';
-    window._mytripsAuthed = true;
-    document.addEventListener('DOMContentLoaded', () => document.dispatchEvent(new Event('mytrips:authed')));
-} else {
-    document.addEventListener('DOMContentLoaded', showPinOverlay);
-}
-
-// Load the V2 Budget presentation directly as soon as this deferred script runs.
-// At that point the document has already been parsed, so #budget-main is available.
-function loadBudgetLiveRedesign() {
-    if (!document.getElementById('budget-main')) return;
-    if (document.querySelector('script[data-budget-live-redesign]')) return;
-    const s = document.createElement('script');
-    s.src = '/budget-live-redesign.js?v=4';
-    s.dataset.budgetLiveRedesign = '1';
-    s.onload = () => document.documentElement.dataset.budgetRedesign = 'loaded';
-    s.onerror = () => console.error('Budget redesign asset failed to load');
-    document.head.appendChild(s);
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadBudgetLiveRedesign, { once:true });
-} else {
-    loadBudgetLiveRedesign();
-}
-
-// Hotel lookup fix: only a stay that genuinely covers the selected night may
-// be edited. Checkout is exclusive, and there is deliberately no "closest
-// hotel" fallback. This prevents Add / Edit on a new stay from opening and
-// overwriting an existing hotel.
-function installHotelLookupFix() {
-    if (!document.getElementById('rp-hotel')) return;
-    if (typeof STATE === 'undefined' || typeof parseDate !== 'function') return;
-
-    const strictHotelForDay = function(dayIdx) {
-        if (STATE.days[dayIdx]?.noAccommodation) return null;
-        const hotels = STATE.meta?.hotels || (STATE.meta?.hotel ? [STATE.meta.hotel] : []);
-        if (!hotels.length) return null;
-
-        const dayDate = parseDate(STATE.days[dayIdx]?.date);
-        if (!dayDate) return null;
-
-        for (const hotel of hotels) {
-            const checkin = parseDate(hotel.checkin);
-            const checkout = parseDate(hotel.checkout);
-            if (checkin && checkout && dayDate >= checkin && dayDate < checkout) return hotel;
+    overlay.querySelectorAll('.pin-btn[data-n]').forEach(btn => btn.addEventListener('click', () => addDigit(btn.dataset.n)));
+    document.getElementById('pin-del').addEventListener('click', () => {
+        if (!busy) {
+            entered = entered.slice(0, -1);
+            updateDots();
         }
-        return null;
-    };
-
-    // Replace the shared lookup used by the hotel panel, readiness stats,
-    // breakfast logic and the Add / Edit action.
-    window.hotelForDay = strictHotelForDay;
-    window.editHotelForCurrentDay = function() {
-        const hotel = strictHotelForDay(activeDay);
-        if (!hotel) {
-            openHotelModal();
+    });
+    document.addEventListener('keydown', function h(e) {
+        if (!document.getElementById('pin-overlay')) {
+            document.removeEventListener('keydown', h);
             return;
         }
-        const idx = (STATE.meta?.hotels || []).indexOf(hotel);
-        openHotelModal(idx >= 0 ? idx : undefined);
-    };
-
-    // Re-render the current hotel/readiness panels with the corrected lookup.
-    if (typeof renderHotelPanel === 'function') renderHotelPanel();
-    if (typeof renderReadiness === 'function') renderReadiness();
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installHotelLookupFix, { once:true });
-} else {
-    installHotelLookupFix();
-}
-
-// Front-card cleanup: "Travel Day" is an itinerary day label, not a city.
-// Keep it available in trip data, but never render it as a location chip on /trips/ cards.
-function removeTravelDayFrontCardTags() {
-    if (!/^\/trips\/?$/.test(window.location.pathname)) return;
-    document.querySelectorAll('.trip-card .city-tag').forEach(tag => {
-        if ((tag.textContent || '').trim().toLowerCase() === 'travel day') tag.remove();
+        if (/^[0-9]$/.test(e.key)) addDigit(e.key);
+        else if (e.key === 'Backspace' && !busy) {
+            entered = entered.slice(0, -1);
+            updateDots();
+        }
     });
 }
 
-if (/^\/trips\/?$/.test(window.location.pathname)) {
+function relockForExpiredSession() {
+    if (IS_SHARE_VIEW) return;
+    clearSession();
+    window._mytripsAuthed = false;
+    if (document.body) showPinOverlay();
+    else document.addEventListener('DOMContentLoaded', showPinOverlay, { once: true });
+}
+
+document.addEventListener('mytrips:auth-expired', relockForExpiredSession);
+
+if (IS_SHARE_VIEW) {
+    announceAuthed();
+} else if (isAuthed()) {
+    window._mytripsAuthed = true;
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeTravelDayFrontCardTags, { once:true });
+        document.addEventListener('DOMContentLoaded', () => document.dispatchEvent(new Event('mytrips:authed')), { once: true });
     } else {
-        removeTravelDayFrontCardTags();
+        document.dispatchEvent(new Event('mytrips:authed'));
     }
-    new MutationObserver(removeTravelDayFrontCardTags).observe(document.documentElement, { childList:true, subtree:true });
+} else {
+    clearSession();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showPinOverlay, { once: true });
+    else showPinOverlay();
 }

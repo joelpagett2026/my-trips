@@ -1,24 +1,77 @@
 Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
 # ══════════════════════════════════════════════════════════════════════
-# ONE SHARED ITINERARY TEMPLATE
-# Every itinerary now resolves to trip.php, which renders new-trip-v2.html.
-# Legacy baked .html URLs are kept only as redirects so old bookmarks still work.
-# This means Itinerary, Bookings, Map and Budget all come from the same template.
+# SHARED RENDERERS
+# Itineraries use trip.php + new-trip-v2.html. The raw shared template is never
+# served directly because it contains compatibility source that must be sanitized
+# and runtime browser configuration that must be injected server-side.
 # ══════════════════════════════════════════════════════════════════════
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Keep the Trips dashboard on one canonical URL. This also ensures any
-# dashboard-only front-card fixes run against /trips/ rather than a stale
-# /trips/index.html URL.
+# Render the homepage through a small PHP shell so critical auth/database assets
+# always receive fresh version URLs after a security deployment.
+RewriteRule ^$ home.php [L,QSA]
+
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
+RewriteRule ^share\.html$ /share.php [R=302,L,QSA]
 
-# Retired share page.
-RewriteRule ^share\.html$ /new-trip-v2.html [R=301,L,QSA]
+# The V1 editor is retired. Even if a stale copy remains in public_html from an
+# older deployment, it must never be executable or reachable again.
+RewriteRule ^new-trip\.html$ - [R=410,L]
 
-# Legacy baked itinerary URLs -> canonical dynamic trip URL.
-# Match both root copies and /trips/ copies created by older deploys.
+# Browser API traffic is same-origin only. Block explicit cross-site fetches and
+# reject foreign Origin headers before authentication/rate-limit code runs. CLI
+# requests without browser Origin/Sec-Fetch-Site headers remain available for
+# controlled administration with a valid bearer/deploy credential.
+RewriteCond %{HTTP:Sec-Fetch-Site} ^cross-site$ [NC]
+RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$ - [F,L]
+RewriteCond %{HTTP:Origin} !^$
+RewriteCond %{HTTP:Origin} !^https://(?:www\.)?joelpagett\.co\.uk$ [NC]
+RewriteRule ^(?:api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$ - [F,L]
+
+# Intercept historical place-photo API actions before api.php executes. The
+# dedicated endpoint resolves Google's public image URL server-side so the
+# server Places key never appears in browser JSON or an <img> URL.
+RewriteCond %{QUERY_STRING} (^|&)action=(place_photo_v2|place_photo)(&|$) [NC]
+RewriteRule ^api\.php$ place-photo.php [L,QSA]
+
+# Public share data must pass through share.php so each token's booking-reference
+# privacy choice is enforced server-side. This also preserves compatibility with
+# older cached clients that still call api.php?action=share_load directly.
+RewriteCond %{QUERY_STRING} (^|&)action=share_load(&|$) [NC]
+RewriteRule ^api\.php$ share.php [L,QSA]
+
+# Generic record deletion remains available to non-trip tools, but it must pass
+# through a guard that protects the registry, snapshots and active trip records.
+RewriteCond %{QUERY_STRING} (^|&)action=delete(&|$) [NC]
+RewriteRule ^api\.php$ record-delete.php [L,QSA]
+
+# Legacy whole-record writes bypass the conflict-safe record.php endpoint,
+# generic setting writes bypass the dedicated PIN/session lifecycle, and the old
+# create_page action could create/overwrite a trip separately from its registry
+# entry. All three are superseded by dedicated safe endpoints.
+RewriteCond %{QUERY_STRING} (^|&)action=(save|set_setting|create_page)(&|$) [NC]
+RewriteRule ^api\.php$ - [R=410,L]
+
+# Existing share links used /new-trip-v2.html?share=1&t=TOKEN. Preserve them by
+# internally handing them to share.php, then deny every other direct template hit.
+RewriteCond %{QUERY_STRING} (^|&)share=1(&|$) [NC]
+RewriteRule ^new-trip-v2\.html$ share.php [L,QSA]
+RewriteRule ^new-trip-v2\.html$ - [R=404,L]
+
+# Settings uses a tiny renderer so Settings-only runtime modules stay out of
+# auth.js/db.js while settings.html remains the presentation source.
+RewriteRule ^settings\.html$ settings.php [L,QSA]
+RewriteRule ^settings/?$ settings.php [L,QSA]
+
+# Public pages that need a browser Maps key are rendered through PHP so the key
+# can be centrally restricted/rotated without committing the active value again.
+RewriteRule ^trips/?$ trips.php [L,QSA]
+RewriteRule ^parks/map\.html$ parks-map.php [L,QSA]
+
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
@@ -26,14 +79,18 @@ RewriteRule ^(?:trips/)?porto-budget\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^porto-2026-v2/?$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?graz-ljubljana-lake-bled-2027\.html$ /graz-ljubljana-lake-bled-2027 [R=302,L,QSA]
 
-# Canonical itinerary route. A clean trip slug always uses the dynamic renderer.
-# Files/directories such as /trips/, /icons/ and /api.php continue to work normally.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 </IfModule>
 
-# Browser caching for static assets
+<IfModule mod_headers.c>
+  <FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\.php$">
+    Header always unset Access-Control-Allow-Origin
+    Header always unset Access-Control-Allow-Credentials
+  </FilesMatch>
+</IfModule>
+
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/javascript        "access plus 7 days"
@@ -47,15 +104,15 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
   ExpiresByType font/woff              "access plus 1 year"
 </IfModule>
 
-# auth.js carries small shared behaviour fixes used by the Trips dashboard.
-# Do not let a week-long JS cache hide newly deployed fixes.
-<Files "auth.js">
+# Critical application behaviour changes frequently. These scripts control
+# authentication, record saving, conflict protection and itinerary presentation,
+# so never allow the generic seven-day JavaScript expiry to hide a new version.
+<FilesMatch "^(auth|db|itinerary-state-guard|itinerary-ui|trip-dashboard-create|trip-delete|budget-live-redesign|datepicker|settings-backup)\.js$">
   Header set Cache-Control "no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
-</Files>
+</FilesMatch>
 
-# Prevent itinerary HTML from being cached (trip data changes frequently)
 <FilesMatch "\.html$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
