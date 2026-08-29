@@ -1,6 +1,7 @@
-// MY TRIPS — mobile map presentation layer
-// Mobile map UX: compact filters, map-first layout, one bottom preview banner,
-// and the banner opens the item's existing detail drawer/modal.
+// MY TRIPS — responsive map presentation layer
+// Mobile keeps the compact map-first layout. Desktop keeps its useful sidebar,
+// but now uses the same clean interaction: marker/list selection -> one preview
+// banner -> existing detail drawer/modal, with no duplicate Google InfoWindow.
 (function () {
   const MOBILE = '(max-width: 768px)';
   let selectedMapListItem = null;
@@ -15,7 +16,6 @@
   }
 
   function closeNativeMapPopup() {
-    if (!isMobile()) return;
     try {
       if (typeof _mapInfoWin !== 'undefined' && _mapInfoWin && typeof _mapInfoWin.close === 'function') {
         _mapInfoWin.close();
@@ -28,6 +28,117 @@
     const style = document.createElement('style');
     style.id = 'map-mobile-redesign-style';
     style.textContent = `
+      /* Shared marker-selection preview: used on desktop and mobile. */
+      #view-map { position: relative !important; }
+      #map-mobile-place-card {
+        position: absolute;
+        left: 304px;
+        bottom: 22px;
+        z-index: 20;
+        width: min(440px, calc(100% - 328px));
+        display: none;
+        align-items: center;
+        gap: 12px;
+        min-height: 78px;
+        padding: 12px 13px;
+        box-sizing: border-box;
+        background: rgba(255,255,255,.97);
+        border: 1px solid rgba(25,45,55,.10);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(21,45,55,.18);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform .12s ease, box-shadow .12s ease;
+      }
+      #map-mobile-place-card.is-visible { display: flex; }
+      #map-mobile-place-card:hover { box-shadow: 0 12px 34px rgba(21,45,55,.22); transform: translateY(-1px); }
+      #map-mobile-place-card:active { transform: translateY(1px); }
+      .mmc-accent {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 42px;
+        color: #fff;
+        background: #0e7a87;
+      }
+      .mmc-accent svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+      .mmc-copy { min-width: 0; flex: 1; }
+      .mmc-type {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: #0e7a87;
+        margin-bottom: 3px;
+      }
+      .mmc-name {
+        font-size: 14px;
+        line-height: 1.18;
+        font-weight: 800;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .mmc-meta {
+        margin-top: 3px;
+        font-size: 10.5px;
+        line-height: 1.2;
+        color: var(--text3);
+        font-weight: 500;
+      }
+      .mmc-open {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--teal-xdim, rgba(14,122,135,.10));
+        color: var(--teal, #0e7a87);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .mmc-open svg { width: 16px; height: 16px; }
+
+      /* Desktop: retain the useful list, but make it cleaner and let the map
+         preview banner be the single selection surface. */
+      @media (min-width: 769px) {
+        #view-map .map-sidebar {
+          width: 280px !important;
+          background: #fff !important;
+          border-right: 1px solid var(--line) !important;
+        }
+        #view-map .map-filters { padding: 14px 14px 8px !important; }
+        #view-map .mf-select {
+          margin-bottom: 10px !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+        }
+        #view-map .mf-row-icons { gap: 7px !important; margin-bottom: 4px !important; }
+        #view-map .mf-icon-btn { width: 38px !important; height: 38px !important; }
+        #view-map .map-list { padding: 6px 8px 10px !important; }
+        #view-map .ml-item {
+          margin: 2px 0 !important;
+          padding: 10px 10px !important;
+          border: 0 !important;
+          border-radius: 10px !important;
+        }
+        #view-map .ml-item:hover { background: rgba(14,122,135,.06) !important; }
+        #view-map .ml-item.active {
+          background: rgba(14,122,135,.10) !important;
+          box-shadow: inset 3px 0 0 var(--teal, #0e7a87);
+        }
+      }
+
       @media (max-width: 768px) {
         #view-map {
           flex-direction: column !important;
@@ -103,81 +214,14 @@
         }
 
         #map-mobile-place-card {
-          position: absolute;
           left: 12px;
           right: 12px;
           bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-          z-index: 20;
-          display: none;
-          align-items: center;
-          gap: 11px;
+          width: auto;
           min-height: 78px;
           padding: 11px 12px;
-          box-sizing: border-box;
-          background: rgba(255,255,255,.97);
-          border: 1px solid rgba(25,45,55,.10);
-          border-radius: 16px;
-          box-shadow: 0 8px 28px rgba(21,45,55,.18);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          cursor: pointer;
-          -webkit-tap-highlight-color: transparent;
         }
-        #map-mobile-place-card.is-visible { display: flex; }
-        #map-mobile-place-card:active { transform: translateY(1px); }
-        .mmc-accent {
-          width: 42px;
-          height: 42px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex: 0 0 42px;
-          color: #fff;
-          background: #0e7a87;
-        }
-        .mmc-accent svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
-        .mmc-copy { min-width: 0; flex: 1; }
-        .mmc-type {
-          font-size: 9px;
-          font-weight: 800;
-          letter-spacing: .07em;
-          text-transform: uppercase;
-          color: #0e7a87;
-          margin-bottom: 3px;
-        }
-        .mmc-name {
-          font-size: 14px;
-          line-height: 1.18;
-          font-weight: 800;
-          color: var(--text);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .mmc-meta {
-          margin-top: 3px;
-          font-size: 10.5px;
-          line-height: 1.2;
-          color: var(--text3);
-          font-weight: 500;
-        }
-        .mmc-open {
-          width: 34px;
-          height: 34px;
-          flex: 0 0 34px;
-          border: 0;
-          border-radius: 50%;
-          background: var(--teal-xdim, rgba(14,122,135,.10));
-          color: var(--teal, #0e7a87);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          pointer-events: none;
-        }
-        .mmc-open svg { width: 16px; height: 16px; }
+        #map-mobile-place-card:hover { transform: none; }
       }
     `;
     document.head.appendChild(style);
@@ -261,7 +305,7 @@
   }
 
   function showCardFromItem(item) {
-    if (!isMobile() || !item) return;
+    if (!item) return;
     const card = ensureCard();
     if (!card) return;
     const name = item.querySelector('.ml-name')?.textContent?.trim();
@@ -336,15 +380,19 @@
     return active >= 0 ? active : 0;
   }
 
+  function clearSelectionPreview() {
+    selectedMapListItem = null;
+    const card = document.getElementById('map-mobile-place-card');
+    card?.classList.remove('is-visible');
+    closeNativeMapPopup();
+  }
+
   function syncMapToDay() {
     if (!isMobile() || !mapVisible()) return;
     if (typeof window.setMapFilter !== 'function' && typeof setMapFilter !== 'function') return;
     const day = currentDayIndex();
     try { (window.setMapFilter || setMapFilter)('day', String(day)); } catch (_) {}
-    selectedMapListItem = null;
-    const card = document.getElementById('map-mobile-place-card');
-    card?.classList.remove('is-visible');
-    closeNativeMapPopup();
+    clearSelectionPreview();
   }
 
   function installObservers() {
@@ -372,10 +420,23 @@
         if (mapVisible()) {
           decorateFilters();
           ensureCard();
-          setTimeout(syncMapToDay, 0);
+          if (isMobile()) setTimeout(syncMapToDay, 0);
+        } else {
+          clearSelectionPreview();
         }
       }).observe(view, { attributes: true, attributeFilter: ['style', 'class'] });
     }
+  }
+
+  function installFilterSelectionReset() {
+    document.addEventListener('change', event => {
+      if (!mapVisible()) return;
+      if (event.target.closest('#view-map .mf-select')) setTimeout(clearSelectionPreview, 0);
+    }, true);
+    document.addEventListener('click', event => {
+      if (!mapVisible()) return;
+      if (event.target.closest('#view-map .mf-icon-btn')) setTimeout(clearSelectionPreview, 0);
+    }, true);
   }
 
   function installDaySync() {
@@ -394,8 +455,9 @@
     ensureCard();
     decorateFilters();
     installObservers();
+    installFilterSelectionReset();
     installDaySync();
-    if (mapVisible()) setTimeout(syncMapToDay, 0);
+    if (mapVisible() && isMobile()) setTimeout(syncMapToDay, 0);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
