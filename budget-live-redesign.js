@@ -1,223 +1,35 @@
-// Live Budget dashboard enhancement for the V2 itinerary.
-// Loaded only on pages that contain #budget-main (see auth.js).
-(function () {
-  'use strict';
-
-  const css = `
-  /* ══ LIVE BUDGET REDESIGN ═══════════════════════════════════════ */
-  #view-budget { background:#eef0f1; }
-  #budget-main { background:#eef0f1; }
-  #budget-main .bv-hero {
-    position:relative; overflow:hidden; color:#fff;
-    background:linear-gradient(125deg,#155f6c 0%,#0e7a87 52%,#15958e 100%);
-    padding:28px 30px 26px; border-radius:0; box-shadow:none;
-    min-height:205px;
-  }
-  #budget-main .bv-hero::after {
-    content:''; position:absolute; inset:auto -8% -65% 42%; height:210px;
-    background:radial-gradient(circle,rgba(255,255,255,.11),transparent 68%);
-    pointer-events:none;
-  }
-  #budget-main .bv-hero-label { font-size:11px; text-transform:uppercase; letter-spacing:.09em; font-weight:800; color:rgba(255,255,255,.75); }
-  #budget-main .bv-hero-amount { font-size:48px; line-height:1; margin-top:8px; font-weight:800; letter-spacing:-.045em; color:#fff; }
-  #budget-main .bv-hero-sub { margin-top:9px; font-size:12.5px; font-weight:500; color:rgba(255,255,255,.78); }
-  #budget-main .bv-hero-badges { display:flex; gap:9px; flex-wrap:wrap; margin-top:21px; position:relative; z-index:2; }
-  #budget-main .bv-hero-badge { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid rgba(255,255,255,.13); border-radius:999px; background:rgba(255,255,255,.11); color:#fff; font-size:11px; font-weight:700; backdrop-filter:blur(5px); }
-  #budget-main .bv-hero-badge svg { width:13px; height:13px; }
-
-  .bv-live-stats { position:absolute; top:52px; right:30px; display:flex; align-items:stretch; z-index:2; }
-  .bv-live-stat { min-width:128px; padding:8px 22px; border-left:1px solid rgba(255,255,255,.18); display:flex; gap:10px; align-items:center; }
-  .bv-live-stat:first-child { border-left:1px solid rgba(255,255,255,.18); }
-  .bv-live-stat-ico { width:28px; height:28px; display:grid; place-items:center; color:rgba(255,255,255,.7); }
-  .bv-live-stat-ico svg { width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.8; }
-  .bv-live-stat b { display:block; color:#fff; font-size:18px; line-height:1.1; font-weight:800; white-space:nowrap; }
-  .bv-live-stat span { display:block; margin-top:3px; color:rgba(255,255,255,.72); font-size:10.5px; font-weight:500; white-space:nowrap; }
-
-  #budget-main .bv-tiles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; background:#fff; border-bottom:1px solid rgba(0,0,0,.07); box-shadow:0 2px 12px rgba(0,0,0,.06); }
-  #budget-main .bv-tile { position:relative; min-height:112px; padding:17px 18px 14px 62px; border-right:1px solid rgba(0,0,0,.06); background:#fff; border-radius:0; box-shadow:none; }
-  #budget-main .bv-tile:last-child { border-right:0; }
-  #budget-main .bv-tile-icon { position:absolute; left:18px; top:17px; width:29px; height:29px; border-radius:8px; display:grid; place-items:center; }
-  #budget-main .bv-tile-icon svg { width:15px; height:15px; }
-  #budget-main .bv-tile-label { margin-top:32px; font-size:9.5px; text-transform:uppercase; letter-spacing:.07em; font-weight:800; color:#8a999f; }
-  #budget-main .bv-tile-val { margin-top:3px; font-size:18px; font-weight:800; color:#17242a; }
-  #budget-main .bv-tile-count { margin-top:2px; font-size:10px; color:#93a0a6; }
-  #budget-main .bv-tile-bar-wrap { position:absolute; left:18px; right:18px; bottom:12px; height:3px; background:#edf0f1; border-radius:4px; overflow:hidden; }
-  #budget-main .bv-tile-bar { height:100%; border-radius:4px; }
-
-  #budget-main .bv-breakdown { padding:20px 20px 0; }
-  #budget-main .bv-breakdown-title { margin:0 3px 11px; font-size:10px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; color:#7c898f; }
-  #budget-main .bv-grid { display:grid; grid-template-columns:1.05fr 1.18fr 1fr; gap:14px; align-items:start; }
-  #budget-main .bv-panel { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.065); border:1px solid rgba(0,0,0,.025); }
-  #budget-main .bv-panel-head { min-height:49px; padding:10px 13px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #edf0f1; }
-  #budget-main .bv-panel-head-left { display:flex; align-items:center; gap:9px; min-width:0; }
-  #budget-main .bv-panel-head-ico { width:30px; height:30px; border-radius:8px; display:grid; place-items:center; flex:0 0 auto; background:rgba(14,122,135,.10)!important; color:#0e7a87!important; }
-  #budget-main .bv-panel-head-ico svg { width:15px; height:15px; }
-  #budget-main .bv-panel-title { font-size:11px; text-transform:uppercase; letter-spacing:.055em; font-weight:800; color:#40555e; }
-  #budget-main .bv-panel-subcount { margin-left:6px; font-size:9px; font-weight:500; text-transform:none; letter-spacing:0; color:#93a0a6; }
-  #budget-main .bv-panel-total { font-size:13.5px; font-weight:800; color:#0f6671; }
-  #budget-main .bv-panel-body { background:#fff; }
-  #budget-main .bv-row { min-height:58px; padding:10px 13px; display:flex; align-items:flex-start; gap:10px; border-bottom:1px solid #edf0f1; }
-  #budget-main .bv-row:last-child { border-bottom:0; }
-  #budget-main .bv-row-ico-wrap { width:29px; height:29px; border-radius:8px; flex:0 0 auto; display:grid; place-items:center; margin-top:1px; }
-  #budget-main .bv-row-ico-wrap svg { width:14px; height:14px; }
-  #budget-main .bv-row-info { min-width:0; flex:1; }
-  #budget-main .bv-row-name { font-size:11.5px; line-height:1.3; font-weight:700; color:#15232a; }
-  #budget-main .bv-row-meta { margin-top:3px; font-size:9.5px; line-height:1.4; color:#8d9ba1; }
-  #budget-main .bv-row-tag { display:inline-block; margin-top:3px; font-size:8.5px; text-transform:uppercase; letter-spacing:.035em; color:#74858c; }
-  #budget-main .bv-row-right { text-align:right; flex:0 0 auto; padding-left:5px; }
-  #budget-main .bv-row-cost { font-size:11.5px; font-weight:800; color:#14242b; white-space:nowrap; }
-  #budget-main .bv-row-sub { margin-top:2px; font-size:8.5px; color:#a1adb1; }
-  #budget-main .bv-row-avios { margin-top:3px; font-size:8.5px; color:#526B82; font-weight:700; }
-  #budget-main .bv-avios-input { width:75px; max-width:100%; font:inherit; font-size:8.5px; border:0; border-bottom:1px solid #d9e0e2; outline:0; background:transparent; }
-  #budget-main .bv-panel-foot { padding:10px 13px; border-top:1px solid #e9edef; background:#fbfcfc; }
-  #budget-main .bv-foot-row { display:flex; justify-content:space-between; gap:12px; padding:2px 0; font-size:10px; font-weight:700; color:#5b6d75; }
-  #budget-main .bv-foot-row span:last-child { color:#0f6671; }
-
-  .bv-live-hotel-row .bv-row-ico-wrap { display:none!important; }
-  .bv-live-hotel-photo { width:64px; height:52px; border-radius:9px; background:#e4e9ea center/cover no-repeat; flex:0 0 auto; }
-  .bv-live-hotel-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
-  .bv-live-chip { padding:3px 7px; border-radius:999px; border:1px solid #d9e3e5; background:#fff; color:#587078; font-size:8px; font-weight:600; }
-  .bv-live-chip.confirmed { border-color:#b8dec1; background:#f0faf2; color:#28763c; }
-
-  .bv-live-group { padding:7px 13px; display:flex; align-items:center; gap:7px; background:#f5f7f8; border-top:1px solid #edf0f1; border-bottom:1px solid #edf0f1; font-size:8.5px; text-transform:uppercase; letter-spacing:.07em; font-weight:800; color:#526B82; }
-  .bv-live-group:first-child { border-top:0; }
-  .bv-live-group-count { margin-left:auto; color:#9aa7ac; font-weight:600; text-transform:none; letter-spacing:0; }
-
-  .bv-live-grand { margin:14px 20px 20px; background:#fff; border-radius:14px; min-height:70px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
-  .bv-live-grand-left { display:flex; align-items:center; gap:12px; }
-  .bv-live-grand-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; background:rgba(14,122,135,.10); color:#0e7a87; font-size:22px; font-weight:800; }
-  .bv-live-grand-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.045em; color:#42565e; }
-  .bv-live-grand-sub { margin-top:3px; font-size:9.5px; color:#8b999f; }
-  .bv-live-grand-price { text-align:right; }
-  .bv-live-grand-price strong { display:block; color:#0f6671; font-size:25px; font-weight:800; letter-spacing:-.025em; }
-  .bv-live-grand-price span { display:block; margin-top:2px; font-size:9.5px; color:#89979d; }
-
-  #budget-main .bv-footer { margin:0 20px 12px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.65); box-shadow:none; color:#718087; }
-  #budget-main .bv-footer-ico { color:#0e7a87; }
-  #budget-main .bv-export-bar { padding:0 20px 22px; }
-  #budget-main .bv-export-btn { border-radius:9px; background:#0e7a87; font-size:10px; padding:8px 13px; }
-
-  @media (max-width:1180px) {
-    .bv-live-stats { position:static; margin-top:18px; }
-    #budget-main .bv-hero { min-height:auto; }
-    #budget-main .bv-grid { grid-template-columns:1fr 1fr; }
-    #budget-main .bv-grid .bv-panel:last-child { grid-column:1/-1; }
-  }
-  @media (max-width:820px) {
-    #budget-main .bv-tiles { grid-template-columns:1fr 1fr; }
-    #budget-main .bv-tile:nth-child(2) { border-right:0; }
-    #budget-main .bv-grid { grid-template-columns:1fr; }
-    #budget-main .bv-grid .bv-panel:last-child { grid-column:auto; }
-    .bv-live-stats { flex-wrap:wrap; gap:8px; }
-    .bv-live-stat { padding:5px 14px; min-width:105px; }
-  }
-  @media (max-width:560px) {
-    #budget-main .bv-hero { padding:21px 17px; }
-    #budget-main .bv-hero-amount { font-size:39px; }
-    #budget-main .bv-breakdown { padding:14px 10px 0; }
-    #budget-main .bv-tiles { grid-template-columns:1fr; }
-    #budget-main .bv-tile { border-right:0; border-bottom:1px solid #edf0f1; }
-    .bv-live-grand { margin:12px 10px 16px; }
-    #budget-main .bv-footer { margin-left:10px; margin-right:10px; }
-    #budget-main .bv-export-bar { padding-left:10px; padding-right:10px; }
-  }
-  `;
-
-  function injectStyles() {
-    if (document.getElementById('budget-live-redesign-style')) return;
-    const s = document.createElement('style');
-    s.id = 'budget-live-redesign-style';
-    s.textContent = css;
-    document.head.appendChild(s);
-  }
-
-  function svgUsers(){return '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>';}
-  function svgCalendar(){return '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';}
-  function svgWallet(){return '<svg viewBox="0 0 24 24"><path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v10a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6"/><path d="M16 13h4"/></svg>';}
-
-  function moneyNumber(text) {
-    const n = parseFloat(String(text||'').replace(/[^0-9.]/g,''));
-    return isFinite(n) ? n : 0;
-  }
-
-  function addHeroStats(root) {
-    const hero = root.querySelector('.bv-hero');
-    if (!hero || hero.querySelector('.bv-live-stats')) return;
-    const amount = moneyNumber(root.querySelector('.bv-hero-amount')?.textContent);
-    const tripState = typeof STATE !== 'undefined' ? STATE : null;
-    const travellers = Number((tripState && tripState.meta && tripState.meta.trav) || new URLSearchParams(location.search).get('trav') || 1) || 1;
-    const days = (tripState && Array.isArray(tripState.days)) ? tripState.days.length : 0;
-    const daily = days ? amount / days : 0;
-    const stats = document.createElement('div');
-    stats.className = 'bv-live-stats';
-    stats.innerHTML = `
-      <div class="bv-live-stat"><div class="bv-live-stat-ico">${svgUsers()}</div><div><b>${travellers}</b><span>Traveller${travellers===1?'':'s'}</span></div></div>
-      <div class="bv-live-stat"><div class="bv-live-stat-ico">${svgCalendar()}</div><div><b>${days || '—'}</b><span>Days</span></div></div>
-      <div class="bv-live-stat"><div class="bv-live-stat-ico">${svgWallet()}</div><div><b>${daily ? '£'+daily.toFixed(2) : '—'}</b><span>Daily average</span></div></div>`;
-    hero.appendChild(stats);
-    hero.querySelectorAll('.bv-hero-badge').forEach(b => {
-      if (/\bTravel\b/.test(b.textContent)) b.childNodes[b.childNodes.length-1].textContent = b.childNodes[b.childNodes.length-1].textContent.replace('Travel','Transport');
-    });
-  }
-
-  function enhanceHotels(root) {
-    const panel = root.querySelector('.bv-grid .bv-panel:nth-child(1)');
-    if (!panel) return;
-    const rows = [...panel.querySelectorAll('.bv-panel-body > .bv-row')];
-    const tripState = typeof STATE !== 'undefined' ? STATE : null;
-    const hotels = (tripState && tripState.meta && Array.isArray(tripState.meta.hotels)) ? tripState.meta.hotels : [];
-    rows.forEach((row, i) => {
-      if (row.classList.contains('bv-live-hotel-row')) return;
-      row.classList.add('bv-live-hotel-row');
-      const h = hotels[i] || {};
-      const pic = document.createElement('div');
-      pic.className = 'bv-live-hotel-photo';
-      if (h.photo) pic.style.backgroundImage = `url('${String(h.photo).replace(/'/g,"\\'")}')`;
-      row.insertBefore(pic, row.firstChild);
-      const info = row.querySelector('.bv-row-info');
-      if (info) {
-        const chips = document.createElement('div');
-        chips.className = 'bv-live-hotel-tags';
-        chips.innerHTML = `<span class="bv-live-chip confirmed">Confirmed</span>${h.nights ? `<span class="bv-live-chip">${h.nights} night${Number(h.nights)===1?'':'s'}</span>` : ''}${h.breakfast==='included' ? '<span class="bv-live-chip">Breakfast incl.</span>' : ''}`;
-        info.appendChild(chips);
-      }
-    });
-  }
-
-  function addGrandTotal(root) {
-    if (root.querySelector('.bv-live-grand')) return;
-    const amount = root.querySelector('.bv-hero-amount')?.textContent || '—';
-    const sub = root.querySelector('.bv-hero-sub')?.textContent || '';
-    const grand = document.createElement('div');
-    grand.className = 'bv-live-grand';
-    grand.innerHTML = `<div class="bv-live-grand-left"><div class="bv-live-grand-icon">£</div><div><div class="bv-live-grand-title">Total Trip Cost</div><div class="bv-live-grand-sub">All costs for your trip</div></div></div><div class="bv-live-grand-price"><strong>${amount}</strong><span>${sub.split('·')[0].trim()}</span></div>`;
-    const footer = root.querySelector('.bv-footer');
-    if (footer) root.insertBefore(grand, footer); else root.appendChild(grand);
-  }
-
-  function enhanceBudget() {
-    injectStyles();
-    const root = document.getElementById('budget-main');
-    if (!root || !root.querySelector('.bv-hero')) return;
-    addHeroStats(root);
-    enhanceHotels(root);
-    addGrandTotal(root);
-  }
-
-  function patchRenderer() {
-    if (window.__budgetLivePatched) return;
-    if (typeof window.renderBudgetView !== 'function') { setTimeout(patchRenderer, 50); return; }
-    window.__budgetLivePatched = true;
-    const original = window.renderBudgetView;
-    window.renderBudgetView = function () {
-      const result = original.apply(this, arguments);
-      requestAnimationFrame(enhanceBudget);
-      return result;
-    };
-    enhanceBudget();
-  }
-
-  injectStyles();
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', patchRenderer, {once:true});
-  else patchRenderer();
+(function(){'use strict';
+const css=`
+#view-budget,#budget-main{background:#f2f4f4}#budget-main{--teal:#0e7a87;--navy:#526b82;--green:#5a8968;--ink:#17252b;--muted:#7d8b91;--line:#e6ebed;padding-bottom:22px}
+#budget-main .bv-hero{position:relative;overflow:hidden;min-height:175px;padding:27px 30px 24px;color:#fff;background:linear-gradient(125deg,#0a5d68,#0e7a87 58%,#118f8b);border-radius:0;box-shadow:none}
+#budget-main .bv-hero:after{content:'';position:absolute;width:330px;height:330px;right:-90px;bottom:-230px;border-radius:50%;background:rgba(255,255,255,.075)}
+#budget-main .bv-hero-label{font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+#budget-main .bv-hero-amount{position:relative;z-index:1;margin-top:8px;font-size:46px;line-height:1;font-weight:800;letter-spacing:-.045em;color:#fff}
+#budget-main .bv-hero-sub{margin-top:9px;font-size:11.5px;color:rgba(255,255,255,.74)}#budget-main .bv-hero-badges,#budget-main .bv-tiles,.bv-live-grand{display:none!important}
+.bd-stats{position:absolute;z-index:2;top:40px;right:30px;display:grid;grid-template-columns:1fr 1fr;min-width:310px;border:1px solid rgba(255,255,255,.15);border-radius:13px;overflow:hidden;background:rgba(255,255,255,.08);backdrop-filter:blur(7px)}
+.bd-stat{min-height:82px;padding:14px 17px;display:flex;flex-direction:column;justify-content:center}.bd-stat+.bd-stat{border-left:1px solid rgba(255,255,255,.14)}.bd-stat span{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.65)}.bd-stat strong{margin-top:6px;font-size:20px;color:#fff;white-space:nowrap}
+.bd-overview{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(350px,1.35fr);gap:15px;padding:18px 20px 0}.bd-card{min-width:0;background:#fff;border:1px solid rgba(20,42,49,.055);border-radius:14px;overflow:hidden;box-shadow:0 2px 11px rgba(18,39,45,.055)}.bd-head{padding:13px 15px 11px;border-bottom:1px solid var(--line)}.bd-kicker{font-size:9px;font-weight:800;letter-spacing:.075em;text-transform:uppercase;color:#7a898f}.bd-title{margin-top:3px;font-size:14px;font-weight:800;color:var(--ink)}
+.bd-summary{padding:5px 15px 7px}.bd-srow{min-height:37px;display:grid;grid-template-columns:10px 1fr auto;gap:9px;align-items:center;border-bottom:1px solid #f0f2f3}.bd-srow:last-child{border-bottom:0}.bd-dot{width:8px;height:8px;border-radius:50%}.bd-label{font-size:10.5px;font-weight:650;color:#4b5e66}.bd-value{font-size:11px;font-weight:800;color:#1a2a31;white-space:nowrap}.bd-total{margin:0 15px;padding:12px 0 14px;display:flex;justify-content:space-between;align-items:end;border-top:1px solid var(--line)}.bd-total span{font-size:9px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;color:#75858b}.bd-total strong{font-size:20px;color:#0a5d68}
+.bd-bars{padding:9px 15px 15px}.bd-bar{margin-top:10px}.bd-bar:first-child{margin-top:2px}.bd-meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;font-size:10.5px}.bd-meta span:first-child{font-weight:700;color:#52656d}.bd-meta span:last-child{font-weight:800;color:#24343a}.bd-track{height:7px;border-radius:999px;background:#edf0f1;overflow:hidden}.bd-fill{height:100%;min-width:2px;border-radius:inherit}.bd-avios{margin:10px 15px 15px;padding:9px 11px;display:flex;justify-content:space-between;gap:10px;border-radius:9px;background:#fff8ef;border:1px solid #f2dfc4;font-size:9.5px;color:#8a6539}.bd-avios strong{color:#a66009}
+#budget-main .bv-breakdown{padding:20px 20px 0}#budget-main .bv-breakdown-title{margin:0 1px 10px;font-size:9.5px;font-weight:800;letter-spacing:.075em;text-transform:uppercase;color:#76868c}#budget-main .bv-grid{display:flex;flex-direction:column;gap:14px}
+#budget-main .bv-panel{position:relative;width:100%;overflow:hidden;background:#fff;border:1px solid rgba(20,42,49,.055);border-radius:14px;box-shadow:0 2px 11px rgba(18,39,45,.055);--accent:var(--teal)}#budget-main .bv-panel:before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--accent);z-index:2}.bd-accom{--accent:var(--teal)!important}.bd-travel{--accent:var(--navy)!important}.bd-acts{--accent:var(--green)!important}
+#budget-main .bv-panel-head{min-height:57px;padding:11px 16px 11px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line);background:#fff}#budget-main .bv-panel-head-left{display:flex;align-items:center;gap:10px;min-width:0}#budget-main .bv-panel-head-ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#f2f6f6!important;color:var(--accent)!important}#budget-main .bv-panel-head-ico svg{width:16px;height:16px}#budget-main .bv-panel-title{font-size:11.5px;font-weight:800;letter-spacing:.045em;text-transform:uppercase;color:#33484f}#budget-main .bv-panel-subcount{margin-left:7px;font-size:9px;font-weight:600;letter-spacing:0;text-transform:none;color:#98a3a7}#budget-main .bv-panel-total{font-size:15px;font-weight:800;color:var(--accent);white-space:nowrap}
+#budget-main .bv-row{min-height:62px;padding:11px 16px 11px 18px;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:11px;align-items:center;border-bottom:1px solid #edf0f1;background:#fff}#budget-main .bv-row:last-child{border-bottom:0}#budget-main .bv-row-ico-wrap{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:#f3f6f7!important;color:var(--accent)!important}#budget-main .bv-row-ico-wrap svg{width:15px;height:15px}#budget-main .bv-row-info{min-width:0}#budget-main .bv-row-name{font-size:11.5px;line-height:1.35;font-weight:750;color:#17272e}#budget-main .bv-row-meta{margin-top:3px;font-size:9.5px;line-height:1.4;color:#8a989e}#budget-main .bv-row-tag{display:inline-block;margin-top:4px;font-size:8px;letter-spacing:.035em;text-transform:uppercase;color:#718087}#budget-main .bv-row-right{min-width:90px;text-align:right}#budget-main .bv-row-cost{font-size:12px;font-weight:800;color:#1a2a31;white-space:nowrap}#budget-main .bv-row-sub,#budget-main .bv-row-avios{margin-top:3px;font-size:8.5px;color:#98a3a7}#budget-main .bv-row-avios{color:var(--navy);font-weight:750}
+.bd-accom .bv-row{grid-template-columns:minmax(0,1fr) auto!important}.bd-accom .bv-row-ico-wrap,.bv-live-hotel-photo,.bv-live-hotel-tags{display:none!important}.bv-live-group{min-height:34px;padding:8px 16px 8px 18px;display:flex;align-items:center;gap:8px;background:#f7f9f9;border-bottom:1px solid #e8edef;font-size:8.5px;font-weight:800;letter-spacing:.075em;text-transform:uppercase;color:var(--accent)}.bv-live-group-count{margin-left:auto;font-size:8.5px;font-weight:650;letter-spacing:0;text-transform:none;color:#98a3a7}
+#budget-main .bv-panel-foot{padding:10px 16px 11px 18px;border-top:1px solid var(--line);background:#fafbfb}#budget-main .bv-foot-row{display:flex;justify-content:space-between;gap:12px;padding:2px 0;font-size:9.5px;font-weight:700;color:#61747b}#budget-main .bv-foot-row span:last-child{color:var(--accent)}#budget-main .bv-footer{margin:14px 20px 0}#budget-main .bv-export-bar{padding:10px 20px 0}#budget-main .bv-export-btn{background:var(--teal);border-radius:9px}
+@media(max-width:1050px){.bd-stats{position:static;margin-top:18px;width:min(100%,430px);min-width:0}#budget-main .bv-hero{min-height:auto}}
+@media(max-width:820px){.bd-overview{grid-template-columns:1fr;padding:14px 14px 0;gap:12px}#budget-main .bv-breakdown{padding:16px 14px 0}#budget-main .bv-footer{margin-left:14px;margin-right:14px}#budget-main .bv-export-bar{padding-left:14px;padding-right:14px}}
+@media(max-width:560px){#budget-main{padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}#budget-main .bv-hero{padding:20px 16px 17px}#budget-main .bv-hero-label{font-size:9px}#budget-main .bv-hero-amount{font-size:37px}#budget-main .bv-hero-sub{font-size:10px}.bd-stats{width:100%;grid-template-columns:1fr 1fr}.bd-stat{min-height:65px;padding:10px 12px}.bd-stat span{font-size:8px}.bd-stat strong{font-size:15px}.bd-overview{display:block;padding:10px 9px 0}.bd-card{margin-bottom:10px;border-radius:12px}.bd-head{padding:11px 12px 9px}.bd-title{font-size:12px}.bd-summary{padding:4px 12px 6px}.bd-srow{min-height:34px}.bd-label,.bd-value,.bd-meta{font-size:9.5px}.bd-total{margin:0 12px;padding:10px 0 12px}.bd-total strong{font-size:18px}.bd-bars{padding:8px 12px 12px}.bd-avios{margin:9px 12px 12px}#budget-main .bv-breakdown{padding:12px 9px 0}#budget-main .bv-breakdown-title{font-size:8.5px}#budget-main .bv-grid{gap:10px}#budget-main .bv-panel{border-radius:12px}#budget-main .bv-panel-head{min-height:51px;padding:9px 12px 9px 14px}#budget-main .bv-panel-head-ico{width:29px;height:29px}#budget-main .bv-panel-title{font-size:9.5px}#budget-main .bv-panel-subcount{display:block;margin:2px 0 0;font-size:8px}#budget-main .bv-panel-total{font-size:12.5px}#budget-main .bv-row{min-height:57px;padding:10px 12px 10px 14px;grid-template-columns:28px minmax(0,1fr) auto;gap:9px}#budget-main .bv-row-ico-wrap{width:27px;height:27px}#budget-main .bv-row-name{font-size:10.5px}#budget-main .bv-row-meta{font-size:8.5px}#budget-main .bv-row-right{min-width:72px}#budget-main .bv-row-cost{font-size:10.5px}.bv-live-group{padding:7px 12px 7px 14px;font-size:7.5px}#budget-main .bv-footer{margin:10px 9px 0}#budget-main .bv-export-bar{padding:9px 9px 0}#budget-main .bv-export-btn{width:100%;min-height:42px}}
+@media(max-width:370px){#budget-main .bv-row{grid-template-columns:minmax(0,1fr) auto}.bd-travel .bv-row-ico-wrap,.bd-acts .bv-row-ico-wrap{display:none!important}}
+`;
+function inject(){if(document.getElementById('budget-dashboard-v5'))return;const s=document.createElement('style');s.id='budget-dashboard-v5';s.textContent=css;document.head.appendChild(s)}
+function num(t){const m=String(t||'').replace(/,/g,'').match(/[0-9]+(?:\.[0-9]+)?/);return m?+m[0]:0}function cash(n){return n>0?'£'+n.toFixed(2).replace(/\.00$/,''):'—'}
+function tiles(root){return[...root.querySelectorAll('.bv-tile')].map(x=>({label:(x.querySelector('.bv-tile-label')?.textContent||'').trim(),txt:(x.querySelector('.bv-tile-val')?.textContent||'').trim(),val:num(x.querySelector('.bv-tile-val')?.textContent)})).filter(x=>x.label)}
+function kind(l){l=l.toLowerCase();if(l.includes('accommodation'))return['#0e7a87',1];if(l.includes('transport')||l.includes('travel'))return['#526b82',1];if(l.includes('activit'))return['#5a8968',1];return['#bf7417',0]}
+function panels(root){[...root.querySelectorAll('.bv-grid>.bv-panel')].forEach(p=>{p.classList.remove('bd-accom','bd-travel','bd-acts');const t=(p.querySelector('.bv-panel-title')?.textContent||'').toLowerCase();if(t.includes('accommodation'))p.classList.add('bd-accom');else if(t.includes('travel')||t.includes('transport')){p.classList.add('bd-travel');const h=p.querySelector('.bv-panel-title');if(h){const sub=h.querySelector('.bv-panel-subcount')?.outerHTML||'';h.innerHTML='Flights &amp; Transport'+sub}}else if(t.includes('activit'))p.classList.add('bd-acts')});root.querySelectorAll('.bv-live-hotel-photo,.bv-live-hotel-tags').forEach(x=>x.remove())}
+function hero(root){const h=root.querySelector('.bv-hero');if(!h)return;h.querySelector('.bd-stats')?.remove();const total=num(root.querySelector('.bv-hero-amount')?.textContent),state=typeof STATE!=='undefined'?STATE:null,trav=+(state?.meta?.trav||new URLSearchParams(location.search).get('trav')||1)||1,days=Array.isArray(state?.days)?state.days.length:0,s=document.createElement('div');s.className='bd-stats';s.innerHTML=`<div class="bd-stat"><span>Per person</span><strong>${cash(total/trav)}</strong></div><div class="bd-stat"><span>Daily average</span><strong>${days?cash(total/days):'—'}</strong></div>`;h.appendChild(s)}
+function overview(root){root.querySelector('.bd-overview')?.remove();const h=root.querySelector('.bv-hero'),ts=tiles(root);if(!h||!ts.length)return;const costs=ts.filter(x=>kind(x.label)[1]),av=ts.find(x=>/avios/i.test(x.label)),max=Math.max(1,...costs.map(x=>x.val)),total=num(root.querySelector('.bv-hero-amount')?.textContent),sum=costs.map(x=>`<div class="bd-srow"><span class="bd-dot" style="background:${kind(x.label)[0]}"></span><span class="bd-label">${x.label}</span><span class="bd-value">${x.txt||cash(x.val)}</span></div>`).join(''),bars=costs.map(x=>`<div class="bd-bar"><div class="bd-meta"><span>${x.label}</span><span>${x.txt||cash(x.val)}</span></div><div class="bd-track"><div class="bd-fill" style="width:${Math.max(2,x.val/max*100).toFixed(1)}%;background:${kind(x.label)[0]}"></div></div></div>`).join(''),o=document.createElement('div');o.className='bd-overview';o.innerHTML=`<section class="bd-card"><div class="bd-head"><div class="bd-kicker">At a glance</div><div class="bd-title">Budget Summary</div></div><div class="bd-summary">${sum}</div><div class="bd-total"><span>Total trip cost</span><strong>${cash(total)}</strong></div></section><section class="bd-card"><div class="bd-head"><div class="bd-kicker">Where the money goes</div><div class="bd-title">Cost Breakdown</div></div><div class="bd-bars">${bars}</div>${av&&av.txt&&av.txt!=='—'?`<div class="bd-avios"><span>Avios earned / used</span><strong>${av.txt}</strong></div>`:''}</section>`;h.insertAdjacentElement('afterend',o)}
+function enhance(){inject();const r=document.getElementById('budget-main');if(!r||!r.querySelector('.bv-hero'))return;panels(r);hero(r);overview(r)}
+function patch(){if(window.__budgetV5)return;if(typeof window.renderBudgetView!=='function'){setTimeout(patch,50);return}window.__budgetV5=1;const old=window.renderBudgetView;window.renderBudgetView=function(){const v=old.apply(this,arguments);requestAnimationFrame(enhance);return v};enhance()}
+inject();document.readyState==='loading'?document.addEventListener('DOMContentLoaded',patch,{once:true}):patch();
 })();
