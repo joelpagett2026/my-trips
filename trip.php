@@ -132,12 +132,14 @@ $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content=
 // db.js from relocking the page and asking for the PIN a second time.
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$completionVersion = @filemtime(__DIR__ . '/itinerary-completion.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
+  . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
   $guardCount
