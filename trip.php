@@ -201,12 +201,150 @@ $drawerSwipeFix = <<<'HTML'
 })();
 </script>
 HTML;
+
+$mobileTimelineLongPress = <<<'HTML'
+<script>
+(function () {
+  if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
+  const root = document.getElementById('tl-col');
+  if (!root || root.dataset.longPressDrag === '1') return;
+  root.dataset.longPressDrag = '1';
+
+  const HOLD_MS = 320;
+  const CANCEL_DISTANCE = 8;
+  const DRAG_POINTER_ID = 987654;
+  let timer = null;
+  let row = null;
+  let touchId = null;
+  let startX = 0, startY = 0, lastX = 0, lastY = 0;
+  let active = false;
+  let suppressClick = false;
+
+  function currentItemForRow(el) {
+    if (!el || typeof STATE === 'undefined' || typeof activeDay === 'undefined') return null;
+    const idx = parseInt(el.dataset.idx, 10);
+    return STATE.days?.[activeDay]?.items?.[idx] || null;
+  }
+
+  function eligibleRow(target) {
+    if (!target || target.closest('button,a,input,select,textarea,label')) return null;
+    const candidate = target.closest('.tl-item');
+    if (!candidate) return null;
+    const item = currentItemForRow(candidate);
+    return item && ['place', 'attraction', 'ticket'].includes(item.type) ? candidate : null;
+  }
+
+  function clearTimer() {
+    if (timer) window.clearTimeout(timer);
+    timer = null;
+  }
+
+  function reset() {
+    clearTimer();
+    if (row) row.classList.remove('tl-longpress-dragging');
+    row = null;
+    touchId = null;
+    active = false;
+    startX = startY = lastX = lastY = 0;
+  }
+
+  function touchById(list) {
+    if (!list) return null;
+    for (const t of list) if (t.identifier === touchId) return t;
+    return null;
+  }
+
+  function dispatchPointer(type, x, y, buttons) {
+    const target = type === 'pointerdown' ? row?.querySelector('.tl-time') : window;
+    if (!target || typeof PointerEvent !== 'function') return;
+    target.dispatchEvent(new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      pointerId: DRAG_POINTER_ID,
+      pointerType: 'touch',
+      isPrimary: true,
+      clientX: x,
+      clientY: y,
+      button: type === 'pointerdown' ? 0 : -1,
+      buttons: buttons
+    }));
+  }
+
+  root.addEventListener('touchstart', e => {
+    if (!e.touches || e.touches.length !== 1) return;
+    const candidate = eligibleRow(e.target);
+    if (!candidate) return;
+
+    reset();
+    row = candidate;
+    const t = e.touches[0];
+    touchId = t.identifier;
+    startX = lastX = t.clientX;
+    startY = lastY = t.clientY;
+
+    timer = window.setTimeout(() => {
+      if (!row) return;
+      active = true;
+      suppressClick = true;
+      row.classList.add('tl-longpress-dragging');
+      dispatchPointer('pointerdown', startX, startY, 1);
+      if (navigator.vibrate) navigator.vibrate(18);
+    }, HOLD_MS);
+  }, { passive: true });
+
+  root.addEventListener('touchmove', e => {
+    if (!row) return;
+    const t = touchById(e.touches);
+    if (!t) return;
+    lastX = t.clientX;
+    lastY = t.clientY;
+
+    if (!active) {
+      const dx = lastX - startX;
+      const dy = lastY - startY;
+      if (Math.hypot(dx, dy) > CANCEL_DISTANCE) reset();
+      return;
+    }
+
+    e.preventDefault();
+    dispatchPointer('pointermove', lastX, lastY, 1);
+  }, { passive: false });
+
+  function finish(e, cancelled) {
+    if (!row) return;
+    clearTimer();
+    if (active) {
+      if (e?.cancelable) e.preventDefault();
+      dispatchPointer(cancelled ? 'pointercancel' : 'pointerup', lastX || startX, lastY || startY, 0);
+      window.setTimeout(() => { suppressClick = false; }, 350);
+    }
+    reset();
+  }
+
+  root.addEventListener('touchend', e => finish(e, false), { passive: false });
+  root.addEventListener('touchcancel', e => finish(e, true), { passive: false });
+
+  root.addEventListener('click', e => {
+    if (!suppressClick) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    suppressClick = false;
+  }, true);
+
+  root.addEventListener('contextmenu', e => {
+    if (active || timer) e.preventDefault();
+  });
+})();
+</script>
+HTML;
+
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
   . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
   . $drawerSwipeFix . "\n"
+  . $mobileTimelineLongPress . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
