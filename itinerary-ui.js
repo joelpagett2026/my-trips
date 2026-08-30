@@ -57,9 +57,9 @@
     if (window.__itineraryCompletionInstalled) return;
     window.__itineraryCompletionInstalled = true;
 
-    // `place` is the current Point of Interest type; `act` is retained for
-    // legacy POIs. Ticket/attraction are the green attraction records.
-    const eligibleTypes = new Set(['place', 'act', 'ticket', 'attraction']);
+    // `place` and `poi` are current Point of Interest types; `act` is retained
+    // for legacy POIs. Ticket/attraction are the green attraction records.
+    const eligibleTypes = new Set(['place', 'poi', 'act', 'ticket', 'attraction']);
     const isEligible = item => !!item && eligibleTypes.has(item.type);
 
     const style = document.createElement('style');
