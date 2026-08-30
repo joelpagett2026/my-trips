@@ -108,7 +108,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 # Itinerary interaction scripts should always revalidate. This is especially
 # important for the installed iOS web app, where gesture fixes must not linger
 # behind a previously cached response.
-<FilesMatch "^(?:itinerary-state-guard|itinerary-ui|mobile-drag)\.js$">
+<FilesMatch "^(?:itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete)\.js$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
 
