@@ -123,6 +123,20 @@ $standaloneHead = <<<'HTML'
   .field-select,
   .field-textarea { min-width:0 !important; max-width:100% !important; }
 }
+
+/* Mobile itinerary: the time column is the drag handle. Prevent the
+   browser from turning that gesture into page scrolling so pointermove
+   remains available to the existing reorder logic. Scrolling everywhere
+   else in the itinerary remains unchanged. */
+@media (max-width: 768px) {
+  .tl-time {
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .tl-time:active { cursor: grabbing; }
+}
 </style>
 HTML;
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
