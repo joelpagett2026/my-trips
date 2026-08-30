@@ -214,7 +214,7 @@ $mobileTimelineLongPress = <<<'HTML'
   if (!root || root.dataset.longPressDrag === '1') return;
   root.dataset.longPressDrag = '1';
 
-  const HOLD_MS = 320;
+  const HOLD_MS = 260;
   const CANCEL_DISTANCE = 8;
   const DRAG_POINTER_ID = 987654;
   let timer = null;
@@ -236,6 +236,25 @@ $mobileTimelineLongPress = <<<'HTML'
     if (!candidate) return null;
     const item = currentItemForRow(candidate);
     return item && ['place', 'attraction', 'ticket'].includes(item.type) ? candidate : null;
+  }
+
+  function hardenRow(el) {
+    if (!el) return;
+    [el, ...el.querySelectorAll('*')].forEach(node => {
+      if (!node.style) return;
+      node.style.setProperty('-webkit-user-select', 'none', 'important');
+      node.style.setProperty('user-select', 'none', 'important');
+      node.style.setProperty('-webkit-touch-callout', 'none', 'important');
+      node.style.setProperty('-webkit-user-drag', 'none', 'important');
+      if ('draggable' in node) node.draggable = false;
+    });
+  }
+
+  function clearNativeSelection() {
+    try {
+      const selection = window.getSelection && window.getSelection();
+      if (selection && selection.rangeCount) selection.removeAllRanges();
+    } catch (_) {}
   }
 
   function clearTimer() {
@@ -280,6 +299,8 @@ $mobileTimelineLongPress = <<<'HTML'
     if (!candidate) return;
 
     reset();
+    hardenRow(candidate);
+    clearNativeSelection();
     row = candidate;
     const t = e.touches[0];
     touchId = t.identifier;
@@ -288,6 +309,7 @@ $mobileTimelineLongPress = <<<'HTML'
 
     timer = window.setTimeout(() => {
       if (!row) return;
+      clearNativeSelection();
       active = true;
       suppressClick = true;
       row.classList.add('tl-longpress-dragging');
@@ -310,6 +332,7 @@ $mobileTimelineLongPress = <<<'HTML'
       return;
     }
 
+    clearNativeSelection();
     e.preventDefault();
     dispatchPointer('pointermove', lastX, lastY, 1);
   }, { passive: false });
@@ -318,6 +341,7 @@ $mobileTimelineLongPress = <<<'HTML'
     if (!row) return;
     clearTimer();
     if (active) {
+      clearNativeSelection();
       if (e?.cancelable) e.preventDefault();
       dispatchPointer(cancelled ? 'pointercancel' : 'pointerup', lastX || startX, lastY || startY, 0);
       window.setTimeout(() => { suppressClick = false; }, 350);
@@ -328,6 +352,17 @@ $mobileTimelineLongPress = <<<'HTML'
   root.addEventListener('touchend', e => finish(e, false), { passive: false });
   root.addEventListener('touchcancel', e => finish(e, true), { passive: false });
 
+  root.addEventListener('selectstart', e => {
+    if (eligibleRow(e.target) || row) {
+      e.preventDefault();
+      clearNativeSelection();
+    }
+  }, true);
+
+  root.addEventListener('dragstart', e => {
+    if (eligibleRow(e.target) || row) e.preventDefault();
+  }, true);
+
   root.addEventListener('click', e => {
     if (!suppressClick) return;
     e.preventDefault();
@@ -336,8 +371,12 @@ $mobileTimelineLongPress = <<<'HTML'
   }, true);
 
   root.addEventListener('contextmenu', e => {
-    if (active || timer) e.preventDefault();
-  });
+    if (eligibleRow(e.target) || active || timer) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      clearNativeSelection();
+    }
+  }, true);
 })();
 </script>
 HTML;
