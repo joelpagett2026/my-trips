@@ -146,7 +146,6 @@ $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
 $uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();
 $mapVersion = @filemtime(__DIR__ . '/map-mobile-redesign.js') ?: time();
-$completionVersion = @filemtime(__DIR__ . '/itinerary-completion.js') ?: time();
 $mobileDragVersion = @filemtime(__DIR__ . '/mobile-drag.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
@@ -209,7 +208,6 @@ $page = str_replace(
   . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
   . $drawerSwipeFix . "\n"
   . '<script src="/mobile-drag.js?v=' . $mobileDragVersion . '"></script>' . "\n"
-  . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
   $guardCount
