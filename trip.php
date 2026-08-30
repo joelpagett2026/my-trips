@@ -124,8 +124,8 @@ $standaloneHead = <<<'HTML'
   .field-textarea { min-width:0 !important; max-width:100% !important; }
 }
 
-/* Mobile itinerary drag gesture. Safari otherwise interprets a long press
-   as text selection / Copy / Look Up before the reorder gesture can start. */
+/* Prevent iOS text-selection callouts on mobile itinerary rows. The dedicated
+   mobile-drag.js handler owns the actual long-press/scroll gesture. */
 @media (max-width: 768px) {
   .tl-item,
   .tl-item * {
@@ -134,12 +134,6 @@ $standaloneHead = <<<'HTML'
     -webkit-touch-callout: none !important;
     -webkit-user-drag: none !important;
   }
-  .tl-time {
-    touch-action: none;
-    cursor: grab;
-  }
-  .tl-time:active,
-  .tl-longpress-dragging { cursor: grabbing; }
 }
 </style>
 HTML;
@@ -147,11 +141,13 @@ $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content=
 
 // Keep the current authenticated session when navigating from the homepage or
 // dashboard into a trip. Dynamic version URLs prevent older cached scripts from
-// relocking the page or leaving the mobile map redesign stale.
+// relocking the page or leaving mobile UI helpers stale.
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();
 $mapVersion = @filemtime(__DIR__ . '/map-mobile-redesign.js') ?: time();
 $completionVersion = @filemtime(__DIR__ . '/itinerary-completion.js') ?: time();
+$mobileDragVersion = @filemtime(__DIR__ . '/mobile-drag.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
 $drawerSwipeFix = <<<'HTML'
@@ -206,188 +202,13 @@ $drawerSwipeFix = <<<'HTML'
 </script>
 HTML;
 
-$mobileTimelineLongPress = <<<'HTML'
-<script>
-(function () {
-  if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
-  const root = document.getElementById('tl-col');
-  if (!root || root.dataset.longPressDrag === '1') return;
-  root.dataset.longPressDrag = '1';
-
-  const HOLD_MS = 260;
-  const CANCEL_DISTANCE = 8;
-  const DRAG_POINTER_ID = 987654;
-  let timer = null;
-  let row = null;
-  let touchId = null;
-  let startX = 0, startY = 0, lastX = 0, lastY = 0;
-  let active = false;
-  let suppressClick = false;
-
-  function currentItemForRow(el) {
-    if (!el || typeof STATE === 'undefined' || typeof activeDay === 'undefined') return null;
-    const idx = parseInt(el.dataset.idx, 10);
-    return STATE.days?.[activeDay]?.items?.[idx] || null;
-  }
-
-  function eligibleRow(target) {
-    if (!target || target.closest('button,a,input,select,textarea,label')) return null;
-    const candidate = target.closest('.tl-item');
-    if (!candidate) return null;
-    const item = currentItemForRow(candidate);
-    return item && ['place', 'attraction', 'ticket'].includes(item.type) ? candidate : null;
-  }
-
-  function hardenRow(el) {
-    if (!el) return;
-    [el, ...el.querySelectorAll('*')].forEach(node => {
-      if (!node.style) return;
-      node.style.setProperty('-webkit-user-select', 'none', 'important');
-      node.style.setProperty('user-select', 'none', 'important');
-      node.style.setProperty('-webkit-touch-callout', 'none', 'important');
-      node.style.setProperty('-webkit-user-drag', 'none', 'important');
-      if ('draggable' in node) node.draggable = false;
-    });
-  }
-
-  function clearNativeSelection() {
-    try {
-      const selection = window.getSelection && window.getSelection();
-      if (selection && selection.rangeCount) selection.removeAllRanges();
-    } catch (_) {}
-  }
-
-  function clearTimer() {
-    if (timer) window.clearTimeout(timer);
-    timer = null;
-  }
-
-  function reset() {
-    clearTimer();
-    if (row) row.classList.remove('tl-longpress-dragging');
-    row = null;
-    touchId = null;
-    active = false;
-    startX = startY = lastX = lastY = 0;
-  }
-
-  function touchById(list) {
-    if (!list) return null;
-    for (const t of list) if (t.identifier === touchId) return t;
-    return null;
-  }
-
-  function dispatchPointer(type, x, y, buttons) {
-    const target = type === 'pointerdown' ? row?.querySelector('.tl-time') : window;
-    if (!target || typeof PointerEvent !== 'function') return;
-    target.dispatchEvent(new PointerEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      pointerId: DRAG_POINTER_ID,
-      pointerType: 'touch',
-      isPrimary: true,
-      clientX: x,
-      clientY: y,
-      button: type === 'pointerdown' ? 0 : -1,
-      buttons: buttons
-    }));
-  }
-
-  root.addEventListener('touchstart', e => {
-    if (!e.touches || e.touches.length !== 1) return;
-    const candidate = eligibleRow(e.target);
-    if (!candidate) return;
-
-    reset();
-    hardenRow(candidate);
-    clearNativeSelection();
-    row = candidate;
-    const t = e.touches[0];
-    touchId = t.identifier;
-    startX = lastX = t.clientX;
-    startY = lastY = t.clientY;
-
-    timer = window.setTimeout(() => {
-      if (!row) return;
-      clearNativeSelection();
-      active = true;
-      suppressClick = true;
-      row.classList.add('tl-longpress-dragging');
-      dispatchPointer('pointerdown', startX, startY, 1);
-      if (navigator.vibrate) navigator.vibrate(18);
-    }, HOLD_MS);
-  }, { passive: true });
-
-  root.addEventListener('touchmove', e => {
-    if (!row) return;
-    const t = touchById(e.touches);
-    if (!t) return;
-    lastX = t.clientX;
-    lastY = t.clientY;
-
-    if (!active) {
-      const dx = lastX - startX;
-      const dy = lastY - startY;
-      if (Math.hypot(dx, dy) > CANCEL_DISTANCE) reset();
-      return;
-    }
-
-    clearNativeSelection();
-    e.preventDefault();
-    dispatchPointer('pointermove', lastX, lastY, 1);
-  }, { passive: false });
-
-  function finish(e, cancelled) {
-    if (!row) return;
-    clearTimer();
-    if (active) {
-      clearNativeSelection();
-      if (e?.cancelable) e.preventDefault();
-      dispatchPointer(cancelled ? 'pointercancel' : 'pointerup', lastX || startX, lastY || startY, 0);
-      window.setTimeout(() => { suppressClick = false; }, 350);
-    }
-    reset();
-  }
-
-  root.addEventListener('touchend', e => finish(e, false), { passive: false });
-  root.addEventListener('touchcancel', e => finish(e, true), { passive: false });
-
-  root.addEventListener('selectstart', e => {
-    if (eligibleRow(e.target) || row) {
-      e.preventDefault();
-      clearNativeSelection();
-    }
-  }, true);
-
-  root.addEventListener('dragstart', e => {
-    if (eligibleRow(e.target) || row) e.preventDefault();
-  }, true);
-
-  root.addEventListener('click', e => {
-    if (!suppressClick) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    suppressClick = false;
-  }, true);
-
-  root.addEventListener('contextmenu', e => {
-    if (eligibleRow(e.target) || active || timer) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      clearNativeSelection();
-    }
-  }, true);
-})();
-</script>
-HTML;
-
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
-  . '<script src="/itinerary-ui.js?v=1"></script>' . "\n"
+  . '<script src="/itinerary-ui.js?v=' . $uiVersion . '"></script>' . "\n"
   . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
   . $drawerSwipeFix . "\n"
-  . $mobileTimelineLongPress . "\n"
+  . '<script src="/mobile-drag.js?v=' . $mobileDragVersion . '"></script>' . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
