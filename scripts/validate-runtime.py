@@ -40,7 +40,10 @@ require("new-trip-v2.html" in trip, "trip.php must render the shared V2 template
 require("template-runtime.php" in trip and "applyItineraryRuntimeSafety" in trip,
         "trip.php must sanitize the shared template before output")
 require('/itinerary-state-guard.js?v=1' in trip, "trip.php must load the state safety layer")
-require('/itinerary-ui.js?v=1' in trip, "trip.php must load itinerary-only UI bootstrap")
+require('/itinerary-ui.js?v=' in trip and '$uiVersion' in trip,
+        "trip.php must load versioned itinerary-only UI bootstrap")
+require('/mobile-drag.js?v=' in trip and '$mobileDragVersion' in trip,
+        "trip.php must load the versioned mobile drag handler")
 require("hotel_lookup_rewritten" in trip, "trip.php must fail closed if the centralized hotel correction drifts")
 
 # The legacy hotel source remains only as a known compatibility target until the
@@ -197,6 +200,7 @@ for runtime_file in [
     "parks-map.php",
     "itinerary-state-guard.js",
     "itinerary-ui.js",
+    "mobile-drag.js",
     "budget-live-redesign.js",
     "manifest.webmanifest",
 ]:
