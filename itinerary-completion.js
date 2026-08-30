@@ -213,7 +213,10 @@
 
     function eligibleRowFrom(target) {
       if (!(target instanceof Element)) return null;
-      if (target.closest('button,a,input,select,textarea,label')) return null;
+      // Keep only the dedicated row controls out of the drag gesture. The
+      // itinerary card body itself may contain links/buttons, and those should
+      // still be draggable after a hold; a quick tap is recreated below.
+      if (target.closest('.tl-complete-btn, .tl-more-btn, input, select, textarea, label')) return null;
       const candidate = target.closest('.tl-item');
       if (!candidate) return null;
       const item = currentItem(candidate);
