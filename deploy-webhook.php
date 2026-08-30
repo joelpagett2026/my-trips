@@ -188,6 +188,8 @@ $coreFiles = [
     'db.js',
     'itinerary-state-guard.js',
     'itinerary-ui.js',
+    'itinerary-completion.js',
+    'mobile-drag.js',
     'map-mobile-redesign.js',
     'trip-dashboard-create.js',
     'trip-delete.js',
