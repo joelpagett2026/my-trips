@@ -7,10 +7,9 @@
   if (window.__mobileTimelineDragInstalled) return;
   window.__mobileTimelineDragInstalled = true;
 
-  const ELIGIBLE_TYPES = new Set(['place', 'act', 'attraction', 'ticket']);
+  const ELIGIBLE_TYPES = new Set(['place', 'poi', 'act', 'attraction', 'ticket']);
   const HOLD_MS = 280;
   const MOVE_THRESHOLD = 7;
-  const SYNTHETIC_POINTER_ID = 778899;
 
   let row = null;
   let originalTarget = null;
@@ -113,22 +112,6 @@
     return null;
   }
 
-  function dispatchPointer(type, x, y, buttons) {
-    const target = type === 'pointerdown' ? row?.querySelector('.tl-time') : window;
-    if (!target || typeof PointerEvent !== 'function') return;
-    target.dispatchEvent(new PointerEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      pointerId: SYNTHETIC_POINTER_ID,
-      pointerType: 'touch',
-      isPrimary: true,
-      clientX: x,
-      clientY: y,
-      button: type === 'pointerdown' ? 0 : -1,
-      buttons
-    }));
-  }
-
   function recreateTap(target) {
     if (!(target instanceof Element)) return;
     target.dispatchEvent(new MouseEvent('click', {
@@ -138,14 +121,57 @@
     }));
   }
 
+  function sharedDragReady() {
+    return typeof startDragVisual === 'function'
+      && typeof updateDropTarget === 'function'
+      && typeof onDragEnd === 'function'
+      && typeof dragCleanup === 'function';
+  }
+
+  function beginSharedDrag() {
+    if (!row || !sharedDragReady()) return false;
+    try {
+      dragEl = row;
+      dragStartX = startX;
+      dragStartY = startY;
+      dragMoved = true;
+      startDragVisual();
+      updateDropTarget(startY);
+      return !!dragGhost;
+    } catch (_) {
+      try { dragCleanup(); } catch (_) {}
+      return false;
+    }
+  }
+
+  function moveSharedDrag(x, y) {
+    try {
+      const dx = x - startX;
+      const dy = y - startY;
+      if (dragGhost) {
+        dragGhost.style.top = (dragGhost._baseTop + dy) + 'px';
+        dragGhost.style.left = (dragGhost._baseLeft + dx) + 'px';
+      }
+      updateDropTarget(y);
+    } catch (_) {}
+  }
+
+  function finishSharedDrag(cancelled) {
+    try {
+      if (cancelled) dragCleanup();
+      else onDragEnd();
+    } catch (_) {
+      try { dragCleanup(); } catch (_) {}
+    }
+  }
+
   function onTouchStart(event) {
     if (!event.touches || event.touches.length !== 1) return;
     const candidate = eligibleRowFrom(event.target);
     if (!candidate) return;
 
-    // Claim the gesture immediately. This is the key iOS standalone-web-app
-    // requirement: without cancelling touchstart, Safari can start text
-    // selection / Copy / Look Up before our long-press timer fires.
+    // Claim the gesture immediately so iOS does not start text selection or
+    // the Copy / Look Up callout while we wait to distinguish drag from scroll.
     event.preventDefault();
     event.stopImmediatePropagation();
     clearSelection();
@@ -166,9 +192,12 @@
     timer = window.setTimeout(() => {
       if (!row || mode !== 'waiting') return;
       clearSelection();
+      if (!beginSharedDrag()) {
+        reset();
+        return;
+      }
       mode = 'dragging';
       row.classList.add('mobile-drag-active');
-      dispatchPointer('pointerdown', startX, startY, 1);
       if (navigator.vibrate) navigator.vibrate(15);
     }, HOLD_MS);
   }
@@ -197,7 +226,7 @@
       return;
     }
 
-    if (mode === 'dragging') dispatchPointer('pointermove', lastX, lastY, 1);
+    if (mode === 'dragging') moveSharedDrag(lastX, lastY);
   }
 
   function finish(event, cancelled) {
@@ -210,9 +239,7 @@
     const finishedMode = mode;
     const tapTarget = originalTarget;
 
-    if (finishedMode === 'dragging') {
-      dispatchPointer(cancelled ? 'pointercancel' : 'pointerup', lastX || startX, lastY || startY, 0);
-    }
+    if (finishedMode === 'dragging') finishSharedDrag(cancelled);
 
     reset();
 
