@@ -25,8 +25,10 @@ if (!isAuthorizedToken($token, false)) photoFail('Unauthorised', 401);
 
 $q = trim((string)($_GET['q'] ?? ''));
 $city = trim((string)($_GET['city'] ?? ''));
-if ($q === '') photoOk(null);
-if (mb_strlen($q) > 180 || mb_strlen($city) > 120) photoFail('Search text is too long');
+$placeId = trim((string)($_GET['place_id'] ?? ''));
+if ($q === '' && $placeId === '') photoOk(null);
+if (mb_strlen($q) > 180 || mb_strlen($city) > 120 || mb_strlen($placeId) > 255) photoFail('Search text is too long');
+if ($placeId !== '' && !preg_match('/^[A-Za-z0-9._:-]{5,255}$/', $placeId)) photoFail('Invalid place ID');
 
 function fetchText(string $url, int $timeout = 8): string {
     $ch = curl_init($url);
@@ -69,7 +71,23 @@ function googlePhotoRedirect(string $photoRef, string $key): ?string {
 $key = optionalConfigValue('PLACES_API_KEY') ?: '';
 $query = $q . ($city !== '' ? ', ' . $city : '');
 
-if ($key !== '') {
+// When the browser already knows the exact Google Place ID (for example after
+// selecting a restaurant from autocomplete), use Place Details first. This avoids
+// fuzzy text search choosing a similarly named venue or failing on a new entry.
+if ($key !== '' && $placeId !== '') {
+    $detailsUrl = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' . rawurlencode($placeId)
+        . '&fields=photos&key=' . rawurlencode($key);
+    $details = json_decode(fetchText($detailsUrl), true);
+    $photoRef = is_array($details) ? ($details['result']['photos'][0]['photo_reference'] ?? null) : null;
+    if (is_string($photoRef) && $photoRef !== '') {
+        $publicUrl = googlePhotoRedirect($photoRef, $key);
+        if ($publicUrl !== null) photoOk($publicUrl);
+    }
+}
+
+// Keep the established text-based search as a fallback for existing restaurants
+// that were saved before Place IDs were recorded.
+if ($key !== '' && $q !== '') {
     $findUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=' . rawurlencode($query)
         . '&inputtype=textquery&fields=place_id,photos&key=' . rawurlencode($key);
     $find = json_decode(fetchText($findUrl), true);
@@ -87,6 +105,8 @@ if ($key !== '') {
         if ($publicUrl !== null) photoOk($publicUrl);
     }
 }
+
+if ($q === '') photoOk(null);
 
 // Wikimedia Commons fallback.
 $commonsUrl = 'https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=' . rawurlencode($query)
