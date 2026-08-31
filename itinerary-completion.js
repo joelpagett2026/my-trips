@@ -1,384 +1,430 @@
-// MY TRIPS — completion checkboxes for attractions / places of interest
-// Adds an owner-only "done" state without changing the shared itinerary template.
+// MY TRIPS — restaurant drawer + mobile add/edit modal enhancements
+// Reuses the retired completion runtime slot; completion ticks now live in itinerary-ui.js.
 (function () {
   'use strict';
 
-  const ELIGIBLE_TYPES = new Set(['act', 'ticket', 'attraction']);
-  const MOBILE_DRAG_TYPES = new Set(['place', 'act', 'ticket', 'attraction']);
+  if (new URLSearchParams(window.location.search).has('share')) return;
+  if (window.__restaurantModalEnhancementsInstalled) return;
+  window.__restaurantModalEnhancementsInstalled = true;
+
+  const isMobile = () => !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+  const authToken = () => {
+    try {
+      if (typeof AUTH_TOKEN !== 'undefined' && AUTH_TOKEN) return AUTH_TOKEN;
+    } catch (_) {}
+    try {
+      if (typeof getToken === 'function') return getToken() || '';
+    } catch (_) {}
+    return '';
+  };
+
+  function currentCity(dayIdx) {
+    try {
+      const day = typeof STATE !== 'undefined' ? STATE.days?.[dayIdx] : null;
+      return String(day?.loc || STATE?.meta?.dest || '').trim();
+    } catch (_) {
+      return '';
+    }
+  }
 
   function injectStyles() {
-    if (document.getElementById('itinerary-completion-style')) return;
+    if (document.getElementById('restaurant-mobile-modal-style')) return;
     const style = document.createElement('style');
-    style.id = 'itinerary-completion-style';
+    style.id = 'restaurant-mobile-modal-style';
     style.textContent = `
-      .tl-complete-btn {
-        width: 30px;
-        height: 30px;
-        flex: 0 0 30px;
-        align-self: center;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        margin-left: 1px;
-        border: 1.5px solid rgba(90,137,104,.45);
-        border-radius: 50%;
-        background: rgba(90,137,104,.05);
-        color: #5A8968;
-        cursor: pointer;
-        transition: background .14s ease, border-color .14s ease, color .14s ease, transform .12s ease;
-        position: relative;
-        z-index: 3;
-      }
-      .tl-complete-btn svg {
-        width: 14px;
-        height: 14px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2.4;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        opacity: 0;
-        transform: scale(.72);
-        transition: opacity .12s ease, transform .12s ease;
-      }
-      .tl-complete-btn:hover {
-        background: rgba(90,137,104,.11);
-        border-color: #5A8968;
-      }
-      .tl-complete-btn:active { transform: scale(.93); }
-      .tl-complete-btn.is-done {
-        background: #5A8968;
-        border-color: #5A8968;
-        color: #fff;
-      }
-      .tl-complete-btn.is-done svg {
-        opacity: 1;
-        transform: scale(1);
-      }
+      #f-meal-name-list { z-index: 160 !important; }
+      #f-meal-name-list .places-ac-item { cursor: pointer; }
 
-      /* Keep the completion control crisp while gently receding the finished item. */
-      .tl-item.tl-completed { background: rgba(0,0,0,.018); }
-      .tl-item.tl-completed .tl-time,
-      .tl-item.tl-completed .tl-text,
-      .tl-item.tl-completed .tl-ico,
-      .tl-item.tl-completed .tl-price,
-      .tl-item.tl-completed .tl-ticket-status,
-      .tl-item.tl-completed .badge {
-        opacity: .52;
-        filter: grayscale(.28);
-      }
-      .tl-item.tl-completed .tl-dot {
-        background: #aeb8bb !important;
-        box-shadow: none !important;
-      }
-      .tl-item.tl-completed .tl-title { color: var(--text2); }
-
-      @media (max-width: 700px) {
-        .tl-complete-btn {
-          width: 34px;
-          height: 34px;
-          flex-basis: 34px;
-          margin-left: 0;
+      @media (max-width: 768px) {
+        #modal-overlay {
+          align-items: flex-end !important;
+          padding: 0 !important;
+          overflow: hidden !important;
         }
-        .tl-complete-btn svg { width: 15px; height: 15px; }
-
-        /* iOS web-app: eligible itinerary rows own the long-press gesture. */
-        .tl-item.mobile-longpress-eligible,
-        .tl-item.mobile-longpress-eligible * {
-          -webkit-user-select: none !important;
-          user-select: none !important;
-          -webkit-touch-callout: none !important;
-          -webkit-user-drag: none !important;
+        #modal-overlay .modal {
+          position: fixed !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          top: auto !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          height: auto !important;
+          max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 10px)) !important;
+          border-radius: 20px 20px 0 0 !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: column !important;
         }
-        .tl-item.mobile-longpress-active {
-          cursor: grabbing;
+        #modal-overlay .modal::before {
+          content: '';
+          width: 42px;
+          height: 4px;
+          border-radius: 99px;
+          background: rgba(80, 96, 104, .24);
+          margin: 8px auto 0;
+          flex: 0 0 auto;
+        }
+        #modal-overlay .modal-head {
+          flex: 0 0 auto !important;
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) 44px !important;
+          align-items: center !important;
+          gap: 8px 10px !important;
+          padding: 10px 14px 12px !important;
+          background: var(--surface, #fff) !important;
+          border-bottom: 1px solid var(--line) !important;
+          position: relative !important;
+          z-index: 5 !important;
+        }
+        #modal-overlay .modal-title {
+          min-width: 0 !important;
+          font-size: 16px !important;
+          line-height: 1.25 !important;
+        }
+        #modal-overlay .modal-close {
+          position: static !important;
+          width: 44px !important;
+          height: 44px !important;
+          min-width: 44px !important;
+          border-radius: 12px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          justify-self: end !important;
+        }
+        #modal-overlay .modal-tabs {
+          grid-column: 1 / -1 !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          -webkit-overflow-scrolling: touch !important;
+          scrollbar-width: none !important;
+          padding-bottom: 1px !important;
+        }
+        #modal-overlay .modal-tabs::-webkit-scrollbar { display: none !important; }
+        #modal-overlay .modal-body,
+        #modal-overlay #modal-body-single,
+        #modal-overlay #modal-body-bulk {
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          overscroll-behavior: contain !important;
+          padding: 14px 14px 22px !important;
+          scroll-padding-top: 18px !important;
+          scroll-padding-bottom: 120px !important;
+        }
+        #modal-overlay .field-row {
+          grid-template-columns: minmax(0, 1fr) !important;
+          gap: 12px !important;
+        }
+        #modal-overlay .field-group { min-width: 0 !important; }
+        #modal-overlay .field-input,
+        #modal-overlay .field-select {
+          width: 100% !important;
+          min-width: 0 !important;
+          min-height: 46px !important;
+          font-size: 16px !important;
+          border-radius: 10px !important;
+        }
+        #modal-overlay .field-textarea {
+          width: 100% !important;
+          min-width: 0 !important;
+          min-height: 94px !important;
+          font-size: 16px !important;
+          border-radius: 10px !important;
+        }
+        #modal-overlay .modal-foot {
+          flex: 0 0 auto !important;
+          display: grid !important;
+          grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) !important;
+          gap: 8px !important;
+          padding: 11px 14px calc(11px + env(safe-area-inset-bottom, 0px)) !important;
+          background: var(--surface, #fff) !important;
+          border-top: 1px solid var(--line) !important;
+          box-shadow: 0 -8px 22px rgba(20, 35, 45, .07) !important;
+          position: relative !important;
+          z-index: 6 !important;
+        }
+        #modal-overlay .modal-btn {
+          min-height: 44px !important;
+          min-width: 0 !important;
+          padding: 10px 12px !important;
+        }
+        #f-meal-name-list {
+          max-height: min(240px, 34dvh) !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          z-index: 180 !important;
+          border-radius: 12px !important;
+        }
+        #f-meal-name-list .places-ac-item {
+          min-height: 50px !important;
+          padding: 10px 12px !important;
+          display: flex !important;
+          align-items: center !important;
         }
       }
     `;
     document.head.appendChild(style);
   }
 
-  function currentItem(row) {
-    if (typeof STATE === 'undefined' || typeof activeDay === 'undefined') return null;
-    const idx = Number(row.dataset.idx);
-    if (!Number.isInteger(idx)) return null;
-    return STATE.days?.[activeDay]?.items?.[idx] || null;
-  }
+  async function lookupPhoto(title, placeId, city) {
+    const query = new URLSearchParams();
+    if (title) query.set('q', title);
+    if (city) query.set('city', city);
+    if (placeId) query.set('place_id', placeId);
+    if (!query.has('q') && !query.has('place_id')) return null;
 
-  function applyState(row, button, item) {
-    const done = item.completed === true;
-    row.classList.toggle('tl-completed', done);
-    button.classList.toggle('is-done', done);
-    button.setAttribute('aria-pressed', done ? 'true' : 'false');
-    button.setAttribute('aria-label', done ? `Mark ${item.title || 'item'} as not done` : `Mark ${item.title || 'item'} as done`);
-    button.title = done ? 'Completed — click to undo' : 'Mark as completed';
-  }
-
-  function decorateTimeline() {
-    const root = document.getElementById('tl-col');
-    if (!root) return;
-
-    root.querySelectorAll('.tl-item').forEach(row => {
-      const item = currentItem(row);
-      row.classList.toggle('mobile-longpress-eligible', !!item && MOBILE_DRAG_TYPES.has(item.type));
-
-      if (!item || !ELIGIBLE_TYPES.has(item.type)) {
-        row.classList.remove('tl-completed');
-        row.querySelector('.tl-complete-btn')?.remove();
-        return;
-      }
-
-      let button = row.querySelector('.tl-complete-btn');
-      if (!button) {
-        button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'tl-complete-btn';
-        button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="5 12.5 9.2 16.5 19 6.5"></polyline></svg>';
-
-        button.addEventListener('click', event => {
-          event.preventDefault();
-          event.stopPropagation();
-          const latest = currentItem(row);
-          if (!latest || !ELIGIBLE_TYPES.has(latest.type)) return;
-
-          if (typeof takeSnapshot === 'function') takeSnapshot();
-          latest.completed = latest.completed !== true;
-          applyState(row, button, latest);
-          if (typeof scheduleSave === 'function') scheduleSave();
-        });
-
-        const more = row.querySelector('.tl-more-btn');
-        const body = row.querySelector('.tl-body-wrap');
-        if (more && more.parentNode) more.parentNode.insertBefore(button, more);
-        else if (body) body.appendChild(button);
-      }
-
-      applyState(row, button, item);
-    });
-  }
-
-  function installMobileLongPressDrag() {
-    if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
-    if (document.documentElement.dataset.mobileLongPressV3 === '1') return;
-    document.documentElement.dataset.mobileLongPressV3 = '1';
-
-    const HOLD_MS = 280;
-    const MOVE_THRESHOLD = 7;
-    const SYNTHETIC_POINTER_ID = 778899;
-
-    let row = null;
-    let originalTarget = null;
-    let touchId = null;
-    let timer = null;
-    let mode = 'idle'; // idle | waiting | scrolling | dragging
-    let startX = 0;
-    let startY = 0;
-    let lastX = 0;
-    let lastY = 0;
-    let startScrollTop = 0;
-    let scrollEl = null;
-
-    function clearSelection() {
-      try {
-        const selection = window.getSelection?.();
-        if (selection?.rangeCount) selection.removeAllRanges();
-      } catch (_) {}
-    }
-
-    function clearTimer() {
-      if (timer) clearTimeout(timer);
-      timer = null;
-    }
-
-    function reset() {
-      clearTimer();
-      row?.classList.remove('mobile-longpress-active');
-      row = null;
-      originalTarget = null;
-      touchId = null;
-      mode = 'idle';
-      startX = startY = lastX = lastY = 0;
-      startScrollTop = 0;
-      scrollEl = null;
-    }
-
-    function touchFrom(list) {
-      if (!list) return null;
-      for (const touch of list) {
-        if (touch.identifier === touchId) return touch;
-      }
+    try {
+      const response = await fetch('/place-photo.php?' + query.toString(), {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { 'X-Auth-Token': authToken() },
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json?.data?.photo || json?.photo || null;
+    } catch (_) {
       return null;
     }
+  }
 
-    function eligibleRowFrom(target) {
-      if (!(target instanceof Element)) return null;
-      // Keep only the dedicated row controls out of the drag gesture. The
-      // itinerary card body itself may contain links/buttons, and those should
-      // still be draggable after a hold; a quick tap is recreated below.
-      if (target.closest('.tl-complete-btn, .tl-more-btn, input, select, textarea, label')) return null;
-      const candidate = target.closest('.tl-item');
-      if (!candidate) return null;
-      const item = currentItem(candidate);
-      return item && MOBILE_DRAG_TYPES.has(item.type) ? candidate : null;
+  function restaurantInput() {
+    return document.getElementById('f-meal-name');
+  }
+
+  function ensureAutocompleteList(input) {
+    if (!input) return null;
+    const group = input.closest('.field-group');
+    if (!group) return null;
+    group.classList.add('places-ac-wrap');
+    input.classList.add('places-ac-input');
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('spellcheck', 'false');
+
+    let list = document.getElementById('f-meal-name-list');
+    if (!list) {
+      list = document.createElement('div');
+      list.id = 'f-meal-name-list';
+      list.className = 'places-ac-list';
+      group.appendChild(list);
+    }
+    return list;
+  }
+
+  function restoreRestaurantMeta(item) {
+    const input = restaurantInput();
+    if (!input) return;
+    delete input.dataset.restaurantPhoto;
+    delete input.dataset.placeId;
+    delete input.dataset.lat;
+    delete input.dataset.lng;
+
+    if (item?._geo?.place_id) input.dataset.placeId = String(item._geo.place_id);
+    if (Number.isFinite(Number(item?._geo?.lat))) input.dataset.lat = String(item._geo.lat);
+    if (Number.isFinite(Number(item?._geo?.lng))) input.dataset.lng = String(item._geo.lng);
+    if (item?._photo) input.dataset.restaurantPhoto = String(item._photo);
+  }
+
+  function ensureRestaurantAutocomplete(item) {
+    const input = restaurantInput();
+    if (!input) return;
+    const list = ensureAutocompleteList(input);
+    restoreRestaurantMeta(item || null);
+
+    if (input.dataset.restaurantAutocomplete !== '1') {
+      input.dataset.restaurantAutocomplete = '1';
+      try {
+        if (typeof attachPlacesAutocomplete === 'function') attachPlacesAutocomplete('f-meal-name');
+      } catch (_) {}
+
+      input.addEventListener('input', () => {
+        delete input.dataset.placeId;
+        delete input.dataset.lat;
+        delete input.dataset.lng;
+        delete input.dataset.restaurantPhoto;
+      });
+
+      const observer = new MutationObserver(async mutations => {
+        if (!mutations.some(m => m.attributeName === 'data-place-id')) return;
+        const placeId = input.dataset.placeId || '';
+        const title = input.value.trim();
+        if (!placeId || !title) return;
+        const city = currentCity(typeof activeDay === 'number' ? activeDay : 0);
+        const photo = await lookupPhoto(title, placeId, city);
+        if (photo && input.dataset.placeId === placeId) input.dataset.restaurantPhoto = photo;
+      });
+      observer.observe(input, { attributes: true, attributeFilter: ['data-place-id'] });
     }
 
-    function harden(candidate) {
-      candidate.classList.add('mobile-longpress-eligible');
-      [candidate, ...candidate.querySelectorAll('*')].forEach(node => {
-        if (!node.style) return;
-        node.style.setProperty('-webkit-user-select', 'none', 'important');
-        node.style.setProperty('user-select', 'none', 'important');
-        node.style.setProperty('-webkit-touch-callout', 'none', 'important');
-        node.style.setProperty('-webkit-user-drag', 'none', 'important');
+    if (list) list.style.zIndex = '180';
+  }
+
+  function captureRestaurantMeta() {
+    const input = restaurantInput();
+    if (!input) return null;
+    const placeId = String(input.dataset.placeId || '').trim();
+    const title = input.value.trim();
+    if (!title) return null;
+    const lat = Number(input.dataset.lat);
+    const lng = Number(input.dataset.lng);
+    return {
+      title,
+      placeId,
+      lat: Number.isFinite(lat) ? lat : null,
+      lng: Number.isFinite(lng) ? lng : null,
+      photo: String(input.dataset.restaurantPhoto || '').trim(),
+    };
+  }
+
+  function saveMetaOnItem(item, meta, dayIdx) {
+    if (!item || item.type !== 'meal' || !meta) return;
+    if (meta.placeId) {
+      item._geo = { place_id: meta.placeId };
+      if (meta.lat !== null) item._geo.lat = meta.lat;
+      if (meta.lng !== null) item._geo.lng = meta.lng;
+    } else if (item._geo?.place_id && item.title !== meta.title) {
+      delete item._geo;
+    }
+    if (meta.photo) item._photo = meta.photo;
+
+    if (!item._photo && meta.placeId) {
+      const title = item.title || meta.title;
+      const placeId = meta.placeId;
+      lookupPhoto(title, placeId, currentCity(dayIdx)).then(photo => {
+        if (!photo || item._geo?.place_id !== placeId) return;
+        item._photo = photo;
+        if (typeof scheduleSave === 'function') scheduleSave();
       });
     }
+  }
 
-    function pointer(type, x, y, buttons) {
-      const target = type === 'pointerdown' ? row?.querySelector('.tl-time') : window;
-      if (!target || typeof PointerEvent !== 'function') return;
-      target.dispatchEvent(new PointerEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        pointerId: SYNTHETIC_POINTER_ID,
-        pointerType: 'touch',
-        isPrimary: true,
-        clientX: x,
-        clientY: y,
-        button: type === 'pointerdown' ? 0 : -1,
-        buttons
-      }));
+  function installFunctionHooks() {
+    if (typeof window.openAddItem === 'function' && !window.openAddItem.__restaurantEnhanced) {
+      const original = window.openAddItem;
+      const wrapped = function (...args) {
+        const result = original.apply(this, args);
+        window.setTimeout(() => ensureRestaurantAutocomplete(null), 0);
+        return result;
+      };
+      wrapped.__restaurantEnhanced = true;
+      window.openAddItem = wrapped;
     }
 
-    function manualTap(target) {
-      if (!(target instanceof Element)) return;
-      target.dispatchEvent(new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      }));
+    if (typeof window.openEditItem === 'function' && !window.openEditItem.__restaurantEnhanced) {
+      const original = window.openEditItem;
+      const wrapped = function (dayIdx, itemIdx, ...rest) {
+        let item = null;
+        try { item = STATE.days?.[dayIdx]?.items?.[itemIdx] || null; } catch (_) {}
+        const result = original.call(this, dayIdx, itemIdx, ...rest);
+        if (item?.type === 'meal') window.setTimeout(() => ensureRestaurantAutocomplete(item), 0);
+        return result;
+      };
+      wrapped.__restaurantEnhanced = true;
+      window.openEditItem = wrapped;
     }
 
-    document.addEventListener('touchstart', event => {
-      if (!event.touches || event.touches.length !== 1) return;
-      const candidate = eligibleRowFrom(event.target);
-      if (!candidate) return;
+    if (typeof window.saveItem === 'function' && !window.saveItem.__restaurantEnhanced) {
+      const original = window.saveItem;
+      const wrapped = function (...args) {
+        let type = '';
+        try { type = document.getElementById('f-type')?.value || ''; } catch (_) {}
+        if (type !== 'meal') return original.apply(this, args);
 
-      // Critical for iOS standalone web apps: cancel the native touch at the
-      // beginning so Copy / Look Up / Translate never gets ownership.
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      clearSelection();
-      reset();
+        const meta = captureRestaurantMeta();
+        let dayIdx = 0;
+        let editDayIdx = null;
+        let editItemIdx = null;
+        let before = new Set();
+        try {
+          dayIdx = typeof activeDay === 'number' ? activeDay : 0;
+          if (typeof editItem !== 'undefined' && editItem) {
+            editDayIdx = Number(editItem.dayIdx);
+            editItemIdx = Number(editItem.itemIdx);
+          }
+          before = new Set(STATE.days?.[dayIdx]?.items || []);
+        } catch (_) {}
 
-      row = candidate;
-      originalTarget = event.target;
-      harden(row);
+        const result = original.apply(this, args);
 
-      const touch = event.touches[0];
-      touchId = touch.identifier;
-      startX = lastX = touch.clientX;
-      startY = lastY = touch.clientY;
-      scrollEl = row.closest('.v2-content') || document.scrollingElement;
-      startScrollTop = scrollEl?.scrollTop || 0;
-      mode = 'waiting';
-
-      timer = setTimeout(() => {
-        if (!row || mode !== 'waiting') return;
-        clearSelection();
-        mode = 'dragging';
-        row.classList.add('mobile-longpress-active');
-        pointer('pointerdown', startX, startY, 1);
-        if (navigator.vibrate) navigator.vibrate(15);
-      }, HOLD_MS);
-    }, { capture: true, passive: false });
-
-    document.addEventListener('touchmove', event => {
-      if (!row || mode === 'idle') return;
-      const touch = touchFrom(event.touches);
-      if (!touch) return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      clearSelection();
-
-      lastX = touch.clientX;
-      lastY = touch.clientY;
-      const dx = lastX - startX;
-      const dy = lastY - startY;
-
-      if (mode === 'waiting' && Math.hypot(dx, dy) > MOVE_THRESHOLD) {
-        clearTimer();
-        mode = 'scrolling';
-      }
-
-      if (mode === 'scrolling') {
-        if (scrollEl) scrollEl.scrollTop = startScrollTop - dy;
-        return;
-      }
-
-      if (mode === 'dragging') pointer('pointermove', lastX, lastY, 1);
-    }, { capture: true, passive: false });
-
-    function finish(event, cancelled) {
-      if (!row || mode === 'idle') return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      clearSelection();
-      clearTimer();
-
-      const finishedMode = mode;
-      const tapTarget = originalTarget;
-
-      if (finishedMode === 'dragging') {
-        pointer(cancelled ? 'pointercancel' : 'pointerup', lastX || startX, lastY || startY, 0);
-      }
-
-      reset();
-
-      if (!cancelled && finishedMode === 'waiting') {
-        // preventDefault() suppresses iOS's synthetic click, so recreate the
-        // ordinary quick-tap behaviour ourselves.
-        setTimeout(() => manualTap(tapTarget), 0);
-      }
+        try {
+          let saved = null;
+          let savedDay = dayIdx;
+          if (Number.isInteger(editDayIdx) && Number.isInteger(editItemIdx)) {
+            savedDay = editDayIdx;
+            saved = STATE.days?.[editDayIdx]?.items?.[editItemIdx] || null;
+          }
+          if (!saved) {
+            const items = STATE.days?.[dayIdx]?.items || [];
+            saved = items.find(item => !before.has(item) && item?.type === 'meal' && (!meta?.title || item.title === meta.title))
+              || [...items].reverse().find(item => item?.type === 'meal' && (!meta?.title || item.title === meta.title));
+          }
+          if (saved) {
+            saveMetaOnItem(saved, meta, savedDay);
+            if (typeof scheduleSave === 'function') scheduleSave();
+          }
+        } catch (_) {}
+        return result;
+      };
+      wrapped.__restaurantEnhanced = true;
+      window.saveItem = wrapped;
     }
 
-    document.addEventListener('touchend', event => finish(event, false), { capture: true, passive: false });
-    document.addEventListener('touchcancel', event => finish(event, true), { capture: true, passive: false });
+    if (typeof window.fetchMealPhoto === 'function' && !window.fetchMealPhoto.__restaurantEnhanced) {
+      const original = window.fetchMealPhoto;
+      const wrapped = async function (item) {
+        if (!item || item.type !== 'meal' || item._photo || !item._geo?.place_id) {
+          return original.apply(this, arguments);
+        }
 
-    document.addEventListener('contextmenu', event => {
-      if (eligibleRowFrom(event.target) || row) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        clearSelection();
-      }
-    }, true);
+        let dayIdx = 0;
+        try {
+          dayIdx = typeof drawerItem !== 'undefined' && drawerItem ? drawerItem.dayIdx : (typeof activeDay === 'number' ? activeDay : 0);
+        } catch (_) {}
+        const photo = await lookupPhoto(item.title || '', String(item._geo.place_id), currentCity(dayIdx));
+        if (!photo) return original.apply(this, arguments);
 
-    document.addEventListener('selectstart', event => {
-      if (eligibleRowFrom(event.target) || row) {
-        event.preventDefault();
-        clearSelection();
-      }
-    }, true);
+        item._photo = photo;
+        if (typeof scheduleSave === 'function') scheduleSave();
+        const slot = document.getElementById('dr-photo-slot');
+        const img = document.getElementById('dr-photo-img');
+        if (img) {
+          img.onload = () => { if (slot) slot.style.display = 'block'; };
+          img.onerror = () => { if (slot) slot.style.display = 'none'; };
+          img.src = photo;
+        }
+        return photo;
+      };
+      wrapped.__restaurantEnhanced = true;
+      window.fetchMealPhoto = wrapped;
+    }
+  }
+
+  function installMobileFocusAssist() {
+    document.addEventListener('focusin', event => {
+      if (!isMobile()) return;
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest('#modal-overlay')) return;
+      if (!target.matches('input, select, textarea')) return;
+      window.setTimeout(() => {
+        try { target.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (_) {}
+      }, 280);
+    });
   }
 
   function init() {
     injectStyles();
-    const root = document.getElementById('tl-col');
-    if (!root) return;
-
-    let queued = false;
-    const observer = new MutationObserver(() => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(() => {
-        queued = false;
-        decorateTimeline();
-      });
-    });
-    observer.observe(root, { childList: true, subtree: true });
-    decorateTimeline();
-    installMobileLongPressDrag();
+    installFunctionHooks();
+    installMobileFocusAssist();
+    ensureRestaurantAutocomplete(null);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
