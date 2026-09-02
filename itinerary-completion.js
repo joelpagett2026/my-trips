@@ -1,11 +1,13 @@
 // MY TRIPS — restaurant metadata + add/edit modal UX enhancements
-// Keeps the large shared template stable while improving desktop/mobile entry flows.
 (function () {
   'use strict';
 
   if (new URLSearchParams(window.location.search).has('share')) return;
   if (window.__restaurantModalEnhancementsInstalled) return;
   window.__restaurantModalEnhancementsInstalled = true;
+
+  const MOBILE_QUERY = '(max-width: 768px)';
+  const isMobile = () => !!(window.matchMedia && window.matchMedia(MOBILE_QUERY).matches);
 
   const authToken = () => {
     try { if (typeof getToken === 'function') return getToken() || ''; } catch (_) {}
@@ -24,7 +26,6 @@
     const style = document.createElement('style');
     style.id = 'itinerary-entry-modal-style';
     style.textContent = `
-      /* Desktop + tablet: make the add/edit form feel like one deliberate editor. */
       #modal-overlay { padding:24px !important; }
       #modal-overlay .modal {
         width:min(720px,calc(100vw - 48px)) !important;
@@ -35,6 +36,7 @@
         overflow:hidden !important;
         border-radius:18px !important;
         box-shadow:0 24px 70px rgba(27,42,51,.22) !important;
+        background:var(--surface,#fff) !important;
       }
       #modal-overlay .modal-head {
         flex:0 0 auto !important;
@@ -81,13 +83,26 @@
         width:100% !important;
         min-width:0 !important;
         box-sizing:border-box !important;
-        line-height:1.35 !important;
+        font-family:var(--font,'Montserrat',sans-serif) !important;
         caret-color:#0e7a87 !important;
         text-rendering:auto !important;
       }
       #modal-overlay .field-input,
-      #modal-overlay .field-select { min-height:44px !important; }
-      #modal-overlay .field-textarea { min-height:92px !important; resize:vertical !important; }
+      #modal-overlay .field-select {
+        min-height:44px !important;
+        line-height:1.3 !important;
+      }
+      #modal-overlay .field-textarea {
+        min-height:104px !important;
+        padding:12px 14px !important;
+        line-height:1.5 !important;
+        resize:vertical !important;
+        overflow:auto !important;
+        vertical-align:top !important;
+        white-space:pre-wrap !important;
+        -webkit-appearance:none !important;
+        appearance:none !important;
+      }
       #modal-overlay .field-input:focus,
       #modal-overlay .field-select:focus,
       #modal-overlay .field-textarea:focus {
@@ -140,106 +155,205 @@
           align-items:flex-end !important;
           padding:0 !important;
           overflow:hidden !important;
-          background:rgba(24,35,40,.42) !important;
+          background:rgba(20,34,40,.48) !important;
         }
         #modal-overlay .modal {
           position:fixed !important;
-          left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
-          width:100% !important; max-width:100% !important; min-width:0 !important;
-          height:min(92dvh,860px) !important;
-          max-height:calc(100dvh - max(env(safe-area-inset-top,0px),8px)) !important;
-          border-radius:22px 22px 0 0 !important;
+          left:0 !important;
+          right:0 !important;
+          bottom:0 !important;
+          top:auto !important;
+          width:100% !important;
+          max-width:100% !important;
+          min-width:0 !important;
+          height:var(--entry-viewport-height,94dvh) !important;
+          max-height:var(--entry-viewport-height,94dvh) !important;
+          border-radius:24px 24px 0 0 !important;
           overflow:hidden !important;
-          transform:translateZ(0) !important;
+          transform:none !important;
+          will-change:auto !important;
+          contain:layout paint !important;
         }
         #modal-overlay .modal::before {
           content:'';
-          width:42px; height:4px;
-          border-radius:99px;
-          background:rgba(80,96,104,.24);
-          margin:8px auto 0;
-          flex:0 0 auto;
+          width:38px !important;
+          height:4px !important;
+          border-radius:999px !important;
+          background:rgba(91,108,116,.24) !important;
+          margin:8px auto 2px !important;
+          flex:0 0 auto !important;
         }
         #modal-overlay .modal-head {
+          position:relative !important;
+          z-index:20 !important;
           display:grid !important;
-          grid-template-columns:minmax(0,1fr) 44px !important;
+          grid-template-columns:minmax(0,1fr) 42px !important;
           align-items:center !important;
           gap:8px 10px !important;
-          padding:9px 14px 11px !important;
+          padding:8px 16px 12px !important;
+          background:var(--surface,#fff) !important;
+          border-bottom:1px solid rgba(100,120,128,.12) !important;
+          box-shadow:0 4px 14px rgba(25,40,46,.035) !important;
         }
         #modal-overlay .modal-title {
           min-width:0 !important;
-          font-size:17px !important;
+          font-size:18px !important;
           line-height:1.2 !important;
+          font-weight:800 !important;
         }
         #modal-overlay .modal-close {
           position:static !important;
-          width:44px !important; height:44px !important; min-width:44px !important;
+          width:42px !important;
+          height:42px !important;
+          min-width:42px !important;
           border-radius:12px !important;
           display:inline-flex !important;
           align-items:center !important;
           justify-content:center !important;
           justify-self:end !important;
+          background:rgba(99,115,122,.07) !important;
         }
         #modal-overlay .modal-tabs {
           grid-column:1 / -1 !important;
           width:100% !important;
-          margin-top:1px !important;
+          margin:2px 0 0 !important;
+          min-height:42px !important;
+          display:flex !important;
         }
-        #modal-overlay .modal-tab { flex:1 1 0 !important; min-width:0 !important; }
+        #modal-overlay .modal-tab {
+          flex:1 1 0 !important;
+          min-width:0 !important;
+          min-height:38px !important;
+          font-size:12px !important;
+        }
         #modal-overlay .modal-body,
         #modal-overlay #modal-body-single,
         #modal-overlay #modal-body-bulk {
-          padding:14px 14px 28px !important;
+          flex:1 1 auto !important;
+          min-height:0 !important;
+          padding:16px 16px 32px !important;
+          overflow-y:auto !important;
+          overflow-x:hidden !important;
           -webkit-overflow-scrolling:touch !important;
-          scroll-padding-top:18px !important;
-          scroll-padding-bottom:150px !important;
+          overscroll-behavior-y:contain !important;
+          scroll-padding-top:16px !important;
+          scroll-padding-bottom:132px !important;
+          background:#fff !important;
         }
         #modal-overlay .field-row {
           grid-template-columns:minmax(0,1fr) !important;
-          gap:12px !important;
+          gap:14px !important;
+        }
+        #modal-overlay .field-group { margin-bottom:2px !important; }
+        #modal-overlay .field-label {
+          margin-bottom:7px !important;
+          font-size:10.5px !important;
+          letter-spacing:.055em !important;
+          text-transform:uppercase !important;
         }
         #modal-overlay .field-input,
         #modal-overlay .field-select,
         #modal-overlay .field-textarea {
           font-size:16px !important;
           -webkit-text-size-adjust:100% !important;
+          border-radius:12px !important;
+          background:#fff !important;
         }
         #modal-overlay .field-input,
-        #modal-overlay .field-select { min-height:48px !important; }
-        #modal-overlay .field-textarea { min-height:100px !important; }
-        #modal-overlay #f-category-row {
-          grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-          gap:7px !important;
+        #modal-overlay .field-select {
+          min-height:50px !important;
+          padding-left:14px !important;
+          padding-right:14px !important;
         }
+        #modal-overlay .field-textarea {
+          display:block !important;
+          min-height:132px !important;
+          max-height:260px !important;
+          padding:14px !important;
+          line-height:24px !important;
+          overflow-y:auto !important;
+          resize:none !important;
+          transform:none !important;
+          -webkit-transform:none !important;
+          -webkit-font-smoothing:antialiased !important;
+          font-variant-ligatures:none !important;
+          letter-spacing:0 !important;
+          word-spacing:0 !important;
+        }
+        #modal-overlay #f-place-notes,
+        #modal-overlay #f-att-notes,
+        #modal-overlay #f-meal-notes,
+        #modal-overlay #f-move-notes,
+        #modal-overlay #f-move-notes-flight {
+          text-align:left !important;
+          text-indent:0 !important;
+        }
+        #modal-overlay #f-category-row {
+          display:flex !important;
+          gap:8px !important;
+          width:calc(100% + 16px) !important;
+          margin-right:-16px !important;
+          overflow-x:auto !important;
+          overflow-y:hidden !important;
+          padding:2px 16px 4px 0 !important;
+          -webkit-overflow-scrolling:touch !important;
+          scrollbar-width:none !important;
+          scroll-snap-type:x proximity !important;
+        }
+        #modal-overlay #f-category-row::-webkit-scrollbar { display:none !important; }
         #modal-overlay #f-category-row .tt-btn {
+          flex:0 0 auto !important;
+          min-width:112px !important;
           min-height:44px !important;
-          padding:8px 5px !important;
+          padding:9px 12px !important;
+          border-radius:12px !important;
+          white-space:nowrap !important;
           font-size:11px !important;
+          scroll-snap-align:start !important;
         }
         #modal-overlay .modal-foot {
+          position:relative !important;
+          z-index:30 !important;
           display:grid !important;
-          grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) !important;
-          gap:8px !important;
-          padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px)) !important;
+          grid-template-columns:minmax(96px,.42fr) minmax(0,1fr) !important;
+          gap:10px !important;
+          padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)) !important;
+          background:rgba(255,255,255,.98) !important;
+          border-top:1px solid rgba(100,120,128,.13) !important;
+          box-shadow:0 -10px 26px rgba(20,35,45,.08) !important;
         }
         #modal-overlay .modal-btn {
           min-width:0 !important;
-          min-height:46px !important;
-          padding:10px 9px !important;
-          font-size:12px !important;
+          min-height:50px !important;
+          padding:12px 14px !important;
+          border-radius:12px !important;
+          font-size:13px !important;
+          font-weight:750 !important;
+        }
+        #modal-overlay .modal-foot .modal-btn:last-child {
+          min-width:0 !important;
         }
         #modal-overlay .places-ac-list {
-          max-height:min(250px,32dvh) !important;
+          max-height:min(260px,34dvh) !important;
           -webkit-overflow-scrolling:touch !important;
         }
-        #modal-overlay .places-ac-item { min-height:52px !important; padding:11px 12px !important; }
+        #modal-overlay .places-ac-item {
+          min-height:54px !important;
+          padding:12px 14px !important;
+        }
+        html.ios-standalone #modal-overlay .modal {
+          bottom:0 !important;
+          padding-bottom:0 !important;
+        }
       }
 
       @media (max-width:390px) {
-        #modal-overlay #f-category-row { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
-        #modal-overlay .modal-foot { grid-template-columns:auto 1fr !important; }
-        #modal-overlay .modal-foot .modal-btn:last-child { grid-column:2; }
+        #modal-overlay .modal-head { padding-left:14px !important; padding-right:14px !important; }
+        #modal-overlay .modal-body,
+        #modal-overlay #modal-body-single,
+        #modal-overlay #modal-body-bulk { padding-left:14px !important; padding-right:14px !important; }
+        #modal-overlay .modal-foot { padding-left:14px !important; padding-right:14px !important; }
+        #modal-overlay #f-category-row .tt-btn { min-width:102px !important; }
       }
     `;
     document.head.appendChild(style);
@@ -287,10 +401,6 @@
     return list;
   }
 
-  // Replaces the old single global autocomplete timer. Each field now owns its
-  // request sequence, so a slow response for older text can never overwrite the
-  // suggestions for what the user is currently typing. This also handles iOS
-  // composition/predictive text without fighting the visible input value.
   function installAutocompleteFix() {
     window.attachPlacesAutocomplete = function attachPlacesAutocompleteStable(inputId) {
       const input = document.getElementById(inputId);
@@ -339,14 +449,16 @@
         try { if (typeof updateCarHireMapsLinks === 'function') updateCarHireMapsLinks(); } catch (_) {}
         clearTimeout(timer);
         sequence++;
-        timer = setTimeout(requestSuggestions, 220);
+        timer = setTimeout(requestSuggestions,220);
       }
 
-      input.addEventListener('compositionstart', () => { composing = true; clearTimeout(timer); });
-      input.addEventListener('compositionend', () => { composing = false; schedule(); });
-      input.addEventListener('input', schedule);
-      input.addEventListener('focus', () => { if (input.value.trim().length >= 3 && list.childElementCount) list.style.display = 'block'; });
-      input.addEventListener('blur', () => setTimeout(hide, 160));
+      input.addEventListener('compositionstart',() => { composing = true; clearTimeout(timer); });
+      input.addEventListener('compositionend',() => { composing = false; schedule(); });
+      input.addEventListener('input',schedule);
+      input.addEventListener('focus',() => {
+        if (input.value.trim().length >= 3 && list.childElementCount) list.style.display = 'block';
+      });
+      input.addEventListener('blur',() => setTimeout(hide,160));
 
       async function choose(event) {
         const row = event.target.closest('.places-ac-item');
@@ -368,13 +480,12 @@
             if (details.address) input.dataset.address = String(details.address);
           }
         } catch (_) {}
-        input.dispatchEvent(new Event('change', { bubbles:true }));
+        input.dispatchEvent(new Event('change',{ bubbles:true }));
         try { if (typeof updateCarHireMapsLinks === 'function') updateCarHireMapsLinks(); } catch (_) {}
       }
 
-      list.addEventListener('pointerdown', choose);
-      // Older iOS versions may not emit PointerEvent reliably inside fixed sheets.
-      list.addEventListener('touchstart', choose, { passive:false });
+      list.addEventListener('pointerdown',choose);
+      list.addEventListener('touchstart',choose,{ passive:false });
     };
   }
 
@@ -387,14 +498,14 @@
     });
   }
 
-  async function lookupPhoto(title, placeId, city) {
+  async function lookupPhoto(title,placeId,city) {
     const query = new URLSearchParams();
-    if (title) query.set('q', title);
-    if (city) query.set('city', city);
-    if (placeId) query.set('place_id', placeId);
+    if (title) query.set('q',title);
+    if (city) query.set('city',city);
+    if (placeId) query.set('place_id',placeId);
     if (!query.has('q') && !query.has('place_id')) return null;
     try {
-      const response = await fetch('/place-photo.php?' + query.toString(), {
+      const response = await fetch('/place-photo.php?' + query.toString(),{
         cache:'no-store', credentials:'same-origin', headers:{ 'X-Auth-Token':authToken() }
       });
       if (!response.ok) return null;
@@ -430,9 +541,9 @@
       const title = input.value.trim();
       if (!placeId || !title) return;
       const city = currentCity(typeof activeDay === 'number' ? activeDay : 0);
-      const photo = await lookupPhoto(title, placeId, city);
+      const photo = await lookupPhoto(title,placeId,city);
       if (photo && input.dataset.placeId === placeId) input.dataset.restaurantPhoto = photo;
-    }).observe(input, { attributes:true, attributeFilter:['data-place-id'] });
+    }).observe(input,{ attributes:true, attributeFilter:['data-place-id'] });
   }
 
   function captureRestaurantMeta() {
@@ -448,7 +559,7 @@
     };
   }
 
-  function applyRestaurantMeta(item, meta, dayIdx) {
+  function applyRestaurantMeta(item,meta,dayIdx) {
     if (!item || item.type !== 'meal' || !meta) return;
     if (meta.placeId) {
       item._geo = { place_id:meta.placeId };
@@ -457,7 +568,7 @@
     }
     if (meta.photo) item._photo = meta.photo;
     if (!item._photo && meta.placeId) {
-      lookupPhoto(item.title || meta.title, meta.placeId, currentCity(dayIdx)).then(photo => {
+      lookupPhoto(item.title || meta.title,meta.placeId,currentCity(dayIdx)).then(photo => {
         if (!photo || item._geo?.place_id !== meta.placeId) return;
         item._photo = photo;
         if (typeof scheduleSave === 'function') scheduleSave();
@@ -465,28 +576,48 @@
     }
   }
 
+  function setMobileViewportHeight() {
+    const overlay = document.getElementById('modal-overlay');
+    const modal = overlay?.querySelector('.modal');
+    if (!overlay || !modal || !isMobile()) return;
+    const vv = window.visualViewport;
+    const viewportHeight = vv ? vv.height : window.innerHeight;
+    const topInset = Math.max(8, vv?.offsetTop || 0);
+    const available = Math.max(360, Math.round(viewportHeight - topInset));
+    modal.style.setProperty('--entry-viewport-height',available + 'px');
+  }
+
   function improveKeyboardBehaviour() {
     const overlay = document.getElementById('modal-overlay');
     if (!overlay) return;
 
-    overlay.addEventListener('focusin', event => {
+    overlay.addEventListener('focusin',event => {
       const field = event.target.closest('input,textarea,select');
-      if (!field || !window.matchMedia('(max-width:768px)').matches) return;
-      setTimeout(() => field.scrollIntoView({ block:'center', behavior:'smooth' }), 180);
+      if (!field || !isMobile()) return;
+      setMobileViewportHeight();
+      window.setTimeout(() => {
+        const body = field.closest('.modal-body,#modal-body-single,#modal-body-bulk');
+        if (!body) return;
+        const bodyRect = body.getBoundingClientRect();
+        const fieldRect = field.getBoundingClientRect();
+        if (fieldRect.bottom > bodyRect.bottom - 18) {
+          body.scrollTop += fieldRect.bottom - bodyRect.bottom + 34;
+        } else if (fieldRect.top < bodyRect.top + 18) {
+          body.scrollTop -= bodyRect.top - fieldRect.top + 24;
+        }
+      },80);
+    });
+
+    overlay.addEventListener('focusout',() => {
+      if (!isMobile()) return;
+      window.setTimeout(setMobileViewportHeight,120);
     });
 
     if (window.visualViewport) {
-      const adjust = () => {
-        if (!overlay.classList.contains('open') || !window.matchMedia('(max-width:768px)').matches) return;
-        const modal = overlay.querySelector('.modal');
-        if (!modal) return;
-        const available = Math.max(320, Math.round(window.visualViewport.height - 8));
-        modal.style.setProperty('--entry-viewport-height', available + 'px');
-        modal.style.maxHeight = 'var(--entry-viewport-height)';
-      };
-      window.visualViewport.addEventListener('resize', adjust, { passive:true });
-      window.visualViewport.addEventListener('scroll', adjust, { passive:true });
+      window.visualViewport.addEventListener('resize',setMobileViewportHeight,{ passive:true });
+      window.visualViewport.addEventListener('scroll',setMobileViewportHeight,{ passive:true });
     }
+    window.addEventListener('orientationchange',() => setTimeout(setMobileViewportHeight,120),{ passive:true });
   }
 
   function installHooks() {
@@ -498,6 +629,7 @@
           ensureEntryAutocomplete();
           ensureRestaurantAutocomplete(null);
           syncPoiFields();
+          setMobileViewportHeight();
         },0);
         return result;
       };
@@ -515,6 +647,7 @@
           ensureEntryAutocomplete();
           if (item?.type === 'meal') ensureRestaurantAutocomplete(item);
           syncPoiFields();
+          setMobileViewportHeight();
         },0);
         return result;
       };
@@ -549,14 +682,23 @@
       const wrapped = function (...args) {
         const type = document.getElementById('f-type')?.value || '';
         if (type !== 'meal') return original.apply(this,args);
+
         const meta = captureRestaurantMeta();
         const dayIdx = typeof activeDay === 'number' ? activeDay : 0;
+        let editTarget = null;
+        try {
+          if (typeof editItem !== 'undefined' && editItem?.item) editTarget = editItem.item;
+        } catch (_) {}
         const before = new Set(STATE.days?.[dayIdx]?.items || []);
         const result = original.apply(this,args);
+
         try {
           const items = STATE.days?.[dayIdx]?.items || [];
-          const saved = items.find(it => !before.has(it) && it?.type === 'meal' && (!meta?.title || it.title === meta.title))
-            || [...items].reverse().find(it => it?.type === 'meal' && (!meta?.title || it.title === meta.title));
+          let saved = editTarget && items.includes(editTarget) ? editTarget : null;
+          if (!saved) {
+            saved = items.find(it => !before.has(it) && it?.type === 'meal' && (!meta?.title || it.title === meta.title))
+              || [...items].reverse().find(it => it?.type === 'meal' && (!meta?.title || it.title === meta.title));
+          }
           if (saved) {
             applyRestaurantMeta(saved,meta,dayIdx);
             if (typeof scheduleSave === 'function') scheduleSave();
@@ -591,19 +733,21 @@
     improveKeyboardBehaviour();
     syncPoiFields();
 
-    document.addEventListener('click', event => {
+    document.addEventListener('click',event => {
       if (event.target.closest('#f-category-row .tt-btn')) setTimeout(() => {
         syncPoiFields();
         ensureEntryAutocomplete();
       },0);
-    }, true);
+    },true);
 
     const overlay = document.getElementById('modal-overlay');
     if (overlay) {
       new MutationObserver(() => {
-        if (overlay.classList.contains('open')) setTimeout(() => {
+        if (!overlay.classList.contains('open')) return;
+        setTimeout(() => {
           syncPoiFields();
           ensureEntryAutocomplete();
+          setMobileViewportHeight();
         },0);
       }).observe(overlay,{ attributes:true, attributeFilter:['class'] });
     }
