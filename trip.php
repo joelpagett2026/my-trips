@@ -202,6 +202,82 @@ $drawerSwipeFix = <<<'HTML'
 </script>
 HTML;
 
+$mobileModalLayoutFix = <<<'HTML'
+<script>
+(function () {
+  if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
+  const style = document.createElement('style');
+  style.id = 'mobile-entry-modal-layout-fix';
+  style.textContent = `
+    @media (max-width:768px) {
+      #modal-overlay .modal-head {
+        display:block !important;
+        position:relative !important;
+        padding:10px 14px 12px !important;
+        min-height:0 !important;
+      }
+      #modal-overlay .modal-title {
+        padding-right:54px !important;
+        min-height:42px !important;
+        display:flex !important;
+        align-items:center !important;
+        font-size:18px !important;
+        line-height:1.15 !important;
+      }
+      #modal-overlay .modal-close {
+        position:absolute !important;
+        top:8px !important;
+        right:14px !important;
+        width:42px !important;
+        height:42px !important;
+        min-width:42px !important;
+        margin:0 !important;
+        z-index:5 !important;
+      }
+      #modal-overlay .modal-tabs {
+        display:flex !important;
+        width:100% !important;
+        margin:8px 0 0 !important;
+        min-height:42px !important;
+        grid-column:auto !important;
+      }
+      #modal-overlay .modal-body,
+      #modal-overlay #modal-body-single,
+      #modal-overlay #modal-body-bulk {
+        min-height:0 !important;
+        flex:1 1 0 !important;
+        overflow-y:auto !important;
+        padding:14px 14px 24px !important;
+        scroll-padding-bottom:92px !important;
+      }
+      #modal-overlay .field-textarea {
+        box-sizing:border-box !important;
+        min-height:112px !important;
+        max-height:180px !important;
+        height:112px !important;
+        padding:13px 14px !important;
+        line-height:22px !important;
+        overflow-y:auto !important;
+        transform:none !important;
+        -webkit-transform:none !important;
+      }
+      #modal-overlay .modal-foot {
+        flex:0 0 auto !important;
+        display:grid !important;
+        grid-template-columns:minmax(110px,.42fr) minmax(0,1fr) !important;
+        gap:10px !important;
+        padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px)) !important;
+      }
+      #modal-overlay .modal-foot .modal-btn {
+        min-height:48px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+</script>
+HTML;
+
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
@@ -210,6 +286,7 @@ $page = str_replace(
   . $drawerSwipeFix . "\n"
   . '<script src="/mobile-drag.js?v=' . $mobileDragVersion . '"></script>' . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
+  . $mobileModalLayoutFix . "\n"
   . '<script src="/trip-delete.js?v=1"></script>' . "\n</body>",
   $page,
   $guardCount
