@@ -43,6 +43,7 @@
         #modal-overlay .modal-head {
           display:grid !important;
           grid-template-columns:max-content minmax(150px,1fr) 40px !important;
+          grid-template-rows:auto !important;
           align-items:center !important;
           gap:8px !important;
           padding:10px 14px !important;
@@ -53,6 +54,7 @@
         }
         #modal-overlay .modal-title {
           grid-column:1 !important;
+          grid-row:1 !important;
           min-width:0 !important;
           min-height:38px !important;
           padding:0 !important;
@@ -64,6 +66,7 @@
         }
         #modal-overlay .modal-tabs {
           grid-column:2 !important;
+          grid-row:1 !important;
           display:flex !important;
           width:100% !important;
           min-width:0 !important;
@@ -86,6 +89,7 @@
         }
         #modal-overlay .modal-close {
           grid-column:3 !important;
+          grid-row:1 !important;
           position:static !important;
           width:40px !important;
           height:40px !important;
