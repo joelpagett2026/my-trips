@@ -38,15 +38,13 @@
         }
         .tl-item.mobile-drag-active { cursor: grabbing; }
 
-        /* Mobile-only activity editor header: title, tabs and close control
-           share one compact bar so the form gets the maximum vertical space. */
         #modal-overlay .modal-head {
           display:grid !important;
-          grid-template-columns:max-content minmax(150px,1fr) 40px !important;
+          grid-template-columns:96px minmax(0,1fr) 40px !important;
           grid-template-rows:auto !important;
           align-items:center !important;
-          gap:8px !important;
-          padding:10px 14px !important;
+          gap:6px !important;
+          padding:10px 12px !important;
           min-height:0 !important;
           background:#f2f4f4 !important;
           border-bottom:1px solid rgba(100,120,128,.14) !important;
@@ -55,18 +53,31 @@
         #modal-overlay .modal-title {
           grid-column:1 !important;
           grid-row:1 !important;
+          position:static !important;
+          left:auto !important;
+          right:auto !important;
+          top:auto !important;
+          bottom:auto !important;
+          transform:none !important;
+          -webkit-transform:none !important;
+          width:auto !important;
+          max-width:none !important;
           min-width:0 !important;
           min-height:38px !important;
+          margin:0 !important;
           padding:0 !important;
           display:flex !important;
           align-items:center !important;
+          justify-content:flex-start !important;
+          overflow:visible !important;
           white-space:nowrap !important;
-          font-size:16px !important;
+          font-size:14px !important;
           line-height:1.1 !important;
         }
         #modal-overlay .modal-tabs {
           grid-column:2 !important;
           grid-row:1 !important;
+          position:static !important;
           display:flex !important;
           width:100% !important;
           min-width:0 !important;
@@ -81,9 +92,9 @@
           flex:1 1 0 !important;
           min-width:0 !important;
           min-height:32px !important;
-          padding:6px 7px !important;
+          padding:6px 5px !important;
           border-radius:8px !important;
-          font-size:10.5px !important;
+          font-size:10px !important;
           line-height:1.1 !important;
           white-space:nowrap !important;
         }
@@ -91,6 +102,10 @@
           grid-column:3 !important;
           grid-row:1 !important;
           position:static !important;
+          left:auto !important;
+          right:auto !important;
+          top:auto !important;
+          transform:none !important;
           width:40px !important;
           height:40px !important;
           min-width:40px !important;
@@ -106,16 +121,16 @@
 
       @media (max-width: 390px) {
         #modal-overlay .modal-head {
-          grid-template-columns:max-content minmax(132px,1fr) 38px !important;
-          gap:6px !important;
+          grid-template-columns:88px minmax(0,1fr) 38px !important;
+          gap:5px !important;
           padding-left:10px !important;
           padding-right:10px !important;
         }
-        #modal-overlay .modal-title { font-size:15px !important; }
+        #modal-overlay .modal-title { font-size:13px !important; }
         #modal-overlay .modal-tab {
-          padding-left:4px !important;
-          padding-right:4px !important;
-          font-size:10px !important;
+          padding-left:3px !important;
+          padding-right:3px !important;
+          font-size:9.5px !important;
         }
         #modal-overlay .modal-close {
           width:38px !important;
@@ -125,6 +140,53 @@
       }
     `;
     document.head.appendChild(style);
+  }
+
+  function important(el, property, value) {
+    if (el?.style) el.style.setProperty(property, value, 'important');
+  }
+
+  function applyModalHeaderLayout() {
+    const head = document.querySelector('#modal-overlay .modal-head');
+    const title = document.querySelector('#modal-overlay .modal-title');
+    const tabs = document.querySelector('#modal-overlay .modal-tabs');
+    const close = document.querySelector('#modal-overlay .modal-close');
+    if (!head || !title || !tabs || !close) return;
+
+    const narrow = window.innerWidth <= 390;
+    important(head, 'display', 'grid');
+    important(head, 'grid-template-columns', narrow ? '88px minmax(0,1fr) 38px' : '96px minmax(0,1fr) 40px');
+    important(head, 'grid-template-rows', 'auto');
+    important(head, 'align-items', 'center');
+    important(head, 'gap', narrow ? '5px' : '6px');
+    important(head, 'padding-left', narrow ? '10px' : '12px');
+    important(head, 'padding-right', narrow ? '10px' : '12px');
+    important(head, 'padding-bottom', '10px');
+    important(head, 'background', '#f2f4f4');
+    important(head, 'border-bottom', '1px solid rgba(100,120,128,.14)');
+
+    [
+      ['grid-column', '1'], ['grid-row', '1'], ['position', 'static'],
+      ['left', 'auto'], ['right', 'auto'], ['top', 'auto'], ['bottom', 'auto'],
+      ['transform', 'none'], ['-webkit-transform', 'none'], ['width', 'auto'],
+      ['max-width', 'none'], ['min-width', '0'], ['margin', '0'], ['padding', '0'],
+      ['display', 'flex'], ['align-items', 'center'], ['justify-content', 'flex-start'],
+      ['overflow', 'visible'], ['white-space', 'nowrap'], ['font-size', narrow ? '13px' : '14px'],
+      ['line-height', '1.1']
+    ].forEach(([property, value]) => important(title, property, value));
+
+    [
+      ['grid-column', '2'], ['grid-row', '1'], ['position', 'static'],
+      ['left', 'auto'], ['right', 'auto'], ['top', 'auto'], ['transform', 'none'],
+      ['width', '100%'], ['min-width', '0'], ['margin', '0'], ['display', 'flex']
+    ].forEach(([property, value]) => important(tabs, property, value));
+
+    [
+      ['grid-column', '3'], ['grid-row', '1'], ['position', 'static'],
+      ['left', 'auto'], ['right', 'auto'], ['top', 'auto'], ['transform', 'none'],
+      ['width', narrow ? '38px' : '40px'], ['height', narrow ? '38px' : '40px'],
+      ['min-width', narrow ? '38px' : '40px'], ['margin', '0'], ['justify-self', 'end']
+    ].forEach(([property, value]) => important(close, property, value));
   }
 
   function currentItem(candidate) {
@@ -255,8 +317,6 @@
     const candidate = eligibleRowFrom(event.target);
     if (!candidate) return;
 
-    // Claim the gesture immediately so iOS does not start text selection or
-    // the Copy / Look Up callout while we wait to distinguish drag from scroll.
     event.preventDefault();
     event.stopImmediatePropagation();
     clearSelection();
@@ -336,6 +396,18 @@
   function init() {
     injectStyles();
     decorateRows();
+    applyModalHeaderLayout();
+    requestAnimationFrame(applyModalHeaderLayout);
+    window.setTimeout(applyModalHeaderLayout, 80);
+    window.setTimeout(applyModalHeaderLayout, 250);
+
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) {
+      const modalObserver = new MutationObserver(() => requestAnimationFrame(applyModalHeaderLayout));
+      modalObserver.observe(overlay, { attributes: true, childList: true, subtree: true });
+    }
+
+    window.addEventListener('resize', applyModalHeaderLayout, { passive: true });
 
     const root = document.getElementById('tl-col');
     if (root) {
