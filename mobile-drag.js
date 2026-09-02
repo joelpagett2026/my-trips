@@ -37,6 +37,87 @@
           -webkit-user-drag: none !important;
         }
         .tl-item.mobile-drag-active { cursor: grabbing; }
+
+        /* Mobile-only activity editor header: title, tabs and close control
+           share one compact bar so the form gets the maximum vertical space. */
+        #modal-overlay .modal-head {
+          display:grid !important;
+          grid-template-columns:max-content minmax(150px,1fr) 40px !important;
+          align-items:center !important;
+          gap:8px !important;
+          padding:10px 14px !important;
+          min-height:0 !important;
+          background:#f2f4f4 !important;
+          border-bottom:1px solid rgba(100,120,128,.14) !important;
+          box-shadow:none !important;
+        }
+        #modal-overlay .modal-title {
+          grid-column:1 !important;
+          min-width:0 !important;
+          min-height:38px !important;
+          padding:0 !important;
+          display:flex !important;
+          align-items:center !important;
+          white-space:nowrap !important;
+          font-size:16px !important;
+          line-height:1.1 !important;
+        }
+        #modal-overlay .modal-tabs {
+          grid-column:2 !important;
+          display:flex !important;
+          width:100% !important;
+          min-width:0 !important;
+          min-height:38px !important;
+          margin:0 !important;
+          padding:3px !important;
+          gap:3px !important;
+          border-radius:10px !important;
+          background:rgba(102,117,125,.10) !important;
+        }
+        #modal-overlay .modal-tab {
+          flex:1 1 0 !important;
+          min-width:0 !important;
+          min-height:32px !important;
+          padding:6px 7px !important;
+          border-radius:8px !important;
+          font-size:10.5px !important;
+          line-height:1.1 !important;
+          white-space:nowrap !important;
+        }
+        #modal-overlay .modal-close {
+          grid-column:3 !important;
+          position:static !important;
+          width:40px !important;
+          height:40px !important;
+          min-width:40px !important;
+          margin:0 !important;
+          justify-self:end !important;
+          background:rgba(99,115,122,.08) !important;
+          border-radius:11px !important;
+        }
+        html.ios-standalone #modal-overlay .modal-head {
+          padding-top:calc(10px + env(safe-area-inset-top,0px)) !important;
+        }
+      }
+
+      @media (max-width: 390px) {
+        #modal-overlay .modal-head {
+          grid-template-columns:max-content minmax(132px,1fr) 38px !important;
+          gap:6px !important;
+          padding-left:10px !important;
+          padding-right:10px !important;
+        }
+        #modal-overlay .modal-title { font-size:15px !important; }
+        #modal-overlay .modal-tab {
+          padding-left:4px !important;
+          padding-right:4px !important;
+          font-size:10px !important;
+        }
+        #modal-overlay .modal-close {
+          width:38px !important;
+          height:38px !important;
+          min-width:38px !important;
+        }
       }
     `;
     document.head.appendChild(style);
