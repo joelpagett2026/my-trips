@@ -211,35 +211,50 @@ $mobileModalLayoutFix = <<<'HTML'
   style.textContent = `
     @media (max-width:768px) {
       #modal-overlay .modal-head {
-        display:block !important;
+        display:grid !important;
+        grid-template-columns:minmax(104px,.72fr) minmax(170px,1.18fr) 40px !important;
+        align-items:center !important;
+        gap:6px !important;
         position:relative !important;
-        padding:10px 14px 12px !important;
+        padding:10px 12px 10px !important;
         min-height:0 !important;
       }
       #modal-overlay .modal-title {
-        padding-right:54px !important;
-        min-height:42px !important;
+        padding:0 !important;
+        min-height:40px !important;
         display:flex !important;
         align-items:center !important;
-        font-size:18px !important;
-        line-height:1.15 !important;
-      }
-      #modal-overlay .modal-close {
-        position:absolute !important;
-        top:8px !important;
-        right:14px !important;
-        width:42px !important;
-        height:42px !important;
-        min-width:42px !important;
-        margin:0 !important;
-        z-index:5 !important;
+        font-size:16px !important;
+        line-height:1.1 !important;
+        white-space:nowrap !important;
       }
       #modal-overlay .modal-tabs {
+        grid-column:auto !important;
         display:flex !important;
         width:100% !important;
-        margin:8px 0 0 !important;
-        min-height:42px !important;
-        grid-column:auto !important;
+        min-width:0 !important;
+        min-height:38px !important;
+        margin:0 !important;
+        padding:3px !important;
+      }
+      #modal-overlay .modal-tab {
+        min-width:0 !important;
+        min-height:32px !important;
+        padding:6px 8px !important;
+        font-size:10.5px !important;
+        white-space:nowrap !important;
+      }
+      #modal-overlay .modal-close {
+        position:static !important;
+        width:40px !important;
+        height:40px !important;
+        min-width:40px !important;
+        margin:0 !important;
+        justify-self:end !important;
+        z-index:5 !important;
+      }
+      html.ios-standalone #modal-overlay .modal-head {
+        padding-top:calc(10px + env(safe-area-inset-top, 0px)) !important;
       }
       #modal-overlay .modal-body,
       #modal-overlay #modal-body-single,
@@ -270,6 +285,25 @@ $mobileModalLayoutFix = <<<'HTML'
       }
       #modal-overlay .modal-foot .modal-btn {
         min-height:48px !important;
+      }
+    }
+    @media (max-width:390px) {
+      #modal-overlay .modal-head {
+        grid-template-columns:minmax(96px,.68fr) minmax(154px,1.12fr) 38px !important;
+        gap:5px !important;
+        padding-left:10px !important;
+        padding-right:10px !important;
+      }
+      #modal-overlay .modal-title { font-size:15px !important; }
+      #modal-overlay .modal-close {
+        width:38px !important;
+        height:38px !important;
+        min-width:38px !important;
+      }
+      #modal-overlay .modal-tab {
+        padding-left:5px !important;
+        padding-right:5px !important;
+        font-size:10px !important;
       }
     }
   `;
