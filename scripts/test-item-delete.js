@@ -31,6 +31,14 @@ function makeContext({ saveFails = false } = {}) {
     syncRegistryCities: () => {},
     showSnapshotBar: () => {},
     setTimeout: () => 0,
+    getToken: () => 'test-token',
+    URL,
+    window: { location: { href: 'https://example.test/trip', replace: () => { calls.reloaded = true; } } },
+    fetch: async (_url, options) => {
+      calls.fetch = (calls.fetch || 0) + 1;
+      calls.fetchBody = JSON.parse(options.body);
+      return { ok: true, json: async () => ({ ok: true, data: { deleted: true } }) };
+    },
     console
   };
   vm.createContext(ctx);
@@ -102,8 +110,11 @@ function makeContext({ saveFails = false } = {}) {
     if (JSON.stringify(ids) !== JSON.stringify(['inserted','keep'])) {
       throw new Error('drawer transport delete did not resolve by object identity');
     }
-    if (calls.save !== 1) {
-      throw new Error('drawer transport identity delete did not persist');
+    if (calls.fetch !== 1 || calls.fetchBody?.fingerprint?.mode !== 'Coach') {
+      throw new Error('drawer transport identity delete did not call atomic transport delete');
+    }
+    if (!calls.reloaded) {
+      throw new Error('drawer transport identity delete did not reload after server deletion');
     }
   }
 
