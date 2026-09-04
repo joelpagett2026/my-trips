@@ -99,6 +99,8 @@ jobs:
 
       - name: Validate atomic trip deletion contracts
         run: python scripts/validate-trip-delete.py
+      - name: Test itinerary item deletion behavior
+        run: node scripts/test-item-delete.js
 
       - name: Execute renderer integration contracts
         run: php scripts/validate-renderers.php
