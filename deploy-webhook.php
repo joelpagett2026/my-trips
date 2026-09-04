@@ -193,6 +193,7 @@ $coreFiles = [
     'map-mobile-redesign.js',
     'trip-dashboard-create.js',
     'trip-delete.js',
+    'activity-editor.js',
     'settings-backup.js',
     'datepicker.js',
     'budget-live-redesign.js',
