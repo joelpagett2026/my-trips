@@ -31,6 +31,7 @@ record = read("record.php")
 db = read("db.js")
 db_config = read("db-config.php")
 ui = read("itinerary-ui.js")
+state_guard = read("itinerary-state-guard.js")
 settings = read("settings.html")
 api = read("api.php")
 htaccess = read(".htaccess")
@@ -39,7 +40,8 @@ htaccess = read(".htaccess")
 require("new-trip-v2.html" in trip, "trip.php must render the shared V2 template")
 require("template-runtime.php" in trip and "applyItineraryRuntimeSafety" in trip,
         "trip.php must sanitize the shared template before output")
-require('/itinerary-state-guard.js?v=1' in trip, "trip.php must load the state safety layer")
+require('/itinerary-state-guard.js?v=' in trip and '$stateGuardVersion' in trip,
+        "trip.php must load a dynamically versioned state safety layer")
 require('/itinerary-ui.js?v=' in trip and '$uiVersion' in trip,
         "trip.php must load versioned itinerary-only UI bootstrap")
 require('/mobile-drag.js?v=' in trip and '$mobileDragVersion' in trip,
@@ -101,7 +103,7 @@ require("installHotelLookupFix" not in auth, "hotel monkey patch leaked back int
 require("budget-live-redesign.js" not in auth, "Budget asset must not be loaded by auth.js")
 require("budget-live-redesign.js" in ui, "itinerary-ui.js must load the Budget presentation")
 
-# Conflict-safe saves.
+# Conflict-safe whole-record saves plus atomic explicit item saves.
 require("FOR UPDATE" in record, "record.php must lock a record while checking its version")
 require("expected_version" in record, "record.php must enforce expected versions")
 require("array_key_exists('expected_version', $body)" in record,
@@ -110,11 +112,37 @@ require("Missing expected_version" in record and "428" in record,
         "missing save preconditions must fail closed")
 require("409" in record, "record.php must reject stale writes")
 require("isAuthorizedToken($token, false)" in record, "record.php must reject legacy PIN-hash bearer tokens")
+require("$action === 'upsert_item'" in record and "original_item" in record,
+        "record.php must retain the atomic Add/Edit item endpoint")
+require("This item was changed in another tab" in record and "FOR UPDATE" in record,
+        "item edits must detect same-item concurrency while holding the record lock")
+require("saved_index" in record and "'data' => $data" in record and "'version' => hash('sha256', $json)" in record,
+        "atomic item saves must return the authoritative document and version")
 require("_dbSaveQueues" in db, "db.js must serialize saves per record")
 require("expected_version" in db, "db.js must send record versions")
+require("dbUpsertItineraryItem" in db and "dbAdoptRecord" in db,
+        "browser must adopt the server-authoritative state after item-level saves")
 require("return getStoredAuth().sessionToken || ''" in db, "browser API calls must use only the random server session token")
 require("s.token" not in db, "db.js must not fall back to the PIN hash token")
 require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
+
+# iOS Add/Edit controls must resolve the user's touch before VisualViewport/keyboard
+# layout changes can retarget the synthetic click. The explicit save must use the
+# item-level transaction and suppress the old whole-document autosave race.
+require("installAtomicItemSave" in state_guard and "dbUpsertItineraryItem" in state_guard,
+        "state guard must route explicit modal saves through atomic item persistence")
+require("suppressAutosave = true" in state_guard and "const payloadItem = clone(currentItem)" in state_guard,
+        "modal save must suppress redundant autosave until synchronous metadata is captured")
+require("pointerdown" in state_guard and "pointerup" in state_guard and "pointerType !== 'touch'" in state_guard,
+        "touch controls must use pointer events rather than relying on delayed iOS click")
+require("#f-meal-kind-row .tt-btn" in state_guard and "setMealKind(kind.dataset.val" in state_guard,
+        "meal-kind selection must be committed on touch pointerdown")
+require("#f-meal-status-row .tt-btn" in state_guard and "setMealStatus(status.dataset.val" in state_guard,
+        "meal status selection must be committed on touch pointerdown")
+require("#modal-save-btn" in state_guard and "window.saveItem()" in state_guard and "lastTouchSaveAt" in state_guard,
+        "modal Save must be touch-stable and suppress the synthetic duplicate click")
+require("STATE = beforeState" in state_guard and "modal?.classList.add('open')" in state_guard,
+        "a failed atomic item save must restore local state and keep the form available")
 
 # Authentication v2 must issue random expiring sessions, throttle PIN guesses, and
 # hash the four-digit PIN only on the server. The database PIN is authoritative;
