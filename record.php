@@ -48,6 +48,98 @@ if ($action === 'load') {
     ]);
 }
 
+if ($action === 'delete_item') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') respondFail('POST required', 405);
+
+    $raw = file_get_contents('php://input');
+    $body = json_decode($raw ?: '', true);
+    if (!is_array($body)) respondFail('Invalid JSON body');
+
+    $id = (string)($body['id'] ?? '');
+    $dayIndex = filter_var($body['day_index'] ?? null, FILTER_VALIDATE_INT);
+    $itemId = (string)($body['item_id'] ?? '');
+    $fingerprint = is_array($body['fingerprint'] ?? null) ? $body['fingerprint'] : [];
+    if ($id === '' || $dayIndex === false || $dayIndex < 0) respondFail('Missing or invalid delete target');
+
+    $pdo = db();
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('SELECT data FROM itinerary WHERE id = ? FOR UPDATE');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            $pdo->rollBack();
+            respondFail('Trip not found', 404);
+        }
+
+        $data = json_decode((string)$row['data'], true);
+        if (!is_array($data) || !isset($data['days'][$dayIndex]['items']) || !is_array($data['days'][$dayIndex]['items'])) {
+            $pdo->rollBack();
+            respondFail('Trip day not found', 404);
+        }
+
+        $items =& $data['days'][$dayIndex]['items'];
+        $matchIndex = -1;
+
+        if ($itemId !== '') {
+            foreach ($items as $i => $item) {
+                if (is_array($item) && (string)($item['_id'] ?? '') === $itemId) {
+                    $matchIndex = $i;
+                    break;
+                }
+            }
+        }
+
+        if ($matchIndex < 0 && $fingerprint) {
+            foreach ($items as $i => $item) {
+                if (!is_array($item)) continue;
+                $mode = (string)($item['transport']['mode'] ?? '');
+                $from = (string)($item['transport']['from'] ?? '');
+                $to = (string)($item['transport']['to'] ?? '');
+                $same =
+                    (string)($item['type'] ?? '') === (string)($fingerprint['type'] ?? '') &&
+                    (string)($item['title'] ?? '') === (string)($fingerprint['title'] ?? '') &&
+                    (string)($item['time'] ?? '') === (string)($fingerprint['time'] ?? '') &&
+                    $mode === (string)($fingerprint['mode'] ?? '') &&
+                    $from === (string)($fingerprint['from'] ?? '') &&
+                    $to === (string)($fingerprint['to'] ?? '');
+                if ($same) {
+                    $matchIndex = $i;
+                    break;
+                }
+            }
+        }
+
+        if ($matchIndex < 0) {
+            $pdo->rollBack();
+            respondFail('Item not found', 404);
+        }
+
+        $target = $items[$matchIndex];
+        if ((string)($target['type'] ?? '') !== 'move') {
+            $pdo->rollBack();
+            respondFail('Target is not transport', 400);
+        }
+
+        array_splice($items, $matchIndex, 1);
+        $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($json === false) throw new RuntimeException('Could not encode updated trip');
+
+        $update = $pdo->prepare('UPDATE itinerary SET data = ?, updated_at = NOW() WHERE id = ?');
+        $update->execute([$json, $id]);
+        $pdo->commit();
+
+        respondOk([
+            'id' => $id,
+            'deleted' => true,
+            'version' => hash('sha256', $json),
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        respondFail('Delete item failed', 500);
+    }
+}
+
 if ($action === 'save') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') respondFail('POST required', 405);
 
