@@ -50,10 +50,10 @@
 // Mobile activity editor shell.
 //
 // The add/edit form is a true full-screen surface on mobile. iOS Safari already
-// positions fixed elements in the visual viewport while the keyboard is open.
-// Applying visualViewport.offsetTop to another fixed element therefore moves it
-// twice — exactly the failure where the itinerary becomes visible above the
-// editor and only the bottom of the form remains above the keyboard.
+// positions fixed elements in the visible viewport while the keyboard is open.
+// Applying that viewport's top displacement to another fixed element therefore
+// moves it twice — exactly the failure where the itinerary becomes visible above
+// the editor and only the bottom of the form remains above the keyboard.
 //
 // Keep the editor pinned to top:0 and use only visualViewport.height to size the
 // visible shell. The body scrolls independently while the header and Save bar
