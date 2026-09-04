@@ -28,6 +28,7 @@ jobs:
           node --check itinerary-ui.js
           node --check trip-dashboard-create.js
           node --check trip-delete.js
+          node --check activity-editor.js
           node --check settings-backup.js
           node --check datepicker.js
           node --check budget-live-redesign.js
@@ -139,6 +140,9 @@ jobs:
           failed = payload.get('failed')
           if failed:
               raise SystemExit('deploy webhook reported failed file copies')
+          copied = payload.get('copied') or []
+          if 'activity-editor.js' not in copied:
+              raise SystemExit('deploy webhook did not copy activity-editor.js')
           print(f'deployed against verified database with {count} active itineraries')
           PY
 
@@ -169,6 +173,16 @@ jobs:
             --output /tmp/trip.html
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
+
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/activity-editor.js?verify-controller=1" \
+            --output /tmp/activity-editor.js
+          grep -q '__activityEditorControllerV1' /tmp/activity-editor.js
+          grep -q "save.addEventListener('click', onSaveClick)" /tmp/activity-editor.js
+          if grep -q "setImportant(overlay, 'pointer-events'" /tmp/activity-editor.js; then
+            echo 'live activity editor can override closed-overlay pointer safety'
+            exit 1
+          fi
 
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/auth.js?verify-restored-gate=1" \
@@ -203,4 +217,4 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=check")
           test "$check_status" = "401"
 
-          echo 'PIN gate + response headers + dashboard session runtime + protected APIs: ok'
+          echo 'PIN gate + response headers + dashboard session runtime + activity editor + protected APIs: ok'
