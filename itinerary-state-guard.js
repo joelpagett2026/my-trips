@@ -162,16 +162,25 @@
         : -1;
       const originalItem = editDescriptor?.item ? clone(editDescriptor.item) : null;
 
+      // Keep this true until the microtask below captures the final synchronous
+      // item shape. itinerary-completion.js wraps saveItem outside this layer and
+      // adds restaurant metadata immediately after the core save returns; keeping
+      // autosave suppressed through that step prevents a second whole-document
+      // save from racing the item transaction.
       suppressAutosave = true;
       let result;
       try {
         result = originalSaveItem.apply(this, args);
-      } finally {
+      } catch (error) {
         suppressAutosave = false;
+        throw error;
       }
 
       const overlay = document.getElementById('modal-overlay');
-      if (overlay?.classList.contains('open')) return result; // validation kept it open
+      if (overlay?.classList.contains('open')) {
+        suppressAutosave = false;
+        return result; // validation kept it open
+      }
 
       const items = STATE.days?.[dayIdx]?.items || [];
       let savedIndex = -1;
@@ -181,6 +190,7 @@
         savedIndex = items.findIndex(item => !beforeRefs.has(item));
       }
       if (savedIndex < 0 || !items[savedIndex]) {
+        suppressAutosave = false;
         STATE = beforeState;
         if (typeof render === 'function') render();
         if (typeof setStatus === 'function') setStatus('error', '✕ Save failed');
@@ -210,11 +220,18 @@
         const currentItem = currentItems[currentIndex];
         if (!currentItem) throw new Error('Saved item disappeared before persistence');
 
+        // Synchronous enhancement work is now captured. Later asynchronous work
+        // (for example a restaurant photo arriving from Places) may use normal
+        // autosave after this point and will inherit the new record version once
+        // the item transaction succeeds.
+        const payloadItem = clone(currentItem);
+        suppressAutosave = false;
+
         const response = await window.dbUpsertItineraryItem(
           RECORD_ID,
           dayIdx,
           currentIndex,
-          clone(currentItem),
+          payloadItem,
           originalItem
         );
 
@@ -226,9 +243,9 @@
         if (typeof setStatus === 'function') setStatus('saved', '');
         if (typeof syncRegistryCities === 'function') syncRegistryCities();
       }).catch(error => {
+        suppressAutosave = false;
         console.error('Atomic itinerary item save failed', error);
         STATE = beforeState;
-        lastPersistedState = clone(beforeState);
         if (typeof render === 'function') render();
         if (editDescriptor && typeof editItem !== 'undefined') {
           const restored = STATE.days?.[dayIdx]?.items?.[originalIndex] || null;
@@ -245,6 +262,7 @@
             : 'This item was not saved. Your form is still open so you can try again.');
         }, 0);
       }).finally(() => {
+        suppressAutosave = false;
         explicitSaveBusy = false;
       });
 
