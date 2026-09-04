@@ -517,12 +517,14 @@
     const touch = touches.find(candidate => candidate.identifier === touchId);
     const action = armedAction;
     const button = armedButton;
+    const originX = startX;
+    const originY = startY;
     resetTouch();
 
     event.preventDefault();
     event.stopImmediatePropagation();
     if (!touch) return;
-    if (Math.abs(touch.clientX - startX) > 18 || Math.abs(touch.clientY - startY) > 18) return;
+    if (Math.abs(touch.clientX - originX) > 18 || Math.abs(touch.clientY - originY) > 18) return;
     if (!pointInside(button, touch.clientX, touch.clientY)) return;
 
     lastTouchActionAt = Date.now();
