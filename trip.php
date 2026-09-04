@@ -11,7 +11,8 @@ require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/template-runtime.php';
 
 header('Content-Type: text/html; charset=UTF-8');
-header('Cache-Control: no-cache, must-revalidate');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Expires: 0');
 header('Pragma: no-cache');
 
 $slug = preg_replace('/[^a-z0-9\-]/', '', strtolower($_GET['slug'] ?? ''));
@@ -82,7 +83,22 @@ $standaloneHead = <<<'HTML'
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
 <script>
-(function () { if (window.navigator.standalone === true) document.documentElement.classList.add('ios-standalone'); })();
+(function () {
+  const standalone = window.navigator.standalone === true;
+  if (standalone) document.documentElement.classList.add('ios-standalone');
+
+  // iOS Home Screen apps can restore a previously suspended document without
+  // requesting it from the server again. If that happens, force one real
+  // navigation so newly deployed itinerary code is actually loaded.
+  if (standalone) {
+    window.addEventListener('pageshow', function (event) {
+      if (!event.persisted) return;
+      const url = new URL(window.location.href);
+      url.searchParams.set('_appfresh', Date.now().toString());
+      window.location.replace(url.toString());
+    });
+  }
+})();
 </script>
 <style>
 @media (max-width: 700px) {
