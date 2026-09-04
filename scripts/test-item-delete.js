@@ -86,6 +86,27 @@ function makeContext({ saveFails = false } = {}) {
     }
   }
 
+  {
+    const { ctx, calls } = makeContext();
+    const transport = { id: 'transport', type: 'move', title: 'Guimaraes → Braga', transport: { mode: 'Coach' } };
+    ctx.STATE.days[0].items = [
+      { id: 'inserted', type: 'place', title: 'Inserted' },
+      { id: 'keep', type: 'place', title: 'Keep' },
+      transport
+    ];
+    // Simulate the drawer having opened before a re-render/reorder changed the
+    // numeric position. The object reference must still win over the stale index.
+    ctx.drawerItem = { dayIdx: 0, itemIdx: 1, item: transport };
+    await ctx.deleteCurrentItem();
+    const ids = ctx.STATE.days[0].items.map(x => x.id);
+    if (JSON.stringify(ids) !== JSON.stringify(['inserted','keep'])) {
+      throw new Error('drawer transport delete did not resolve by object identity');
+    }
+    if (calls.save !== 1) {
+      throw new Error('drawer transport identity delete did not persist');
+    }
+  }
+
   console.log('item deletion behavior: ok');
 })().catch(err => {
   console.error('item deletion behavior failed:', err.message);
