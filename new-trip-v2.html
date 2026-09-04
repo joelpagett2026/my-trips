@@ -2036,17 +2036,18 @@ function makeItemNode(item, idx) {
     e.stopPropagation();
     if (!dragMoved) openEditItem(activeDay, idx);
   });
-  row.querySelector('.tl-delete-btn')?.addEventListener('click', e => {
+  row.querySelector('.tl-delete-btn')?.addEventListener('click', async e => {
     e.stopPropagation();
     if (dragMoved) return;
-    if (!confirm('Remove this activity from the itinerary?')) return;
-    const items = STATE.days[activeDay].items;
-    takeSnapshot();
-    items.splice(idx, 1);
-    scheduleSave();
-    render();
-    showSnapshotBar(true);
-    setTimeout(() => showSnapshotBar(false), 6000);
+    const isTransport = it && it.type === 'move';
+    await removeItineraryItem(activeDay, idx, {
+      label: isTransport ? 'transport item' : 'activity',
+      confirmMessage: isTransport
+        ? 'Remove this transport item from the itinerary?'
+        : 'Remove this activity from the itinerary?',
+      closeDrawer: false,
+      closeModal: false
+    });
   });
   return row;
 }
@@ -2804,40 +2805,36 @@ function editCurrentItem() {
   openEditItem(drawerItem.dayIdx, drawerItem.itemIdx);
 }
 
-async function deleteCurrentItem() {
-  if (!drawerItem) return;
-
-  const dayIdx = Number(drawerItem.dayIdx);
-  const itemIdx = Number(drawerItem.itemIdx);
+async function removeItineraryItem(dayIdx, itemIdx, options = {}) {
+  dayIdx = Number(dayIdx);
+  itemIdx = Number(itemIdx);
   const items = STATE.days?.[dayIdx]?.items;
+  const label = options.label || 'activity';
 
   if (!Number.isInteger(dayIdx) || !Array.isArray(items) ||
       !Number.isInteger(itemIdx) || itemIdx < 0 || itemIdx >= items.length) {
-    console.error('Delete activity: invalid selected item', drawerItem);
-    alert('Could not identify this activity to remove. Please close it and try again.');
-    return;
+    console.error('Remove itinerary item: invalid target', { dayIdx, itemIdx, options });
+    alert('Could not identify this ' + label + ' to remove. Please close it and try again.');
+    return false;
   }
 
-  if (!confirm('Delete this activity?')) return;
+  if (options.confirmMessage && !confirm(options.confirmMessage)) return false;
 
   const removedItem = items[itemIdx];
 
-  // Snapshotting must never be allowed to block the delete itself. Safari can
-  // throw here if local snapshot storage is unavailable/full.
   try { takeSnapshot(); } catch (e) {
-    console.warn('Delete activity snapshot skipped:', e);
+    console.warn('Remove itinerary item snapshot skipped:', e);
   }
 
   items.splice(itemIdx, 1);
 
-  // Update the UI immediately so a successful confirmation can never appear
-  // to do nothing.
-  try { closeDrawer(); } catch (e) { console.warn('Delete drawer close failed:', e); }
-  try { closeModal(); } catch (e) { console.warn('Delete modal close failed:', e); }
-  try { render(); } catch (e) { console.warn('Delete render failed:', e); }
+  // Update every visible surface immediately. This is important for transport
+  // rows because they can also be shown in the Bookings view.
+  try { if (options.closeDrawer !== false) closeDrawer(); } catch (_) {}
+  try { if (options.closeModal !== false) closeModal(); } catch (_) {}
+  try { if (options.closeQuickJourney) closeQuickJourneyModal(); } catch (_) {}
+  try { render(); } catch (e) { console.warn('Remove itinerary item render failed:', e); }
 
-  // Persist immediately rather than relying on the debounced autosave. If the
-  // database save fails, restore the item in its original position.
   try {
     setStatus('saving', '●  Saving…');
     await dbSave(RECORD_ID, STATE);
@@ -2847,13 +2844,23 @@ async function deleteCurrentItem() {
       showSnapshotBar(true);
       setTimeout(() => showSnapshotBar(false), 6000);
     } catch (_) {}
+    return true;
   } catch (e) {
-    console.error('Delete activity save failed:', e);
+    console.error('Remove itinerary item save failed:', e);
     items.splice(Math.min(itemIdx, items.length), 0, removedItem);
     try { render(); } catch (_) {}
     setStatus('error', '✕ Save failed');
-    alert('The activity could not be removed because the save failed. It has been restored.');
+    alert('The ' + label + ' could not be removed because the save failed. It has been restored.');
+    return false;
   }
+}
+
+async function deleteCurrentItem() {
+  if (!drawerItem) return;
+  await removeItineraryItem(drawerItem.dayIdx, drawerItem.itemIdx, {
+    label: 'activity',
+    confirmMessage: 'Delete this activity?'
+  });
 }
 
 // ── ADD / EDIT MODAL ──────────────────────────────────────────────────
@@ -3324,15 +3331,16 @@ function closeQuickJourneyModal() {
   _quickJourneyEditTarget = null;
 }
 
-function deleteQuickJourney() {
+async function deleteQuickJourney() {
   if (!_quickJourneyEditTarget) return;
-  if (!confirm('Delete this journey?')) return;
   const { dayIdx, itemIdx } = _quickJourneyEditTarget;
-  takeSnapshot();
-  STATE.days[dayIdx].items.splice(itemIdx, 1);
-  closeQuickJourneyModal();
-  scheduleSave();
-  render();
+  await removeItineraryItem(dayIdx, itemIdx, {
+    label: 'journey',
+    confirmMessage: 'Delete this journey?',
+    closeDrawer: false,
+    closeModal: false,
+    closeQuickJourney: true
+  });
 }
 
 async function saveQuickJourney() {
