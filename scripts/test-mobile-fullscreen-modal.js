@@ -56,4 +56,15 @@ assert(html.includes('<button class="modal-close" onclick="closeModal()">×</but
 assert(/\.modal-overlay\{[^}]*pointer-events:none/i.test(css), 'closed overlay must not intercept touches');
 assert(/\.modal-overlay\.open\{[^}]*pointer-events:auto/i.test(css), 'only an open overlay may intercept touches');
 
-console.log('mobile fullscreen activity modal final-authority behavior: ok');
+// Edit-control regression: mobile drawer swiping must not make Edit dependent on
+// a fragile synthetic click or a stale array index after a save/re-render.
+assert(html.includes('onclick="editCurrentItem()"'), 'drawer Edit button is missing');
+assert(runtime.includes('window.__stableDrawerItemEditV1'), 'stable drawer Edit hardening is missing');
+assert(runtime.includes('function resolveDrawerEditTarget()'), 'Edit must resolve the live itinerary target before opening');
+assert(runtime.includes("items.findIndex(item => item && item._id === selected.item._id)"), 'Edit must recover an item by stable id when its array index moved');
+assert(runtime.includes('const target = resolveDrawerEditTarget();'), 'Edit must resolve the target before closing the drawer');
+assert(runtime.includes('window.openEditItem(target.dayIdx, target.itemIdx);'), 'Edit must open the authoritative item index');
+assert(runtime.includes("event.target?.closest?.('#drawer .dr-text-btn')"), 'iPhone Edit must have a dedicated touch-stable path');
+assert(runtime.includes('event.stopImmediatePropagation();'), 'touch-stable Edit must suppress the duplicate synthetic click');
+
+console.log('mobile fullscreen activity modal and Edit control behavior: ok');
