@@ -80,11 +80,6 @@
     }
   });
 
-  // Existing handlers call takeSnapshot() around destructive edits. Capture the
-  // last server-confirmed state immediately so Undo is safe even if the user taps
-  // it before the asynchronous autosave finishes. saveData() also captures the
-  // same baseline for edit paths that never call takeSnapshot(); de-duplication in
-  // pushSnapshot() prevents the two paths from creating duplicate history rows.
   window.takeSnapshot = function () {
     if (!initializeFromLoadedRecord()) return;
     pushSnapshot(lastPersistedState);
@@ -120,12 +115,9 @@
     }
   };
 
-  // Explicit Add/Edit saves are item-level transactions. The old path mutated
-  // STATE, closed the modal, then hoped a whole-document autosave would complete.
-  // On iPhone that could lose the click during keyboard viewport movement, and a
-  // harmless change elsewhere could also make the whole-document version stale.
-  // Keep autosave for background edits, but commit modal items directly on the
-  // server while protecting concurrent edits to the same item.
+  // Explicit Add/Edit saves are item-level transactions. Keep autosave for
+  // background edits, but commit modal items directly on the server while
+  // protecting concurrent edits to the same item.
   function installAtomicItemSave() {
     if (typeof window.saveItem !== 'function' || typeof window.scheduleSave !== 'function') return;
     if (window.saveItem.__atomicItemSave) return;
@@ -279,21 +271,47 @@
         border-color:var(--amber,#b97825) !important;
         color:#8a5618 !important;
       }
+      #modal-overlay .modal-body,
+      #modal-overlay #modal-body-single,
+      #modal-overlay #modal-body-bulk {
+        position:relative !important;
+        z-index:1 !important;
+      }
+      #modal-overlay .modal-foot {
+        position:relative !important;
+        z-index:1000 !important;
+        pointer-events:auto !important;
+        isolation:isolate !important;
+      }
+      #modal-save-btn {
+        position:relative !important;
+        z-index:1001 !important;
+        pointer-events:auto !important;
+        touch-action:manipulation !important;
+        -webkit-user-select:none !important;
+        user-select:none !important;
+      }
       #modal-save-btn[data-saving="1"] { opacity:.72 !important; pointer-events:none !important; }
     `;
     document.head.appendChild(style);
 
-    let armedSavePointer = null;
-    let armedSaveButton = null;
-    let armedSaveX = 0;
-    let armedSaveY = 0;
-    let saveGestureMoved = false;
-    let lastTouchSaveAt = 0;
+    let armedTouchId = null;
+    let armedX = 0;
+    let armedY = 0;
+    let moved = false;
+    let lastCoordinateSaveAt = 0;
     let ignoreMealClickUntil = 0;
 
+    function pointInside(el, x, y) {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }
+
+    // Meal segmented controls keep their existing early touch handling because
+    // iOS can otherwise retarget their synthetic click while the form relayouts.
     document.addEventListener('pointerdown', event => {
       if (event.pointerType !== 'touch') return;
-
       const kind = event.target.closest('#f-meal-kind-row .tt-btn');
       if (kind && typeof setMealKind === 'function') {
         event.preventDefault();
@@ -302,54 +320,57 @@
         setMealKind(kind.dataset.val || '');
         return;
       }
-
       const status = event.target.closest('#f-meal-status-row .tt-btn');
       if (status && typeof setMealStatus === 'function') {
         event.preventDefault();
         event.stopImmediatePropagation();
         ignoreMealClickUntil = Date.now() + 900;
         setMealStatus(status.dataset.val || 'walkin');
-        return;
-      }
-
-      const save = event.target.closest('#modal-save-btn');
-      if (save) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        armedSavePointer = event.pointerId;
-        armedSaveButton = save;
-        armedSaveX = event.clientX;
-        armedSaveY = event.clientY;
-        saveGestureMoved = false;
-        try { save.setPointerCapture(event.pointerId); } catch (_) {}
       }
     }, true);
 
-    document.addEventListener('pointermove', event => {
-      if (event.pointerType !== 'touch' || armedSavePointer !== event.pointerId) return;
-      if (Math.hypot(event.clientX - armedSaveX, event.clientY - armedSaveY) > 24) saveGestureMoved = true;
+    // Do NOT cancel the native Save click on touchstart. Instead arm the save by
+    // screen coordinates. This deliberately ignores event.target so a transparent
+    // scrolling/viewport layer cannot make the visible Save button untappable.
+    document.addEventListener('touchstart', event => {
+      const overlay = document.getElementById('modal-overlay');
+      const save = document.getElementById('modal-save-btn');
+      if (!overlay?.classList.contains('open') || !save || event.touches.length !== 1) return;
+      const t = event.touches[0];
+      if (!pointInside(save, t.clientX, t.clientY)) return;
+      armedTouchId = t.identifier;
+      armedX = t.clientX;
+      armedY = t.clientY;
+      moved = false;
     }, true);
 
-    document.addEventListener('pointerup', event => {
-      if (event.pointerType !== 'touch' || armedSavePointer !== event.pointerId) return;
-      const save = armedSaveButton;
-      armedSavePointer = null;
-      armedSaveButton = null;
+    document.addEventListener('touchmove', event => {
+      if (armedTouchId === null) return;
+      const t = Array.from(event.touches).find(touch => touch.identifier === armedTouchId);
+      if (!t) return;
+      if (Math.hypot(t.clientX - armedX, t.clientY - armedY) > 24) moved = true;
+    }, true);
+
+    document.addEventListener('touchend', event => {
+      if (armedTouchId === null) return;
+      const t = Array.from(event.changedTouches).find(touch => touch.identifier === armedTouchId);
+      const save = document.getElementById('modal-save-btn');
+      armedTouchId = null;
+      if (!t || moved || !save || !pointInside(save, t.clientX, t.clientY)) return;
+
+      // Coordinate hit is authoritative. Prevent the later synthetic click so the
+      // save runs exactly once, even if iOS reports another element as the target.
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (!save || saveGestureMoved) return;
-      lastTouchSaveAt = Date.now();
+      lastCoordinateSaveAt = Date.now();
       save.dataset.saving = '1';
       try { window.saveItem(); }
       finally { window.setTimeout(() => { delete save.dataset.saving; }, 700); }
     }, true);
 
-    document.addEventListener('pointercancel', event => {
-      if (armedSavePointer === event.pointerId) {
-        armedSavePointer = null;
-        armedSaveButton = null;
-        saveGestureMoved = false;
-      }
+    document.addEventListener('touchcancel', () => {
+      armedTouchId = null;
+      moved = false;
     }, true);
 
     document.addEventListener('click', event => {
@@ -358,7 +379,7 @@
         event.stopImmediatePropagation();
         return;
       }
-      if (Date.now() - lastTouchSaveAt < 900 && event.target.closest('#modal-save-btn')) {
+      if (Date.now() - lastCoordinateSaveAt < 900 && event.target.closest('#modal-save-btn')) {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
@@ -376,7 +397,6 @@
   };
 
   // "Travel Day" is an itinerary label, not a real destination/city tag.
-  // Filter it before syncing the registry so bad presentation data is not stored.
   window.computeTripCities = function () {
     if (typeof STATE === 'undefined' || !STATE || !STATE.meta) return [];
     const m = STATE.meta;
