@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'stability-hardening-*'
+      - 'fix-mobile-modal-*'
   pull_request:
     branches:
       - main
@@ -105,6 +106,9 @@ jobs:
 
       - name: Test itinerary item save transactions
         run: node scripts/test-item-save.js
+
+      - name: Test mobile modal overlay release
+        run: node scripts/test-modal-overlay.js
 
       - name: Execute renderer integration contracts
         run: php scripts/validate-renderers.php
