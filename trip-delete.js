@@ -170,3 +170,52 @@
     }).observe(overlay, { attributes:true, attributeFilter:['class'] });
   }
 })();
+
+// The edit modal's Delete button historically called deleteCurrentItem(), but
+// that function only looked at drawerItem. When an item is opened directly in
+// the edit modal, editItem is populated while drawerItem can be null, so Delete
+// silently returned without doing anything. Resolve either edit context.
+(function () {
+  if (typeof window === 'undefined') return;
+
+  window.deleteCurrentItem = function deleteCurrentItemFixed() {
+    let dayIdx = null;
+    let itemIdx = -1;
+
+    try {
+      if (typeof editItem !== 'undefined' && editItem && editItem.item) {
+        dayIdx = Number(editItem.dayIdx);
+        const items = STATE.days?.[dayIdx]?.items || [];
+        itemIdx = items.indexOf(editItem.item);
+        if (itemIdx < 0 && Number.isInteger(Number(editItem.itemIdx))) itemIdx = Number(editItem.itemIdx);
+      }
+    } catch (_) {}
+
+    try {
+      if ((dayIdx === null || itemIdx < 0) && typeof drawerItem !== 'undefined' && drawerItem) {
+        dayIdx = Number(drawerItem.dayIdx);
+        const items = STATE.days?.[dayIdx]?.items || [];
+        itemIdx = Number.isInteger(Number(drawerItem.itemIdx))
+          ? Number(drawerItem.itemIdx)
+          : items.indexOf(drawerItem.item);
+      }
+    } catch (_) {}
+
+    if (!Number.isInteger(dayIdx) || dayIdx < 0 || !Number.isInteger(itemIdx) || itemIdx < 0) {
+      console.warn('Delete activity: no valid item target');
+      return;
+    }
+
+    const items = STATE.days?.[dayIdx]?.items;
+    if (!Array.isArray(items) || itemIdx >= items.length) return;
+    if (!window.confirm('Delete this activity?')) return;
+
+    try { if (typeof takeSnapshot === 'function') takeSnapshot(); } catch (_) {}
+    items.splice(itemIdx, 1);
+
+    try { if (typeof closeDrawer === 'function') closeDrawer(); } catch (_) {}
+    try { if (typeof closeModal === 'function') closeModal(); } catch (_) {}
+    try { if (typeof scheduleSave === 'function') scheduleSave(); } catch (_) {}
+    try { if (typeof render === 'function') render(); } catch (_) {}
+  };
+})();
