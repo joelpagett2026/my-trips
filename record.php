@@ -57,9 +57,22 @@ if ($action === 'delete_item') {
 
     $id = (string)($body['id'] ?? '');
     $dayIndex = filter_var($body['day_index'] ?? null, FILTER_VALIDATE_INT);
+    $originalIndex = filter_var($body['item_index'] ?? null, FILTER_VALIDATE_INT);
     $itemId = (string)($body['item_id'] ?? '');
     $fingerprint = is_array($body['fingerprint'] ?? null) ? $body['fingerprint'] : [];
     if ($id === '' || $dayIndex === false || $dayIndex < 0) respondFail('Missing or invalid delete target');
+
+    $matchesFingerprint = static function(array $item, array $fp): bool {
+        $transport = is_array($item['transport'] ?? null) ? $item['transport'] : [];
+        return
+            (string)($item['type'] ?? '') === (string)($fp['type'] ?? '') &&
+            (string)($item['title'] ?? '') === (string)($fp['title'] ?? '') &&
+            (string)($item['time'] ?? '') === (string)($fp['time'] ?? '') &&
+            (string)($item['period'] ?? '') === (string)($fp['period'] ?? '') &&
+            (string)($transport['mode'] ?? '') === (string)($fp['mode'] ?? '') &&
+            (string)($transport['from'] ?? '') === (string)($fp['from'] ?? '') &&
+            (string)($transport['to'] ?? '') === (string)($fp['to'] ?? '');
+    };
 
     $pdo = db();
     try {
@@ -81,6 +94,7 @@ if ($action === 'delete_item') {
         $items =& $data['days'][$dayIndex]['items'];
         $matchIndex = -1;
 
+        // Strongest identifier: stable item id.
         if ($itemId !== '') {
             foreach ($items as $i => $item) {
                 if (is_array($item) && (string)($item['_id'] ?? '') === $itemId) {
@@ -90,35 +104,27 @@ if ($action === 'delete_item') {
             }
         }
 
-        if ($matchIndex < 0 && $fingerprint) {
-            foreach ($items as $i => $item) {
-                if (!is_array($item)) continue;
-                $mode = (string)($item['transport']['mode'] ?? '');
-                $from = (string)($item['transport']['from'] ?? '');
-                $to = (string)($item['transport']['to'] ?? '');
-                $same =
-                    (string)($item['type'] ?? '') === (string)($fingerprint['type'] ?? '') &&
-                    (string)($item['title'] ?? '') === (string)($fingerprint['title'] ?? '') &&
-                    (string)($item['time'] ?? '') === (string)($fingerprint['time'] ?? '') &&
-                    $mode === (string)($fingerprint['mode'] ?? '') &&
-                    $from === (string)($fingerprint['from'] ?? '') &&
-                    $to === (string)($fingerprint['to'] ?? '');
-                if ($same) {
-                    $matchIndex = $i;
-                    break;
-                }
+        // Next safest: the original index, but only when the item still matches
+        // the fingerprint supplied by the browser.
+        if ($matchIndex < 0 && $originalIndex !== false && $originalIndex >= 0 && isset($items[$originalIndex]) && is_array($items[$originalIndex])) {
+            if (!$fingerprint || $matchesFingerprint($items[$originalIndex], $fingerprint)) {
+                $matchIndex = $originalIndex;
             }
+        }
+
+        // Final fallback for older items without _id: search the current server
+        // copy for the same logical item.
+        if ($matchIndex < 0 && $fingerprint) {
+            $matches = [];
+            foreach ($items as $i => $item) {
+                if (is_array($item) && $matchesFingerprint($item, $fingerprint)) $matches[] = $i;
+            }
+            if (count($matches) === 1) $matchIndex = $matches[0];
         }
 
         if ($matchIndex < 0) {
             $pdo->rollBack();
-            respondFail('Item not found', 404);
-        }
-
-        $target = $items[$matchIndex];
-        if ((string)($target['type'] ?? '') !== 'move') {
-            $pdo->rollBack();
-            respondFail('Target is not transport', 400);
+            respondFail('Item not found or no longer uniquely identifiable', 409);
         }
 
         array_splice($items, $matchIndex, 1);
@@ -132,6 +138,7 @@ if ($action === 'delete_item') {
         respondOk([
             'id' => $id,
             'deleted' => true,
+            'deleted_index' => $matchIndex,
             'version' => hash('sha256', $json),
         ]);
     } catch (Throwable $e) {
