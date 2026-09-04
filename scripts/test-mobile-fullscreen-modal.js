@@ -56,15 +56,24 @@ assert(html.includes('<button class="modal-close" onclick="closeModal()">×</but
 assert(/\.modal-overlay\{[^}]*pointer-events:none/i.test(css), 'closed overlay must not intercept touches');
 assert(/\.modal-overlay\.open\{[^}]*pointer-events:auto/i.test(css), 'only an open overlay may intercept touches');
 
-// Edit-control regression: mobile drawer swiping must not make Edit dependent on
-// a fragile synthetic click or a stale array index after a save/re-render.
+// Drawer action regression: Edit and Remove share the same action footer, but
+// must never share one generic touch handler. The capture-phase touchstart stops
+// the swipe-to-close listener from arming and each action is routed separately.
 assert(html.includes('onclick="editCurrentItem()"'), 'drawer Edit button is missing');
-assert(runtime.includes('window.__stableDrawerItemEditV1'), 'stable drawer Edit hardening is missing');
-assert(runtime.includes('function resolveDrawerEditTarget()'), 'Edit must resolve the live itinerary target before opening');
-assert(runtime.includes("items.findIndex(item => item && item._id === selected.item._id)"), 'Edit must recover an item by stable id when its array index moved');
-assert(runtime.includes('const target = resolveDrawerEditTarget();'), 'Edit must resolve the target before closing the drawer');
-assert(runtime.includes('window.openEditItem(target.dayIdx, target.itemIdx);'), 'Edit must open the authoritative item index');
-assert(runtime.includes("event.target?.closest?.('#drawer .dr-text-btn')"), 'iPhone Edit must have a dedicated touch-stable path');
-assert(runtime.includes('event.stopImmediatePropagation();'), 'touch-stable Edit must suppress the duplicate synthetic click');
+assert(html.includes('onclick="deleteCurrentItem()"'), 'drawer Remove button is missing');
+assert(runtime.includes('window.__stableDrawerActionsV2'), 'stable drawer action controller is missing');
+assert(!runtime.includes('window.__stableDrawerItemEditV1'), 'legacy Edit-only touch controller must be removed');
+assert(runtime.includes('function resolveDrawerTarget()'), 'drawer actions must resolve the live itinerary target');
+assert(runtime.includes("items.findIndex(item => item && item._id === selected.item._id)"), 'drawer actions must recover an item by stable id when its array index moved');
+assert(runtime.includes("if (onclick.includes('editCurrentItem')) action = 'edit';"), 'Edit button must be classified independently');
+assert(runtime.includes("else if (onclick.includes('deleteCurrentItem')) action = 'remove';"), 'Remove button must be classified independently');
+assert(runtime.includes("if (action === 'edit') return window.editCurrentItem();"), 'Edit touch action must invoke Edit only');
+assert(runtime.includes("if (action === 'remove') return window.deleteCurrentItem();"), 'Remove touch action must invoke Remove only');
+assert(runtime.includes('Array.from(event.changedTouches || [])'), 'touch handling must not assume TouchList is iterable on iOS');
+assert(runtime.includes('const originX = startX;') && runtime.includes('const originY = startY;'), 'touch origin must be preserved before action state resets');
+assert(runtime.includes('event.stopPropagation();\n    touchId = touch.identifier;'), 'action touchstart must stop drawer swipe handling before arming');
+assert(runtime.includes("document.addEventListener('click', event =>"), 'drawer actions must retain a click fallback');
+assert(runtime.includes('#drawer .dr-text-actions .dr-text-btn'), 'drawer action hardening must be scoped to the action footer');
+assert(runtime.includes("touch-action:manipulation !important"), 'drawer action buttons must opt out of ambiguous mobile gestures');
 
-console.log('mobile fullscreen activity modal and Edit control behavior: ok');
+console.log('mobile fullscreen activity modal and drawer Edit/Remove behavior: ok');
