@@ -3,8 +3,8 @@
 // One controller owns Add/Edit/Remove interaction across desktop, mobile web and
 // the iOS Home Screen app. It deliberately does NOT execute actions from touchend
 // or pointerdown. Those events only stop the drawer swipe gesture. The native
-// click is the single activation event, which prevents iOS synthetic-click
-// duplication and click-through after a drawer/modal closes.
+// click is the single activation event, preventing duplicate saves and iOS
+// click-through after a drawer/modal closes.
 (function () {
   'use strict';
   if (typeof window === 'undefined' || window.__activityEditorControllerV1) return;
@@ -30,11 +30,6 @@
   const bound = new WeakSet();
   const MOBILE_QUERY = '(max-width: 768px)';
   const isMobile = () => !!(window.matchMedia && window.matchMedia(MOBILE_QUERY).matches);
-
-  function clone(value) {
-    try { return value == null ? value : JSON.parse(JSON.stringify(value)); }
-    catch (_) { return value; }
-  }
 
   function sameFingerprint(a, b) {
     if (!a || !b) return false;
@@ -71,16 +66,14 @@
     const selected = descriptor.item || null;
     const stableId = selected?._id ? String(selected._id) : '';
 
-    // Stable ID is authoritative. Object identity is only useful before a
-    // server response replaces STATE with a fresh object graph.
-    if (stableId) {
-      itemIdx = items.findIndex(item => item && String(item._id || '') === stableId);
-    }
+    // Stable ID is authoritative after a server response replaces STATE with a
+    // fresh object graph.
+    if (stableId) itemIdx = items.findIndex(item => item && String(item._id || '') === stableId);
     if (itemIdx < 0 && selected) itemIdx = items.indexOf(selected);
 
-    // Legacy rows created before stable IDs may still exist. Only use a
-    // fingerprint if it uniquely identifies one row; never guess between
-    // duplicate-looking activities.
+    // Older rows may pre-date stable IDs. Fingerprint matching is only safe if
+    // it uniquely identifies one row; never guess between duplicate-looking
+    // activities.
     if (itemIdx < 0 && selected) {
       const matches = [];
       items.forEach((item, index) => { if (sameFingerprint(item, selected)) matches.push(index); });
@@ -227,8 +220,10 @@
     setImportant(overlay, 'background', '#fff');
     setImportant(overlay, 'transform', 'none');
     setImportant(overlay, 'overscroll-behavior', 'none');
-    setImportant(overlay, 'pointer-events', 'auto');
 
+    // Never set pointer-events inline. The stylesheet contract remains the sole
+    // authority: .modal-overlay is pointer-events:none and only .open is auto.
+    // That guarantees a closed editor cannot leave an invisible touch blocker.
     setImportant(modal, 'position', 'relative');
     setImportant(modal, 'left', 'auto');
     setImportant(modal, 'right', 'auto');
@@ -276,9 +271,9 @@
     const save = document.getElementById('activity-save-btn') || document.getElementById('modal-save-btn');
     if (!save) return;
 
-    // The older state-guard owns document-level handlers that explicitly query
-    // #modal-save-btn. Give the live control a controller-only ID so those
-    // legacy listeners become inert without altering their persistence logic.
+    // Older document-level Save handlers explicitly query #modal-save-btn. Give
+    // the live control a controller-only ID so they are inert, while preserving
+    // the existing atomic persistence wrapper behind legacy.saveItem.
     save.id = 'activity-save-btn';
     save.removeAttribute('onclick');
     save.type = 'button';
@@ -298,7 +293,6 @@
     if (!overlay) return;
     const close = overlay.querySelector('.modal-close');
     const cancel = overlay.querySelector('.modal-foot .modal-btn.secondary');
-
     [close, cancel].filter(Boolean).forEach(button => {
       button.removeAttribute('onclick');
       button.type = 'button';
@@ -338,9 +332,7 @@
 
   function classifyDrawerButton(button) {
     if (!button) return '';
-    if (button.dataset.activityAction === 'edit' || button.dataset.activityAction === 'remove') {
-      return button.dataset.activityAction;
-    }
+    if (button.dataset.activityAction === 'edit' || button.dataset.activityAction === 'remove') return button.dataset.activityAction;
     const onclick = button.getAttribute('onclick') || '';
     const text = String(button.textContent || '').trim().toLowerCase();
     if (onclick.includes('editCurrentItem') || text === 'edit') return 'edit';
@@ -355,8 +347,7 @@
   }
 
   function configureDrawerActions() {
-    const buttons = document.querySelectorAll('#drawer .dr-text-actions .dr-text-btn');
-    buttons.forEach(button => {
+    document.querySelectorAll('#drawer .dr-text-actions .dr-text-btn').forEach(button => {
       const action = classifyDrawerButton(button);
       if (!action) return;
       button.dataset.activityAction = action;
@@ -389,9 +380,9 @@
     save.disabled = true;
     save.textContent = 'Saving…';
 
-    // Restore the legacy ID only after the click capture phase has completely
-    // passed. Legacy form logic may query it while building the item, but the old
-    // document-level touch/click handlers can no longer see this activation.
+    // The click capture phase has already passed while the control had the
+    // controller-only ID. Restore the legacy ID now so existing form-building
+    // code can query it, without letting old document handlers see this click.
     save.id = 'modal-save-btn';
 
     try {
@@ -410,8 +401,8 @@
     }
 
     // Validation keeps the editor open synchronously. If that happened, restore
-    // the controller ID and allow another attempt. A valid submission closes the
-    // modal; the atomic persistence layer then owns success/failure recovery.
+    // the controller ID and permit a corrected retry. A valid submission closes
+    // the modal and the atomic persistence layer owns success/failure recovery.
     if (overlay.classList.contains('open')) {
       window.setTimeout(() => {
         if (!overlay.classList.contains('open')) return;
@@ -446,8 +437,8 @@
       return false;
     }
 
-    // Close the detail drawer only after the editor exists. Because this runs
-    // from the native click (not touchend), there is no later synthetic click to
+    // Close the details drawer only after the editor exists. Because the action
+    // runs from native click rather than touchend, no later synthetic click can
     // fall through onto the itinerary underneath.
     try { if (legacy.closeDrawer) legacy.closeDrawer.call(window); } catch (_) {}
     return true;
@@ -475,8 +466,7 @@
 
     try {
       if (!legacy.deleteCurrentItem) throw new Error('Remove action is unavailable');
-      const result = await legacy.deleteCurrentItem.call(window);
-      return result;
+      return await legacy.deleteCurrentItem.call(window);
     } catch (error) {
       console.error('Remove activity failed', error);
       alert('Could not remove this item. Please try again.');
@@ -499,7 +489,6 @@
         return result;
       };
     }
-
     if (legacy.openEditItem) {
       window.openEditItem = function (...args) {
         restoreLegacySaveId();
@@ -508,7 +497,6 @@
         return result;
       };
     }
-
     if (legacy.openDrawerItem) {
       window.openDrawerItem = function (...args) {
         const result = legacy.openDrawerItem.apply(this, args);
@@ -517,7 +505,8 @@
       };
     }
 
-    // Keep any remaining inline/programmatic calls deterministic too.
+    // Any remaining inline/programmatic calls are routed through the same
+    // authoritative controller instead of creating a second interaction path.
     window.editCurrentItem = function () { return onEditClick(null); };
     window.deleteCurrentItem = function () { return onRemoveClick(null); };
   }
@@ -529,7 +518,7 @@
       const observer = new MutationObserver(() => {
         const open = overlay.classList.contains('open');
         if (open && !state.overlayWasOpen) {
-          // This also handles an atomic-save failure reopening the form.
+          // Atomic-save failure can reopen the form without calling openAdd/Edit.
           state.saveBusy = false;
           state.removeBusy = false;
           configureModal({ newSession:false });
@@ -550,9 +539,7 @@
   }
 
   function bindViewport() {
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', queueMobileShell, { passive:true });
-    }
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', queueMobileShell, { passive:true });
     window.addEventListener('resize', queueMobileShell, { passive:true });
     window.addEventListener('orientationchange', () => window.setTimeout(queueMobileShell, 120), { passive:true });
   }
@@ -565,7 +552,7 @@
   if (document.getElementById('modal-overlay')?.classList.contains('open')) configureModal({ newSession:true });
 
   window.__activityEditorControllerV1 = {
-    version: '1.0.0',
+    version: '1.1.0',
     resolveTarget,
     sameFingerprint,
     configureModal,
