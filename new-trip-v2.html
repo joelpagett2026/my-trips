@@ -2519,7 +2519,7 @@ function renderPlacesToEat() {
 function openDrawerItem(dayIdx, itemIdx) {
   const item = STATE.days[dayIdx]?.items?.[itemIdx];
   if (!item || item.conn !== undefined) return;
-  drawerItem = { dayIdx, itemIdx };
+  drawerItem = { dayIdx, itemIdx, item };
   const dayLoc = STATE.days[dayIdx]?.loc || STATE.meta?.dest || dest || '';
   const isAct       = item.type === 'act' || (!item.type && item.icoType === 'pin');
   const isTicket    = item.type === 'ticket' || item.type === 'attraction';
@@ -2857,9 +2857,45 @@ async function removeItineraryItem(dayIdx, itemIdx, options = {}) {
 
 async function deleteCurrentItem() {
   if (!drawerItem) return;
-  await removeItineraryItem(drawerItem.dayIdx, drawerItem.itemIdx, {
-    label: 'activity',
-    confirmMessage: 'Delete this activity?'
+
+  const dayIdx = Number(drawerItem.dayIdx);
+  const items = STATE.days?.[dayIdx]?.items || [];
+  const selected = drawerItem.item || null;
+
+  // Prefer the actual object that opened the drawer. Transport/bookings views
+  // can re-render between open and delete, so a remembered numeric index alone
+  // is not sufficiently stable.
+  let itemIdx = selected ? items.indexOf(selected) : -1;
+
+  // Stable id fallback for items that have one.
+  if (itemIdx < 0 && selected?._id) {
+    itemIdx = items.findIndex(it => it && it._id === selected._id);
+  }
+
+  // Final fallback: use the original index only if it still points at the same
+  // logical item. This prevents deleting a neighbouring row after a re-render.
+  if (itemIdx < 0) {
+    const fallback = Number(drawerItem.itemIdx);
+    const candidate = Number.isInteger(fallback) ? items[fallback] : null;
+    if (candidate && (!selected ||
+        (candidate.title === selected.title &&
+         candidate.type === selected.type &&
+         (candidate.transport?.mode || '') === (selected.transport?.mode || '')))) {
+      itemIdx = fallback;
+    }
+  }
+
+  if (itemIdx < 0) {
+    alert('This item changed while it was open. Please close it, reopen it and press Remove again.');
+    return;
+  }
+
+  const item = items[itemIdx];
+  const isTransport = item?.type === 'move';
+
+  await removeItineraryItem(dayIdx, itemIdx, {
+    label: isTransport ? 'transport item' : 'activity',
+    confirmMessage: isTransport ? 'Remove this transport item?' : 'Delete this activity?'
   });
 }
 
