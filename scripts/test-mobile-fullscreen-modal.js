@@ -11,11 +11,21 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-assert(runtime.includes("style.id = 'mobile-entry-fullscreen-v3'"), 'mobile fullscreen activity editor runtime is missing');
-assert(runtime.includes('window.visualViewport'), 'mobile fullscreen editor must follow the iOS visual viewport');
+assert(runtime.includes("style.id = 'mobile-entry-fullscreen-v4'"), 'mobile fullscreen activity editor runtime is missing');
+assert(runtime.includes('window.visualViewport'), 'mobile fullscreen editor must use the iOS visual viewport height');
 assert(runtime.includes("attributeFilter:['class']"), 'modal viewport runtime must clean up when the modal closes');
 assert(runtime.includes("overlay.style.removeProperty('--entry-fullscreen-height')"), 'modal close must clear fullscreen height state');
-assert(runtime.includes("overlay.style.removeProperty('--entry-fullscreen-top')"), 'modal close must clear fullscreen top state');
+
+// iOS fixed-position elements already move with the visible viewport. Adding
+// visualViewport.offsetTop/pageTop again pushes the editor down by the amount
+// Safari has panned the page, exposing the itinerary above the keyboard.
+assert(!runtime.includes('vv?.offsetTop'), 'fullscreen modal must never double-apply visualViewport.offsetTop');
+assert(!runtime.includes('visualViewport.offsetTop'), 'fullscreen modal must never read visualViewport.offsetTop');
+assert(!runtime.includes('visualViewport.pageTop'), 'fullscreen modal must never read visualViewport.pageTop');
+assert(!runtime.includes('--entry-fullscreen-top'), 'fullscreen modal must not maintain a synthetic top offset');
+assert(runtime.includes('top:0 !important'), 'fullscreen modal must remain pinned to the top of the visible viewport');
+assert(runtime.includes("window.visualViewport.addEventListener('resize', queueSync"), 'fullscreen modal must resize when the keyboard changes visible height');
+assert(!runtime.includes("window.visualViewport.addEventListener('scroll', queueSync"), 'visual viewport scrolling must not reposition the fullscreen editor');
 
 assert(runtime.includes('border-radius:0 !important'), 'mobile activity editor must be true fullscreen, not a bottom sheet');
 assert(runtime.includes('height:100% !important'), 'mobile activity editor must fill the visual viewport shell');
