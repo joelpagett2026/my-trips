@@ -9,6 +9,7 @@ const html = fs.readFileSync('new-trip-v2.html', 'utf8');
 const css = fs.readFileSync('itinerary-v2-style.css', 'utf8');
 const completion = fs.readFileSync('itinerary-completion.js', 'utf8');
 const renderer = fs.readFileSync('trip.php', 'utf8');
+const deployer = fs.readFileSync('deploy-webhook.php', 'utf8');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -17,7 +18,8 @@ function assert(condition, message) {
 // Architecture regression: trip deletion and activity editing are deliberately
 // separate now. This prevents another unrelated mobile patch being appended to
 // the trip-delete file and competing for the same events/overlay.
-assert(tripDelete.includes("script.src = '/activity-editor.js?v="), 'trip renderer helper must load the dedicated activity editor');
+assert(tripDelete.includes("script.src = '/activity-editor.js?v="), 'trip runtime helper must load the dedicated activity editor');
+assert(deployer.includes("'activity-editor.js',"), 'production deployer must copy the activity editor runtime');
 assert(!tripDelete.includes('__stableDrawerActionsV2'), 'trip-delete must not own drawer item actions');
 assert(!tripDelete.includes('mobile-entry-fullscreen-v5'), 'trip-delete must not own activity modal geometry');
 assert(runtime.includes('window.__activityEditorControllerV1'), 'authoritative activity editor controller is missing');
@@ -50,6 +52,7 @@ assert(runtime.includes("setImportant(overlay, 'height', height + 'px')"), 'full
 assert(runtime.includes("setImportant(modal, 'height', '100%')"), 'modal must fill the fullscreen overlay');
 assert(runtime.includes("setImportant(modal, 'border-radius', '0')"), 'mobile modal must not regress to a bottom sheet');
 assert(runtime.includes("setImportant(overlay, 'background', '#fff')"), 'fullscreen overlay must remain opaque');
+assert(!runtime.includes("setImportant(overlay, 'pointer-events'"), 'controller must never override closed-overlay pointer safety inline');
 assert(runtime.includes('window.visualViewport'), 'iPhone editor must use the visual viewport height');
 assert(!runtime.includes('visualViewport.offsetTop'), 'iPhone editor must never double-apply visualViewport.offsetTop');
 assert(!runtime.includes('visualViewport.pageTop'), 'iPhone editor must never double-apply visualViewport.pageTop');
