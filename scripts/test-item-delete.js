@@ -65,6 +65,27 @@ function makeContext({ saveFails = false } = {}) {
     }
   }
 
+  {
+    const { ctx, calls } = makeContext();
+    ctx.STATE.days[0].items = [
+      { id: 'keep', type: 'place' },
+      { id: 'transport', type: 'move', transport: { mode: 'Coach' } }
+    ];
+    await ctx.removeItineraryItem(0, 1, {
+      label: 'transport item',
+      confirmMessage: 'Remove this transport item from the itinerary?',
+      closeDrawer: false,
+      closeModal: false
+    });
+    const ids = ctx.STATE.days[0].items.map(x => x.id);
+    if (JSON.stringify(ids) !== JSON.stringify(['keep'])) {
+      throw new Error('transport item delete did not remove the selected transport row');
+    }
+    if (calls.save !== 1 || JSON.stringify(calls.savedIds) !== JSON.stringify(['keep'])) {
+      throw new Error('transport item delete did not persist immediately');
+    }
+  }
+
   console.log('item deletion behavior: ok');
 })().catch(err => {
   console.error('item deletion behavior failed:', err.message);
