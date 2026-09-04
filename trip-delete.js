@@ -49,30 +49,30 @@
 
 // Mobile activity editor shell.
 //
-// The add/edit form used to behave like a bottom sheet. Once iOS opened the
-// keyboard, the sheet remained bottom-anchored to the layout viewport while its
-// height was calculated from the smaller visual viewport. That is the exact
-// combination that leaves only the top of the form visible above the keyboard.
+// The add/edit form is a true full-screen surface on mobile. iOS Safari already
+// positions fixed elements in the visual viewport while the keyboard is open.
+// Applying visualViewport.offsetTop to another fixed element therefore moves it
+// twice — exactly the failure where the itinerary becomes visible above the
+// editor and only the bottom of the form remains above the keyboard.
 //
-// Make the editor a true full-screen surface instead. This runs after the older
-// layout helpers, so it is the final authority for the mobile shell. The form
-// body remains independently scrollable, while the header and Save bar stay in
-// the currently visible iOS viewport. Save still closes on success; X is the
-// only manual dismiss action on mobile.
+// Keep the editor pinned to top:0 and use only visualViewport.height to size the
+// visible shell. The body scrolls independently while the header and Save bar
+// stay inside the visible screen. Save closes on success; X is the only manual
+// dismiss action on mobile.
 (function () {
   if (typeof window === 'undefined' || !window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
-  if (window.__mobileEntryFullscreenV3) return;
-  window.__mobileEntryFullscreenV3 = true;
+  if (window.__mobileEntryFullscreenV4) return;
+  window.__mobileEntryFullscreenV4 = true;
 
   const style = document.createElement('style');
-  style.id = 'mobile-entry-fullscreen-v3';
+  style.id = 'mobile-entry-fullscreen-v4';
   style.textContent = `
     @media (max-width:768px) {
       #modal-overlay {
         position:fixed !important;
         left:0 !important;
         right:0 !important;
-        top:var(--entry-fullscreen-top, 0px) !important;
+        top:0 !important;
         bottom:auto !important;
         width:100% !important;
         height:var(--entry-fullscreen-height, 100dvh) !important;
@@ -159,10 +159,7 @@
 
     const vv = window.visualViewport;
     const height = Math.max(300, Math.round(vv?.height || window.innerHeight || 640));
-    const top = Math.max(0, Math.round(vv?.offsetTop || 0));
-
     overlay.style.setProperty('--entry-fullscreen-height', height + 'px');
-    overlay.style.setProperty('--entry-fullscreen-top', top + 'px');
   }
 
   function queueSync() {
@@ -176,14 +173,12 @@
       raf = 0;
     }
     overlay.style.removeProperty('--entry-fullscreen-height');
-    overlay.style.removeProperty('--entry-fullscreen-top');
     const active = document.activeElement;
     if (active && active.closest?.('#modal-overlay') && typeof active.blur === 'function') active.blur();
   }
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', queueSync, { passive:true });
-    window.visualViewport.addEventListener('scroll', queueSync, { passive:true });
   }
   window.addEventListener('resize', queueSync, { passive:true });
   window.addEventListener('orientationchange', () => window.setTimeout(queueSync, 120), { passive:true });
