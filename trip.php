@@ -160,6 +160,7 @@ $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content=
 // relocking the page or leaving mobile UI helpers stale.
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$stateGuardVersion = @filemtime(__DIR__ . '/itinerary-state-guard.js') ?: time();
 $uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();
 $mapVersion = @filemtime(__DIR__ . '/map-mobile-redesign.js') ?: time();
 $mobileDragVersion = @filemtime(__DIR__ . '/mobile-drag.js') ?: time();
@@ -331,7 +332,7 @@ HTML;
 
 $page = str_replace(
   '</body>',
-  '<script src="/itinerary-state-guard.js?v=1"></script>' . "\n"
+  '<script src="/itinerary-state-guard.js?v=' . $stateGuardVersion . '"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=' . $uiVersion . '"></script>' . "\n"
   . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
   . $drawerSwipeFix . "\n"
