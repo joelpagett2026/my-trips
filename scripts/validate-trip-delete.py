@@ -43,8 +43,9 @@ require("dbDelete" not in client and "dbSaveRegistry" not in client,
         "atomic delete client must not repeat the old two-step cleanup")
 require("Nothing was partially deleted" in client,
         "failure message must reflect transactional behavior")
-require("/trip-delete.js?v=1" in renderer,
-        "trip renderer must load the atomic deletion override")
+require("$tripDeleteVersion = @filemtime(__DIR__ . '/trip-delete.js')" in renderer
+        and "src=\"/trip-delete.js?v=' . $tripDeleteVersion . '\"" in renderer,
+        "trip renderer must load the atomic deletion override with cache busting")
 
 require("trip-delete" in htaccess and "%{HTTP:Sec-Fetch-Site} ^cross-site$" in htaccess,
         "trip-delete.php must inherit same-origin API restrictions")
