@@ -2039,18 +2039,7 @@ function makeItemNode(item, idx) {
   row.querySelector('.tl-delete-btn')?.addEventListener('click', async e => {
     e.stopPropagation();
     if (dragMoved) return;
-    const isTransport = it && it.type === 'move';
-    if (isTransport) {
-      if (!confirm('Remove this transport item from the itinerary?')) return;
-      await deleteTransportItemServer(activeDay, it);
-      return;
-    }
-    await removeItineraryItem(activeDay, idx, {
-      label: 'activity',
-      confirmMessage: 'Remove this activity from the itinerary?',
-      closeDrawer: false,
-      closeModal: false
-    });
+    await deleteItineraryItemServer(activeDay, idx, it, 'Remove this item from the itinerary?');
   });
   return row;
 }
@@ -2808,8 +2797,9 @@ function editCurrentItem() {
   openEditItem(drawerItem.dayIdx, drawerItem.itemIdx);
 }
 
-async function deleteTransportItemServer(dayIdx, item) {
-  if (!item || item.type !== 'move') return false;
+async function deleteItineraryItemServer(dayIdx, itemIdx, item, confirmMessage) {
+  if (!item) return false;
+  if (confirmMessage && !confirm(confirmMessage)) return false;
 
   const token = typeof getToken === 'function' ? getToken() : null;
   if (!token) {
@@ -2817,10 +2807,11 @@ async function deleteTransportItemServer(dayIdx, item) {
     return false;
   }
 
+  const tr = item.transport || {};
+
   try {
     setStatus('saving', '●  Saving…');
 
-    const tr = item.transport || {};
     const response = await fetch('/record.php?action=delete_item', {
       method: 'POST',
       headers: {
@@ -2832,11 +2823,13 @@ async function deleteTransportItemServer(dayIdx, item) {
       body: JSON.stringify({
         id: RECORD_ID,
         day_index: Number(dayIdx),
+        item_index: Number(itemIdx),
         item_id: item._id || '',
         fingerprint: {
           type: item.type || '',
           title: item.title || '',
           time: item.time || '',
+          period: item.period || '',
           mode: tr.mode || '',
           from: tr.from || '',
           to: tr.to || ''
@@ -2853,16 +2846,17 @@ async function deleteTransportItemServer(dayIdx, item) {
 
     setStatus('saved', '');
 
-    // Do not leave the installed iPhone app holding the pre-delete document.
-    // Reload from production after the authoritative database mutation succeeds.
+    // Always reload the authoritative server copy after deletion. This avoids
+    // stale in-memory state in the installed iPhone app and also refreshes
+    // Bookings/transport/sidebar views in one step.
     const url = new URL(window.location.href);
-    url.searchParams.set('_transportdelete', Date.now().toString());
+    url.searchParams.set('_itemdelete', Date.now().toString());
     window.location.replace(url.toString());
     return true;
   } catch (e) {
-    console.error('Atomic transport delete failed:', e);
+    console.error('Atomic item delete failed:', e);
     setStatus('error', '✕ Delete failed');
-    alert('Could not remove this transport item. Please try again.');
+    alert('Could not remove this item. Please try again.');
     return false;
   }
 }
@@ -2924,48 +2918,23 @@ async function deleteCurrentItem() {
   const items = STATE.days?.[dayIdx]?.items || [];
   const selected = drawerItem.item || null;
 
-  // Prefer the actual object that opened the drawer. Transport/bookings views
-  // can re-render between open and delete, so a remembered numeric index alone
-  // is not sufficiently stable.
   let itemIdx = selected ? items.indexOf(selected) : -1;
-
-  // Stable id fallback for items that have one.
   if (itemIdx < 0 && selected?._id) {
     itemIdx = items.findIndex(it => it && it._id === selected._id);
   }
-
-  // Final fallback: use the original index only if it still points at the same
-  // logical item. This prevents deleting a neighbouring row after a re-render.
   if (itemIdx < 0) {
     const fallback = Number(drawerItem.itemIdx);
-    const candidate = Number.isInteger(fallback) ? items[fallback] : null;
-    if (candidate && (!selected ||
-        (candidate.title === selected.title &&
-         candidate.type === selected.type &&
-         (candidate.transport?.mode || '') === (selected.transport?.mode || '')))) {
-      itemIdx = fallback;
-    }
+    if (Number.isInteger(fallback) && fallback >= 0 && fallback < items.length) itemIdx = fallback;
   }
 
-  if (itemIdx < 0) {
-    alert('This item changed while it was open. Please close it, reopen it and press Remove again.');
+  if (itemIdx < 0 || !items[itemIdx]) {
+    alert('This item changed while it was open. Please close it, reopen it and try again.');
     return;
   }
 
   const item = items[itemIdx];
-  const isTransport = item?.type === 'move';
-
-  if (isTransport) {
-    if (!confirm('Remove this transport item?')) return;
-    try { closeDrawer(); } catch (_) {}
-    await deleteTransportItemServer(dayIdx, item);
-    return;
-  }
-
-  await removeItineraryItem(dayIdx, itemIdx, {
-    label: 'activity',
-    confirmMessage: 'Delete this activity?'
-  });
+  try { closeDrawer(); } catch (_) {}
+  await deleteItineraryItemServer(dayIdx, itemIdx, item, 'Remove this item from the itinerary?');
 }
 
 // ── ADD / EDIT MODAL ──────────────────────────────────────────────────
@@ -3439,13 +3408,10 @@ function closeQuickJourneyModal() {
 async function deleteQuickJourney() {
   if (!_quickJourneyEditTarget) return;
   const { dayIdx, itemIdx } = _quickJourneyEditTarget;
-  await removeItineraryItem(dayIdx, itemIdx, {
-    label: 'journey',
-    confirmMessage: 'Delete this journey?',
-    closeDrawer: false,
-    closeModal: false,
-    closeQuickJourney: true
-  });
+  const item = STATE.days?.[dayIdx]?.items?.[itemIdx];
+  if (!item) return;
+  try { closeQuickJourneyModal(); } catch (_) {}
+  await deleteItineraryItemServer(dayIdx, itemIdx, item, 'Delete this journey?');
 }
 
 async function saveQuickJourney() {
