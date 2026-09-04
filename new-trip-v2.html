@@ -2040,11 +2040,14 @@ function makeItemNode(item, idx) {
     e.stopPropagation();
     if (dragMoved) return;
     const isTransport = it && it.type === 'move';
+    if (isTransport) {
+      if (!confirm('Remove this transport item from the itinerary?')) return;
+      await deleteTransportItemServer(activeDay, it);
+      return;
+    }
     await removeItineraryItem(activeDay, idx, {
-      label: isTransport ? 'transport item' : 'activity',
-      confirmMessage: isTransport
-        ? 'Remove this transport item from the itinerary?'
-        : 'Remove this activity from the itinerary?',
+      label: 'activity',
+      confirmMessage: 'Remove this activity from the itinerary?',
       closeDrawer: false,
       closeModal: false
     });
@@ -2805,6 +2808,65 @@ function editCurrentItem() {
   openEditItem(drawerItem.dayIdx, drawerItem.itemIdx);
 }
 
+async function deleteTransportItemServer(dayIdx, item) {
+  if (!item || item.type !== 'move') return false;
+
+  const token = typeof getToken === 'function' ? getToken() : null;
+  if (!token) {
+    alert('Your session has expired. Please reopen the app and try again.');
+    return false;
+  }
+
+  try {
+    setStatus('saving', '●  Saving…');
+
+    const tr = item.transport || {};
+    const response = await fetch('/record.php?action=delete_item', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': token
+      },
+      cache: 'no-store',
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        id: RECORD_ID,
+        day_index: Number(dayIdx),
+        item_id: item._id || '',
+        fingerprint: {
+          type: item.type || '',
+          title: item.title || '',
+          time: item.time || '',
+          mode: tr.mode || '',
+          from: tr.from || '',
+          to: tr.to || ''
+        }
+      })
+    });
+
+    let payload = null;
+    try { payload = await response.json(); } catch (_) {}
+
+    if (!response.ok || !payload?.ok) {
+      throw new Error(payload?.error || ('HTTP ' + response.status));
+    }
+
+    setStatus('saved', '');
+
+    // Do not leave the installed iPhone app holding the pre-delete document.
+    // Reload from production after the authoritative database mutation succeeds.
+    const url = new URL(window.location.href);
+    url.searchParams.set('_transportdelete', Date.now().toString());
+    window.location.replace(url.toString());
+    return true;
+  } catch (e) {
+    console.error('Atomic transport delete failed:', e);
+    setStatus('error', '✕ Delete failed');
+    alert('Could not remove this transport item. Please try again.');
+    return false;
+  }
+}
+
 async function removeItineraryItem(dayIdx, itemIdx, options = {}) {
   dayIdx = Number(dayIdx);
   itemIdx = Number(itemIdx);
@@ -2893,9 +2955,16 @@ async function deleteCurrentItem() {
   const item = items[itemIdx];
   const isTransport = item?.type === 'move';
 
+  if (isTransport) {
+    if (!confirm('Remove this transport item?')) return;
+    try { closeDrawer(); } catch (_) {}
+    await deleteTransportItemServer(dayIdx, item);
+    return;
+  }
+
   await removeItineraryItem(dayIdx, itemIdx, {
-    label: isTransport ? 'transport item' : 'activity',
-    confirmMessage: isTransport ? 'Remove this transport item?' : 'Delete this activity?'
+    label: 'activity',
+    confirmMessage: 'Delete this activity?'
   });
 }
 
