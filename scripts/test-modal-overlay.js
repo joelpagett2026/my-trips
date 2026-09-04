@@ -7,36 +7,38 @@ const vm = require('vm');
 const html = fs.readFileSync('new-trip-v2.html', 'utf8');
 const css = fs.readFileSync('itinerary-v2-style.css', 'utf8');
 const completion = fs.readFileSync('itinerary-completion.js', 'utf8');
+const controller = fs.readFileSync('activity-editor.js', 'utf8');
 const tripDelete = fs.readFileSync('trip-delete.js', 'utf8');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-// The old 3 Sep controller used a separate keyboard-open state that could leave
-// a full-screen pointer-catching layer alive after Save. The V5 shell is the
-// final layout authority and may use visualViewport.height, but it must remain
-// class-driven and must never translate itself by a visual viewport top offset.
-assert(tripDelete.includes("style.id = 'mobile-entry-fullscreen-v5'"), 'the final-authority mobile fullscreen shell must be installed');
-assert(tripDelete.includes('window.visualViewport'), 'the fullscreen shell must use the visible iOS viewport height');
-assert(!tripDelete.includes('keyboard-open'), 'the fullscreen shell must not reintroduce legacy keyboard-open state');
-assert(tripDelete.includes('releaseShell()'), 'the fullscreen shell must release transient state when the modal closes');
-assert(!tripDelete.includes('--entry-fullscreen-top'), 'fullscreen shell must not maintain a synthetic top offset');
-assert(!tripDelete.includes('vv?.offsetTop'), 'fullscreen shell must not double-apply iOS visual viewport offset');
-assert(tripDelete.includes("setImportant(overlay, 'top', '0')"), 'fullscreen shell must be pinned to top:0 as inline important geometry');
-assert(tripDelete.includes("setImportant(modal, 'border-radius', '0')"), 'legacy rounded bottom-sheet geometry must not win the cascade');
+// Activity UI must be owned by its dedicated controller, not by trip-delete.
+assert(controller.includes('window.__activityEditorControllerV1'), 'activity editor controller is missing');
+assert(tripDelete.includes("script.src = '/activity-editor.js?v="), 'trip runtime must load the activity editor controller');
+assert(!tripDelete.includes('mobile-entry-fullscreen-v5'), 'trip-delete must not own modal geometry anymore');
+assert(!tripDelete.includes('__stableDrawerActionsV2'), 'trip-delete must not own item button gestures anymore');
 
-// itinerary-completion.js still contains the historical bottom-sheet/focused-
-// field controller. V5 intentionally wins through inline important geometry and
-// delayed installation rather than depending on stylesheet order.
-assert(completion.includes('function setMobileViewportHeight()'), 'focused-field viewport assistance must remain available');
-assert(tripDelete.includes("el.style.setProperty(property, value, 'important')"), 'fullscreen authority must use inline important geometry');
-assert(tripDelete.includes("document.addEventListener('DOMContentLoaded'"), 'fullscreen authority must install after completion styles when necessary');
+// iPhone fullscreen shell consumes visual viewport height only. It must never
+// override pointer-events inline: the class-driven CSS is the safety invariant
+// that makes a closed overlay physically unable to block the itinerary.
+assert(controller.includes('window.visualViewport'), 'activity editor must use the visible iOS viewport height');
+assert(controller.includes("setImportant(overlay, 'top', '0')"), 'mobile editor must remain pinned to top:0');
+assert(controller.includes("setImportant(overlay, 'height', height + 'px')"), 'mobile editor must track visible viewport height');
+assert(controller.includes("setImportant(modal, 'border-radius', '0')"), 'mobile editor must not fall back to bottom-sheet geometry');
+assert(!controller.includes("setImportant(overlay, 'pointer-events'"), 'controller must never leave an inline pointer-events override on the overlay');
+assert(!controller.includes('visualViewport.offsetTop'), 'controller must not double-apply iOS offsetTop');
+assert(!controller.includes('visualViewport.pageTop'), 'controller must not double-apply iOS pageTop');
+assert(!controller.includes("visualViewport.addEventListener('scroll'"), 'visual viewport scrolling must not reposition the editor');
 
-// The overlay contract is class-driven: closed means invisible and unable to
-// intercept touches; only .open can receive pointer events.
+// Historical focused-field CSS still exists, so the new controller must be
+// strong enough to coexist without moving activity behavior back into it.
+assert(completion.includes('function setMobileViewportHeight()'), 'legacy focused-field assistance unexpectedly disappeared');
+assert(controller.includes("el.style.setProperty(property, value, 'important')"), 'fullscreen geometry must be final inline important geometry');
+
 assert(/\.modal-overlay\{[^}]*pointer-events:none/i.test(css), 'closed modal overlay must not intercept pointer events');
-assert(/\.modal-overlay\.open\{[^}]*pointer-events:auto/i.test(css), 'open modal overlay must receive pointer events');
+assert(/\.modal-overlay\.open\{[^}]*pointer-events:auto/i.test(css), 'only an open modal overlay may receive pointer events');
 
 const closeMatch = html.match(/function closeModal\(\)\s*\{[\s\S]*?\n\}/);
 assert(closeMatch, 'could not locate closeModal()');
@@ -56,7 +58,7 @@ const context = {
 vm.createContext(context);
 vm.runInContext(closeMatch[0] + '\ncloseModal();', context);
 
-assert(!overlay.classList.contains('open'), 'closeModal() must release the full-screen overlay');
+assert(!overlay.classList.contains('open'), 'closeModal() must remove the open class');
 assert(context.editItem === null, 'closeModal() must clear edit state');
 assert(context.bookingVisible === false, 'closeModal() must clear booking panel state');
 
