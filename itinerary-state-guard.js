@@ -115,9 +115,6 @@
     }
   };
 
-  // Explicit Add/Edit saves are item-level transactions. Keep autosave for
-  // background edits, but commit modal items directly on the server while
-  // protecting concurrent edits to the same item.
   function installAtomicItemSave() {
     if (typeof window.saveItem !== 'function' || typeof window.scheduleSave !== 'function') return;
     if (window.saveItem.__atomicItemSave) return;
@@ -295,7 +292,7 @@
     `;
     document.head.appendChild(style);
 
-    let armedTouchId = null;
+    let armedPointer = null;
     let armedX = 0;
     let armedY = 0;
     let moved = false;
@@ -308,10 +305,9 @@
       return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
     }
 
-    // Meal segmented controls keep their existing early touch handling because
-    // iOS can otherwise retarget their synthetic click while the form relayouts.
     document.addEventListener('pointerdown', event => {
       if (event.pointerType !== 'touch') return;
+
       const kind = event.target.closest('#f-meal-kind-row .tt-btn');
       if (kind && typeof setMealKind === 'function') {
         event.preventDefault();
@@ -320,46 +316,41 @@
         setMealKind(kind.dataset.val || '');
         return;
       }
+
       const status = event.target.closest('#f-meal-status-row .tt-btn');
       if (status && typeof setMealStatus === 'function') {
         event.preventDefault();
         event.stopImmediatePropagation();
         ignoreMealClickUntil = Date.now() + 900;
         setMealStatus(status.dataset.val || 'walkin');
+        return;
       }
-    }, true);
 
-    // Do NOT cancel the native Save click on touchstart. Instead arm the save by
-    // screen coordinates. This deliberately ignores event.target so a transparent
-    // scrolling/viewport layer cannot make the visible Save button untappable.
-    document.addEventListener('touchstart', event => {
       const overlay = document.getElementById('modal-overlay');
       const save = document.getElementById('modal-save-btn');
-      if (!overlay?.classList.contains('open') || !save || event.touches.length !== 1) return;
-      const t = event.touches[0];
-      if (!pointInside(save, t.clientX, t.clientY)) return;
-      armedTouchId = t.identifier;
-      armedX = t.clientX;
-      armedY = t.clientY;
+      if (!overlay?.classList.contains('open') || !save) return;
+
+      // Arm purely from screen coordinates, not event.target. A transparent
+      // modal/scrolling layer can therefore never make the visible Save button
+      // untappable just because iOS reports the wrong DOM hit target.
+      if (!pointInside(save, event.clientX, event.clientY)) return;
+      armedPointer = event.pointerId;
+      armedX = event.clientX;
+      armedY = event.clientY;
       moved = false;
     }, true);
 
-    document.addEventListener('touchmove', event => {
-      if (armedTouchId === null) return;
-      const t = Array.from(event.touches).find(touch => touch.identifier === armedTouchId);
-      if (!t) return;
-      if (Math.hypot(t.clientX - armedX, t.clientY - armedY) > 24) moved = true;
+    document.addEventListener('pointermove', event => {
+      if (event.pointerType !== 'touch' || armedPointer !== event.pointerId) return;
+      if (Math.hypot(event.clientX - armedX, event.clientY - armedY) > 24) moved = true;
     }, true);
 
-    document.addEventListener('touchend', event => {
-      if (armedTouchId === null) return;
-      const t = Array.from(event.changedTouches).find(touch => touch.identifier === armedTouchId);
+    document.addEventListener('pointerup', event => {
+      if (event.pointerType !== 'touch' || armedPointer !== event.pointerId) return;
       const save = document.getElementById('modal-save-btn');
-      armedTouchId = null;
-      if (!t || moved || !save || !pointInside(save, t.clientX, t.clientY)) return;
+      armedPointer = null;
+      if (!save || moved || !pointInside(save, event.clientX, event.clientY)) return;
 
-      // Coordinate hit is authoritative. Prevent the later synthetic click so the
-      // save runs exactly once, even if iOS reports another element as the target.
       event.preventDefault();
       event.stopImmediatePropagation();
       lastCoordinateSaveAt = Date.now();
@@ -368,9 +359,11 @@
       finally { window.setTimeout(() => { delete save.dataset.saving; }, 700); }
     }, true);
 
-    document.addEventListener('touchcancel', () => {
-      armedTouchId = null;
-      moved = false;
+    document.addEventListener('pointercancel', event => {
+      if (armedPointer === event.pointerId) {
+        armedPointer = null;
+        moved = false;
+      }
     }, true);
 
     document.addEventListener('click', event => {
@@ -396,7 +389,6 @@
     if (typeof showSnapshotBar === 'function') showSnapshotBar(false);
   };
 
-  // "Travel Day" is an itinerary label, not a real destination/city tag.
   window.computeTripCities = function () {
     if (typeof STATE === 'undefined' || !STATE || !STATE.meta) return [];
     const m = STATE.meta;
