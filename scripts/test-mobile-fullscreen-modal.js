@@ -67,4 +67,6 @@ assert(runtime.includes('window.openEditItem(target.dayIdx, target.itemIdx);'), 
 assert(runtime.includes("event.target?.closest?.('#drawer .dr-text-btn')"), 'iPhone Edit must have a dedicated touch-stable path');
 assert(runtime.includes('event.stopImmediatePropagation();'), 'touch-stable Edit must suppress the duplicate synthetic click');
 
+// Keep this combined test in CI so a future modal or drawer change cannot
+// silently break the mobile Edit path while the fullscreen tests still pass.
 console.log('mobile fullscreen activity modal and Edit control behavior: ok');
