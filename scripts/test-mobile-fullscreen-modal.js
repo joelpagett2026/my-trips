@@ -3,7 +3,8 @@
 
 const fs = require('fs');
 
-const runtime = fs.readFileSync('trip-delete.js', 'utf8');
+const runtime = fs.readFileSync('activity-editor.js', 'utf8');
+const tripDelete = fs.readFileSync('trip-delete.js', 'utf8');
 const html = fs.readFileSync('new-trip-v2.html', 'utf8');
 const css = fs.readFileSync('itinerary-v2-style.css', 'utf8');
 const completion = fs.readFileSync('itinerary-completion.js', 'utf8');
@@ -13,67 +14,61 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-// Regression for the 4 Sep iPhone screenshots: itinerary-completion.js injects
-// the legacy bottom-sheet CSS during init. A fullscreen style inserted earlier
-// can therefore be overwritten even if its script tag appears later in HTML.
-// The final fullscreen authority must install after DOMContentLoaded when needed
-// and must also set critical shell geometry inline with !important.
-assert(runtime.includes("style.id = 'mobile-entry-fullscreen-v5'"), 'final-authority mobile fullscreen runtime is missing');
-assert(runtime.includes("document.addEventListener('DOMContentLoaded'"), 'fullscreen authority must wait for late modal style injection when the document is still loading');
-assert(runtime.includes("setImportant(overlay, 'top', '0')"), 'fullscreen overlay must be pinned to top:0 inline');
-assert(runtime.includes("setImportant(overlay, 'height', height + 'px')"), 'fullscreen overlay must use the visible viewport height inline');
-assert(runtime.includes("setImportant(modal, 'height', '100%')"), 'modal must fill the fullscreen overlay inline');
-assert(runtime.includes("setImportant(modal, 'border-radius', '0')"), 'modal must not fall back to bottom-sheet rounded corners');
-assert(runtime.includes("setImportant(overlay, 'background', '#fff')"), 'fullscreen overlay must remain opaque instead of exposing the itinerary');
-assert(runtime.includes("setImportant(foot, 'display', 'flex')"), 'Save footer must remain a normal flex footer above the keyboard');
-assert(runtime.includes("setImportant(secondary, 'display', 'none')"), 'Cancel must remain hidden on mobile so X is the only manual dismiss control');
-assert(runtime.includes("setImportant(save, 'flex', '1 1 auto')"), 'Save must fill the available footer width');
-assert(runtime.includes("overlay.dataset.fullscreenShell = 'v5'"), 'runtime must expose a diagnostic fullscreen-shell marker');
+// Architecture regression: trip deletion and activity editing are deliberately
+// separate now. This prevents another unrelated mobile patch being appended to
+// the trip-delete file and competing for the same events/overlay.
+assert(tripDelete.includes("script.src = '/activity-editor.js?v="), 'trip renderer helper must load the dedicated activity editor');
+assert(!tripDelete.includes('__stableDrawerActionsV2'), 'trip-delete must not own drawer item actions');
+assert(!tripDelete.includes('mobile-entry-fullscreen-v5'), 'trip-delete must not own activity modal geometry');
+assert(runtime.includes('window.__activityEditorControllerV1'), 'authoritative activity editor controller is missing');
 
-// iOS fixed-position elements already follow the visible viewport. Never add
-// the visual viewport top/page offset again; doing so moves the modal down twice.
-assert(runtime.includes('window.visualViewport'), 'mobile fullscreen editor must use the iOS visual viewport height');
-assert(!runtime.includes('vv?.offsetTop'), 'fullscreen modal must never double-apply visualViewport.offsetTop');
-assert(!runtime.includes('visualViewport.offsetTop'), 'fullscreen modal must never read visualViewport.offsetTop');
-assert(!runtime.includes('visualViewport.pageTop'), 'fullscreen modal must never read visualViewport.pageTop');
-assert(!runtime.includes('--entry-fullscreen-top'), 'fullscreen modal must not maintain a synthetic top offset');
-assert(runtime.includes("window.visualViewport.addEventListener('resize', queueApply"), 'fullscreen modal must resize when the keyboard changes visible height');
-assert(!runtime.includes("window.visualViewport.addEventListener('scroll', queueApply"), 'visual viewport scrolling must not reposition the fullscreen editor');
+// One activation model: touch/pointer only stop the drawer gesture; Add/Edit/
+// Remove/Save execute from native click. This is the core protection against the
+// five-item duplicate and iOS click-through regressions.
+assert(runtime.includes("save.addEventListener('click', onSaveClick)"), 'Save must have one native click action');
+assert(runtime.includes("button.addEventListener('click', action === 'edit' ? onEditClick : onRemoveClick)"), 'Edit/Remove must have distinct native click actions');
+assert(runtime.includes("button.addEventListener('touchstart', stopGesture"), 'drawer actions must stop swipe arming at touchstart');
+assert(runtime.includes('Never perform the action here'), 'touch gesture handler must be explicitly non-activating');
+assert(!/addEventListener\(['"]touchend['"][\s\S]{0,500}(onSaveClick|onEditClick|onRemoveClick)/.test(runtime), 'touchend must never execute Save/Edit/Remove');
+assert(runtime.includes('if (!overlay?.classList.contains(\'open\') || state.saveBusy) return;'), 'Save must have a single-flight guard');
+assert(runtime.includes('if (state.removeBusy) return false;'), 'Remove must have a single-flight guard');
 
-// The old controller is still present for focused-field assistance, so the V5
-// shell must be demonstrably stronger than it rather than relying on CSS order.
-assert(completion.includes('align-items:flex-end !important'), 'fixture no longer contains the legacy bottom-sheet rule this regression protects against');
-assert(completion.includes('border-radius:24px 24px 0 0 !important'), 'fixture no longer contains the legacy rounded bottom-sheet rule');
-assert(runtime.includes("el.style.setProperty(property, value, 'important')"), 'critical shell geometry must use inline !important styles');
+// Old state-guard touch handlers remain for backwards compatibility but are made
+// inert by removing the inline handler and changing the live Save control ID.
+assert(runtime.includes("save.id = 'activity-save-btn'"), 'controller must isolate the live Save button from legacy document handlers');
+assert(runtime.includes("save.removeAttribute('onclick')"), 'inline Save onclick must be removed while the controller owns it');
+assert(runtime.includes("save.id = 'modal-save-btn'"), 'legacy ID must be restored only inside the controlled Save invocation');
+
+// Stable identity is authoritative for Edit/Remove after a server response
+// replaces the STATE object graph. Fingerprints are accepted only when unique.
+assert(runtime.includes("String(item._id || '') === stableId"), 'item actions must resolve by stable ID first');
+assert(runtime.includes('if (matches.length === 1) itemIdx = matches[0];'), 'legacy fingerprint resolution must refuse ambiguous duplicates');
+
+// Mobile/iPhone geometry: full-screen editor, top pinned, visible-height only.
+assert(runtime.includes("setImportant(overlay, 'top', '0')"), 'fullscreen overlay must be pinned to top:0');
+assert(runtime.includes("setImportant(overlay, 'height', height + 'px')"), 'fullscreen overlay must track the visible viewport height');
+assert(runtime.includes("setImportant(modal, 'height', '100%')"), 'modal must fill the fullscreen overlay');
+assert(runtime.includes("setImportant(modal, 'border-radius', '0')"), 'mobile modal must not regress to a bottom sheet');
+assert(runtime.includes("setImportant(overlay, 'background', '#fff')"), 'fullscreen overlay must remain opaque');
+assert(runtime.includes('window.visualViewport'), 'iPhone editor must use the visual viewport height');
+assert(!runtime.includes('visualViewport.offsetTop'), 'iPhone editor must never double-apply visualViewport.offsetTop');
+assert(!runtime.includes('visualViewport.pageTop'), 'iPhone editor must never double-apply visualViewport.pageTop');
+assert(!runtime.includes("visualViewport.addEventListener('scroll'"), 'visual viewport scroll must not reposition the editor');
+assert(runtime.includes("window.visualViewport.addEventListener('resize', queueMobileShell"), 'keyboard resize must resize the editor');
+assert(runtime.includes('#modal-overlay .modal-foot .modal-btn.secondary { display:none !important; }'), 'mobile Cancel must stay hidden so X is the manual dismiss control');
+
+// The legacy bottom-sheet CSS still exists, so the controller must remain the
+// final authority rather than assuming the old rules disappeared.
+assert(completion.includes('align-items:flex-end !important'), 'fixture no longer contains the legacy bottom-sheet rule');
+assert(completion.includes('border-radius:24px 24px 0 0 !important'), 'fixture no longer contains the legacy rounded-sheet rule');
+assert(runtime.includes("el.style.setProperty(property, value, 'important')"), 'critical mobile geometry must be inline !important');
 
 const completionPos = renderer.indexOf('<script src="/itinerary-completion.js?v=');
 const tripDeletePos = renderer.indexOf('<script src="/trip-delete.js?v=');
-assert(completionPos >= 0 && tripDeletePos > completionPos, 'trip renderer must load the fullscreen authority after itinerary completion code');
-
-assert(runtime.includes('#modal-overlay .modal::before { display:none !important; content:none !important; }'), 'fullscreen editor must not show a bottom-sheet grab handle');
-assert(runtime.includes('#modal-overlay .modal-foot .modal-btn.secondary { display:none !important; }'), 'Cancel must be hidden in the final stylesheet too');
-assert(html.includes('<button class="modal-close" onclick="closeModal()">×</button>'), 'the editor must retain the X close control');
+assert(completionPos >= 0 && tripDeletePos > completionPos, 'late loader must still run after itinerary-completion');
+assert(html.includes('<button class="modal-close" onclick="closeModal()">×</button>'), 'template must retain the X control for controller takeover');
 assert(/\.modal-overlay\{[^}]*pointer-events:none/i.test(css), 'closed overlay must not intercept touches');
 assert(/\.modal-overlay\.open\{[^}]*pointer-events:auto/i.test(css), 'only an open overlay may intercept touches');
 
-// Drawer action regression: Edit and Remove share the same action footer, but
-// must never share one generic touch handler. The capture-phase touchstart stops
-// the swipe-to-close listener from arming and each action is routed separately.
-assert(html.includes('onclick="editCurrentItem()"'), 'drawer Edit button is missing');
-assert(html.includes('onclick="deleteCurrentItem()"'), 'drawer Remove button is missing');
-assert(runtime.includes('window.__stableDrawerActionsV2'), 'stable drawer action controller is missing');
-assert(!runtime.includes('window.__stableDrawerItemEditV1'), 'legacy Edit-only touch controller must be removed');
-assert(runtime.includes('function resolveDrawerTarget()'), 'drawer actions must resolve the live itinerary target');
-assert(runtime.includes("items.findIndex(item => item && item._id === selected.item._id)"), 'drawer actions must recover an item by stable id when its array index moved');
-assert(runtime.includes("if (onclick.includes('editCurrentItem')) action = 'edit';"), 'Edit button must be classified independently');
-assert(runtime.includes("else if (onclick.includes('deleteCurrentItem')) action = 'remove';"), 'Remove button must be classified independently');
-assert(runtime.includes("if (action === 'edit') return window.editCurrentItem();"), 'Edit touch action must invoke Edit only');
-assert(runtime.includes("if (action === 'remove') return window.deleteCurrentItem();"), 'Remove touch action must invoke Remove only');
-assert(runtime.includes('Array.from(event.changedTouches || [])'), 'touch handling must not assume TouchList is iterable on iOS');
-assert(runtime.includes('const originX = startX;') && runtime.includes('const originY = startY;'), 'touch origin must be preserved before action state resets');
-assert(runtime.includes('event.stopPropagation();\n    touchId = touch.identifier;'), 'action touchstart must stop drawer swipe handling before arming');
-assert(runtime.includes("document.addEventListener('click', event =>"), 'drawer actions must retain a click fallback');
-assert(runtime.includes('#drawer .dr-text-actions .dr-text-btn'), 'drawer action hardening must be scoped to the action footer');
-assert(runtime.includes("touch-action:manipulation !important"), 'drawer action buttons must opt out of ambiguous mobile gestures');
-
-console.log('mobile fullscreen activity modal and drawer Edit/Remove behavior: ok');
+require('./test-activity-editor.js');
+console.log('mobile fullscreen activity editor architecture: ok');
