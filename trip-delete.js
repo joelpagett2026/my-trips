@@ -309,20 +309,37 @@
   }
 })();
 
-// Stable itinerary Edit control.
+// Stable drawer Edit / Remove actions.
 //
-// The drawer Edit action used to rely on the drawer's saved array index and on a
-// normal synthetic click. On iOS that is fragile for two reasons: the drawer's
-// swipe-to-close listener also starts from touches on buttons, and an item's
-// index can legitimately move after a save/re-render. Resolve the current item
-// first, then open it by its authoritative index. A dedicated touch-end path
-// makes the Edit button deterministic on iPhone and suppresses the duplicate
-// synthetic click that Safari would otherwise emit afterwards.
+// iPhone has two gesture systems around the item drawer: Safari's synthetic
+// click generation and our swipe-to-close handler. The previous hardening bound
+// every .dr-text-btn touch to Edit, which meant Remove could be swallowed or
+// misrouted. This controller owns only the Edit and Remove buttons, blocks the
+// drawer swipe from arming on those buttons, and resolves the live itinerary item
+// before either action runs.
 (function () {
-  if (typeof window === 'undefined' || window.__stableDrawerItemEditV1) return;
-  window.__stableDrawerItemEditV1 = true;
+  if (typeof window === 'undefined' || window.__stableDrawerActionsV2) return;
+  window.__stableDrawerActionsV2 = true;
 
-  function resolveDrawerEditTarget() {
+  const ACTIONS = {
+    selector: '#drawer .dr-text-actions .dr-text-btn'
+  };
+
+  function sameFingerprint(a, b) {
+    if (!a || !b) return false;
+    if (a._id && b._id) return a._id === b._id;
+    const at = a.transport || {};
+    const bt = b.transport || {};
+    return (a.type || '') === (b.type || '')
+      && (a.title || '') === (b.title || '')
+      && (a.time || '') === (b.time || '')
+      && (a.period || '') === (b.period || '')
+      && (at.mode || '') === (bt.mode || '')
+      && (at.from || '') === (bt.from || '')
+      && (at.to || '') === (bt.to || '');
+  }
+
+  function resolveDrawerTarget() {
     let selected = null;
     try { selected = typeof drawerItem !== 'undefined' ? drawerItem : null; } catch (_) {}
     if (!selected || typeof STATE === 'undefined') return null;
@@ -335,64 +352,197 @@
     if (itemIdx < 0 && selected.item?._id) {
       itemIdx = items.findIndex(item => item && item._id === selected.item._id);
     }
+    if (itemIdx < 0 && selected.item) {
+      itemIdx = items.findIndex(item => sameFingerprint(item, selected.item));
+    }
     if (itemIdx < 0) {
       const fallback = Number(selected.itemIdx);
-      if (Number.isInteger(fallback) && fallback >= 0 && fallback < items.length) itemIdx = fallback;
+      if (Number.isInteger(fallback) && fallback >= 0 && fallback < items.length) {
+        if (!selected.item || sameFingerprint(items[fallback], selected.item)) itemIdx = fallback;
+      }
     }
     if (itemIdx < 0 || !items[itemIdx]) return null;
     return { dayIdx, itemIdx, item: items[itemIdx] };
   }
 
+  function buttonAction(button) {
+    if (!button) return '';
+    const existing = button.dataset.drawerAction || '';
+    if (existing) return existing;
+    const onclick = button.getAttribute('onclick') || '';
+    let action = '';
+    if (onclick.includes('editCurrentItem')) action = 'edit';
+    else if (onclick.includes('deleteCurrentItem')) action = 'remove';
+    if (action) button.dataset.drawerAction = action;
+    return action;
+  }
+
+  function actionButtonFromTarget(target) {
+    if (!target?.closest) return null;
+    const button = target.closest(ACTIONS.selector);
+    if (!button || !buttonAction(button)) return null;
+    return button;
+  }
+
+  function decorateButtons() {
+    document.querySelectorAll(ACTIONS.selector).forEach(buttonAction);
+  }
+
+  function ensureActionLayer() {
+    if (!document.head || document.getElementById('stable-drawer-actions-v2-style')) return;
+    const style = document.createElement('style');
+    style.id = 'stable-drawer-actions-v2-style';
+    style.textContent = `
+      #drawer .dr-text-actions {
+        position:relative !important;
+        z-index:80 !important;
+        pointer-events:auto !important;
+        isolation:isolate !important;
+      }
+      #drawer .dr-text-actions .dr-text-btn {
+        position:relative !important;
+        z-index:81 !important;
+        pointer-events:auto !important;
+        touch-action:manipulation !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   window.editCurrentItem = function editCurrentItemStable() {
-    const target = resolveDrawerEditTarget();
+    const target = resolveDrawerTarget();
     if (!target) {
       alert('This item changed while it was open. Please close it, reopen it and try again.');
       return false;
     }
 
+    const openEditor = typeof window.openEditItem === 'function'
+      ? window.openEditItem
+      : (typeof openEditItem === 'function' ? openEditItem : null);
+    if (!openEditor) {
+      alert('Could not open this item for editing. Please close it and try again.');
+      return false;
+    }
+
     try {
-      if (typeof window.openEditItem !== 'function') throw new Error('Edit action is unavailable');
-      window.openEditItem(target.dayIdx, target.itemIdx);
+      openEditor(target.dayIdx, target.itemIdx);
+      const editorOpened = document.getElementById('modal-overlay')?.classList.contains('open')
+        || document.getElementById('quick-journey-overlay')?.classList.contains('open');
+      if (!editorOpened) throw new Error('Editor did not open');
     } catch (error) {
       console.error('Open itinerary item editor failed:', error);
       alert('Could not open this item for editing. Please close it and try again.');
       return false;
     }
 
-    // Close the detail drawer only after the edit modal has been opened. If a
-    // future drawer cleanup throws, the editor is already safely visible.
     try { if (typeof closeDrawer === 'function') closeDrawer(); } catch (error) {
       console.warn('Drawer cleanup after Edit failed:', error);
     }
     return true;
   };
 
+  window.deleteCurrentItem = async function deleteCurrentItemStable() {
+    const target = resolveDrawerTarget();
+    if (!target) {
+      alert('This item changed while it was open. Please close it, reopen it and try again.');
+      return false;
+    }
+
+    const deleter = typeof window.deleteItineraryItemServer === 'function'
+      ? window.deleteItineraryItemServer
+      : (typeof deleteItineraryItemServer === 'function' ? deleteItineraryItemServer : null);
+    if (!deleter) {
+      alert('Could not remove this item. Please close it and try again.');
+      return false;
+    }
+
+    try {
+      return await deleter(target.dayIdx, target.itemIdx, target.item, 'Remove this item from the itinerary?');
+    } catch (error) {
+      console.error('Remove itinerary item failed:', error);
+      alert('Could not remove this item. Please try again.');
+      return false;
+    }
+  };
+
+  function runAction(action) {
+    if (action === 'edit') return window.editCurrentItem();
+    if (action === 'remove') return window.deleteCurrentItem();
+    return false;
+  }
+
+  function pointInside(button, x, y) {
+    if (!button || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+    const rect = button.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }
+
   let touchId = null;
   let startX = 0;
   let startY = 0;
-  let armed = false;
+  let armedAction = '';
+  let armedButton = null;
+  let lastTouchActionAt = 0;
+
+  function resetTouch() {
+    touchId = null;
+    startX = 0;
+    startY = 0;
+    armedAction = '';
+    armedButton = null;
+  }
 
   document.addEventListener('touchstart', event => {
-    const button = event.target?.closest?.('#drawer .dr-text-btn');
+    const button = actionButtonFromTarget(event.target);
     if (!button || !event.changedTouches?.length) return;
     const touch = event.changedTouches[0];
+    // Stop here in capture phase so the drawer swipe-to-close listener never
+    // arms itself for a button press.
+    event.stopPropagation();
     touchId = touch.identifier;
     startX = touch.clientX;
     startY = touch.clientY;
-    armed = true;
+    armedAction = buttonAction(button);
+    armedButton = button;
+  }, { capture:true, passive:false });
+
+  document.addEventListener('touchmove', event => {
+    if (!armedAction) return;
+    event.stopPropagation();
   }, { capture:true, passive:true });
 
   document.addEventListener('touchend', event => {
-    if (!armed) return;
-    const button = event.target?.closest?.('#drawer .dr-text-btn');
-    const touch = [...(event.changedTouches || [])].find(t => t.identifier === touchId);
-    armed = false;
-    touchId = null;
-    if (!button || !touch) return;
-    if (Math.abs(touch.clientX - startX) > 12 || Math.abs(touch.clientY - startY) > 12) return;
+    if (!armedAction) return;
+    const touches = Array.from(event.changedTouches || []);
+    const touch = touches.find(candidate => candidate.identifier === touchId);
+    const action = armedAction;
+    const button = armedButton;
+    resetTouch();
 
     event.preventDefault();
     event.stopImmediatePropagation();
-    window.editCurrentItem();
+    if (!touch) return;
+    if (Math.abs(touch.clientX - startX) > 18 || Math.abs(touch.clientY - startY) > 18) return;
+    if (!pointInside(button, touch.clientX, touch.clientY)) return;
+
+    lastTouchActionAt = Date.now();
+    runAction(action);
   }, { capture:true, passive:false });
+
+  document.addEventListener('touchcancel', event => {
+    if (armedAction) event.stopPropagation();
+    resetTouch();
+  }, { capture:true, passive:true });
+
+  document.addEventListener('click', event => {
+    const button = actionButtonFromTarget(event.target);
+    if (!button) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (Date.now() - lastTouchActionAt < 800) return;
+    runAction(buttonAction(button));
+  }, { capture:true });
+
+  ensureActionLayer();
+  decorateButtons();
 })();
