@@ -127,20 +127,26 @@ require("s.token" not in db, "db.js must not fall back to the PIN hash token")
 require("mytrips:auth-expired" in db, "401 responses must notify the auth layer")
 
 # iOS Add/Edit controls must resolve the user's touch before VisualViewport/keyboard
-# layout changes can retarget the synthetic click. The explicit save must use the
-# item-level transaction and suppress the old whole-document autosave race.
+# layout changes can retarget a later synthetic click. Meal controls use pointerdown;
+# Save additionally tracks native touch coordinates and has a captured click fallback.
+# The explicit save must use the item-level transaction and suppress the old
+# whole-document autosave race.
 require("installAtomicItemSave" in state_guard and "dbUpsertItineraryItem" in state_guard,
         "state guard must route explicit modal saves through atomic item persistence")
 require("suppressAutosave = true" in state_guard and "const payloadItem = clone(currentItem)" in state_guard,
         "modal save must suppress redundant autosave until synchronous metadata is captured")
-require("pointerdown" in state_guard and "pointerup" in state_guard and "pointerType !== 'touch'" in state_guard,
-        "touch controls must use pointer events rather than relying on delayed iOS click")
+require("pointerdown" in state_guard and "pointerType !== 'touch'" in state_guard,
+        "touch-sensitive modal controls must still commit on pointerdown where appropriate")
+require("touchstart" in state_guard and "touchend" in state_guard and "invokeModalSave" in state_guard,
+        "modal Save must resolve the iPhone touch directly instead of relying on delayed synthetic click")
 require("#f-meal-kind-row .tt-btn" in state_guard and "setMealKind(kind.dataset.val" in state_guard,
         "meal-kind selection must be committed on touch pointerdown")
 require("#f-meal-status-row .tt-btn" in state_guard and "setMealStatus(status.dataset.val" in state_guard,
         "meal status selection must be committed on touch pointerdown")
 require("#modal-save-btn" in state_guard and "window.saveItem()" in state_guard and "lastTouchSaveAt" in state_guard,
-        "modal Save must be touch-stable and suppress the synthetic duplicate click")
+        "modal Save must be touch-stable and suppress duplicate activation")
+require("Saving…" in state_guard and "lastSaveInvocationAt" in state_guard,
+        "modal Save must give immediate feedback and deduplicate touch/click activation")
 require("STATE = beforeState" in state_guard and "modal?.classList.add('open')" in state_guard,
         "a failed atomic item save must restore local state and keep the form available")
 
