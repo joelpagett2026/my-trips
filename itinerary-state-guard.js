@@ -92,6 +92,7 @@
   };
 
   window.saveData = async function () {
+    // Never establish an undo baseline from temporary template/default data.
     // A user can edit very quickly after the page becomes interactive. Previously
     // this wrapper simply returned if the initial dbLoad had not populated the
     // safety baseline yet, leaving the toolbar permanently saying "Saving…" and
