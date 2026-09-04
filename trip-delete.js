@@ -308,3 +308,91 @@
     window.setTimeout(install, 0);
   }
 })();
+
+// Stable itinerary Edit control.
+//
+// The drawer Edit action used to rely on the drawer's saved array index and on a
+// normal synthetic click. On iOS that is fragile for two reasons: the drawer's
+// swipe-to-close listener also starts from touches on buttons, and an item's
+// index can legitimately move after a save/re-render. Resolve the current item
+// first, then open it by its authoritative index. A dedicated touch-end path
+// makes the Edit button deterministic on iPhone and suppresses the duplicate
+// synthetic click that Safari would otherwise emit afterwards.
+(function () {
+  if (typeof window === 'undefined' || window.__stableDrawerItemEditV1) return;
+  window.__stableDrawerItemEditV1 = true;
+
+  function resolveDrawerEditTarget() {
+    let selected = null;
+    try { selected = typeof drawerItem !== 'undefined' ? drawerItem : null; } catch (_) {}
+    if (!selected || typeof STATE === 'undefined') return null;
+
+    const dayIdx = Number(selected.dayIdx);
+    const items = STATE.days?.[dayIdx]?.items;
+    if (!Number.isInteger(dayIdx) || !Array.isArray(items)) return null;
+
+    let itemIdx = selected.item ? items.indexOf(selected.item) : -1;
+    if (itemIdx < 0 && selected.item?._id) {
+      itemIdx = items.findIndex(item => item && item._id === selected.item._id);
+    }
+    if (itemIdx < 0) {
+      const fallback = Number(selected.itemIdx);
+      if (Number.isInteger(fallback) && fallback >= 0 && fallback < items.length) itemIdx = fallback;
+    }
+    if (itemIdx < 0 || !items[itemIdx]) return null;
+    return { dayIdx, itemIdx, item: items[itemIdx] };
+  }
+
+  window.editCurrentItem = function editCurrentItemStable() {
+    const target = resolveDrawerEditTarget();
+    if (!target) {
+      alert('This item changed while it was open. Please close it, reopen it and try again.');
+      return false;
+    }
+
+    try {
+      if (typeof window.openEditItem !== 'function') throw new Error('Edit action is unavailable');
+      window.openEditItem(target.dayIdx, target.itemIdx);
+    } catch (error) {
+      console.error('Open itinerary item editor failed:', error);
+      alert('Could not open this item for editing. Please close it and try again.');
+      return false;
+    }
+
+    // Close the detail drawer only after the edit modal has been opened. If a
+    // future drawer cleanup throws, the editor is already safely visible.
+    try { if (typeof closeDrawer === 'function') closeDrawer(); } catch (error) {
+      console.warn('Drawer cleanup after Edit failed:', error);
+    }
+    return true;
+  };
+
+  let touchId = null;
+  let startX = 0;
+  let startY = 0;
+  let armed = false;
+
+  document.addEventListener('touchstart', event => {
+    const button = event.target?.closest?.('#drawer .dr-text-btn');
+    if (!button || !event.changedTouches?.length) return;
+    const touch = event.changedTouches[0];
+    touchId = touch.identifier;
+    startX = touch.clientX;
+    startY = touch.clientY;
+    armed = true;
+  }, { capture:true, passive:true });
+
+  document.addEventListener('touchend', event => {
+    if (!armed) return;
+    const button = event.target?.closest?.('#drawer .dr-text-btn');
+    const touch = [...(event.changedTouches || [])].find(t => t.identifier === touchId);
+    armed = false;
+    touchId = null;
+    if (!button || !touch) return;
+    if (Math.abs(touch.clientX - startX) > 12 || Math.abs(touch.clientY - startY) > 12) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    window.editCurrentItem();
+  }, { capture:true, passive:false });
+})();
