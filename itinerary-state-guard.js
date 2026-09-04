@@ -55,6 +55,24 @@
     return true;
   }
 
+  function waitForLoadedRecord(maxMs = 5000) {
+    if (initializeFromLoadedRecord()) return Promise.resolve(true);
+    return new Promise(resolve => {
+      const started = Date.now();
+      const timer = setInterval(() => {
+        if (initializeFromLoadedRecord()) {
+          clearInterval(timer);
+          resolve(true);
+          return;
+        }
+        if (Date.now() - started >= maxMs) {
+          clearInterval(timer);
+          resolve(false);
+        }
+      }, 100);
+    });
+  }
+
   document.addEventListener('mytrips:record-loaded', (event) => {
     if (initialized || typeof RECORD_ID === 'undefined') return;
     if (!event.detail || event.detail.id !== RECORD_ID) return;
@@ -74,10 +92,19 @@
   };
 
   window.saveData = async function () {
-    // Never establish an undo baseline from temporary template/default data while
-    // the initial DB load is still in flight. The caller's scheduled save can run
-    // again after loading; skipping here is safer than inventing history.
-    if (!initializeFromLoadedRecord()) return;
+    // A user can edit very quickly after the page becomes interactive. Previously
+    // this wrapper simply returned if the initial dbLoad had not populated the
+    // safety baseline yet, leaving the toolbar permanently saying "Saving…" and
+    // dropping that scheduled save. Wait briefly for the authoritative load instead.
+    if (!initializeFromLoadedRecord()) {
+      const ready = await waitForLoadedRecord();
+      if (!ready) {
+        if (typeof setStatus === 'function') setStatus('error', '✕ Save paused — reload');
+        console.error('Save paused: authoritative itinerary state did not finish loading');
+        return;
+      }
+    }
+
     const nextState = clone(STATE);
     const previousState = clone(lastPersistedState);
 
