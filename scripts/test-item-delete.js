@@ -5,9 +5,9 @@ const fs = require('fs');
 const vm = require('vm');
 
 const html = fs.readFileSync('new-trip-v2.html', 'utf8');
-const start = html.indexOf('async function removeItineraryItem(');
+const start = html.indexOf('async function deleteTransportItemServer(');
 const end = html.indexOf('// ── ADD / EDIT MODAL', start);
-if (start < 0 || end < 0) throw new Error('Could not locate item deletion functions in template');
+if (start < 0 || end < 0) throw new Error('Could not locate transport/item deletion functions in template');
 const fnSource = html.slice(start, end);
 
 function makeContext({ saveFails = false } = {}) {
