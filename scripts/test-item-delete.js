@@ -5,39 +5,41 @@ const fs = require('fs');
 const vm = require('vm');
 
 const html = fs.readFileSync('new-trip-v2.html', 'utf8');
-const start = html.indexOf('async function deleteTransportItemServer(');
+const start = html.indexOf('async function deleteItineraryItemServer(');
 const end = html.indexOf('// ── ADD / EDIT MODAL', start);
-if (start < 0 || end < 0) throw new Error('Could not locate transport/item deletion functions in template');
+if (start < 0 || end < 0) throw new Error('Could not locate item deletion functions in template');
 const fnSource = html.slice(start, end);
 
-function makeContext({ saveFails = false } = {}) {
-  const calls = { closeDrawer: 0, closeModal: 0, render: 0, save: 0, alert: 0, snapshot: 0 };
+function makeContext({ responseOk = true } = {}) {
+  const calls = { closeDrawer: 0, alert: 0, fetch: 0, reloaded: false };
   const ctx = {
-    STATE: { days: [{ items: [{ id: 'keep' }, { id: 'remove' }] }] },
-    drawerItem: { dayIdx: 0, itemIdx: 1 },
+    STATE: { days: [{ items: [] }] },
+    drawerItem: null,
     RECORD_ID: 'test-trip',
     confirm: () => true,
     alert: () => { calls.alert++; },
-    takeSnapshot: () => { calls.snapshot++; throw new Error('simulated snapshot storage failure'); },
     closeDrawer: () => { calls.closeDrawer++; },
-    closeModal: () => { calls.closeModal++; },
-    render: () => { calls.render++; },
     setStatus: () => {},
-    dbSave: async (_id, state) => {
-      calls.save++;
-      if (saveFails) throw new Error('simulated save failure');
-      calls.savedIds = state.days[0].items.map(x => x.id);
-    },
-    syncRegistryCities: () => {},
-    showSnapshotBar: () => {},
-    setTimeout: () => 0,
     getToken: () => 'test-token',
+    Date,
     URL,
-    window: { location: { href: 'https://example.test/trip', replace: () => { calls.reloaded = true; } } },
-    fetch: async (_url, options) => {
-      calls.fetch = (calls.fetch || 0) + 1;
-      calls.fetchBody = JSON.parse(options.body);
-      return { ok: true, json: async () => ({ ok: true, data: { deleted: true } }) };
+    window: {
+      location: {
+        href: 'https://example.test/trip',
+        replace: () => { calls.reloaded = true; }
+      }
+    },
+    fetch: async (url, options) => {
+      calls.fetch++;
+      calls.url = url;
+      calls.body = JSON.parse(options.body);
+      return {
+        ok: responseOk,
+        status: responseOk ? 200 : 500,
+        json: async () => responseOk
+          ? ({ ok: true, data: { deleted: true } })
+          : ({ ok: false, error: 'Delete item failed' })
+      };
     },
     console
   };
@@ -49,73 +51,54 @@ function makeContext({ saveFails = false } = {}) {
 (async () => {
   {
     const { ctx, calls } = makeContext();
-    await ctx.deleteCurrentItem();
-    if (ctx.STATE.days[0].items.length !== 1 || ctx.STATE.days[0].items[0].id !== 'keep') {
-      throw new Error('confirmed delete did not remove the selected item');
-    }
-    if (calls.closeDrawer !== 1 || calls.render < 1) {
-      throw new Error('confirmed delete did not update the UI immediately');
-    }
-    if (calls.save !== 1 || JSON.stringify(calls.savedIds) !== JSON.stringify(['keep'])) {
-      throw new Error('confirmed delete did not persist the updated state immediately');
-    }
-  }
+    const item = { _id: 'a1', type: 'place', title: 'Cathedral', time: '10:00', period: 'morning' };
+    ctx.STATE.days[0].items = [item];
+    ctx.drawerItem = { dayIdx: 0, itemIdx: 0, item };
 
-  {
-    const { ctx, calls } = makeContext({ saveFails: true });
     await ctx.deleteCurrentItem();
-    const ids = ctx.STATE.days[0].items.map(x => x.id);
-    if (JSON.stringify(ids) !== JSON.stringify(['keep', 'remove'])) {
-      throw new Error('failed save did not restore the removed item');
+
+    if (calls.fetch !== 1 || calls.url !== '/record.php?action=delete_item') {
+      throw new Error('activity delete did not call atomic delete endpoint');
     }
-    if (calls.alert !== 1) {
-      throw new Error('failed save did not notify the user');
+    if (calls.body.item_id !== 'a1' || calls.body.item_index !== 0 || calls.body.fingerprint.type !== 'place') {
+      throw new Error('activity delete sent the wrong target');
+    }
+    if (calls.closeDrawer !== 1 || !calls.reloaded) {
+      throw new Error('activity delete did not close and reload after server success');
     }
   }
 
   {
     const { ctx, calls } = makeContext();
-    ctx.STATE.days[0].items = [
-      { id: 'keep', type: 'place' },
-      { id: 'transport', type: 'move', transport: { mode: 'Coach' } }
-    ];
-    await ctx.removeItineraryItem(0, 1, {
-      label: 'transport item',
-      confirmMessage: 'Remove this transport item from the itinerary?',
-      closeDrawer: false,
-      closeModal: false
-    });
-    const ids = ctx.STATE.days[0].items.map(x => x.id);
-    if (JSON.stringify(ids) !== JSON.stringify(['keep'])) {
-      throw new Error('transport item delete did not remove the selected transport row');
+    const transport = {
+      _id: 't1', type: 'move', title: 'Guimaraes → Braga', time: '14:00', period: 'afternoon',
+      transport: { mode: 'Coach', from: 'Guimaraes', to: 'Braga' }
+    };
+    ctx.STATE.days[0].items = [{ type: 'place', title: 'Keep' }, transport];
+    ctx.drawerItem = { dayIdx: 0, itemIdx: 0, item: transport };
+
+    await ctx.deleteCurrentItem();
+
+    if (calls.body.item_id !== 't1' || calls.body.item_index !== 1) {
+      throw new Error('drawer delete did not resolve the live item index by identity');
     }
-    if (calls.save !== 1 || JSON.stringify(calls.savedIds) !== JSON.stringify(['keep'])) {
-      throw new Error('transport item delete did not persist immediately');
+    if (calls.body.fingerprint.mode !== 'Coach' || calls.body.fingerprint.from !== 'Guimaraes') {
+      throw new Error('transport delete fingerprint is incomplete');
     }
+    if (!calls.reloaded) throw new Error('transport delete did not reload after server success');
   }
 
   {
-    const { ctx, calls } = makeContext();
-    const transport = { id: 'transport', type: 'move', title: 'Guimaraes → Braga', transport: { mode: 'Coach' } };
-    ctx.STATE.days[0].items = [
-      { id: 'inserted', type: 'place', title: 'Inserted' },
-      { id: 'keep', type: 'place', title: 'Keep' },
-      transport
-    ];
-    // Simulate the drawer having opened before a re-render/reorder changed the
-    // numeric position. The object reference must still win over the stale index.
-    ctx.drawerItem = { dayIdx: 0, itemIdx: 1, item: transport };
+    const { ctx, calls } = makeContext({ responseOk: false });
+    const item = { _id: 'm1', type: 'meal', title: 'Dinner', time: '19:00', period: 'evening' };
+    ctx.STATE.days[0].items = [item];
+    ctx.drawerItem = { dayIdx: 0, itemIdx: 0, item };
+
     await ctx.deleteCurrentItem();
-    const ids = ctx.STATE.days[0].items.map(x => x.id);
-    if (JSON.stringify(ids) !== JSON.stringify(['inserted','keep'])) {
-      throw new Error('drawer transport delete did not resolve by object identity');
-    }
-    if (calls.fetch !== 1 || calls.fetchBody?.fingerprint?.mode !== 'Coach') {
-      throw new Error('drawer transport identity delete did not call atomic transport delete');
-    }
-    if (!calls.reloaded) {
-      throw new Error('drawer transport identity delete did not reload after server deletion');
-    }
+
+    if (calls.fetch !== 1) throw new Error('failed delete did not reach the server');
+    if (calls.reloaded) throw new Error('failed delete must not reload');
+    if (calls.alert !== 1) throw new Error('failed delete did not notify the user');
   }
 
   console.log('item deletion behavior: ok');
