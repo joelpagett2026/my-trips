@@ -288,21 +288,68 @@
         -webkit-user-select:none !important;
         user-select:none !important;
       }
-      #modal-save-btn[data-saving="1"] { opacity:.72 !important; pointer-events:none !important; }
+      #modal-save-btn[data-saving="1"] { opacity:.72 !important; }
     `;
     document.head.appendChild(style);
 
-    let armedPointer = null;
+    let armedTouchId = null;
     let armedX = 0;
     let armedY = 0;
     let moved = false;
     let lastTouchSaveAt = 0;
+    let lastSaveInvocationAt = 0;
     let ignoreMealClickUntil = 0;
 
     function pointInside(el, x, y) {
-      if (!el) return false;
+      if (!el || !Number.isFinite(x) || !Number.isFinite(y)) return false;
       const r = el.getBoundingClientRect();
       return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }
+
+    function invokeModalSave(event) {
+      const overlay = document.getElementById('modal-overlay');
+      const save = document.getElementById('modal-save-btn');
+      if (!overlay?.classList.contains('open') || !save) return false;
+
+      const now = Date.now();
+      if (now - lastSaveInvocationAt < 650) {
+        if (event) {
+          event.preventDefault?.();
+          event.stopImmediatePropagation?.();
+        }
+        return true;
+      }
+      lastSaveInvocationAt = now;
+      lastTouchSaveAt = now;
+
+      if (event) {
+        event.preventDefault?.();
+        event.stopImmediatePropagation?.();
+      }
+
+      // Give immediate visible confirmation that the tap reached the Save action.
+      // The atomic wrapper then replaces this with Saved or a concrete error.
+      save.dataset.saving = '1';
+      const oldText = save.textContent;
+      save.textContent = 'Saving…';
+      if (typeof setStatus === 'function') setStatus('saving', '●  Saving…');
+
+      try {
+        if (typeof window.saveItem !== 'function') {
+          throw new Error('Save action is not available');
+        }
+        window.saveItem();
+      } catch (error) {
+        console.error('Modal Save action failed', error);
+        if (typeof setStatus === 'function') setStatus('error', '✕ Save failed — try again');
+        window.setTimeout(() => alert('The Save button was pressed, but the save action failed. Please try again.'), 0);
+      } finally {
+        window.setTimeout(() => {
+          delete save.dataset.saving;
+          if (save.isConnected && save.textContent === 'Saving…') save.textContent = oldText || 'Save';
+        }, 700);
+      }
+      return true;
     }
 
     document.addEventListener('pointerdown', event => {
@@ -323,55 +370,58 @@
         event.stopImmediatePropagation();
         ignoreMealClickUntil = Date.now() + 900;
         setMealStatus(status.dataset.val || 'walkin');
-        return;
       }
+    }, true);
 
+    // iPhone Safari can retarget the synthetic click after the keyboard/visual
+    // viewport moves. Arm and finish the Save using touch screen coordinates,
+    // so it does not matter which DOM element iOS reports as event.target.
+    document.addEventListener('touchstart', event => {
       const overlay = document.getElementById('modal-overlay');
       const save = document.getElementById('modal-save-btn');
-      if (!overlay?.classList.contains('open') || !save) return;
-      if (!pointInside(save, event.clientX, event.clientY)) return;
-      armedPointer = event.pointerId;
-      armedX = event.clientX;
-      armedY = event.clientY;
+      if (!overlay?.classList.contains('open') || !save || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      if (!pointInside(save, touch.clientX, touch.clientY)) return;
+      armedTouchId = touch.identifier;
+      armedX = touch.clientX;
+      armedY = touch.clientY;
       moved = false;
-    }, true);
+    }, { capture: true, passive: true });
 
-    document.addEventListener('pointermove', event => {
-      if (event.pointerType !== 'touch' || armedPointer !== event.pointerId) return;
-      if (Math.hypot(event.clientX - armedX, event.clientY - armedY) > 24) moved = true;
-    }, true);
+    document.addEventListener('touchmove', event => {
+      if (armedTouchId === null) return;
+      const touch = Array.from(event.touches).find(t => t.identifier === armedTouchId);
+      if (!touch) return;
+      if (Math.hypot(touch.clientX - armedX, touch.clientY - armedY) > 24) moved = true;
+    }, { capture: true, passive: true });
 
-    document.addEventListener('pointerup', event => {
-      if (event.pointerType !== 'touch' || armedPointer !== event.pointerId) return;
+    document.addEventListener('touchend', event => {
+      if (armedTouchId === null) return;
+      const touch = Array.from(event.changedTouches).find(t => t.identifier === armedTouchId);
       const save = document.getElementById('modal-save-btn');
-      armedPointer = null;
-      if (!save || moved || !pointInside(save, event.clientX, event.clientY)) return;
+      armedTouchId = null;
+      if (!touch || moved || !save || !pointInside(save, touch.clientX, touch.clientY)) return;
+      invokeModalSave(event);
+    }, { capture: true, passive: false });
 
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      lastTouchSaveAt = Date.now();
-      save.dataset.saving = '1';
-      try { window.saveItem(); }
-      finally { window.setTimeout(() => { delete save.dataset.saving; }, 700); }
-    }, true);
+    document.addEventListener('touchcancel', () => {
+      armedTouchId = null;
+      moved = false;
+    }, { capture: true, passive: true });
 
-    document.addEventListener('pointercancel', event => {
-      if (armedPointer === event.pointerId) {
-        armedPointer = null;
-        moved = false;
-      }
-    }, true);
-
+    // Make the captured click itself authoritative too. This covers desktop,
+    // accessibility activation and any iPhone path where touchend is suppressed
+    // but the native click still arrives. The inline onclick is intentionally
+    // stopped so Save can never execute twice.
     document.addEventListener('click', event => {
       if (Date.now() < ignoreMealClickUntil && event.target.closest('#f-meal-kind-row .tt-btn,#f-meal-status-row .tt-btn')) {
         event.preventDefault();
         event.stopImmediatePropagation();
         return;
       }
-      if (Date.now() - lastTouchSaveAt < 900 && event.target.closest('#modal-save-btn')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
+      const save = event.target.closest('#modal-save-btn');
+      if (!save) return;
+      invokeModalSave(event);
     }, true);
   }
 
