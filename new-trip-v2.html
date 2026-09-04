@@ -710,6 +710,12 @@
       </div>
 
       <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
+        <label class="field-label">App refresh</label>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Use this after site updates if the iPhone app appears to be showing an older version. Your saved itinerary data will not be deleted.</div>
+        <button class="modal-btn secondary" id="ts-refresh-app-btn" style="width:100%;" onclick="refreshAppFiles()">Refresh app files</button>
+      </div>
+
+      <div class="field-group" style="border-top:1px solid var(--line);padding-top:13px;">
         <label class="field-label" style="color:#e53e3e;">Danger zone</label>
         <div style="font-size:10.5px;color:var(--text3);margin-bottom:8px;">Permanently delete this trip and all its itinerary data. This cannot be undone.</div>
         <button class="modal-btn secondary danger-text" style="width:100%;" onclick="deleteTrip()">🗑 Delete this trip</button>
@@ -4203,6 +4209,40 @@ function formatDMY(dt) {
   const dd = String(dt.getDate()).padStart(2,'0');
   const mm = String(dt.getMonth()+1).padStart(2,'0');
   return dd + '/' + mm + '/' + dt.getFullYear();
+}
+
+async function refreshAppFiles() {
+  if (!confirm('Refresh the app and load the latest site files?\n\nYour saved itinerary data will not be deleted.')) return;
+
+  const btn = document.getElementById('ts-refresh-app-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Refreshing…';
+  }
+
+  try {
+    // Clear only browser-managed application caches. Do not clear localStorage
+    // or sessionStorage because they contain authentication and user settings.
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+
+    // No service worker is currently used, but unregister any stale/future one
+    // so an installed Home Screen app cannot keep serving an older app shell.
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg => reg.unregister()));
+    }
+  } catch (e) {
+    console.warn('App refresh cleanup was incomplete:', e);
+  }
+
+  // Force a real navigation with a unique URL so iOS requests the itinerary
+  // document and its versioned scripts again instead of restoring old state.
+  const url = new URL(window.location.href);
+  url.searchParams.set('_apprefresh', Date.now().toString());
+  window.location.replace(url.toString());
 }
 
 function openTripSettings() {
