@@ -124,6 +124,31 @@
     }
   };
 
+  // The main Add/Edit modal's Save button is an explicit user command, not an
+  // autosave hint. Core saveItem() updates STATE, closes the modal, and schedules
+  // a debounced save 1.8 seconds later. On iOS/PWA that delay can be interrupted
+  // by backgrounding/navigation and also makes the UI close before persistence is
+  // confirmed. After a valid modal save has closed the overlay, immediately flush
+  // the pending timer. If validation kept the modal open, do nothing.
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    const button = target && typeof target.closest === 'function'
+      ? target.closest('#modal-save-btn')
+      : null;
+    if (!button) return;
+
+    setTimeout(() => {
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay && overlay.classList.contains('open')) return;
+
+      if (typeof window.flushPendingSave === 'function') {
+        window.flushPendingSave();
+      } else if (typeof window.saveData === 'function') {
+        window.saveData();
+      }
+    }, 0);
+  }, true);
+
   window.restoreSnapshot = function () {
     if (typeof snapshotList === 'undefined' || !snapshotList.length) return;
     const previous = snapshotList[0];
