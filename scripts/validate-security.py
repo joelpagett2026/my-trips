@@ -131,7 +131,8 @@ require('__mytripsLoadedRecords' in db and 'mytrips:record-loaded' in db,
         'db.js must expose authoritative loaded-record state')
 require('__mytripsLoadedRecords' in state_guard and 'mytrips:record-loaded' in state_guard,
         'snapshot guard must initialize from authoritative server state')
-require('temporary template/default data' in state_guard,
+require('if (!(loaded instanceof Map) || !loaded.has(RECORD_ID)) return false;' in state_guard
+        and 'authoritative itinerary state did not finish loading' in state_guard,
         'snapshot guard must explicitly avoid default-state baselines')
 require('pushSnapshot(lastPersistedState)' in state_guard,
         'takeSnapshot must make the last persisted state immediately available for Undo')
