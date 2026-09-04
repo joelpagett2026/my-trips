@@ -296,7 +296,7 @@
     let armedX = 0;
     let armedY = 0;
     let moved = false;
-    let lastCoordinateSaveAt = 0;
+    let lastTouchSaveAt = 0;
     let ignoreMealClickUntil = 0;
 
     function pointInside(el, x, y) {
@@ -329,10 +329,6 @@
       const overlay = document.getElementById('modal-overlay');
       const save = document.getElementById('modal-save-btn');
       if (!overlay?.classList.contains('open') || !save) return;
-
-      // Arm purely from screen coordinates, not event.target. A transparent
-      // modal/scrolling layer can therefore never make the visible Save button
-      // untappable just because iOS reports the wrong DOM hit target.
       if (!pointInside(save, event.clientX, event.clientY)) return;
       armedPointer = event.pointerId;
       armedX = event.clientX;
@@ -353,7 +349,7 @@
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      lastCoordinateSaveAt = Date.now();
+      lastTouchSaveAt = Date.now();
       save.dataset.saving = '1';
       try { window.saveItem(); }
       finally { window.setTimeout(() => { delete save.dataset.saving; }, 700); }
@@ -372,7 +368,7 @@
         event.stopImmediatePropagation();
         return;
       }
-      if (Date.now() - lastCoordinateSaveAt < 900 && event.target.closest('#modal-save-btn')) {
+      if (Date.now() - lastTouchSaveAt < 900 && event.target.closest('#modal-save-btn')) {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
