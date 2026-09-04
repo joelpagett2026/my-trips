@@ -162,11 +162,6 @@
         : -1;
       const originalItem = editDescriptor?.item ? clone(editDescriptor.item) : null;
 
-      // Keep this true until the microtask below captures the final synchronous
-      // item shape. itinerary-completion.js wraps saveItem outside this layer and
-      // adds restaurant metadata immediately after the core save returns; keeping
-      // autosave suppressed through that step prevents a second whole-document
-      // save from racing the item transaction.
       suppressAutosave = true;
       let result;
       try {
@@ -179,7 +174,7 @@
       const overlay = document.getElementById('modal-overlay');
       if (overlay?.classList.contains('open')) {
         suppressAutosave = false;
-        return result; // validation kept it open
+        return result;
       }
 
       const items = STATE.days?.[dayIdx]?.items || [];
@@ -207,8 +202,6 @@
       explicitSaveBusy = true;
       if (typeof setStatus === 'function') setStatus('saving', '●  Saving…');
 
-      // Defer one microtask so itinerary-completion.js can synchronously attach
-      // restaurant place/photo metadata before we capture the item payload.
       Promise.resolve().then(async () => {
         const currentItems = STATE.days?.[dayIdx]?.items || [];
         let currentIndex = savedIndex;
@@ -220,10 +213,6 @@
         const currentItem = currentItems[currentIndex];
         if (!currentItem) throw new Error('Saved item disappeared before persistence');
 
-        // Synchronous enhancement work is now captured. Later asynchronous work
-        // (for example a restaurant photo arriving from Places) may use normal
-        // autosave after this point and will inherit the new record version once
-        // the item transaction succeeds.
         const payloadItem = clone(currentItem);
         suppressAutosave = false;
 
@@ -295,6 +284,10 @@
     document.head.appendChild(style);
 
     let armedSavePointer = null;
+    let armedSaveButton = null;
+    let armedSaveX = 0;
+    let armedSaveY = 0;
+    let saveGestureMoved = false;
     let lastTouchSaveAt = 0;
     let ignoreMealClickUntil = 0;
 
@@ -324,16 +317,27 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         armedSavePointer = event.pointerId;
+        armedSaveButton = save;
+        armedSaveX = event.clientX;
+        armedSaveY = event.clientY;
+        saveGestureMoved = false;
+        try { save.setPointerCapture(event.pointerId); } catch (_) {}
       }
+    }, true);
+
+    document.addEventListener('pointermove', event => {
+      if (event.pointerType !== 'touch' || armedSavePointer !== event.pointerId) return;
+      if (Math.hypot(event.clientX - armedSaveX, event.clientY - armedSaveY) > 24) saveGestureMoved = true;
     }, true);
 
     document.addEventListener('pointerup', event => {
       if (event.pointerType !== 'touch' || armedSavePointer !== event.pointerId) return;
-      const save = event.target.closest('#modal-save-btn');
+      const save = armedSaveButton;
       armedSavePointer = null;
-      if (!save) return;
+      armedSaveButton = null;
       event.preventDefault();
       event.stopImmediatePropagation();
+      if (!save || saveGestureMoved) return;
       lastTouchSaveAt = Date.now();
       save.dataset.saving = '1';
       try { window.saveItem(); }
@@ -341,13 +345,13 @@
     }, true);
 
     document.addEventListener('pointercancel', event => {
-      if (armedSavePointer === event.pointerId) armedSavePointer = null;
+      if (armedSavePointer === event.pointerId) {
+        armedSavePointer = null;
+        armedSaveButton = null;
+        saveGestureMoved = false;
+      }
     }, true);
 
-    // iOS may synthesize a click after the pointer sequence, sometimes after the
-    // visual viewport has resized and a different segmented button is under the
-    // old finger coordinate. Suppress that ghost click: the pointerdown selection
-    // above is already authoritative.
     document.addEventListener('click', event => {
       if (Date.now() < ignoreMealClickUntil && event.target.closest('#f-meal-kind-row .tt-btn,#f-meal-status-row .tt-btn')) {
         event.preventDefault();
