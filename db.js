@@ -4,6 +4,7 @@
 
 const API = '/api.php';
 const RECORD_API = '/record.php';
+const RECORD_REQUEST_TIMEOUT_MS = 20000;
 
 function getStoredAuth() {
     try {
@@ -74,13 +75,36 @@ async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     const token = await waitForToken();
+
+    const { timeoutMs = RECORD_REQUEST_TIMEOUT_MS, ...requestOptions } = fetchOptions || {};
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const suppliedSignal = requestOptions.signal;
+    if (controller && !suppliedSignal) requestOptions.signal = controller.signal;
+
     const options = {
         method: body ? 'POST' : 'GET',
         headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token },
-        ...fetchOptions,
+        ...requestOptions,
     };
     if (body) options.body = JSON.stringify(body);
-    return parseJsonResponse(await fetch(url.toString(), options));
+
+    let timeout = null;
+    if (controller && !suppliedSignal && Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0) {
+        timeout = setTimeout(() => controller.abort(), Number(timeoutMs));
+    }
+
+    try {
+        return await parseJsonResponse(await fetch(url.toString(), options));
+    } catch (err) {
+        if (err && err.name === 'AbortError') {
+            const timeoutError = new Error('The save request took too long. Please try again.');
+            timeoutError.status = 408;
+            throw timeoutError;
+        }
+        throw err;
+    } finally {
+        if (timeout) clearTimeout(timeout);
+    }
 }
 
 const _recordVersions = new Map();
