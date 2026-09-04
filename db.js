@@ -153,13 +153,25 @@ function dbAdoptRecord(id, data, version) {
     return data;
 }
 
-function dbSave(id, data, options = {}) {
+// All writes for a record — whole-document autosaves and explicit item saves —
+// must pass through the same queue. Previously dbSave() was queued but
+// dbUpsertItineraryItem() bypassed that queue, so an older autosave could race a
+// modal Save and leave the browser/server disagreeing about which state won.
+function queueRecordWrite(id, operation) {
     const previous = _dbSaveQueues.get(id) || Promise.resolve();
+    const run = previous.catch(() => {}).then(operation);
+    _dbSaveQueues.set(id, run);
+    const cleanup = () => { if (_dbSaveQueues.get(id) === run) _dbSaveQueues.delete(id); };
+    run.then(cleanup, cleanup);
+    return run;
+}
+
+function dbSave(id, data, options = {}) {
     const snapshot = JSON.parse(JSON.stringify(data));
     const saveOptions = { ...options };
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') saveOptions.keepalive = true;
 
-    const run = previous.catch(() => {}).then(async () => {
+    return queueRecordWrite(id, async () => {
         if (!_recordVersions.has(id)) await dbLoad(id);
 
         // Once the server has rejected a stale write, do not keep sending queued
@@ -188,30 +200,101 @@ function dbSave(id, data, options = {}) {
             throw err;
         }
     });
+}
 
-    _dbSaveQueues.set(id, run);
-    const cleanup = () => { if (_dbSaveQueues.get(id) === run) _dbSaveQueues.delete(id); };
-    run.then(cleanup, cleanup);
-    return run;
+function cloneRecordValue(value) {
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function ensureStableItemId(item, originalItem = null) {
+    const next = cloneRecordValue(item) || {};
+    const originalId = String(originalItem?._id || '').trim();
+    if (originalId) {
+        // Editing must retain the same stable identity. Older UI code rebuilt the
+        // object and could accidentally assign a new ID on every edit.
+        next._id = originalId;
+    } else if (!String(next._id || '').trim()) {
+        next._id = (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function')
+            ? globalThis.crypto.randomUUID()
+            : 'item-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    }
+    return next;
+}
+
+function itemExistsInRecord(data, dayIndex, item) {
+    const items = data?.days?.[Number(dayIndex)]?.items;
+    if (!Array.isArray(items) || !item) return false;
+    const id = String(item._id || '').trim();
+    if (id) return items.some(candidate => candidate && String(candidate._id || '') === id);
+    return items.some(candidate => JSON.stringify(candidate) === JSON.stringify(item));
+}
+
+function isTransientRecordError(err) {
+    const status = Number(err?.status || 0);
+    return !status || status === 408 || status === 425 || status === 429 || status >= 500;
 }
 
 // Explicit Add/Edit modal saves use an item-level transaction. This is deliberately
 // separate from whole-record autosave: an unrelated change from another tab must
 // not make a newly added meal/activity disappear, while an edit of the same item
 // is still rejected if that item changed on the server.
-async function dbUpsertItineraryItem(id, dayIndex, itemIndex, item, originalItem = null) {
-    const result = await recordCall('upsert_item', {}, {
-        id,
-        day_index: Number(dayIndex),
-        item_index: Number(itemIndex),
-        item,
-        original_item: originalItem,
+function dbUpsertItineraryItem(id, dayIndex, itemIndex, item, originalItem = null) {
+    const originalSnapshot = cloneRecordValue(originalItem);
+    const itemSnapshot = ensureStableItemId(item, originalSnapshot);
+    const numericDay = Number(dayIndex);
+    const numericIndex = Number(itemIndex);
+
+    return queueRecordWrite(id, async () => {
+        let result;
+        let firstError = null;
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                result = await recordCall('upsert_item', {}, {
+                    id,
+                    day_index: numericDay,
+                    item_index: numericIndex,
+                    item: itemSnapshot,
+                    original_item: originalSnapshot,
+                });
+                break;
+            } catch (err) {
+                if (attempt === 0 && isTransientRecordError(err)) {
+                    firstError = err;
+                    await new Promise(resolve => setTimeout(resolve, 250));
+                    continue;
+                }
+
+                // A response can be lost after the server has already committed.
+                // For an edit, retrying then correctly produces 409 because the
+                // original item no longer matches. Reload once and accept the save
+                // only if the stable item ID proves that the intended item exists.
+                if (attempt === 1 && firstError && err?.status === 409) {
+                    const authoritative = await dbLoad(id);
+                    if (itemExistsInRecord(authoritative, numericDay, itemSnapshot)) {
+                        return {
+                            id,
+                            saved: true,
+                            recovered: true,
+                            data: authoritative,
+                            version: _recordVersions.get(id) || null,
+                        };
+                    }
+                }
+                throw err;
+            }
+        }
+
+        if (!result || !result.data || !result.version) {
+            throw new Error('The server did not confirm the itinerary item save.');
+        }
+        if (!itemExistsInRecord(result.data, numericDay, itemSnapshot)) {
+            throw new Error('The server response did not contain the saved itinerary item.');
+        }
+
+        dbAdoptRecord(id, result.data, result.version);
+        return result;
     });
-    if (!result || !result.data || !result.version) {
-        throw new Error('The server did not confirm the itinerary item save.');
-    }
-    dbAdoptRecord(id, result.data, result.version);
-    return result;
 }
 
 async function dbDelete(id) {
