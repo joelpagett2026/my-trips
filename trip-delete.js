@@ -108,7 +108,6 @@
     const height = Math.max(280, Math.round(vv?.height || window.innerHeight || 640));
     const top = Math.max(0, Math.round(vv?.offsetTop || 0));
 
-    // Refresh the no-keyboard baseline only when the viewport is essentially full.
     const currentInner = window.innerHeight || height;
     if (height >= currentInner - 80) baselineHeight = Math.max(height, currentInner);
 
@@ -117,9 +116,6 @@
     overlay.style.setProperty('--entry-visual-height', height + 'px');
     overlay.style.setProperty('--entry-visual-top', top + 'px');
 
-    // Override the older height variable too. itinerary-completion.js still
-    // writes it during viewport events; this handler is registered later and
-    // keeps both systems on the same visual-viewport measurement.
     const modal = overlay.querySelector('.modal');
     if (modal) modal.style.setProperty('--entry-viewport-height', height + 'px');
   }
@@ -171,10 +167,7 @@
   }
 })();
 
-// The edit modal's Delete button historically called deleteCurrentItem(), but
-// that function only looked at drawerItem. When an item is opened directly in
-// the edit modal, editItem is populated while drawerItem can be null, so Delete
-// silently returned without doing anything. Resolve either edit context.
+// Resolve Delete from either the edit modal or drawer.
 (function () {
   if (typeof window === 'undefined') return;
 
@@ -218,4 +211,86 @@
     try { if (typeof scheduleSave === 'function') scheduleSave(); } catch (_) {}
     try { if (typeof render === 'function') render(); } catch (_) {}
   };
+})();
+
+// The drawer's Remove control is rendered with an inline onclick handler in the
+// template. Because the template can define deleteCurrentItem after this file has
+// loaded, replacing window.deleteCurrentItem alone is not reliable. Intercept the
+// actual Remove/Delete click in the capture phase and persist it immediately.
+(function () {
+  if (typeof window === 'undefined' || window.__itemDeleteCaptureInstalled) return;
+  window.__itemDeleteCaptureInstalled = true;
+
+  function resolveTarget() {
+    try {
+      if (typeof drawerItem !== 'undefined' && drawerItem) {
+        const dayIdx = Number(drawerItem.dayIdx);
+        const items = STATE.days?.[dayIdx]?.items || [];
+        let itemIdx = Number.isInteger(Number(drawerItem.itemIdx)) ? Number(drawerItem.itemIdx) : -1;
+        if (itemIdx < 0 && drawerItem.item) itemIdx = items.indexOf(drawerItem.item);
+        if (Number.isInteger(dayIdx) && dayIdx >= 0 && Number.isInteger(itemIdx) && itemIdx >= 0 && itemIdx < items.length) {
+          return { dayIdx, itemIdx, items };
+        }
+      }
+    } catch (_) {}
+
+    try {
+      if (typeof editItem !== 'undefined' && editItem) {
+        const dayIdx = Number(editItem.dayIdx);
+        const items = STATE.days?.[dayIdx]?.items || [];
+        let itemIdx = editItem.item ? items.indexOf(editItem.item) : -1;
+        if (itemIdx < 0 && Number.isInteger(Number(editItem.itemIdx))) itemIdx = Number(editItem.itemIdx);
+        if (Number.isInteger(dayIdx) && dayIdx >= 0 && Number.isInteger(itemIdx) && itemIdx >= 0 && itemIdx < items.length) {
+          return { dayIdx, itemIdx, items };
+        }
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  document.addEventListener('click', async event => {
+    const button = event.target?.closest?.('.dr-text-btn--danger, #modal-delete-btn');
+    if (!button) return;
+
+    const inline = button.getAttribute('onclick') || '';
+    if (!inline.includes('deleteCurrentItem')) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    const target = resolveTarget();
+    if (!target) {
+      console.error('Delete activity: could not resolve selected item');
+      window.alert('Could not identify this activity to remove. Please close it and try again.');
+      return;
+    }
+
+    if (!window.confirm('Delete this activity?')) return;
+
+    const removedItem = target.items[target.itemIdx];
+    try { if (typeof takeSnapshot === 'function') takeSnapshot(); } catch (_) {}
+    target.items.splice(target.itemIdx, 1);
+
+    try { if (typeof closeDrawer === 'function') closeDrawer(); } catch (_) {}
+    try { if (typeof closeModal === 'function') closeModal(); } catch (_) {}
+    try { if (typeof render === 'function') render(); } catch (_) {}
+
+    try {
+      if (typeof setStatus === 'function') setStatus('saving', '');
+      if (typeof dbSave === 'function' && typeof RECORD_ID !== 'undefined') {
+        await dbSave(RECORD_ID, STATE);
+        if (typeof setStatus === 'function') setStatus('saved', '');
+      } else if (typeof scheduleSave === 'function') {
+        scheduleSave();
+      }
+    } catch (error) {
+      console.error('Delete activity save failed:', error);
+      target.items.splice(Math.min(target.itemIdx, target.items.length), 0, removedItem);
+      try { if (typeof render === 'function') render(); } catch (_) {}
+      try { if (typeof setStatus === 'function') setStatus('error', ''); } catch (_) {}
+      window.alert('The activity could not be removed because the save failed. It has been restored.');
+    }
+  }, true);
 })();
