@@ -146,6 +146,13 @@ async function dbLoad(id) {
     return result.data;
 }
 
+function dbAdoptRecord(id, data, version) {
+    _recordVersions.set(id, version || null);
+    _recordConflicts.delete(id);
+    noteRecordLoaded(id, data);
+    return data;
+}
+
 function dbSave(id, data, options = {}) {
     const previous = _dbSaveQueues.get(id) || Promise.resolve();
     const snapshot = JSON.parse(JSON.stringify(data));
@@ -186,6 +193,25 @@ function dbSave(id, data, options = {}) {
     const cleanup = () => { if (_dbSaveQueues.get(id) === run) _dbSaveQueues.delete(id); };
     run.then(cleanup, cleanup);
     return run;
+}
+
+// Explicit Add/Edit modal saves use an item-level transaction. This is deliberately
+// separate from whole-record autosave: an unrelated change from another tab must
+// not make a newly added meal/activity disappear, while an edit of the same item
+// is still rejected if that item changed on the server.
+async function dbUpsertItineraryItem(id, dayIndex, itemIndex, item, originalItem = null) {
+    const result = await recordCall('upsert_item', {}, {
+        id,
+        day_index: Number(dayIndex),
+        item_index: Number(itemIndex),
+        item,
+        original_item: originalItem,
+    });
+    if (!result || !result.data || !result.version) {
+        throw new Error('The server did not confirm the itinerary item save.');
+    }
+    dbAdoptRecord(id, result.data, result.version);
+    return result;
 }
 
 async function dbDelete(id) {
@@ -264,6 +290,8 @@ if (typeof window !== 'undefined') {
         apiCall,
         dbLoad,
         dbSave,
+        dbAdoptRecord,
+        dbUpsertItineraryItem,
         dbDelete,
         dbVerifyPin,
         dbChangePin,
