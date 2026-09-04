@@ -110,6 +110,9 @@ jobs:
       - name: Test mobile modal overlay release
         run: node scripts/test-modal-overlay.js
 
+      - name: Test fullscreen mobile activity modal
+        run: node scripts/test-mobile-fullscreen-modal.js
+
       - name: Execute renderer integration contracts
         run: php scripts/validate-renderers.php
 
