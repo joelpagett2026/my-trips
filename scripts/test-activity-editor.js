@@ -4,8 +4,6 @@
 const fs = require('fs');
 const vm = require('vm');
 
-// Activity Editor V2 is intentionally installed by the directly-loaded
-// trip-delete runtime so iOS cannot show a modal before its controller arrives.
 const source = fs.readFileSync('trip-delete.js', 'utf8');
 
 function assert(condition, message) {
@@ -25,8 +23,20 @@ class FakeStyle {
   removeProperty(name) { delete this.values[name]; }
 }
 
+function simpleMatch(el, selector) {
+  if (!el) return false;
+  selector = selector.trim();
+  if (!selector) return false;
+  if (selector.startsWith('#')) return el.id === selector.slice(1);
+  if (selector.startsWith('.')) {
+    return selector.slice(1).split('.').every(cls => el.classList.contains(cls));
+  }
+  if (selector === 'button') return el.tagName === 'BUTTON';
+  return false;
+}
+
 class FakeElement {
-  constructor(id = '', classes = []) {
+  constructor(id = '', classes = [], tagName = 'DIV') {
     this.id = id;
     this.classList = new ClassList(classes);
     this.dataset = Object.create(null);
@@ -35,31 +45,28 @@ class FakeElement {
     this.listeners = Object.create(null);
     this.children = [];
     this.parentNode = null;
+    this.parentElement = null;
     this.textContent = '';
     this.disabled = false;
     this.type = '';
+    this.tagName = tagName;
     this.isConnected = true;
   }
 
   appendChild(child) {
     child.parentNode = this;
+    child.parentElement = this;
     this.children.push(child);
     return child;
   }
 
-  addEventListener(type, handler) {
-    (this.listeners[type] ||= []).push(handler);
+  addEventListener(type, handler, options) {
+    (this.listeners[type] ||= []).push({ handler, capture: options === true || !!options?.capture });
   }
 
   setAttribute(name, value) { this.attributes[name] = String(value); }
   getAttribute(name) { return this.attributes[name] ?? null; }
   removeAttribute(name) { delete this.attributes[name]; }
-
-  matchesSimple(selector) {
-    if (selector.startsWith('#')) return this.id === selector.slice(1);
-    if (!selector.startsWith('.')) return false;
-    return selector.slice(1).split('.').every(cls => this.classList.contains(cls));
-  }
 
   descendants() {
     const out = [];
@@ -68,78 +75,69 @@ class FakeElement {
     return out;
   }
 
-  querySelector(selector) {
-    if (selector === '.modal-foot .modal-btn.secondary') {
-      return this.descendants().find(el => el.classList.contains('modal-btn') && el.classList.contains('secondary')) || null;
-    }
-    if (selector.startsWith('script[')) return null;
-    const last = selector.trim().split(/\s+/).pop();
-    return this.descendants().find(el => el.matchesSimple(last)) || null;
-  }
-
-  querySelectorAll(selector) {
-    const last = selector.trim().split(/\s+/).pop();
-    return this.descendants().filter(el => el.matchesSimple(last));
+  matches(selector) {
+    return selector.split(',').some(part => simpleMatch(this, part.trim().split(/\s+/).pop()));
   }
 
   closest(selector) {
+    const parts = selector.split(',').map(part => part.trim().split(/\s+/).pop());
     let node = this;
-    if (selector === '#modal-overlay' || selector === '#drawer') {
-      const id = selector.slice(1);
-      while (node) {
-        if (node.id === id) return node;
-        node = node.parentNode;
-      }
-      return null;
-    }
-    const last = selector.trim().split(/\s+/).pop();
     while (node) {
-      if (node.matchesSimple(last)) return node;
-      node = node.parentNode;
+      if (parts.some(part => simpleMatch(node, part))) return node;
+      node = node.parentElement;
     }
     return null;
   }
 
-  dispatch(type, extra = {}) {
+  querySelector(selector) {
+    return this.descendants().find(el => el.matches(selector)) || null;
+  }
+
+  querySelectorAll(selector) {
+    return this.descendants().filter(el => el.matches(selector));
+  }
+
+  dispatch(type, target = this) {
     let prevented = false;
-    let stopped = false;
+    let immediateStopped = false;
     const event = {
       type,
-      target: this,
+      target,
       currentTarget: this,
       preventDefault() { prevented = true; },
-      stopPropagation() { stopped = true; },
-      stopImmediatePropagation() { stopped = true; },
-      ...extra,
+      stopPropagation() {},
+      stopImmediatePropagation() { immediateStopped = true; },
     };
-    for (const handler of this.listeners[type] || []) handler.call(this, event);
-    event.prevented = () => prevented;
-    event.stopped = () => stopped;
-    return event;
+    for (const entry of this.listeners[type] || []) {
+      entry.handler.call(this, event);
+      if (immediateStopped) break;
+    }
+    return { prevented: () => prevented, stopped: () => immediateStopped };
   }
 }
 
 function makeHarness({ mobile = true, standalone = false } = {}) {
   const all = [];
-  const make = (id = '', classes = []) => {
-    const el = new FakeElement(id, classes);
+  const make = (id = '', classes = [], tag = 'DIV') => {
+    const el = new FakeElement(id, classes, tag);
     all.push(el);
     return el;
   };
 
-  const head = make('head');
-  const body = make('body');
+  const head = make('head', [], 'HEAD');
+  const body = make('body', [], 'BODY');
   const overlay = make('modal-overlay', ['modal-overlay']);
   const modal = make('', ['modal']);
   const modalHead = make('', ['modal-head']);
   const title = make('modal-title', ['modal-title']);
   const tabs = make('', ['modal-tabs']);
-  const close = make('', ['modal-close']);
+  const close = make('', ['modal-close'], 'BUTTON');
   const bodySingle = make('modal-body-single', ['modal-body']);
+  const categoryButton = make('', ['tt-btn'], 'BUTTON');
   const foot = make('', ['modal-foot']);
-  const deleteButton = make('modal-delete-btn', ['modal-btn', 'danger']);
-  const cancel = make('', ['modal-btn', 'secondary']);
-  const save = make('modal-save-btn', ['modal-btn', 'primary']);
+  const deleteButton = make('modal-delete-btn', ['modal-btn', 'danger'], 'BUTTON');
+  const cancel = make('', ['modal-btn', 'secondary'], 'BUTTON');
+  const save = make('modal-save-btn', ['modal-btn', 'primary'], 'BUTTON');
   save.textContent = 'Save';
   close.setAttribute('onclick', 'closeModal()');
   cancel.setAttribute('onclick', 'closeModal()');
@@ -149,6 +147,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
   modalHead.appendChild(title);
   modalHead.appendChild(tabs);
   modalHead.appendChild(close);
+  bodySingle.appendChild(categoryButton);
   foot.appendChild(deleteButton);
   foot.appendChild(cancel);
   foot.appendChild(save);
@@ -160,8 +159,8 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
 
   const drawer = make('drawer', ['drawer']);
   const actions = make('', ['dr-text-actions']);
-  const editButton = make('', ['dr-text-btn']);
-  const removeButton = make('', ['dr-text-btn', 'dr-text-btn--danger']);
+  const editButton = make('', ['dr-text-btn'], 'BUTTON');
+  const removeButton = make('', ['dr-text-btn', 'dr-text-btn--danger'], 'BUTTON');
   editButton.textContent = 'Edit';
   removeButton.textContent = 'Remove';
   editButton.setAttribute('onclick', 'editCurrentItem()');
@@ -176,20 +175,17 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
     head,
     body,
     documentElement: { dataset: Object.create(null) },
-    createElement() { return make(); },
+    createElement(tag = 'div') { return make('', [], String(tag).toUpperCase()); },
     getElementById(id) { return all.find(el => el.id === id) || null; },
     querySelector(selector) {
-      if (selector.startsWith('script[')) return null;
-      if (selector === '#activity-save-btn') return all.find(el => el.id === 'activity-save-btn') || null;
-      if (selector === '#modal-save-btn') return all.find(el => el.id === 'modal-save-btn') || null;
+      if (selector === 'script[data-activity-editor-controller="1"]') {
+        return all.find(el => el.tagName === 'SCRIPT' && el.dataset.activityEditorController === '1') || null;
+      }
       return body.querySelector(selector);
     },
-    querySelectorAll(selector) {
-      if (selector === '#drawer .dr-text-actions .dr-text-btn') return [editButton, removeButton];
-      return body.querySelectorAll(selector);
-    },
-    addEventListener(type, handler) {
-      (documentListeners[type] ||= []).push(handler);
+    querySelectorAll(selector) { return body.querySelectorAll(selector); },
+    addEventListener(type, handler, options) {
+      (documentListeners[type] ||= []).push({ handler, capture: options === true || !!options?.capture });
     },
   };
 
@@ -206,21 +202,24 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
   const ctx = {
     console,
     document,
+    Element: FakeElement,
     navigator: { standalone },
-    crypto: { randomUUID: () => 'uuid-test' },
+    location: { href: '' },
+    RECORD_ID: 'test-trip',
+    Event: class { constructor(type) { this.type = type; } },
+    fetch: async () => ({ ok:true, status:200, text:async () => '{"ok":true,"data":{}}' }),
     alert() {},
     confirm() { return true; },
-    fetch: async () => ({ ok:true, status:200, text:async () => '{"ok":true,"data":{}}' }),
     setTimeout(fn) { fn(); return 1; },
     clearTimeout() {},
-    requestAnimationFrame(fn) { fn(); return 0; },
+    requestAnimationFrame(fn) { fn(); return 1; },
     cancelAnimationFrame() {},
     MutationObserver: class { observe() {} disconnect() {} },
     matchMedia() { return { matches: mobile }; },
     visualViewport: { height: 520, addEventListener() {} },
     innerHeight: 812,
     addEventListener() {},
-    location: { href: '' },
+    getComputedStyle(el) { return { pointerEvents: el.style.values['pointer-events'] || 'auto' }; },
     STATE: { days: [{ items: [] }] },
     activeDay: 0,
     editItem: null,
@@ -264,7 +263,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
     if (ctx.editItem?.item) {
       ctx.editItem.item.title = 'Edited restaurant';
     } else {
-      ctx.STATE.days[0].items.push({ _id: 'restaurant-' + calls.save, type: 'meal', title: 'Restaurant', period: 'evening' });
+      ctx.STATE.days[0].items.push({ _id:'restaurant-' + calls.save, type:'meal', title:'Restaurant', period:'evening' });
     }
     overlay.classList.remove('open');
     return true;
@@ -281,9 +280,9 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
   };
 
   vm.createContext(ctx);
-  new vm.Script(source, { filename: 'trip-delete.js' }).runInContext(ctx);
+  new vm.Script(source, { filename:'trip-delete.js' }).runInContext(ctx);
 
-  return { ctx, calls, overlay, drawer, save, editButton, removeButton, deleteButton };
+  return { ctx, calls, overlay, modal, drawer, save, close, categoryButton, editButton, removeButton };
 }
 
 async function flush() {
@@ -291,77 +290,65 @@ async function flush() {
   await Promise.resolve();
 }
 
-function touchPress(button, pointerId = 1) {
-  const start = button.dispatch('touchstart', { touches:[{ identifier:pointerId, clientX:10, clientY:10 }] });
-  button.dispatch('pointerdown', { pointerType:'touch', pointerId, clientX:10, clientY:10 });
-  button.dispatch('pointerup', { pointerType:'touch', pointerId, clientX:10, clientY:10 });
-  return start;
-}
-
 async function runScenario(options) {
   const h = makeHarness(options);
-  const { ctx, calls, overlay, drawer, save, editButton, removeButton } = h;
+  const { ctx, calls, overlay, modal, drawer, save, close, categoryButton, editButton, removeButton } = h;
 
-  assert(ctx.__activityEditorControllerV2, 'V2 controller did not install from directly loaded runtime');
-  assert(ctx.__activityEditorControllerV2.version === '2.0.0', 'unexpected V2 controller version');
+  assert(ctx.__activityEditorControllerV3, 'V3 controller did not install from directly loaded runtime');
+  assert(ctx.__activityEditorControllerV3.version === '3.0.0', 'unexpected V3 controller version');
 
-  // ADD — iPhone path: pointerup performs exactly one save. The later synthetic
-  // click must not perform a second save, which is the five-restaurant regression.
+  // ADD: a native click is the sole activation path. The controller isolates the
+  // Save ID from historical document-level handlers before the click occurs.
   ctx.openAddItem();
-  assert(save.id === 'activity-save-btn', 'controller did not isolate Save from legacy touch handlers');
-  assert(save.getAttribute('onclick') === null, 'inline Save handler was not removed');
-  if (options.mobile) {
-    const saveTouch = touchPress(save, 11);
-    assert(saveTouch.stopped(), 'Save touchstart did not stop competing gesture propagation');
-    save.dispatch('click');
-  } else {
-    save.dispatch('click');
-    save.dispatch('click');
-  }
-  assert(calls.save === 1, 'one Add activation executed Save more than once');
-  assert(ctx.STATE.days[0].items.length === 1, 'one Add activation created duplicate items');
+  assert(save.id === 'activity-save-btn-v3', 'V3 did not take ownership of Save');
+  assert(save.getAttribute('onclick') === null, 'legacy inline Save handler remained active');
+  overlay.dispatch('click', save);
+  overlay.dispatch('click', save); // modal is already closed; cannot save twice
+  assert(calls.save === 1, 'one Add action executed Save more than once');
+  assert(ctx.STATE.days[0].items.length === 1, 'one Add action created duplicate items');
 
-  // EDIT — touch must execute on pointerup before Safari can retarget a click.
+  // Non-action controls remain native and are not swallowed by the delegated
+  // capture handler. This covers category/tab buttons in the activity form.
+  ctx.openAddItem();
+  const categoryClick = overlay.dispatch('click', categoryButton);
+  assert(!categoryClick.prevented(), 'activity form category button was swallowed by modal delegation');
+  ctx.closeModal();
+
+  // EDIT: drawer capture delegation must beat the legacy inline handler, open one
+  // editor and close the details drawer.
   ctx.openDrawerItem(0, 0);
-  if (options.mobile) {
-    const editTouch = touchPress(editButton, 12);
-    assert(editTouch.stopped(), 'Edit touchstart did not stop drawer swipe propagation');
-    editButton.dispatch('click');
-  } else {
-    editButton.dispatch('click');
-  }
+  drawer.dispatch('click', editButton);
   assert(calls.editOpen === 1, 'Edit did not open exactly one editor');
-  assert(overlay.classList.contains('open'), 'Edit did not open the modal');
-  assert(!drawer.classList.contains('open'), 'detail drawer stayed open behind Edit');
+  assert(overlay.classList.contains('open'), 'Edit did not open the activity modal');
+  assert(!drawer.classList.contains('open'), 'details drawer remained open behind Edit');
 
-  // Stable ID must recover the intended row after server persistence replaces
-  // STATE with a fresh object graph.
+  // Stable IDs recover the intended item after STATE is replaced by a server copy.
   const previousDescriptor = ctx.drawerItem;
-  ctx.STATE = { days: [{ items: [{ _id: previousDescriptor.item._id, type:'meal', title:'Server copy', period:'evening' }] }] };
+  ctx.STATE = { days:[{ items:[{ _id:previousDescriptor.item._id, type:'meal', title:'Server copy', period:'evening' }] }] };
   ctx.drawerItem = previousDescriptor;
-  const resolved = ctx.__activityEditorControllerV2.resolveTarget(previousDescriptor);
-  assert(resolved && resolved.item === ctx.STATE.days[0].items[0], 'Edit/Remove did not recover a replaced item by stable ID');
+  const resolved = ctx.__activityEditorControllerV3.resolveTarget(previousDescriptor);
+  assert(resolved && resolved.item === ctx.STATE.days[0].items[0], 'V3 did not resolve a replaced item by stable ID');
 
-  // REMOVE — exactly one delete and no click-through follow-up action.
+  // REMOVE: exactly one delete from a native click.
   ctx.closeModal();
   ctx.openDrawerItem(0, 0);
-  if (options.mobile) {
-    const removeTouch = touchPress(removeButton, 13);
-    assert(removeTouch.stopped(), 'Remove touchstart did not stop drawer swipe propagation');
-    removeButton.dispatch('click');
-  } else {
-    removeButton.dispatch('click');
-  }
+  drawer.dispatch('click', removeButton);
   await flush();
   assert(calls.remove === 1, 'Remove did not execute exactly once');
   assert(ctx.STATE.days[0].items.length === 0, 'Remove did not delete the selected item');
 
+  // X must remain independently clickable.
+  ctx.openAddItem();
+  overlay.dispatch('click', close);
+  assert(!overlay.classList.contains('open'), 'X did not close the activity modal');
+
   if (options.mobile) {
-    assert(overlay.style.values.top === '0', 'mobile overlay is not pinned to top:0');
-    assert(overlay.style.values.height === '520px', 'mobile overlay does not use visual viewport height');
-    assert(overlay.style.values.background === '#fff', 'mobile overlay is transparent and exposes itinerary content');
-  } else {
-    assert(!('height' in overlay.style.values), 'desktop unexpectedly received forced mobile fullscreen height');
+    ctx.openAddItem();
+    assert(overlay.style.values['pointer-events'] === 'auto', 'open mobile overlay is not hit-testable');
+    assert(overlay.style.values['z-index'] === '2147483000', 'mobile overlay is not above competing page layers');
+    assert(overlay.style.values.height === '100vh', 'mobile overlay does not cover the complete layout viewport');
+    assert(modal.style.values['--activity-visible-height'] === '520px', 'inner editor does not track keyboard-visible height');
+    assert(overlay.style.values.background === '#fff', 'mobile overlay can expose itinerary content behind the editor');
   }
 }
 
@@ -369,7 +356,7 @@ async function runScenario(options) {
   await runScenario({ mobile:true, standalone:false });
   await runScenario({ mobile:true, standalone:true });
   await runScenario({ mobile:false, standalone:false });
-  console.log('activity editor V2 add/edit/remove behavioral tests: ok');
+  console.log('activity editor V3 add/edit/remove/clickability tests: ok');
 })().catch(error => {
   console.error(error);
   process.exit(1);
