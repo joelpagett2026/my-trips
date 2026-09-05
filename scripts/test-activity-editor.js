@@ -4,7 +4,9 @@
 const fs = require('fs');
 const vm = require('vm');
 
-const source = fs.readFileSync('activity-editor.js', 'utf8');
+// Activity Editor V2 is intentionally installed by the directly-loaded
+// trip-delete runtime so iOS cannot show a modal before its controller arrives.
+const source = fs.readFileSync('trip-delete.js', 'utf8');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -61,9 +63,7 @@ class FakeElement {
 
   descendants() {
     const out = [];
-    const visit = node => {
-      node.children.forEach(child => { out.push(child); visit(child); });
-    };
+    const visit = node => node.children.forEach(child => { out.push(child); visit(child); });
     visit(this);
     return out;
   }
@@ -72,6 +72,7 @@ class FakeElement {
     if (selector === '.modal-foot .modal-btn.secondary') {
       return this.descendants().find(el => el.classList.contains('modal-btn') && el.classList.contains('secondary')) || null;
     }
+    if (selector.startsWith('script[')) return null;
     const last = selector.trim().split(/\s+/).pop();
     return this.descendants().find(el => el.matchesSimple(last)) || null;
   }
@@ -170,6 +171,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
   drawer.appendChild(actions);
   body.appendChild(drawer);
 
+  const documentListeners = Object.create(null);
   const document = {
     head,
     body,
@@ -177,6 +179,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
     createElement() { return make(); },
     getElementById(id) { return all.find(el => el.id === id) || null; },
     querySelector(selector) {
+      if (selector.startsWith('script[')) return null;
       if (selector === '#activity-save-btn') return all.find(el => el.id === 'activity-save-btn') || null;
       if (selector === '#modal-save-btn') return all.find(el => el.id === 'modal-save-btn') || null;
       return body.querySelector(selector);
@@ -184,6 +187,9 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
     querySelectorAll(selector) {
       if (selector === '#drawer .dr-text-actions .dr-text-btn') return [editButton, removeButton];
       return body.querySelectorAll(selector);
+    },
+    addEventListener(type, handler) {
+      (documentListeners[type] ||= []).push(handler);
     },
   };
 
@@ -204,6 +210,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
     crypto: { randomUUID: () => 'uuid-test' },
     alert() {},
     confirm() { return true; },
+    fetch: async () => ({ ok:true, status:200, text:async () => '{"ok":true,"data":{}}' }),
     setTimeout(fn) { fn(); return 1; },
     clearTimeout() {},
     requestAnimationFrame(fn) { fn(); return 0; },
@@ -213,6 +220,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
     visualViewport: { height: 520, addEventListener() {} },
     innerHeight: 812,
     addEventListener() {},
+    location: { href: '' },
     STATE: { days: [{ items: [] }] },
     activeDay: 0,
     editItem: null,
@@ -273,7 +281,7 @@ function makeHarness({ mobile = true, standalone = false } = {}) {
   };
 
   vm.createContext(ctx);
-  new vm.Script(source, { filename: 'activity-editor.js' }).runInContext(ctx);
+  new vm.Script(source, { filename: 'trip-delete.js' }).runInContext(ctx);
 
   return { ctx, calls, overlay, drawer, save, editButton, removeButton, deleteButton };
 }
@@ -283,56 +291,75 @@ async function flush() {
   await Promise.resolve();
 }
 
+function touchPress(button, pointerId = 1) {
+  const start = button.dispatch('touchstart', { touches:[{ identifier:pointerId, clientX:10, clientY:10 }] });
+  button.dispatch('pointerdown', { pointerType:'touch', pointerId, clientX:10, clientY:10 });
+  button.dispatch('pointerup', { pointerType:'touch', pointerId, clientX:10, clientY:10 });
+  return start;
+}
+
 async function runScenario(options) {
   const h = makeHarness(options);
   const { ctx, calls, overlay, drawer, save, editButton, removeButton } = h;
 
-  assert(ctx.__activityEditorControllerV1, 'controller did not install');
+  assert(ctx.__activityEditorControllerV2, 'V2 controller did not install from directly loaded runtime');
+  assert(ctx.__activityEditorControllerV2.version === '2.0.0', 'unexpected V2 controller version');
 
-  // ADD: one native click may mutate the itinerary once only, even if a second
-  // click arrives as an iOS synthetic/duplicate activation.
+  // ADD — iPhone path: pointerup performs exactly one save. The later synthetic
+  // click must not perform a second save, which is the five-restaurant regression.
   ctx.openAddItem();
-  assert(save.id === 'activity-save-btn', 'controller did not take ownership of Save');
+  assert(save.id === 'activity-save-btn', 'controller did not isolate Save from legacy touch handlers');
   assert(save.getAttribute('onclick') === null, 'inline Save handler was not removed');
-  save.dispatch('click');
-  save.dispatch('click');
+  if (options.mobile) {
+    const saveTouch = touchPress(save, 11);
+    assert(saveTouch.stopped(), 'Save touchstart did not stop competing gesture propagation');
+    save.dispatch('click');
+  } else {
+    save.dispatch('click');
+    save.dispatch('click');
+  }
   assert(calls.save === 1, 'one Add activation executed Save more than once');
   assert(ctx.STATE.days[0].items.length === 1, 'one Add activation created duplicate items');
 
-  // EDIT: touching the button must only stop the swipe recogniser; it must not
-  // execute the action until the native click arrives.
+  // EDIT — touch must execute on pointerup before Safari can retarget a click.
   ctx.openDrawerItem(0, 0);
-  const editTouch = editButton.dispatch('touchstart');
-  assert(editTouch.stopped(), 'Edit touchstart did not stop drawer swipe propagation');
-  assert(calls.editOpen === 0, 'Edit executed from touchstart instead of click');
-  assert(!(editButton.listeners.touchend || []).length, 'Edit has a touchend action handler');
-  editButton.dispatch('click');
-  assert(calls.editOpen === 1, 'Edit native click did not open exactly one editor');
+  if (options.mobile) {
+    const editTouch = touchPress(editButton, 12);
+    assert(editTouch.stopped(), 'Edit touchstart did not stop drawer swipe propagation');
+    editButton.dispatch('click');
+  } else {
+    editButton.dispatch('click');
+  }
+  assert(calls.editOpen === 1, 'Edit did not open exactly one editor');
   assert(overlay.classList.contains('open'), 'Edit did not open the modal');
   assert(!drawer.classList.contains('open'), 'detail drawer stayed open behind Edit');
 
-  // Resolve by stable ID after replacing STATE with a fresh object graph.
+  // Stable ID must recover the intended row after server persistence replaces
+  // STATE with a fresh object graph.
   const previousDescriptor = ctx.drawerItem;
-  ctx.STATE = { days: [{ items: [{ _id: previousDescriptor.item._id, type: 'meal', title: 'Server copy', period: 'evening' }] }] };
+  ctx.STATE = { days: [{ items: [{ _id: previousDescriptor.item._id, type:'meal', title:'Server copy', period:'evening' }] }] };
   ctx.drawerItem = previousDescriptor;
-  const resolved = ctx.__activityEditorControllerV1.resolveTarget(previousDescriptor);
+  const resolved = ctx.__activityEditorControllerV2.resolveTarget(previousDescriptor);
   assert(resolved && resolved.item === ctx.STATE.days[0].items[0], 'Edit/Remove did not recover a replaced item by stable ID');
 
-  // REMOVE: same click-only rule, then exactly one deletion.
+  // REMOVE — exactly one delete and no click-through follow-up action.
   ctx.closeModal();
   ctx.openDrawerItem(0, 0);
-  const removeTouch = removeButton.dispatch('touchstart');
-  assert(removeTouch.stopped(), 'Remove touchstart did not stop drawer swipe propagation');
-  assert(calls.remove === 0, 'Remove executed from touchstart instead of click');
-  assert(!(removeButton.listeners.touchend || []).length, 'Remove has a touchend action handler');
-  removeButton.dispatch('click');
+  if (options.mobile) {
+    const removeTouch = touchPress(removeButton, 13);
+    assert(removeTouch.stopped(), 'Remove touchstart did not stop drawer swipe propagation');
+    removeButton.dispatch('click');
+  } else {
+    removeButton.dispatch('click');
+  }
   await flush();
-  assert(calls.remove === 1, 'Remove native click did not execute exactly once');
+  assert(calls.remove === 1, 'Remove did not execute exactly once');
   assert(ctx.STATE.days[0].items.length === 0, 'Remove did not delete the selected item');
 
   if (options.mobile) {
     assert(overlay.style.values.top === '0', 'mobile overlay is not pinned to top:0');
     assert(overlay.style.values.height === '520px', 'mobile overlay does not use visual viewport height');
+    assert(overlay.style.values.background === '#fff', 'mobile overlay is transparent and exposes itinerary content');
   } else {
     assert(!('height' in overlay.style.values), 'desktop unexpectedly received forced mobile fullscreen height');
   }
@@ -342,7 +369,7 @@ async function runScenario(options) {
   await runScenario({ mobile:true, standalone:false });
   await runScenario({ mobile:true, standalone:true });
   await runScenario({ mobile:false, standalone:false });
-  console.log('activity editor add/edit/remove behavioral tests: ok');
+  console.log('activity editor V2 add/edit/remove behavioral tests: ok');
 })().catch(error => {
   console.error(error);
   process.exit(1);
