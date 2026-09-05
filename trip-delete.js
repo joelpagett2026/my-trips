@@ -1,9 +1,10 @@
-// MY TRIPS — trip deletion + authoritative activity editor
+// MY TRIPS — trip deletion + Activity Editor V4
 //
-// Activity Editor V3 deliberately uses one interaction model: native `click`.
-// iOS/Safari generates one click for a tap, so Save/Edit/Remove are never also
-// executed from touchend/pointerup. Capture-phase delegation wins over legacy
-// inline handlers without accumulating listeners on every render.
+// V4 has one source of truth for Add/Edit/Remove/Save and a dedicated iPhone
+// touch bridge. The bridge runs on WINDOW capture, before older document-level
+// gesture handlers, and resolves buttons by screen coordinates rather than
+// trusting Safari's event.target. This prevents both dead taps and click-through
+// into the itinerary underneath the modal.
 
 (function installTripDeletion() {
   'use strict';
@@ -44,8 +45,8 @@
       });
       await parseResponse(res);
       window.location.href = '/trips/';
-    } catch (e) {
-      console.error('Delete trip failed:', e);
+    } catch (error) {
+      console.error('Delete trip failed:', error);
       delete btn.dataset.busy;
       btn.disabled = false;
       btn.textContent = 'Delete permanently';
@@ -54,9 +55,9 @@
   };
 })();
 
-(function installActivityEditorV3() {
+(function installActivityEditorV4() {
   'use strict';
-  if (typeof window === 'undefined' || window.__activityEditorControllerV3) return;
+  if (typeof window === 'undefined' || window.__activityEditorControllerV4) return;
 
   const legacy = {
     openAddItem: typeof window.openAddItem === 'function' ? window.openAddItem : null,
@@ -73,7 +74,10 @@
     removeBusy: false,
     modalSession: 0,
     overlayWasOpen: false,
-    resizeRaf: 0,
+    touch: null,
+    manualClickDepth: 0,
+    suppressTrustedClickUntil: 0,
+    lastTouchAction: '',
   };
 
   const MOBILE_QUERY = '(max-width: 768px)';
@@ -114,20 +118,15 @@
     const stableId = selected?._id ? String(selected._id) : '';
     let itemIdx = -1;
 
-    // Stable item identity survives authoritative STATE replacement.
     if (stableId) itemIdx = items.findIndex(item => item && String(item._id || '') === stableId);
     if (itemIdx < 0 && selected) itemIdx = items.indexOf(selected);
 
-    // For pre-ID data, accept a fingerprint only when it is unambiguous.
     if (itemIdx < 0 && selected) {
       const matches = [];
       items.forEach((item, index) => { if (sameFingerprint(item, selected)) matches.push(index); });
       if (matches.length === 1) itemIdx = matches[0];
     }
 
-    // The drawer's current index is a safe final fallback if the row at that
-    // exact index still matches the item the user opened. This allows old
-    // duplicate-looking rows to be edited/removed individually.
     if (itemIdx < 0) {
       const fallback = Number(descriptor.itemIdx);
       if (Number.isInteger(fallback) && fallback >= 0 && fallback < items.length) {
@@ -144,14 +143,10 @@
     try { drawerItem = { dayIdx: target.dayIdx, itemIdx: target.itemIdx, item: target.item }; } catch (_) {}
   }
 
-  function important(el, property, value) {
-    if (el?.style) el.style.setProperty(property, value, 'important');
-  }
-
   function ensureStyles() {
-    if (!document.head || document.getElementById('activity-editor-v3-style')) return;
+    if (!document.head || document.getElementById('activity-editor-v4-style')) return;
     const style = document.createElement('style');
-    style.id = 'activity-editor-v3-style';
+    style.id = 'activity-editor-v4-style';
     style.textContent = `
       #modal-overlay.open {
         opacity:1 !important;
@@ -172,34 +167,39 @@
       #modal-overlay.open label {
         pointer-events:auto !important;
       }
-      #activity-save-btn-v3,
-      #modal-overlay .modal-close,
-      #modal-overlay #modal-delete-btn,
-      #drawer .dr-text-btn {
+      #modal-overlay.open button,
+      #drawer.open .dr-text-btn {
         touch-action:manipulation !important;
         -webkit-user-select:none !important;
         user-select:none !important;
       }
-      #activity-save-btn-v3[data-busy="1"],
+      #activity-save-btn-v4[data-busy="1"],
       #modal-overlay #modal-delete-btn[data-busy="1"] {
         opacity:.68 !important;
         pointer-events:none !important;
       }
 
       @media (max-width:768px) {
+        html.activity-editor-open,
+        html.activity-editor-open body {
+          overscroll-behavior:none !important;
+        }
         #modal-overlay {
           position:fixed !important;
           inset:0 !important;
           width:100vw !important;
           height:100vh !important;
-          min-height:100dvh !important;
+          height:100dvh !important;
+          min-height:0 !important;
           padding:0 !important;
           margin:0 !important;
           overflow:hidden !important;
-          align-items:flex-start !important;
-          justify-content:flex-start !important;
+          align-items:stretch !important;
+          justify-content:stretch !important;
           background:#fff !important;
           backdrop-filter:none !important;
+          transform:none !important;
+          touch-action:auto !important;
         }
         #modal-overlay .modal {
           position:relative !important;
@@ -207,8 +207,8 @@
           width:100% !important;
           max-width:none !important;
           min-width:0 !important;
-          height:var(--activity-visible-height,100dvh) !important;
-          max-height:var(--activity-visible-height,100dvh) !important;
+          height:100% !important;
+          max-height:none !important;
           min-height:0 !important;
           margin:0 !important;
           padding:0 !important;
@@ -219,7 +219,7 @@
           background:#fff !important;
           display:flex !important;
           flex-direction:column !important;
-          z-index:1 !important;
+          touch-action:auto !important;
         }
         #modal-overlay .modal::before,
         #modal-overlay .modal::after {
@@ -246,7 +246,6 @@
           white-space:nowrap !important;
         }
         #modal-overlay .modal-tabs {
-          grid-column:auto !important;
           width:100% !important;
           min-width:0 !important;
           margin:0 !important;
@@ -274,6 +273,7 @@
           background:#fff !important;
           padding:14px 14px 24px !important;
           scroll-padding-bottom:96px !important;
+          touch-action:pan-y !important;
           z-index:10 !important;
         }
         #modal-overlay .modal-foot {
@@ -291,7 +291,7 @@
           z-index:30 !important;
         }
         #modal-overlay .modal-foot .modal-btn.secondary { display:none !important; }
-        #activity-save-btn-v3 {
+        #activity-save-btn-v4 {
           display:block !important;
           flex:1 1 auto !important;
           width:auto !important;
@@ -307,6 +307,7 @@
           z-index:31 !important;
         }
       }
+
       @media (max-width:390px) {
         #modal-overlay .modal-head {
           grid-template-columns:minmax(96px,.7fr) minmax(0,1.1fr) 38px !important;
@@ -325,11 +326,12 @@
   }
 
   function normalizeSaveButton() {
-    const save = document.getElementById('activity-save-btn-v3')
+    const save = document.getElementById('activity-save-btn-v4')
+      || document.getElementById('activity-save-btn-v3')
       || document.getElementById('activity-save-btn')
       || document.getElementById('modal-save-btn');
     if (!save) return null;
-    save.id = 'activity-save-btn-v3';
+    save.id = 'activity-save-btn-v4';
     save.type = 'button';
     save.removeAttribute('onclick');
     if (!save.dataset.normalText) save.dataset.normalText = save.textContent || 'Save';
@@ -341,56 +343,14 @@
     return save;
   }
 
-  function visibleHeight() {
-    const raw = Number(window.visualViewport?.height || window.innerHeight || 640);
-    return Math.max(320, Math.round(raw));
-  }
-
-  function applyMobileShell() {
-    state.resizeRaf = 0;
-    if (!isMobile()) return;
-    const overlay = document.getElementById('modal-overlay');
-    const modal = overlay?.querySelector('.modal');
-    if (!overlay || !modal || !overlay.classList.contains('open')) return;
-
-    // The overlay always covers the full layout viewport so the itinerary can
-    // never show through. Only the inner editor follows the visible keyboard
-    // viewport height.
-    important(overlay, 'position', 'fixed');
-    important(overlay, 'left', '0');
-    important(overlay, 'right', '0');
-    important(overlay, 'top', '0');
-    important(overlay, 'bottom', '0');
-    important(overlay, 'width', '100vw');
-    important(overlay, 'height', '100vh');
-    important(overlay, 'min-height', '100dvh');
-    important(overlay, 'padding', '0');
-    important(overlay, 'margin', '0');
-    important(overlay, 'background', '#fff');
-    important(overlay, 'overflow', 'hidden');
-    important(overlay, 'opacity', '1');
-    important(overlay, 'visibility', 'visible');
-    important(overlay, 'pointer-events', 'auto');
-    important(overlay, 'z-index', '2147483000');
-
-    const h = visibleHeight();
-    modal.style.setProperty('--activity-visible-height', h + 'px');
-    important(modal, 'pointer-events', 'auto');
-    important(modal, 'z-index', '1');
-  }
-
-  function queueMobileShell() {
-    if (state.resizeRaf) cancelAnimationFrame(state.resizeRaf);
-    state.resizeRaf = requestAnimationFrame(applyMobileShell);
-  }
-
   function releaseClosedOverlay() {
     const overlay = document.getElementById('modal-overlay');
     if (!overlay || overlay.classList.contains('open')) return;
-    important(overlay, 'pointer-events', 'none');
+    document.documentElement.classList.remove('activity-editor-open');
     overlay.style.removeProperty('z-index');
     overlay.style.removeProperty('opacity');
     overlay.style.removeProperty('visibility');
+    overlay.style.removeProperty('pointer-events');
   }
 
   function syncModalOpen(options = {}) {
@@ -409,12 +369,8 @@
       return;
     }
 
+    document.documentElement.classList.add('activity-editor-open');
     normalizeSaveButton();
-    important(overlay, 'pointer-events', 'auto');
-    important(overlay, 'opacity', '1');
-    important(overlay, 'visibility', 'visible');
-    important(overlay, 'z-index', '2147483000');
-    queueMobileShell();
   }
 
   function classifyDrawerButton(button) {
@@ -445,9 +401,9 @@
     save.disabled = true;
     save.textContent = 'Saving…';
 
-    // Historical persistence code expects this ID. It exists only during the
-    // synchronous serializer call, after capture-phase click handling is over,
-    // so legacy document click/touch handlers cannot see the user interaction.
+    // The existing serializer expects #modal-save-btn. Restore that ID only for
+    // the synchronous call; historical document touch handlers never see the
+    // user's physical tap because V4 intercepts it at window capture first.
     save.id = 'modal-save-btn';
     let result;
     try {
@@ -455,7 +411,7 @@
       result = legacy.saveItem.call(window);
     } catch (error) {
       console.error('Activity Save failed before persistence', error);
-      save.id = 'activity-save-btn-v3';
+      save.id = 'activity-save-btn-v4';
       state.saveBusy = false;
       save.disabled = false;
       delete save.dataset.busy;
@@ -465,10 +421,9 @@
       return false;
     }
 
-    // Synchronous validation keeps the modal open. Restore the V3 identity and
-    // allow the corrected form to be submitted again.
+    // Validation errors leave the modal open. Re-arm the button for a retry.
     if (overlay.classList.contains('open')) {
-      save.id = 'activity-save-btn-v3';
+      save.id = 'activity-save-btn-v4';
       state.saveBusy = false;
       save.disabled = false;
       delete save.dataset.busy;
@@ -536,22 +491,16 @@
     if (!target) return;
 
     const close = target.closest('.modal-close');
-    const save = target.closest('#activity-save-btn-v3,#activity-save-btn,#modal-save-btn');
+    const save = target.closest('#activity-save-btn-v4,#activity-save-btn-v3,#activity-save-btn,#modal-save-btn');
     const remove = target.closest('#modal-delete-btn');
-    if (!close && !save && !remove) return; // category/tabs/fields keep native behavior
+    if (!close && !save && !remove) return;
 
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    if (close) {
-      closeEditor();
-      return;
-    }
-    if (save) {
-      saveActivity();
-      return;
-    }
-    if (remove) removeActivity(true, remove);
+    if (close) closeEditor();
+    else if (save) saveActivity();
+    else removeActivity(true, remove);
   }
 
   function onDrawerClick(event) {
@@ -566,33 +515,160 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     button.dataset.activityAction = action;
-    button.removeAttribute('onclick');
 
     if (action === 'edit') editActivity();
     else removeActivity(false, button);
   }
 
+  function rectContains(rect, x, y, pad = 0) {
+    if (!rect) return false;
+    return x >= rect.left - pad && x <= rect.right + pad
+      && y >= rect.top - pad && y <= rect.bottom + pad;
+  }
+
+  function visibleButtonAt(scope, selector, x, y) {
+    if (!scope?.querySelectorAll) return null;
+    const buttons = Array.from(scope.querySelectorAll(selector)).filter(button => {
+      if (!button || button.disabled) return false;
+      const rect = button.getBoundingClientRect?.();
+      return rect && rect.width > 0 && rect.height > 0 && rectContains(rect, x, y, 0);
+    });
+    return buttons.length ? buttons[buttons.length - 1] : null;
+  }
+
+  function actionButtonAt(x, y) {
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay?.classList.contains('open')) {
+      const button = visibleButtonAt(overlay, 'button', x, y);
+      if (button) return { scope:'modal', button };
+      return { scope:'modal', button:null };
+    }
+
+    const drawer = document.getElementById('drawer');
+    if (drawer?.classList.contains('open')) {
+      const button = visibleButtonAt(drawer, '.dr-text-actions .dr-text-btn', x, y);
+      if (button) return { scope:'drawer', button };
+    }
+    return { scope:'', button:null };
+  }
+
+  function touchById(list, id) {
+    if (!list) return null;
+    for (const touch of Array.from(list)) {
+      if (touch.identifier === id) return touch;
+    }
+    return null;
+  }
+
+  function installTouchBridge() {
+    if (window.__activityEditorV4TouchBridge) return;
+    window.__activityEditorV4TouchBridge = true;
+
+    // WINDOW capture is deliberate: it runs before older document-level mobile
+    // drag/save listeners even though those scripts were installed first.
+    window.addEventListener('touchstart', event => {
+      if (!event.touches || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      const hit = actionButtonAt(touch.clientX, touch.clientY);
+
+      state.touch = {
+        id: touch.identifier,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        moved: false,
+        button: hit.button,
+        scope: hit.scope,
+      };
+
+      if (hit.button) {
+        // Prevent old swipe/long-press recognisers from arming on this button.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+
+      // If iOS paints the modal but mis-targets the underlying itinerary, shield
+      // that underlying element. Fields/scrolling inside the modal are untouched.
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay?.classList.contains('open')) {
+        const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+        if (target && !overlay.contains(target)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }
+    }, { capture:true, passive:false });
+
+    window.addEventListener('touchmove', event => {
+      if (!state.touch) return;
+      const touch = touchById(event.touches, state.touch.id);
+      if (!touch) return;
+      if (Math.hypot(touch.clientX - state.touch.startX, touch.clientY - state.touch.startY) > 18) {
+        state.touch.moved = true;
+      }
+      if (state.touch.button) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, { capture:true, passive:false });
+
+    window.addEventListener('touchend', event => {
+      if (!state.touch) return;
+      const session = state.touch;
+      state.touch = null;
+      const touch = touchById(event.changedTouches, session.id);
+      if (!touch || !session.button) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (session.moved) return;
+      const rect = session.button.getBoundingClientRect?.();
+      if (!rectContains(rect, touch.clientX, touch.clientY, 14)) return;
+
+      // preventDefault on touchend suppresses Safari's normal synthetic click.
+      // The short trusted-click guard is an extra defence for standalone mode.
+      state.suppressTrustedClickUntil = Date.now() + 700;
+      state.lastTouchAction = session.button.id || session.button.dataset?.activityAction || session.button.textContent || 'button';
+      state.manualClickDepth += 1;
+      try { session.button.click(); }
+      finally { state.manualClickDepth -= 1; }
+    }, { capture:true, passive:false });
+
+    window.addEventListener('touchcancel', () => { state.touch = null; }, { capture:true, passive:true });
+
+    window.addEventListener('click', event => {
+      if (state.manualClickDepth > 0) return;
+
+      // Drop only the trusted follow-up click after a manual touch activation.
+      if (Date.now() < state.suppressTrustedClickUntil && event.isTrusted !== false) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+
+      // Never allow a modal-visible click to fall through to the itinerary.
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay?.classList.contains('open')) {
+        const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+        if (target && !overlay.contains(target)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }
+    }, true);
+  }
+
   function installDelegates() {
     const overlay = document.getElementById('modal-overlay');
     const drawer = document.getElementById('drawer');
-    if (overlay && overlay.dataset.activityV3Delegated !== '1') {
-      overlay.dataset.activityV3Delegated = '1';
+    if (overlay && overlay.dataset.activityV4Delegated !== '1') {
+      overlay.dataset.activityV4Delegated = '1';
       overlay.addEventListener('click', onModalClick, true);
     }
-    if (drawer && drawer.dataset.activityV3Delegated !== '1') {
-      drawer.dataset.activityV3Delegated = '1';
+    if (drawer && drawer.dataset.activityV4Delegated !== '1') {
+      drawer.dataset.activityV4Delegated = '1';
       drawer.addEventListener('click', onDrawerClick, true);
-    }
-
-    // Prevent the drawer swipe recogniser from arming when the user's finger
-    // starts on Edit/Remove. This does NOT preventDefault, so iOS still emits
-    // the one native click that performs the action.
-    if (document.documentElement.dataset.activityV3TouchGuard !== '1') {
-      document.documentElement.dataset.activityV3TouchGuard = '1';
-      document.addEventListener('touchstart', event => {
-        const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-        if (target?.closest?.('#drawer .dr-text-actions .dr-text-btn')) event.stopPropagation();
-      }, { capture:true, passive:true });
     }
   }
 
@@ -643,57 +719,50 @@
     observer.observe(overlay, { attributes:true, attributeFilter:['class'] });
   }
 
-  function bindViewport() {
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', queueMobileShell, { passive:true });
-    }
-    window.addEventListener('resize', queueMobileShell, { passive:true });
-    window.addEventListener('orientationchange', () => window.setTimeout(queueMobileShell, 100), { passive:true });
-  }
-
   ensureStyles();
   installDelegates();
+  installTouchBridge();
   wrapEntrypoints();
   observeUi();
-  bindViewport();
   syncModalOpen({ newSession:false });
 
   const controller = {
-    version: '3.0.0',
+    version: '4.0.0',
     resolveTarget,
     sameFingerprint,
     syncModalOpen,
+    actionButtonAt,
     diagnostics() {
       const overlay = document.getElementById('modal-overlay');
-      const save = document.getElementById('activity-save-btn-v3') || document.getElementById('modal-save-btn');
+      const save = document.getElementById('activity-save-btn-v4') || document.getElementById('modal-save-btn');
       return {
-        version: '3.0.0',
+        version: '4.0.0',
         modalSession: state.modalSession,
         saveBusy: state.saveBusy,
         removeBusy: state.removeBusy,
         mobile: isMobile(),
         open: !!overlay?.classList.contains('open'),
         saveId: save?.id || '',
-        overlayPointerEvents: overlay ? getComputedStyle(overlay).pointerEvents : '',
+        lastTouchAction: state.lastTouchAction,
       };
     },
   };
 
+  window.__activityEditorControllerV4 = controller;
+  // Compatibility guards keep the old external controller inert.
   window.__activityEditorControllerV3 = controller;
-  // Keep older compatibility guards truthy so the legacy external controller,
-  // if a cached browser requests it, exits without attaching another handler.
   window.__activityEditorControllerV2 = controller;
   window.__activityEditorControllerV1 = controller;
 })();
 
-// Compatibility loader retained temporarily because deployment validation still
-// verifies this file exists. Activity Editor V3 above is already authoritative;
-// activity-editor.js sees the V1 guard and exits without adding listeners.
+// Compatibility loader retained temporarily for deployment/runtime checks.
+// The V1 guard above makes activity-editor.js inert; V4 in this file is the
+// authoritative implementation actually exercised by CI.
 (function loadActivityEditorCompatibility() {
   if (typeof document === 'undefined') return;
   if (document.querySelector('script[data-activity-editor-controller="1"]')) return;
   const script = document.createElement('script');
-  script.src = '/activity-editor.js?v=20260905-1';
+  script.src = '/activity-editor.js?v=20260905-2';
   script.async = false;
   script.dataset.activityEditorController = '1';
   document.body.appendChild(script);
