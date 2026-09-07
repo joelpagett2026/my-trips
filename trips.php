@@ -24,6 +24,27 @@ if (($diag['maps_key_rewritten'] ?? 0) !== 1
     exit;
 }
 
+// Keep the historical mileage baseline aligned with the latest travelled total.
+// Porto is already included in this figure, so its registry entry must not add
+// another estimated journey mileage. It still contributes to trip/country stats.
+$page = str_replace(
+    'const PS_MILES = 205021;',
+    'const PS_MILES = 206825;',
+    $page,
+    $milesBaselineCount
+);
+$page = str_replace(
+    'if (flags.length) liveMiles += estimateMilesForCountries(flags);',
+    "if (flags.length && !['porto-2026','porto-2026-v2'].includes(t.slug)) liveMiles += estimateMilesForCountries(flags);",
+    $page,
+    $portoMileageCount
+);
+if ($milesBaselineCount !== 1 || $portoMileageCount !== 1) {
+    http_response_code(500);
+    echo 'Trips dashboard mileage stats could not be attached safely.';
+    exit;
+}
+
 // The homepage already uses cache-busted authentication/database assets. The
 // dashboard must use the exact same current runtimes so navigation from the
 // homepage keeps the existing session instead of ever loading a stale PIN gate.
