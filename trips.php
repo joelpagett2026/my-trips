@@ -88,6 +88,33 @@ if ($multiCountryRegistryCount !== 1 || $countdownRegistryCount !== 1) {
     exit;
 }
 
+// Do not repeat the card's main destination as a grey city tag. Multi-stop trips
+// can contain both the overall trip name (for example “Hong Kong & Taiwan”) and
+// the individual places in their saved cities array; only the individual places
+// should appear beneath the card title.
+$oldCityTags = <<<'JS'
+  // City tags from stored cities array
+  const cityTagsHtml = (t.cities || [])
+    .filter((c,i,a) => a.indexOf(c) === i) // dedupe
+    .slice(0, 6)
+    .map(c => `<span class="city-tag">${c}</span>`).join('');
+JS;
+$newCityTags = <<<'JS'
+  // City tags from stored cities array
+  const destinationTagKey = String(t.dest || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const cityTagsHtml = (t.cities || [])
+    .filter((c,i,a) => a.indexOf(c) === i) // dedupe
+    .filter(c => String(c || '').trim().toLowerCase().replace(/\s+/g, ' ') !== destinationTagKey)
+    .slice(0, 6)
+    .map(c => `<span class="city-tag">${c}</span>`).join('');
+JS;
+$page = str_replace($oldCityTags, $newCityTags, $page, $cityTagFilterCount);
+if ($cityTagFilterCount !== 1) {
+    http_response_code(500);
+    echo 'Trips dashboard city tags could not be attached safely.';
+    exit;
+}
+
 // The homepage already uses cache-busted authentication/database assets. The
 // dashboard must use the exact same current runtimes so navigation from the
 // homepage keeps the existing session instead of ever loading a stale PIN gate.
