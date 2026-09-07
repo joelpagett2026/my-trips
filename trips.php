@@ -45,9 +45,9 @@ if ($milesBaselineCount !== 1 || $portoMileageCount !== 1) {
     exit;
 }
 
-// Merge registry flags with any known multi-country metadata. This repairs older
-// records (for example Hong Kong & Taiwan) that were originally created with only
-// one geocoded country, without destructively rewriting the saved registry.
+// Merge registry flags with any known multi-country metadata. Older records can
+// have a legacy/renamed slug, so match known trips by slug first and destination
+// name second. Only valid two-letter country codes are passed to FlagCDN.
 $oldRegistryReturn = <<<'JS'
     clearRegistryLoadError();
     return trips;
@@ -56,11 +56,21 @@ JS;
 $newRegistryReturn = <<<'JS'
     clearRegistryLoadError();
     return trips.map(t => {
-      const planned = (typeof PLANNED !== 'undefined' && t && t.slug) ? PLANNED[t.slug] : null;
+      let planned = null;
+      if (typeof PLANNED !== 'undefined' && t) {
+        if (t.slug && PLANNED[t.slug]) {
+          planned = PLANNED[t.slug];
+        } else {
+          const destKey = String(t.dest || '').trim().toLowerCase();
+          planned = Object.values(PLANNED).find(p =>
+            String((p && p.name) || '').trim().toLowerCase() === destKey
+          ) || null;
+        }
+      }
       const mergedFlags = Array.from(new Set([
         ...((t && Array.isArray(t.flags)) ? t.flags : []),
         ...((planned && Array.isArray(planned.countries)) ? planned.countries : [])
-      ].map(cc => String(cc || '').trim().toLowerCase()).filter(Boolean)));
+      ].map(cc => String(cc || '').trim().toLowerCase()).filter(cc => /^[a-z]{2}$/.test(cc))));
       return mergedFlags.length ? {...t, flags: mergedFlags} : t;
     });
   } catch (err) {
