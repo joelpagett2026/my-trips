@@ -44,8 +44,8 @@ require("dbSaveRegistry" not in client and "create_page" not in client,
         "new dashboard creator must not use the old two-step registry flow")
 require("No partial trip was saved" in client,
         "creation failure must not claim a partial trip was retained")
-require("trip-dashboard-create.js?v=1" in renderer,
-        "dashboard renderer must load the atomic creator after legacy source")
+require("trip-dashboard-create.js?v=2" in renderer,
+        "dashboard renderer must load the current atomic creator after legacy source")
 
 require("action=(save|set_setting|create_page)" in htaccess,
         "unsafe legacy create_page action must be retired at the web edge")
