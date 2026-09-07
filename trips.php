@@ -45,6 +45,39 @@ if ($milesBaselineCount !== 1 || $portoMileageCount !== 1) {
     exit;
 }
 
+// Merge registry flags with any known multi-country metadata. This repairs older
+// records (for example Hong Kong & Taiwan) that were originally created with only
+// one geocoded country, without destructively rewriting the saved registry.
+$oldRegistryReturn = <<<'JS'
+    clearRegistryLoadError();
+    return trips;
+  } catch (err) {
+JS;
+$newRegistryReturn = <<<'JS'
+    clearRegistryLoadError();
+    return trips.map(t => {
+      const planned = (typeof PLANNED !== 'undefined' && t && t.slug) ? PLANNED[t.slug] : null;
+      const mergedFlags = Array.from(new Set([
+        ...((t && Array.isArray(t.flags)) ? t.flags : []),
+        ...((planned && Array.isArray(planned.countries)) ? planned.countries : [])
+      ].map(cc => String(cc || '').trim().toLowerCase()).filter(Boolean)));
+      return mergedFlags.length ? {...t, flags: mergedFlags} : t;
+    });
+  } catch (err) {
+JS;
+$page = str_replace($oldRegistryReturn, $newRegistryReturn, $page, $multiCountryRegistryCount);
+$page = str_replace(
+    'const reg = await window.dbLoadRegistry();',
+    'const reg = await loadRegistry();',
+    $page,
+    $countdownRegistryCount
+);
+if ($multiCountryRegistryCount !== 1 || $countdownRegistryCount !== 1) {
+    http_response_code(500);
+    echo 'Trips dashboard multi-country flags could not be attached safely.';
+    exit;
+}
+
 // The homepage already uses cache-busted authentication/database assets. The
 // dashboard must use the exact same current runtimes so navigation from the
 // homepage keeps the existing session instead of ever loading a stale PIN gate.
@@ -56,7 +89,7 @@ $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion .
 // Override the legacy two-step dashboard creator only after its original script
 // has loaded. The replacement uses trip-create.php to commit the itinerary and
 // registry entry atomically.
-$createScript = '<script src="/trip-dashboard-create.js?v=1"></script>';
+$createScript = '<script src="/trip-dashboard-create.js?v=2"></script>';
 $page = str_replace('</body>', $createScript . "\n</body>", $page, $createScriptCount);
 if ($createScriptCount !== 1) {
     http_response_code(500);
