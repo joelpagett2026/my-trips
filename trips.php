@@ -96,7 +96,9 @@ $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
 
-// Remove a grey city tag when it merely repeats the card's main destination.
+// Remove a grey city tag only when it repeats the card's main destination AND
+// the card has at least one other distinct place tag. Single-destination trips
+// such as Gothenburg and Hamburg keep their one useful destination pill.
 // Cards are populated asynchronously, so observe additions and clean them as
 // they appear rather than depending on a brittle source-code replacement.
 $cityTagCleanupScript = <<<'HTML'
@@ -108,7 +110,10 @@ $cityTagCleanupScript = <<<'HTML'
       const destination = card.querySelector('.card-dest');
       if (!destination) return;
       const destinationKey = normalize(destination.textContent);
-      card.querySelectorAll('.city-tag').forEach(tag => {
+      const tags = Array.from(card.querySelectorAll('.city-tag'));
+      const hasOtherPlace = tags.some(tag => normalize(tag.textContent) !== destinationKey);
+      if (!hasOtherPlace) return;
+      tags.forEach(tag => {
         if (normalize(tag.textContent) === destinationKey) tag.remove();
       });
     });
