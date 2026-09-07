@@ -88,33 +88,6 @@ if ($multiCountryRegistryCount !== 1 || $countdownRegistryCount !== 1) {
     exit;
 }
 
-// Do not repeat the card's main destination as a grey city tag. Multi-stop trips
-// can contain both the overall trip name (for example “Hong Kong & Taiwan”) and
-// the individual places in their saved cities array; only the individual places
-// should appear beneath the card title.
-$oldCityTags = <<<'JS'
-  // City tags from stored cities array
-  const cityTagsHtml = (t.cities || [])
-    .filter((c,i,a) => a.indexOf(c) === i) // dedupe
-    .slice(0, 6)
-    .map(c => `<span class="city-tag">${c}</span>`).join('');
-JS;
-$newCityTags = <<<'JS'
-  // City tags from stored cities array
-  const destinationTagKey = String(t.dest || '').trim().toLowerCase().replace(/\s+/g, ' ');
-  const cityTagsHtml = (t.cities || [])
-    .filter((c,i,a) => a.indexOf(c) === i) // dedupe
-    .filter(c => String(c || '').trim().toLowerCase().replace(/\s+/g, ' ') !== destinationTagKey)
-    .slice(0, 6)
-    .map(c => `<span class="city-tag">${c}</span>`).join('');
-JS;
-$page = str_replace($oldCityTags, $newCityTags, $page, $cityTagFilterCount);
-if ($cityTagFilterCount !== 1) {
-    http_response_code(500);
-    echo 'Trips dashboard city tags could not be attached safely.';
-    exit;
-}
-
 // The homepage already uses cache-busted authentication/database assets. The
 // dashboard must use the exact same current runtimes so navigation from the
 // homepage keeps the existing session instead of ever loading a stale PIN gate.
@@ -123,10 +96,34 @@ $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
 
+// Remove a grey city tag when it merely repeats the card's main destination.
+// Cards are populated asynchronously, so observe additions and clean them as
+// they appear rather than depending on a brittle source-code replacement.
+$cityTagCleanupScript = <<<'HTML'
+<script>
+(() => {
+  const normalize = value => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const cleanDuplicateDestinationTags = () => {
+    document.querySelectorAll('.trip-card').forEach(card => {
+      const destination = card.querySelector('.card-dest');
+      if (!destination) return;
+      const destinationKey = normalize(destination.textContent);
+      card.querySelectorAll('.city-tag').forEach(tag => {
+        if (normalize(tag.textContent) === destinationKey) tag.remove();
+      });
+    });
+  };
+  cleanDuplicateDestinationTags();
+  new MutationObserver(cleanDuplicateDestinationTags)
+    .observe(document.body, {childList: true, subtree: true});
+})();
+</script>
+HTML;
+
 // Override the legacy two-step dashboard creator only after its original script
 // has loaded. The replacement uses trip-create.php to commit the itinerary and
 // registry entry atomically.
-$createScript = '<script src="/trip-dashboard-create.js?v=2"></script>';
+$createScript = '<script src="/trip-dashboard-create.js?v=2"></script>' . "\n" . $cityTagCleanupScript;
 $page = str_replace('</body>', $createScript . "\n</body>", $page, $createScriptCount);
 if ($createScriptCount !== 1) {
     http_response_code(500);
