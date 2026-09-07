@@ -26,6 +26,42 @@
     return json.data || {};
   }
 
+  function destinationParts(dest) {
+    const parts = String(dest || '')
+      .split(/\s*(?:&|\/|\+|,|\band\b)\s*/i)
+      .map(part => part.trim())
+      .filter(Boolean);
+    return parts.length > 1 ? parts : [dest];
+  }
+
+  async function geocodeDestination(dest) {
+    const points = [];
+    const flags = [];
+    if (typeof window.geocode !== 'function') return { points, flags };
+
+    const addGeo = geo => {
+      if (!geo) return;
+      const point = [geo.lat, geo.lon];
+      if (!points.some(p => p[0] === point[0] && p[1] === point[1])) points.push(point);
+      const cc = String(geo.cc || '').trim().toLowerCase();
+      if (cc && !flags.includes(cc)) flags.push(cc);
+    };
+
+    const parts = destinationParts(dest);
+    for (const part of parts) {
+      try { addGeo(await window.geocode(part)); }
+      catch { /* one failed place should not block the trip */ }
+    }
+
+    // If splitting produced no useful result, retain the original whole-name fallback.
+    if (!points.length) {
+      try { addGeo(await window.geocode(dest)); }
+      catch { /* geocoding is optional */ }
+    }
+
+    return { points, flags };
+  }
+
   window.createTrip = async function createTrip() {
     const btn = document.getElementById('create-btn');
     const destEl = document.getElementById('m-dest');
@@ -47,15 +83,11 @@
     try {
       let points = [];
       let flags = [];
-      const cities = [dest];
+      const cities = destinationParts(dest);
       try {
-        if (typeof window.geocode === 'function') {
-          const geo = await window.geocode(dest);
-          if (geo) {
-            points = [[geo.lat, geo.lon]];
-            if (geo.cc) flags = [geo.cc];
-          }
-        }
+        const geo = await geocodeDestination(dest);
+        points = geo.points;
+        flags = geo.flags;
       } catch { /* geocoding is optional */ }
 
       const token = typeof window.getToken === 'function' ? await window.waitForToken?.() || window.getToken() : '';
