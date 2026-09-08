@@ -540,6 +540,21 @@
         font-weight:800;
         color:#0e7a87;
       }
+      @media (max-width:768px) {
+        #rp-readiness .tpo-card {
+          padding-top:12px;
+          padding-bottom:10px;
+        }
+        #rp-readiness .tpo-icon-wrap { margin-bottom:5px; }
+        #rp-readiness .tpo-name { line-height:1.2; }
+        #rp-readiness .tpo-status { margin-top:3px; line-height:1.2; }
+        #rp-readiness .tpo-count { margin-top:3px; }
+        #rp-readiness .tpo-progress {
+          margin-top:10px;
+          margin-bottom:1px;
+          height:12px;
+        }
+      }
       @media (max-width:420px) {
         #rp-readiness .tpo-card { padding-left:5px;padding-right:5px; }
         #rp-readiness .tpo-cat { padding-left:2px;padding-right:2px; }
