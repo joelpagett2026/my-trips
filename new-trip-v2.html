@@ -869,6 +869,7 @@ const SHARE_VIEW_ACTIVE = _shareParams.has('share') && !!SHARE_TOKEN;
 // ────────────────────────────────────────────────────────────────────
 
 // ── STATE ────────────────────────────────────────────────────────────
+const AUTH_TOKEN = '__DISABLED_LEGACY_AUTH_TOKEN__';
 let STATE = { days: [], meta: { dest, dep, ret, trav, status, hotel: null, budget: null } };
 let activeDay = 0;
 let currentMode = 'plan';
@@ -1663,7 +1664,7 @@ async function ensureCoverPhoto() {
   try {
     const destName = m.dest || dest;
     const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(destName), {
-      headers: { 'X-Auth-Token': getToken() },
+      headers: { 'X-Auth-Token': AUTH_TOKEN },
     });
     const j = await r.json();
     const photo = j.data?.photo || j.photo || null;
@@ -4597,11 +4598,11 @@ async function generateAllAboutInfo() {
       const [aboutResp, photoResp] = await Promise.all([
         fetch('/api.php?action=generate_about', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': getToken() },
+          headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
           body: JSON.stringify({ place: t.title, city: t.city }),
         }),
         fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(t.title) + '&city=' + encodeURIComponent(t.city), {
-          headers: { 'X-Auth-Token': getToken() },
+          headers: { 'X-Auth-Token': AUTH_TOKEN },
         }).then(r => r.json()).catch(() => ({ photo: null })),
       ]);
       const j = await aboutResp.json();
@@ -4633,7 +4634,7 @@ async function fetchMealPhoto(item) {
   try {
     const city = drawerItem ? (STATE.days[drawerItem.dayIdx]?.loc || STATE.meta?.dest || '') : '';
     const r = await fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(item.title) + '&city=' + encodeURIComponent(city), {
-      headers: { 'X-Auth-Token': getToken() },
+      headers: { 'X-Auth-Token': AUTH_TOKEN },
     });
     const j = await r.json();
     const photo = j.data?.photo || j.photo || null;
@@ -4677,11 +4678,11 @@ async function generateAbout(force) {
     const [aboutResp, photoResp] = await Promise.all([
       fetch('/api.php?action=generate_about', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': getToken() },
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
         body: JSON.stringify({ place: item.title, city }),
       }),
       fetch('/api.php?action=place_photo_v2&q=' + encodeURIComponent(item.title) + '&city=' + encodeURIComponent(city), {
-        headers: { 'X-Auth-Token': getToken() },
+        headers: { 'X-Auth-Token': AUTH_TOKEN },
       }).then(r => r.json()).catch(() => ({ photo: null })),
     ]);
     const j = await aboutResp.json();
@@ -5260,7 +5261,7 @@ async function geocodeBatch(items) {
     try {
       const r = await fetch('/api.php?action=geocode_item', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': getToken() },
+        headers: { 'Content-Type': 'application/json', 'X-Auth-Token': AUTH_TOKEN },
         body: JSON.stringify({ place: item.title, city: item.city }),
       });
       const j = await r.json();
