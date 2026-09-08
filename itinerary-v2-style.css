@@ -22,6 +22,8 @@
   --carhire:    #6E5090;
   --carhire2:   #8A6FAE;
   --carhire-bg: rgba(110,80,144,0.10);
+  --carhire-dim:  rgba(110,80,144,0.14);
+  --carhire-xdim: rgba(110,80,144,0.06);
   --activity:   #5A8968;
   --activity-bg: rgba(90,137,104,0.10);
   --amber:      #b96a00;
@@ -151,10 +153,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 /* TIMELINE */
 .tl-col{flex:1;overflow-y:auto;padding:22px 16px 24px;min-width:0;}
-.staying-pill{display:inline-flex;align-items:center;gap:7px;background:var(--teal-xdim);border:1px solid var(--teal-dim);color:var(--teal);font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:18px;cursor:pointer;transition:background 0.13s;user-select:none;}
+.staying-pill{display:inline-flex;align-items:center;gap:7px;background:var(--carhire-xdim);border:1px solid var(--carhire-dim);color:var(--carhire);font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:18px;cursor:pointer;transition:background 0.13s;user-select:none;}
 .staying-pill svg{width:12px;height:12px;stroke:currentColor;}
 .staying-pill span{color:var(--text2);font-weight:500;}
-.staying-pill:hover{background:var(--teal-dim);}
+.staying-pill:hover{background:var(--carhire-dim);}
 .tl-empty{text-align:center;padding:48px 0;color:var(--text3);}
 .tl-empty svg{width:32px;height:32px;stroke:currentColor;opacity:0.35;display:block;margin:0 auto 10px;}
 .tl-empty p{font-size:13px;margin-bottom:14px;}
@@ -175,7 +177,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-dot.meal{background:#d97b0a;}
 .tl-dot.move{background:var(--transport);}
 .tl-dot.carhire{background:var(--carhire);}
-.tl-dot.hotel{background:var(--teal);}
+.tl-dot.hotel{background:var(--carhire);}
 .tl-ico{width:45px;height:45px;border-radius:10px;background:var(--teal-xdim);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:26px;margin-top:1px;color:var(--teal);}
 .tl-ico svg{width:21px;height:21px;stroke:currentColor;fill:currentColor;}
 .tl-ico.meal{background:rgba(217,123,10,0.10);color:#d97b0a;}
@@ -183,6 +185,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-ico.move-carhire{background:var(--carhire-bg);color:var(--carhire);}
 .tl-ico.move-bus svg{width:25px;height:25px;}
 .tl-ico.ticket{background:var(--activity-bg);color:var(--activity);}
+.tl-ico.attraction{background:var(--activity-bg);color:var(--activity);}
+.tl-ico.hotel{background:var(--carhire-bg);color:var(--carhire);}
 .tl-dot.attraction{background:var(--activity);}
 .tl-text{flex:1;min-width:0;}
 .tl-title{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:2px;}
@@ -249,7 +253,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .h-row-v {
   font-size: 12px; font-weight: 600; color: var(--text); flex: 1; min-width: 0;
 }
-.h-row-v.teal { color: var(--teal); font-weight: 700; }
+.h-row-v.teal { color: var(--carhire); font-weight: 700; }
 .h-name { font-size: 12px; font-weight: 600; line-height: 1.3; }
 .h-ref  { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; color: var(--text2); font-weight: 600; font-size: 11px; }
 
@@ -257,13 +261,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .hotel-map-btn {
   display: flex; align-items: center; justify-content: center; gap: 9px;
   width: 100%; padding: 12px;
-  background: var(--teal-xdim); color: var(--teal);
+  background: var(--carhire-xdim); color: var(--carhire);
   font-family: var(--font); font-size: 12px; font-weight: 700;
   text-decoration: none; letter-spacing: 0.03em;
   border-top: 1px solid var(--line);
   transition: background 0.13s; border-left: none; border-right: none; border-bottom: none; cursor: pointer;
 }
-.hotel-map-btn:hover { background: var(--teal-dim); }
+.hotel-map-btn:hover { background: var(--carhire-dim); }
 
 
 
@@ -1570,12 +1574,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .mf-icon-btn:hover { border-color: var(--mf-c); color: var(--mf-c); }
 .mf-icon-btn.active { background: var(--mf-c); border-color: var(--mf-c); color: #fff; }
 .mf-icon-btn.cat-all    { --mf-c: #555555; }
-.mf-icon-btn.cat-act    { --mf-c: #0e7a87; }
+.mf-icon-btn.cat-act    { --mf-c: #5A8968; }
 .mf-icon-btn.cat-meal   { --mf-c: #d97b0a; }
 .mf-icon-btn.cat-ticket { --mf-c: #5A8968; }
 .mf-icon-btn.cat-hotel  { --mf-c: var(--carhire); }
 .mf-icon-btn.cat-all:hover    { background: rgba(85,85,85,0.10); }
-.mf-icon-btn.cat-act:hover    { background: rgba(14,122,135,0.10); }
+.mf-icon-btn.cat-act:hover    { background: rgba(90,137,104,0.10); }
 .mf-icon-btn.cat-meal:hover   { background: rgba(217,123,10,0.10); }
 .mf-icon-btn.cat-ticket:hover { background: rgba(90,137,104,0.10); }
 .mf-icon-btn.cat-hotel:hover  { background: var(--carhire-bg); }
