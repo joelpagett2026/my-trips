@@ -1,0 +1,45 @@
+name: Patch Concert Log icons v4 once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-concert-icons-v4-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+
+      - name: Increase and refresh Concert Log icons
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('concerts/index.html')
+          page = path.read_text()
+          old = 'width: 22px; height: 22px; background: currentColor; display: inline-block;'
+          new = 'width: 25px; height: 25px; background: currentColor; display: inline-block;'
+          if old in page:
+              page = page.replace(old, new, 1)
+          elif new not in page:
+              raise SystemExit('Concert Log stat icon size CSS not found')
+          for icon in ('concert-concerts', 'concert-festivals', 'concert-artists'):
+              page = page.replace(f'/icons/{icon}.svg?v=3', f'/icons/{icon}.svg?v=4')
+          path.write_text(page)
+          PY
+
+      - name: Commit Concert Log icon sizing
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add concerts/index.html
+          git commit -m "Increase Concert Log icons to 25px and refresh assets"
+          git pull --rebase origin main
+          git push origin main
