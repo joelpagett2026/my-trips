@@ -415,11 +415,278 @@
     installCreateButtons();
   }
 
+  function installTripPlanningOverviewRedesign() {
+    if (window.__tripPlanningOverviewRedesignInstalled) return;
+    window.__tripPlanningOverviewRedesignInstalled = true;
+
+    const style = document.createElement('style');
+    style.id = 'trip-planning-overview-redesign';
+    style.textContent = `
+      #rp-readiness .tpo-card {
+        background:var(--surface,#fff);
+        border-radius:0 0 12px 12px;
+        padding:7px 7px 6px;
+        overflow:hidden;
+      }
+      #rp-readiness .tpo-cats {
+        display:grid;
+        grid-template-columns:repeat(5,minmax(0,1fr));
+        align-items:start;
+        width:100%;
+      }
+      #rp-readiness .tpo-cat {
+        min-width:0;
+        position:relative;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        text-align:center;
+        padding:0 3px;
+      }
+      #rp-readiness .tpo-cat + .tpo-cat::before {
+        content:'';
+        position:absolute;
+        left:0;
+        top:2px;
+        bottom:2px;
+        width:1px;
+        background:var(--line,rgba(0,0,0,.07));
+      }
+      #rp-readiness .tpo-icon-wrap {
+        width:34px;
+        height:34px;
+        position:relative;
+        flex:0 0 34px;
+        margin-bottom:2px;
+      }
+      #rp-readiness .tpo-icon {
+        width:34px;
+        height:34px;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      #rp-readiness .tpo-cat--things .tpo-icon { border-radius:10px; }
+      #rp-readiness .tpo-icon svg { width:18px;height:18px;display:block; }
+      #rp-readiness .tpo-check {
+        position:absolute;
+        top:-2px;
+        right:-3px;
+        width:15px;
+        height:15px;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#55b86a;
+        color:#fff;
+        box-shadow:0 0 0 1.5px #fff;
+      }
+      #rp-readiness .tpo-check svg { width:9px;height:9px; }
+      #rp-readiness .tpo-name {
+        max-width:100%;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:8px;
+        line-height:1.1;
+        font-weight:800;
+        letter-spacing:.01em;
+        color:var(--text,#1a2428);
+      }
+      #rp-readiness .tpo-status {
+        margin-top:1px;
+        font-size:8px;
+        line-height:1.1;
+        font-weight:600;
+      }
+      #rp-readiness .tpo-count {
+        margin-top:1px;
+        font-size:13px;
+        line-height:1;
+        font-weight:800;
+      }
+      #rp-readiness .tpo-progress {
+        display:flex;
+        align-items:center;
+        gap:7px;
+        padding:0 4px;
+        margin-top:6px;
+        height:10px;
+      }
+      #rp-readiness .tpo-progress-track {
+        position:relative;
+        flex:1;
+        height:6px;
+        border-radius:999px;
+        overflow:hidden;
+        background:rgba(14,122,135,.12);
+      }
+      #rp-readiness .tpo-progress-fill {
+        position:absolute;
+        inset:0 auto 0 0;
+        height:100%;
+        border-radius:inherit;
+        background:linear-gradient(90deg,#0e7a87 0%,#0d9e8c 100%);
+        transition:width .25s ease;
+      }
+      #rp-readiness .tpo-progress-pct {
+        width:29px;
+        flex:0 0 29px;
+        text-align:right;
+        font-size:9px;
+        line-height:1;
+        font-weight:800;
+        color:#0e7a87;
+      }
+      @media (max-width:420px) {
+        #rp-readiness .tpo-card { padding-left:5px;padding-right:5px; }
+        #rp-readiness .tpo-cat { padding-left:2px;padding-right:2px; }
+        #rp-readiness .tpo-icon-wrap,
+        #rp-readiness .tpo-icon { width:31px;height:31px;flex-basis:31px; }
+        #rp-readiness .tpo-icon svg { width:16px;height:16px; }
+        #rp-readiness .tpo-name { font-size:7.2px; }
+        #rp-readiness .tpo-status { font-size:7.3px; }
+        #rp-readiness .tpo-count { font-size:12px; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const originalRender = typeof window.renderSidebarReadiness === 'function'
+      ? window.renderSidebarReadiness
+      : null;
+    if (!originalRender) return;
+
+    function renderRedesign() {
+      const root = document.getElementById('rp-readiness');
+      if (!root || typeof STATE === 'undefined' || !Array.isArray(STATE.days)) return;
+
+      const days = STATE.days || [];
+      const N = days.length;
+      const getHotelForDay = typeof hotelForDay === 'function' ? hotelForDay : () => null;
+      const hasBreakfast = hotel => {
+        if (!hotel) return false;
+        const value = String(hotel.breakfast || '').toLowerCase();
+        return !!value && value !== 'not included' && value !== 'no' && value !== 'none';
+      };
+      const hasTransport = day => (day?.items || []).some(item => item && item.type === 'move');
+      const outboundOk = N > 0 && hasTransport(days[0]);
+      const returnOk = N > 1 && hasTransport(days[N - 1]);
+
+      const nights = Math.max(N - 1, 0);
+      let hotelDone = 0;
+      for (let i = 0; i < nights; i++) {
+        if (getHotelForDay(i) || days[i]?.noAccommodation) hotelDone++;
+      }
+
+      let mealDone = 0;
+      days.forEach((day, index) => {
+        const hasMeal = (day.items || []).some(item => item && item.type === 'meal');
+        if (hasMeal || hasBreakfast(getHotelForDay(index))) mealDone++;
+      });
+      const mealTotal = N;
+
+      const middleDays = Math.max(N - 2, 0);
+      let activityDone = 0;
+      for (let i = 1; i < N - 1; i++) {
+        if ((days[i].items || []).some(item => item && ['place','poi','act','ticket','attraction'].includes(item.type))) activityDone++;
+      }
+
+      const total = 2 + nights + mealTotal + middleDays;
+      const done = (outboundOk ? 1 : 0) + (returnOk ? 1 : 0) + hotelDone + mealDone + activityDone;
+      const pct = total ? Math.max(0, Math.min(100, Math.round((done / total) * 100))) : 100;
+
+      const flightsOk = outboundOk && returnOk;
+      const hotelsOk = hotelDone === nights;
+      const mealsOk = mealDone === mealTotal;
+      const activitiesOk = activityDone === middleDays;
+
+      let flightCount = 0;
+      let mealCount = 0;
+      let attractionCount = 0;
+      let thingsCount = 0;
+      days.forEach((day, index) => {
+        const items = day.items || [];
+        items.forEach(item => {
+          if (!item) return;
+          if (item.type === 'move') {
+            const mode = String(item.transport?.mode || item.kicker || '').toLowerCase();
+            if (mode.includes('flight')) flightCount++;
+          } else if (item.type === 'ticket' || item.type === 'attraction') {
+            attractionCount++;
+          } else if (item.type === 'place' || item.type === 'poi' || item.type === 'act') {
+            thingsCount++;
+          }
+        });
+        if (items.some(item => item && item.type === 'meal') || hasBreakfast(getHotelForDay(index))) mealCount++;
+      });
+
+      const hotelCount = Array.isArray(STATE.meta?.hotels) ? STATE.meta.hotels.length : 0;
+      const checkBadge = '<span class="tpo-check"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span>';
+      const categories = [
+        {
+          label:'FLIGHTS', count:flightCount, ok:flightsOk, color:'#526B82', bg:'rgba(82,107,130,.12)',
+          icon:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2h0A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>'
+        },
+        {
+          label:'HOTELS', count:hotelCount, ok:hotelsOk, color:'#6E5090', bg:'rgba(110,80,144,.12)',
+          icon:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>'
+        },
+        {
+          label:'MEALS', count:mealCount, ok:mealsOk, color:'#d97b0a', bg:'rgba(217,123,10,.12)',
+          icon:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>'
+        },
+        {
+          label:'ATTRACTIONS', count:attractionCount, ok:activitiesOk, color:'#5A8968', bg:'rgba(90,137,104,.12)',
+          icon:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v3.1a3 3 0 0 0 0 5.8V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3.1a3 3 0 0 0 0-5.8V6a2 2 0 0 1 2-2zm8 3.25a1 1 0 0 0-1 1v7.5a1 1 0 1 0 2 0v-7.5a1 1 0 0 0-1-1z"/></svg>'
+        },
+        {
+          label:'THINGS TO DO', count:thingsCount, ok:activitiesOk, color:'#3F8190', bg:'rgba(63,129,144,.10)', className:'tpo-cat--things',
+          icon:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2a7 7 0 0 0-7 7c0 5.12 7 12 7 12s7-6.88 7-12a7 7 0 0 0-7-7zm0 4.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 0 0 0-5.2z" clip-rule="evenodd"/><ellipse cx="12" cy="21.1" rx="5.4" ry="1.4" opacity=".28"/></svg>'
+        }
+      ];
+
+      root.innerHTML = `
+        <div class="tpo-card" aria-label="Trip planning progress ${pct}%">
+          <div class="tpo-cats">
+            ${categories.map(category => `
+              <div class="tpo-cat ${category.className || ''}">
+                <div class="tpo-icon-wrap">
+                  <div class="tpo-icon" style="background:${category.bg};color:${category.color}">${category.icon}</div>
+                  ${category.ok ? checkBadge : ''}
+                </div>
+                <div class="tpo-name">${category.label}</div>
+                <div class="tpo-status" style="color:${category.ok ? category.color : 'var(--text3,#9aacb0)'}">${category.ok ? 'Complete' : 'Planned'}</div>
+                <div class="tpo-count" style="color:${category.color}">${category.count}</div>
+              </div>`).join('')}
+          </div>
+          <div class="tpo-progress">
+            <div class="tpo-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+              <div class="tpo-progress-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="tpo-progress-pct">${pct}%</div>
+          </div>
+        </div>`;
+    }
+
+    window.renderSidebarReadiness = function (...args) {
+      const result = originalRender.apply(this, args);
+      try { renderRedesign(); }
+      catch (error) { console.error('Trip planning overview redesign failed', error); }
+      return result;
+    };
+
+    try { renderRedesign(); }
+    catch (error) { console.error('Trip planning overview redesign failed', error); }
+  }
+
   function init() {
     installMobileBrowserViewportFix();
     loadBudgetPresentation();
     installItineraryCompletionTicks();
     installSharePrivacyControls();
+    installTripPlanningOverviewRedesign();
   }
 
   if (document.readyState === 'loading') {
