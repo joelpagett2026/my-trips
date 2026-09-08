@@ -24,6 +24,13 @@ $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
 if (!isAuthorizedToken($token, false)) photoFail('Unauthorised', 401);
 
 $q = trim((string)($_GET['q'] ?? ''));
+// Some saved names carry an informal branch/location qualifier using "//"
+// as a separator (e.g. a chain's specific outlet - "New York Bagel Bar //
+// HH Gänsemarkt"). Google's Find Place / Text Search match far more
+// reliably against a conventional comma-separated phrase than raw "//",
+// so normalise it before it's used in any query below.
+$q = preg_replace('/\s*\/\/\s*/', ', ', $q);
+$q = preg_replace('/\s+/', ' ', trim($q));
 $city = trim((string)($_GET['city'] ?? ''));
 $placeId = trim((string)($_GET['place_id'] ?? ''));
 if ($q === '' && $placeId === '') photoOk(null);
