@@ -185,7 +185,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tl-ico.move-carhire{background:var(--carhire-bg);color:var(--carhire);}
 .tl-ico.move-bus svg{width:25px;height:25px;}
 .tl-ico.ticket{background:var(--activity-bg);color:var(--activity);}
-.tl-ico.attraction{background:var(--activity-bg);color:var(--activity);}
 .tl-ico.hotel{background:var(--carhire-bg);color:var(--carhire);}
 .tl-dot.attraction{background:var(--activity);}
 .tl-text{flex:1;min-width:0;}
@@ -1574,12 +1573,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .mf-icon-btn:hover { border-color: var(--mf-c); color: var(--mf-c); }
 .mf-icon-btn.active { background: var(--mf-c); border-color: var(--mf-c); color: #fff; }
 .mf-icon-btn.cat-all    { --mf-c: #555555; }
-.mf-icon-btn.cat-act    { --mf-c: #5A8968; }
+.mf-icon-btn.cat-act    { --mf-c: #0e7a87; }
 .mf-icon-btn.cat-meal   { --mf-c: #d97b0a; }
 .mf-icon-btn.cat-ticket { --mf-c: #5A8968; }
 .mf-icon-btn.cat-hotel  { --mf-c: var(--carhire); }
 .mf-icon-btn.cat-all:hover    { background: rgba(85,85,85,0.10); }
-.mf-icon-btn.cat-act:hover    { background: rgba(90,137,104,0.10); }
+.mf-icon-btn.cat-act:hover    { background: rgba(14,122,135,0.10); }
 .mf-icon-btn.cat-meal:hover   { background: rgba(217,123,10,0.10); }
 .mf-icon-btn.cat-ticket:hover { background: rgba(90,137,104,0.10); }
 .mf-icon-btn.cat-hotel:hover  { background: var(--carhire-bg); }
@@ -1658,7 +1657,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .rp2-section-ico svg { width: 13px; height: 13px; }
-.rp2-hotel-head  { background: var(--teal) !important; border-radius: 12px 12px 0 0; padding: 9px 12px; }
+.rp2-hotel-head  { background: var(--carhire) !important; border-radius: 12px 12px 0 0; padding: 9px 12px; }
 .rp2-eat-head    { background: #d97b0a !important; border-radius: 12px 12px 0 0; padding: 9px 12px; }
 .rp2-hotel-head .rp2-section-ico.hotel { background: none !important; color: #fff !important; width: 24px !important; height: 24px !important; border-radius: 0; flex-shrink: 0; }
 .rp2-hotel-head .rp2-section-ico.hotel svg { width: 24px !important; height: 24px !important; fill: #fff; }
@@ -1676,7 +1675,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 }
 .rp2-eat-viewall:hover { background: rgba(255,255,255,0.28); color: #fff; }
 .rp2-eat-viewall svg { fill: #fff; }
-.rp2-section-ico.hotel    { background: rgba(14,122,135,0.12); color: var(--teal); }
+.rp2-section-ico.hotel    { background: var(--carhire-bg); color: var(--carhire); }
 .rp2-section-ico.eat      { background: rgba(217,123,10,0.12); color: #d97b0a; }
 .rp2-section-ico.overview { background: rgba(14,122,135,0.12); color: var(--teal); }
 .rp2-section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text); flex: 1; }
@@ -1733,7 +1732,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   transition: background 0.12s;
 }
 .rp2-hotel-maps-chip:hover { background: #fff; }
-.rp2-hotel-maps-chip svg { color: var(--teal); }
+.rp2-hotel-maps-chip svg { color: var(--carhire); }
 .rp2-hotel-edit-chip {
   position: absolute; top: 10px; right: 10px;
   display: flex; align-items: center; gap: 5px;

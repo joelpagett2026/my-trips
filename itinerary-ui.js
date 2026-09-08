@@ -77,9 +77,6 @@
       .tl-complete-btn:hover {background:rgba(14,122,135,.11);border-color:#0e7a87;}
       .tl-complete-btn:active {transform:scale(.93);}
       .tl-complete-btn.is-done {background:#0e7a87;border-color:#0e7a87;color:#fff;}
-      .tl-item:has(.tl-ico.ticket) .tl-complete-btn, .tl-item:has(.tl-ico.attraction) .tl-complete-btn {border-color:rgba(90,137,104,.45);background:rgba(90,137,104,.05);color:#5A8968;}
-      .tl-item:has(.tl-ico.ticket) .tl-complete-btn:hover, .tl-item:has(.tl-ico.attraction) .tl-complete-btn:hover {background:rgba(90,137,104,.11);border-color:#5A8968;}
-      .tl-item:has(.tl-ico.ticket) .tl-complete-btn.is-done, .tl-item:has(.tl-ico.attraction) .tl-complete-btn.is-done {background:#5A8968;border-color:#5A8968;color:#fff;}
       .tl-complete-btn.is-done svg {opacity:1;transform:scale(1);}
       .tl-item.tl-completed {background:rgba(0,0,0,.018);}
       .tl-item.tl-completed .tl-time,
