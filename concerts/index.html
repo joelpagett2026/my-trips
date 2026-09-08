@@ -16,7 +16,7 @@
 <title>Joel Pagett's Concert Log</title>
 <script src="/auth.js?v=3"></script>
 <script src="/db.js?v=3"></script>
-<link rel="stylesheet" href="/holidays/holiday-style.css">
+<link rel="stylesheet" href="/holidays/holiday-style.css?v=20260908-1">
 <style>
   /* ── DARK NAV ── */
   .nav {
@@ -111,6 +111,12 @@
   .dash-stat { display: flex; align-items: center; gap: 12px; padding: clamp(7px, 1.1vh, 12px) 14px; background: #e8e8e8; border-radius: 12px; margin-bottom: clamp(5px, 0.8vh, 9px); }
   .dash-stat:last-child { margin-bottom: 0; }
   .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }
+  .stat-ico {
+    width: 22px; height: 22px; background: currentColor; display: inline-block;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: center; mask-position: center;
+    -webkit-mask-size: contain; mask-size: contain;
+  }
   .dash-stat-lbl { flex: 1; font-size: 10px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 0.04em; }
   .dash-stat-val { font-size: 18px; font-weight: 700; color: #0e7a87; }
   .dash-stat-link { text-decoration: none; cursor: pointer; transition: background 0.15s; }
@@ -325,21 +331,21 @@
         <div class="dash-section-title">Stats</div>
         <a class="dash-stat dash-stat-link" href="/concerts/artists.html?type=concert">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/concert-concerts.svg?v=1);mask-image:url(/icons/concert-concerts.svg?v=1);"></span>
           </div>
           <div class="dash-stat-lbl">Concerts</div>
           <div class="dash-stat-val" id="s-concerts">0</div>
         </a>
         <a class="dash-stat dash-stat-link" href="/concerts/artists.html?type=festival">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 22v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 22v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/concert-festivals.svg?v=1);mask-image:url(/icons/concert-festivals.svg?v=1);"></span>
           </div>
           <div class="dash-stat-lbl">Day festivals</div>
           <div class="dash-stat-val" id="s-festivals">0</div>
         </a>
         <a class="dash-stat dash-stat-link" href="/concerts/artists.html">
           <div class="dash-stat-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <span class="stat-ico" style="-webkit-mask-image:url(/icons/concert-artists.svg?v=1);mask-image:url(/icons/concert-artists.svg?v=1);"></span>
           </div>
           <div class="dash-stat-lbl">Artists seen</div>
           <div class="dash-stat-val" id="s-artists">0</div>
