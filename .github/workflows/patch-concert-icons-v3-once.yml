@@ -24,28 +24,9 @@ jobs:
           from pathlib import Path
 
           icons = {
-              'icons/concert-concerts.svg': '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M13 52c-6-5-7-14-2-20 4-5 9-6 14-5l7-8 13 13-8 7c1 5 0 10-5 14-6 5-14 5-19-1z"/>
-  <path d="M32 19 49 2l13 13-17 17"/>
-  <path d="M40 11 53 24"/>
-  <circle cx="21" cy="42" r="4"/>
-  <path d="M28 34l7 7"/>
-</svg>''',
-              'icons/concert-festivals.svg': '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M32 3v7"/>
-  <path d="M27 10h10a2 2 0 0 1 2 2v4H25v-4a2 2 0 0 1 2-2z"/>
-  <circle cx="32" cy="37" r="20"/>
-  <path d="M12 32h40M12 42h40"/>
-  <path d="M22 20c6 10 6 24 0 34M42 20c-6 10-6 24 0 34M32 17v40"/>
-  <path d="M8 15v6M5 18h6M55 46v6M52 49h6M9 49l2 2M11 49l-2 2"/>
-</svg>''',
-              'icons/concert-artists.svg': '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <g transform="rotate(-38 32 32)">
-    <rect x="20" y="6" width="24" height="27" rx="12"/>
-    <path d="M22 15h20M22 22h20"/>
-    <path d="M26 32h12v24c0 3-2 5-6 5s-6-2-6-5V32z"/>
-  </g>
-</svg>''',
+              'icons/concert-concerts.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 52c-6-5-7-14-2-20 4-5 9-6 14-5l7-8 13 13-8 7c1 5 0 10-5 14-6 5-14 5-19-1z"/><path d="M32 19 49 2l13 13-17 17"/><path d="M40 11 53 24"/><circle cx="21" cy="42" r="4"/><path d="M28 34l7 7"/></svg>',
+              'icons/concert-festivals.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"><path d="M32 3v7"/><path d="M27 10h10a2 2 0 0 1 2 2v4H25v-4a2 2 0 0 1 2-2z"/><circle cx="32" cy="37" r="20"/><path d="M12 32h40M12 42h40"/><path d="M22 20c6 10 6 24 0 34M42 20c-6 10-6 24 0 34M32 17v40"/><path d="M8 15v6M5 18h6M55 46v6M52 49h6M9 49l2 2M11 49l-2 2"/></svg>',
+              'icons/concert-artists.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(-38 32 32)"><rect x="20" y="6" width="24" height="27" rx="12"/><path d="M22 15h20M22 22h20"/><path d="M26 32h12v24c0 3-2 5-6 5s-6-2-6-5V32z"/></g></svg>',
           }
           for path, content in icons.items():
               Path(path).write_text(content + '\n')
