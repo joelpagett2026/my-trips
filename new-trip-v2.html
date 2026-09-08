@@ -1399,7 +1399,7 @@ function icoForType(t, sub, item) {
     return {html: TRANSPORT_ICONS[mode] || ICO.plane, cls:'move' + extraCls};
   }
   if (t==='hotel') return {html:ICO.home, cls:'hotel'};
-  if (t==='attraction' || t==='ticket') return {html:ICO.ticket, cls:''};
+  if (t==='attraction' || t==='ticket') return {html:ICO.ticket, cls:'ticket'};
   return {html:ICO.pin, cls:''};
 }
 
@@ -1997,7 +1997,7 @@ function makeItemNode(item, idx) {
           return [isTicketType ? null : badgeHtml(item.status, item.statusLabel), ticketStatusBubble].filter(Boolean).join('');
         })()
   const isCarHireDot = item.type==='move' && (item.transport && item.transport.mode) === 'Car Hire / Road Trip';
-  const dotCls = item.type==='meal' ? 'meal' : (isCarHireDot ? 'carhire' : (item.type==='move' ? 'move' : (item.type==='hotel' ? 'hotel' : '')));
+  const dotCls = item.type==='meal' ? 'meal' : (isCarHireDot ? 'carhire' : (item.type==='move' ? 'move' : (item.type==='hotel' ? 'hotel' : ((item.type==='attraction'||item.type==='ticket') ? 'attraction' : ''))));
 
   const row = document.createElement('div');
   row.className = 'tl-item';
