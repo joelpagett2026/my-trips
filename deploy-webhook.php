@@ -241,6 +241,7 @@ $subdirFiles = [
     'icons/show-shows.svg' => 'icons/show-shows.svg',
     'icons/show-comedians.svg' => 'icons/show-comedians.svg',
     'icons/concert-concerts.svg' => 'icons/concert-concerts.svg',
+    'icons/concert-concerts.png' => 'icons/concert-concerts.png',
     'icons/concert-festivals.svg' => 'icons/concert-festivals.svg',
     'icons/concert-artists.svg' => 'icons/concert-artists.svg',
     'icons/park-roller-coaster.svg' => 'icons/park-roller-coaster.svg',
