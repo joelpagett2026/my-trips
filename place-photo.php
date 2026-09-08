@@ -87,17 +87,29 @@ if ($key !== '' && $placeId !== '') {
 
 // Keep the established text-based search as a fallback for existing restaurants
 // that were saved before Place IDs were recorded.
-if ($key !== '' && $q !== '') {
-    $findUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=' . rawurlencode($query)
+function googlePlacePhotoRef(string $queryText, string $key): ?string {
+    $findUrl = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=' . rawurlencode($queryText)
         . '&inputtype=textquery&fields=place_id,photos&key=' . rawurlencode($key);
     $find = json_decode(fetchText($findUrl), true);
     $photoRef = is_array($find) ? ($find['candidates'][0]['photos'][0]['photo_reference'] ?? null) : null;
+    if ($photoRef) return $photoRef;
 
-    if (!$photoRef) {
-        $textUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=' . rawurlencode($query)
-            . '&key=' . rawurlencode($key);
-        $text = json_decode(fetchText($textUrl), true);
-        $photoRef = is_array($text) ? ($text['results'][0]['photos'][0]['photo_reference'] ?? null) : null;
+    $textUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json?query=' . rawurlencode($queryText)
+        . '&key=' . rawurlencode($key);
+    $text = json_decode(fetchText($textUrl), true);
+    return is_array($text) ? ($text['results'][0]['photos'][0]['photo_reference'] ?? null) : null;
+}
+
+if ($key !== '' && $q !== '') {
+    $photoRef = googlePlacePhotoRef($query, $key);
+
+    // The name+city combo is a strict-ish match on Google's end — a day's
+    // location field that's blank, misspelled, or just describes a wider
+    // area than where the place actually is can make an otherwise-findable,
+    // well-known place fail to resolve at all. Retry on the name alone
+    // before giving up on Google entirely.
+    if (!$photoRef && $city !== '') {
+        $photoRef = googlePlacePhotoRef($q, $key);
     }
 
     if (is_string($photoRef) && $photoRef !== '') {
