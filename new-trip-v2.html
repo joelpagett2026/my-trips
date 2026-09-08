@@ -4891,7 +4891,17 @@ function extractBookings(state) {
       } else if (it.type==='meal' && (st==='booked'||st==='confirmed') && !isHotelBreakfastItem(it)) {
         dining.push({...base, cat:'dining', sub:it.sub, kicker:it.kicker||'', time:it.time||''});
       } else if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
-        attractions.push({...base, cat:'attraction', tickets:b.tickets, sub:it.sub});
+        // Attractions have a real "Not Booked" state (it.status === null,
+        // set via the Booking status picker) that's distinct from
+        // "Confirmed" — unlike flights/transport/dining, whose status is
+        // always a truthy string. base.status's `st||'confirmed'` default
+        // (written for those other types, where it's never actually
+        // triggered) was silently turning every not-booked attraction
+        // into 'confirmed' here too, which then made attrPill() below
+        // show a green "BOOKED" pill instead of "NOT BOOKED". Override
+        // with the item's real status, mapping null to the string
+        // 'notbooked' that attrPill actually checks for.
+        attractions.push({...base, status: it.status || 'notbooked', cat:'attraction', tickets:b.tickets, sub:it.sub});
       }
     }
   }
