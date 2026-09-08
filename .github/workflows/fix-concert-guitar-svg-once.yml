@@ -1,0 +1,87 @@
+name: Fix Concert Log guitar SVG once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-concert-guitar-svg-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+
+      - name: Replace guitar with crisp simplified SVG
+        run: |
+          cat > icons/concert-concerts.svg <<'SVG'
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <g fill="none" stroke="#000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12.5 46.5c-4.8-5.8-3.3-14.5 3.3-18.2 4.4-2.5 9.3-1.5 12.3 1.7l4-4 6 6-4 4c3.2 3 4.2 7.9 1.7 12.3-3.7 6.6-12.4 8.1-18.2 3.3l-5.1-5.1z"/>
+              <path d="M35 29 52.5 11.5"/>
+              <path d="M39 33 56.5 15.5"/>
+              <path d="M51.5 12.5 56 8l4 4-4.5 4.5"/>
+              <path d="M20 37.5 24 41.5"/>
+              <path d="M23.5 34 27.5 38"/>
+              <circle cx="19.5" cy="45" r="1.7"/>
+              <circle cx="56.2" cy="8" r="1.1"/>
+              <circle cx="60" cy="11.8" r="1.1"/>
+            </g>
+          </svg>
+          SVG
+
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('concerts/index.html')
+          s = p.read_text()
+          old = '/icons/concert-concerts.png?v=7'
+          new = '/icons/concert-concerts.svg?v=8'
+          if old not in s:
+              raise SystemExit('Expected PNG v7 guitar reference not found')
+          p.write_text(s.replace(old, new))
+          PY
+
+      - name: Commit crisp guitar
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add icons/concert-concerts.svg concerts/index.html
+          git commit -m "Use crisp simplified SVG guitar in Concert Log"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Deploy current main directly
+        run: |
+          curl --fail --show-error --silent --retry 2 --retry-delay 3 \
+            --header "X-Deploy-Key: ${{ secrets.DEPLOY_KEY }}" \
+            --output /tmp/deploy.json \
+            "https://joelpagett.co.uk/deploy-webhook.php"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/deploy.json').read_text())
+          if payload.get('ok') is not True:
+              raise SystemExit('deploy webhook did not report success')
+          failed = payload.get('failed')
+          if failed:
+              raise SystemExit(f'deploy failed for: {failed}')
+          print('deploy webhook succeeded')
+          PY
+
+      - name: Verify live Concert Log guitar reference
+        run: |
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/concerts/?verify-guitar-v8=1" \
+            --output /tmp/concerts.html
+          grep -q '/icons/concert-concerts.svg?v=8' /tmp/concerts.html
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/icons/concert-concerts.svg?v=8" \
+            --output /tmp/concert-guitar.svg
+          grep -q 'stroke-width="2.4"' /tmp/concert-guitar.svg
+          echo 'live Concert Log is serving the simplified SVG guitar'
