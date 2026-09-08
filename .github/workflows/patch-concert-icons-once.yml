@@ -1,0 +1,91 @@
+name: Patch Concert Log icons once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-concert-icons-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+
+      - name: Patch Concert Log icons
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          page_path = Path('concerts/index.html')
+          page = page_path.read_text()
+          page = page.replace(
+              '<link rel="stylesheet" href="/holidays/holiday-style.css">',
+              '<link rel="stylesheet" href="/holidays/holiday-style.css?v=20260908-1">'
+          )
+
+          css_anchor = '  .dash-stat-icon { flex-shrink: 0; color: #0e7a87; display: flex; align-items: center; justify-content: center; }\n'
+          stat_css = '''  .stat-ico {\n    width: 22px; height: 22px; background: currentColor; display: inline-block;\n    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;\n    -webkit-mask-position: center; mask-position: center;\n    -webkit-mask-size: contain; mask-size: contain;\n  }\n'''
+          if '.stat-ico {' not in page:
+              if css_anchor not in page:
+                  raise SystemExit('Concert stat icon CSS anchor not found')
+              page = page.replace(css_anchor, css_anchor + stat_css, 1)
+
+          replacements = {
+              '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>': '<span class="stat-ico" style="-webkit-mask-image:url(/icons/concert-concerts.svg?v=1);mask-image:url(/icons/concert-concerts.svg?v=1);"></span>',
+              '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 22v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 22v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>': '<span class="stat-ico" style="-webkit-mask-image:url(/icons/concert-festivals.svg?v=1);mask-image:url(/icons/concert-festivals.svg?v=1);"></span>',
+              '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>': '<span class="stat-ico" style="-webkit-mask-image:url(/icons/concert-artists.svg?v=1);mask-image:url(/icons/concert-artists.svg?v=1);"></span>',
+          }
+          for old, new in replacements.items():
+              if old in page:
+                  page = page.replace(old, new, 1)
+              elif new not in page:
+                  raise SystemExit('Expected Concert Log stat icon markup not found')
+          page_path.write_text(page)
+
+          # Remove the earlier shared-CSS fallback now that the Concert Log owns its icon styling.
+          shared_path = Path('holidays/holiday-style.css')
+          shared = shared_path.read_text()
+          marker = '/* ── CONCERT LOG DASHBOARD STAT ICONS ──'
+          if marker in shared:
+              shared = shared.split(marker, 1)[0].rstrip() + '\n'
+              shared_path.write_text(shared)
+
+          icons = {
+              'icons/concert-concerts.svg': '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="10" r="4"/><path d="M31 14l-4 14 10 5 9-5"/><path d="M31 17l-10-9"/><path d="M29 27l-4 12M36 31l4 9"/><path d="M25 25c4-5 10-6 14-2 4 4 2 9-2 12-4 3-10 1-12-3-2-3-2-5 0-7z"/><path d="M36 27l13-7 3 4-13 8"/><path d="M13 43h38"/><circle cx="18" cy="49" r="3"/><circle cx="32" cy="48" r="3"/><circle cx="46" cy="49" r="3"/><path d="M13 59c1-5 3-7 5-7s4 2 5 7M25 59c1-6 4-8 7-8s6 2 7 8M41 59c1-5 3-7 5-7s4 2 5 7"/><path d="M11 18v-6l5-1v6M52 14V8l5-1v6"/></svg>''',
+              'icons/concert-festivals.svg': '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21L32 9l23 12H9z"/><path d="M12 21v25M52 21v25"/><path d="M12 28h7l-7 7h7l-7 7M52 28h-7l7 7h-7l7 7"/><path d="M22 26l20 16M42 26L22 42"/><circle cx="22" cy="25" r="2.5"/><circle cx="42" cy="25" r="2.5"/><path d="M24 39h16v7H24zM16 43h5v3M43 43h5v3M10 46h44"/><circle cx="17" cy="52" r="3"/><circle cx="27" cy="51" r="3"/><circle cx="37" cy="51" r="3"/><circle cx="47" cy="52" r="3"/><path d="M12 61c1-5 3-7 5-7s4 2 5 7M22 61c1-5 3-7 5-7s4 2 5 7M32 61c1-5 3-7 5-7s4 2 5 7M42 61c1-5 3-7 5-7s4 2 5 7"/></svg>''',
+              'icons/concert-artists.svg': '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(28 34 31)"><rect x="27" y="9" width="16" height="22" rx="8"/><path d="M28 17h14M28 22h14"/><path d="M31 30h8v22c0 3-2 5-4 5s-4-2-4-5V30z"/><path d="M33 37h4"/></g><path d="M12 20v-7l7-2v7"/><circle cx="12" cy="20" r="3"/><path d="M49 48v-7l7-2v7"/><circle cx="49" cy="48" r="3"/></svg>''',
+          }
+          for path, content in icons.items():
+              Path(path).write_text(content + '\n')
+
+          deploy_path = Path('deploy-webhook.php')
+          deploy = deploy_path.read_text()
+          anchor = "    'icons/show-comedians.svg' => 'icons/show-comedians.svg',\n"
+          extra = (
+              "    'icons/concert-concerts.svg' => 'icons/concert-concerts.svg',\n"
+              "    'icons/concert-festivals.svg' => 'icons/concert-festivals.svg',\n"
+              "    'icons/concert-artists.svg' => 'icons/concert-artists.svg',\n"
+          )
+          if "'icons/concert-concerts.svg'" not in deploy:
+              if anchor not in deploy:
+                  raise SystemExit('Deploy icon anchor not found')
+              deploy = deploy.replace(anchor, anchor + extra, 1)
+              deploy_path.write_text(deploy)
+
+          Path('.github/workflows/patch-concert-icons-once.yml').unlink()
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add concerts/index.html holidays/holiday-style.css deploy-webhook.php icons/concert-concerts.svg icons/concert-festivals.svg icons/concert-artists.svg .github/workflows/patch-concert-icons-once.yml
+          git commit -m "Fix Concert Log icons and bust cached stylesheet"
+          git push origin main
