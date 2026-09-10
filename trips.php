@@ -75,6 +75,33 @@ if ($portoTripHistoryCount !== 1 || $portoPastTripsCount !== 1) {
     exit;
 }
 
+// Dubai & Abu Dhabi starts on 26 Dec 2025 but most of the holiday is in January
+// 2026. Keep the actual displayed dates unchanged, while filing the trip under
+// the 2026 holiday group on both the main cards and the Past Trips history.
+$page = str_replace(
+    "    const year = extractYear(t.dep) || '0';",
+    "    const year = t.slug === 'dubai-2025' ? '2026' : (extractYear(t.dep) || '0');",
+    $page,
+    $dubaiCardYearCount
+);
+$page = str_replace(
+    '  {name:"Dubai & Abu Dhabi",start:"Dec 2025",codes:["ae","fr"]},',
+    '  {name:"Dubai & Abu Dhabi",start:"Dec 2025",groupYear:"2026",codes:["ae","fr"]},',
+    $page,
+    $dubaiHistoryMetaCount
+);
+$page = str_replace(
+    '    const year = t.start.match(/(\\d{4})/)?.[1];',
+    '    const year = t.groupYear || t.start.match(/(\\d{4})/)?.[1];',
+    $page,
+    $dubaiHistoryGroupingCount
+);
+if ($dubaiCardYearCount !== 1 || $dubaiHistoryMetaCount !== 1 || $dubaiHistoryGroupingCount !== 2) {
+    http_response_code(500);
+    echo 'Trips dashboard Dubai year grouping could not be attached safely.';
+    exit;
+}
+
 // Merge registry flags with any known multi-country metadata. Older records can
 // have a legacy/renamed slug, so match known trips by slug first and destination
 // name second. Only valid two-letter country codes are passed to FlagCDN.
@@ -123,8 +150,8 @@ if ($multiCountryRegistryCount !== 1 || $countdownRegistryCount !== 1) {
 // homepage keeps the existing session instead of ever loading a stale PIN gate.
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
-$page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
-$page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
+$page = preg_replace('~src="/auth\\.js\\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
+$page = preg_replace('~src="/db\\.js\\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
 
 // Remove a grey city tag only when it repeats the card's main destination AND
 // the card has at least one other distinct place tag. Single-destination trips
