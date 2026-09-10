@@ -45,6 +45,36 @@ if ($milesBaselineCount !== 1 || $portoMileageCount !== 1) {
     exit;
 }
 
+// Keep the completed-trip/country history explicit as well as registry-driven.
+// Porto is the first 2026 entry after China and belongs to Portugal (pt). The
+// registry de-duplication below prevents this from appearing twice when live data
+// is available, while the static history/card data remains complete on its own.
+$tripHistoryNeedle = <<<'JS'
+const trips = [
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+JS;
+$tripHistoryReplacement = <<<'JS'
+const trips = [
+  {name:"Porto",start:"Aug 2026",codes:["pt"]},
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+JS;
+$pastTripsNeedle = <<<'JS'
+const psTripList = [
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+JS;
+$pastTripsReplacement = <<<'JS'
+const psTripList = [
+  {name:"Porto",start:"Aug 2026",codes:["pt"]},
+  {name:"China",start:"Mar 2026",codes:["cn"]},
+JS;
+$page = str_replace($tripHistoryNeedle, $tripHistoryReplacement, $page, $portoTripHistoryCount);
+$page = str_replace($pastTripsNeedle, $pastTripsReplacement, $page, $portoPastTripsCount);
+if ($portoTripHistoryCount !== 1 || $portoPastTripsCount !== 1) {
+    http_response_code(500);
+    echo 'Trips dashboard Porto history could not be attached safely.';
+    exit;
+}
+
 // Merge registry flags with any known multi-country metadata. Older records can
 // have a legacy/renamed slug, so match known trips by slug first and destination
 // name second. Only valid two-letter country codes are passed to FlagCDN.
