@@ -91,13 +91,13 @@ $page = str_replace(
     $dubaiHistoryMetaCount
 );
 $page = str_replace(
-    '    const year = t.start.match(/(\\d{4})/)?.[1];',
-    '    const year = t.groupYear || t.start.match(/(\\d{4})/)?.[1];',
+    'const year = t.start.match(/(\\d{4})/)?.[1];',
+    'const year = t.groupYear || t.start.match(/(\\d{4})/)?.[1];',
     $page,
     $dubaiHistoryGroupingCount
 );
 // The Dubai entry occurs in both historical arrays, so the metadata replacement
-// must intentionally hit exactly two rows. Anything else still fails closed.
+// and both history-grouping loops must all be updated exactly as expected.
 if ($dubaiCardYearCount !== 1 || $dubaiHistoryMetaCount !== 2 || $dubaiHistoryGroupingCount !== 2) {
     http_response_code(500);
     echo 'Trips dashboard Dubai year grouping could not be attached safely.';
