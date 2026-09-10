@@ -60,6 +60,18 @@ requireContract(strpos($dashboard, "const GOOGLE_MAPS_API_KEY = \"RendererContra
     'Trips dashboard did not receive configured browser Maps key');
 assertOnlyConfiguredGoogleKeys($dashboard, 'Trips dashboard');
 
+// Exercise the actual dashboard renderer as well. This catches runtime wrapper
+// failures that syntax/static transformation checks cannot see.
+ob_start();
+include __DIR__ . '/../trips.php';
+$renderedDashboard = ob_get_clean();
+requireContract(strpos($renderedDashboard, 'Trips dashboard Porto history could not be attached safely.') === false,
+    'Porto history runtime injection failed');
+requireContract(substr_count($renderedDashboard, '{name:"Porto",start:"Aug 2026",codes:["pt"]},') === 2,
+    'rendered dashboard should contain Porto in both completed-history datasets');
+requireContract(strpos($renderedDashboard, 'Your saved trips have not been changed') !== false,
+    'rendered dashboard lost registry failure safety message');
+
 $parkSource = readTemplate('parks/map.html');
 [$park, $parkDiag] = applyGoogleMapsScriptRuntimeSafety($parkSource);
 requireContract(($parkDiag['maps_script_key_rewritten'] ?? 0) === 1,
