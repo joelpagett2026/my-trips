@@ -72,6 +72,59 @@ requireContract(substr_count($renderedDashboard, '{name:"Porto",start:"Aug 2026"
 requireContract(strpos($renderedDashboard, 'Your saved trips have not been changed') !== false,
     'rendered dashboard lost registry failure safety message');
 
+// Branch-only live trace to identify which production verification assertion is
+// currently failing. It is deliberately diagnostic and does not change production.
+function curlStatusAndBody(string $url, string $method = 'GET', string $data = ''): array {
+    $tmp = tempnam(sys_get_temp_dir(), 'live-check-');
+    $cmd = 'curl --show-error --silent --output ' . escapeshellarg($tmp)
+        . ' --write-out "%{http_code}"';
+    if ($method !== 'GET') {
+        $cmd .= ' --request ' . escapeshellarg($method);
+    }
+    if ($data !== '') {
+        $cmd .= ' --header ' . escapeshellarg('Content-Type: application/json')
+            . ' --data ' . escapeshellarg($data);
+    }
+    $cmd .= ' ' . escapeshellarg($url);
+    $status = trim((string)shell_exec($cmd));
+    $body = (string)@file_get_contents($tmp);
+    @unlink($tmp);
+    return [$status, $body];
+}
+
+[$liveTripsStatus, $liveTrips] = curlStatusAndBody('https://joelpagett.co.uk/trips/');
+fwrite(STDOUT, 'live trips status=' . $liveTripsStatus
+    . ' auth=' . (preg_match('~src="/auth\\.js\\?v=[0-9]+"~', $liveTrips) ? 'yes' : 'no')
+    . ' db=' . (preg_match('~src="/db\\.js\\?v=[0-9]+"~', $liveTrips) ? 'yes' : 'no')
+    . ' safe-message=' . (strpos($liveTrips, 'Your saved trips have not been changed') !== false ? 'yes' : 'no')
+    . ' old-swallow=' . (strpos($liveTrips, 'try{ return await window.dbLoadRegistry(); }catch{ return []; }') !== false ? 'yes' : 'no')
+    . ' porto-history=' . (strpos($liveTrips, '{name:"Porto",start:"Aug 2026",codes:["pt"]},') !== false ? 'yes' : 'no')
+    . "\n");
+
+[$liveTripStatus, $liveTrip] = curlStatusAndBody('https://joelpagett.co.uk/porto-2026');
+fwrite(STDOUT, 'live porto status=' . $liveTripStatus
+    . ' auth=' . (preg_match('~src="/auth\\.js\\?v=[0-9]+"~', $liveTrip) ? 'yes' : 'no')
+    . ' db=' . (preg_match('~src="/db\\.js\\?v=[0-9]+"~', $liveTrip) ? 'yes' : 'no')
+    . "\n");
+
+[$activityStatus, $activity] = curlStatusAndBody('https://joelpagett.co.uk/activity-editor.js?verify-controller=1');
+fwrite(STDOUT, 'live activity status=' . $activityStatus
+    . ' controller=' . (strpos($activity, '__activityEditorControllerV1') !== false ? 'yes' : 'no')
+    . ' save-listener=' . (strpos($activity, "save.addEventListener('click', onSaveClick)") !== false ? 'yes' : 'no')
+    . ' unsafe-pointer=' . (strpos($activity, "setImportant(overlay, 'pointer-events'") !== false ? 'yes' : 'no')
+    . "\n");
+
+[$authStatus, $authBody] = curlStatusAndBody('https://joelpagett.co.uk/auth.js?verify-restored-gate=1');
+fwrite(STDOUT, 'live auth status=' . $authStatus
+    . ' pin=' . (strpos($authBody, 'Enter your PIN to continue') !== false ? 'yes' : 'no')
+    . ' temporary-access=' . (strpos($authBody, 'temporary_access') !== false ? 'yes' : 'no')
+    . "\n");
+
+[$tempStatus] = curlStatusAndBody('https://joelpagett.co.uk/auth-v2.php?action=temporary_access', 'POST', '{}');
+[$recordStatus] = curlStatusAndBody('https://joelpagett.co.uk/record.php?action=load&id=trip-registry');
+[$checkStatus] = curlStatusAndBody('https://joelpagett.co.uk/auth-v2.php?action=check', 'POST', '{}');
+fwrite(STDOUT, "live API statuses temporary={$tempStatus} record={$recordStatus} check={$checkStatus}\n");
+
 $parkSource = readTemplate('parks/map.html');
 [$park, $parkDiag] = applyGoogleMapsScriptRuntimeSafety($parkSource);
 requireContract(($parkDiag['maps_script_key_rewritten'] ?? 0) === 1,
