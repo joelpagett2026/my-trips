@@ -1,0 +1,69 @@
+name: Verify live share-management origin guard
+
+on:
+  workflow_run:
+    workflows:
+      - Validate and deploy joelpagett.co.uk
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify owner share actions reject cross-site browsers
+        run: |
+          cross_status=$(curl --show-error --silent \
+            --header 'Origin: https://example.invalid' \
+            --header 'Sec-Fetch-Site: cross-site' \
+            --output /tmp/share-cross.json \
+            --write-out '%{http_code}' \
+            'https://joelpagett.co.uk/share.php?action=list_shares&trip_id=porto-2026')
+          test "$cross_status" = "403"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/share-cross.json').read_text())
+          if payload.get('ok') is not False or payload.get('error') != 'Cross-site request blocked':
+              raise SystemExit(f'cross-site share management was not rejected cleanly: {payload!r}')
+          PY
+
+      - name: Verify normal unauthenticated share management still reaches auth
+        run: |
+          status=$(curl --show-error --silent \
+            --output /tmp/share-normal.json \
+            --write-out '%{http_code}' \
+            'https://joelpagett.co.uk/share.php?action=list_shares&trip_id=porto-2026')
+          test "$status" = "401"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/share-normal.json').read_text())
+          if payload.get('ok') is not False or payload.get('error') != 'Unauthorised':
+              raise SystemExit(f'normal share management request did not reach auth: {payload!r}')
+          PY
+
+      - name: Verify public share routing remains cross-site navigable
+        run: |
+          status=$(curl --show-error --silent \
+            --header 'Origin: https://example.invalid' \
+            --header 'Sec-Fetch-Site: cross-site' \
+            --output /tmp/share-public.json \
+            --write-out '%{http_code}' \
+            'https://joelpagett.co.uk/share.php?share=1&t=000000000000000000000000')
+          test "$status" = "404"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/share-public.json').read_text())
+          if payload.get('error') == 'Cross-site request blocked':
+              raise SystemExit('public shared itinerary route was caught by owner-only origin guard')
+          print('live share-management same-origin guard: ok')
+          PY
