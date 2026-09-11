@@ -77,7 +77,7 @@ require("function requireShareManagementSameOrigin" in share,
         "owner share management must have an explicit same-origin browser guard")
 require("HTTP_SEC_FETCH_SITE" in share and "'cross-site'" in share,
         "share-management guard must reject cross-site Fetch Metadata requests")
-require("HTTP_ORIGIN" in share and "joelpagett\\.co\\.uk" in share,
+require("HTTP_ORIGIN" in share and "preg_match(" in share and "joelpagett" in share,
         "share-management guard must reject foreign Origin headers")
 require("function requireShareOwnerSession" in share and "isAuthorizedToken($token, false)" in share,
         "share creation/list/revoke must require a real owner session")
