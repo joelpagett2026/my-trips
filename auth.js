@@ -1,11 +1,13 @@
 // ══════════════════════════════════════════════════════════════════════
 // MY TRIPS — Auth (PIN gate)
 // The browser submits only the four PIN digits to the same-origin HTTPS auth
-// endpoint. The server hashes the PIN and issues a random expiring session token.
+// endpoint. The real session credential lives only in a Secure/HttpOnly cookie;
+// browser storage contains a non-secret compatibility marker for older clients.
 // ══════════════════════════════════════════════════════════════════════
 
 const IS_SHARE_VIEW = new URLSearchParams(window.location.search).has('share');
 const SESSION_KEY = 'jh_auth';
+const SESSION_MARKER = 'cookie-session';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 
 function getStoredSession() {
@@ -15,8 +17,11 @@ function getStoredSession() {
     } catch { return null; }
 }
 
-function storeSession(sessionToken) {
-    const payload = JSON.stringify({ sessionToken: sessionToken || '', ts: Date.now() });
+// Never persist a server credential. The marker is deliberately non-secret: it
+// only keeps older callers that expect a truthy `sessionToken` working. The server
+// validates the HttpOnly cookie on every protected request.
+function storeSession() {
+    const payload = JSON.stringify({ sessionToken: SESSION_MARKER, ts: Date.now() });
     try { localStorage.setItem(SESSION_KEY, payload); } catch {}
     try { sessionStorage.setItem(SESSION_KEY, payload); } catch {}
 }
@@ -26,14 +31,18 @@ function clearSession() {
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
 }
 
-function isAuthed() {
+function storedLegacyHeaderToken() {
     const s = getStoredSession();
-    return !!(
-        s &&
-        /^[a-f0-9]{64}$/i.test(String(s.sessionToken || '')) &&
-        Number.isFinite(Number(s.ts)) &&
-        (Date.now() - Number(s.ts)) < SESSION_TTL
-    );
+    if (!s || !Number.isFinite(Number(s.ts)) || (Date.now() - Number(s.ts)) >= SESSION_TTL) return '';
+    const value = String(s.sessionToken || '');
+    // A valid pre-cookie raw token is sent only to /check once so the server can
+    // migrate it into the HttpOnly cookie. The marker itself is harmless to send.
+    if (/^[a-f0-9]{64}$/i.test(value) || value === SESSION_MARKER) return value;
+    return '';
+}
+
+function isAuthed() {
+    return IS_SHARE_VIEW || window._mytripsAuthed === true;
 }
 
 function announceAuthed() {
@@ -42,7 +51,7 @@ function announceAuthed() {
     document.dispatchEvent(new Event('mytrips:authed'));
 }
 
-if (IS_SHARE_VIEW || isAuthed()) document.documentElement.style.visibility = 'visible';
+if (IS_SHARE_VIEW) document.documentElement.style.visibility = 'visible';
 else document.documentElement.style.visibility = 'hidden';
 
 function showPinOverlay() {
@@ -106,10 +115,10 @@ function showPinOverlay() {
             let json;
             try { json = await res.json(); }
             catch { throw new Error(`Authentication service returned HTTP ${res.status}`); }
-            if (!res.ok || !json.ok || !json.data || !json.data.session_token) {
+            if (!res.ok || !json.ok || !json.data || json.data.session_token !== SESSION_MARKER) {
                 throw new Error(json.error || `Authentication failed (HTTP ${res.status})`);
             }
-            storeSession(json.data.session_token);
+            storeSession();
             overlay.querySelectorAll('.pin-dot').forEach(d => { d.style.background = '#34c759'; });
             setTimeout(() => {
                 overlay.remove();
@@ -147,27 +156,61 @@ function showPinOverlay() {
     });
 }
 
-function relockForExpiredSession() {
-    if (IS_SHARE_VIEW) return;
-    clearSession();
-    window._mytripsAuthed = false;
+function showPinWhenReady() {
     if (document.body) showPinOverlay();
     else document.addEventListener('DOMContentLoaded', showPinOverlay, { once: true });
 }
 
+function relockForExpiredSession() {
+    if (IS_SHARE_VIEW) return;
+    clearSession();
+    window._mytripsAuthed = false;
+    showPinWhenReady();
+}
+
 document.addEventListener('mytrips:auth-expired', relockForExpiredSession);
 
-if (IS_SHARE_VIEW) {
-    announceAuthed();
-} else if (isAuthed()) {
-    window._mytripsAuthed = true;
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => document.dispatchEvent(new Event('mytrips:authed')), { once: true });
-    } else {
-        document.dispatchEvent(new Event('mytrips:authed'));
+async function validateCurrentSession() {
+    const legacyOrMarker = storedLegacyHeaderToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (legacyOrMarker) headers['X-Auth-Token'] = legacyOrMarker;
+
+    try {
+        const res = await fetch('/auth-v2.php?action=check', {
+            method: 'POST',
+            headers,
+            cache: 'no-store',
+            credentials: 'same-origin',
+            body: '{}'
+        });
+        let json = null;
+        try { json = await res.json(); } catch {}
+        if (!res.ok || !json?.ok || !json?.data?.valid || json.data.session_token !== SESSION_MARKER) {
+            clearSession();
+            return false;
+        }
+
+        // This overwrites any still-valid legacy 64-character token with the
+        // non-secret marker immediately after the server has moved it to HttpOnly.
+        storeSession();
+        announceAuthed();
+        return true;
+    } catch {
+        // A transient network failure must not treat a browser marker as authority.
+        // Keep the page locked and offer PIN entry rather than exposing private UI.
+        clearSession();
+        return false;
     }
-} else {
-    clearSession();
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showPinOverlay, { once: true });
-    else showPinOverlay();
 }
+
+async function bootstrapAuth() {
+    if (IS_SHARE_VIEW) {
+        announceAuthed();
+        return;
+    }
+    if (await validateCurrentSession()) return;
+    window._mytripsAuthed = false;
+    showPinWhenReady();
+}
+
+void bootstrapAuth();
