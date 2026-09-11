@@ -4,10 +4,36 @@
 const fs = require('fs');
 const vm = require('vm');
 const source = fs.readFileSync('trip-delete.js', 'utf8');
+const renderer = fs.readFileSync('trip.php', 'utf8');
+const ownerRuntime = fs.readFileSync('trip-standalone.js', 'utf8');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
+
+// Owner-render CSP tranche: the source template keeps public-share compatibility,
+// while trip.php strips exactly seven activity modal/drawer inline handlers after
+// externalizing the giant itinerary core. V4 already owns destructive/save actions.
+assert(renderer.includes('function externalizeOwnerActivityHandlers(string $html): array'),
+  'owner activity handler externalizer is missing');
+assert(renderer.includes("'owner_activity_handlers_externalized' => $total"),
+  'owner activity handler migration must publish exact-count diagnostics');
+assert(renderer.includes("($ownerActivityDiag['owner_activity_handlers_externalized'] ?? 0) !== 7"),
+  'owner activity handler migration must fail closed unless exactly seven handlers move');
+assert(renderer.includes('data-activity-action=\"edit\"'),
+  'owner drawer Edit must become declarative');
+assert(renderer.includes('data-activity-action=\"remove\"'),
+  'owner drawer Remove must become declarative');
+assert(renderer.includes('data-owner-action=\"close-activity-modal\"'),
+  'owner activity Cancel must use delegated close action');
+assert(renderer.includes('data-owner-action=\"close-drawer\"'),
+  'owner drawer overlay must use delegated close action');
+assert(ownerRuntime.includes("case 'close-activity-modal':") && ownerRuntime.includes("call('closeModal')"),
+  'external owner runtime must close the activity modal without inline JavaScript');
+assert(ownerRuntime.includes("case 'close-drawer':") && ownerRuntime.includes("call('closeDrawer')"),
+  'external owner runtime must close the drawer without inline JavaScript');
+assert(source.includes("const existing = button.dataset.activityAction || ''"),
+  'V4 drawer controller must classify declarative activity actions before legacy onclick fallback');
 
 class ClassList {
   constructor(values = []) { this.values = new Set(values); }
