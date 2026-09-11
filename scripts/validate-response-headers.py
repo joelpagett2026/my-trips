@@ -48,9 +48,6 @@ low_risk_csp = (
 require(low_risk_csp in htaccess,
         'CSP must enforce same-origin forms/manifests and restricted workers/media')
 
-# Guard the assumptions behind those promoted directives. There should be no
-# source-controlled external form target or external manifest; active media/worker
-# additions deserve an explicit policy review before they can land.
 for path in list(ROOT.rglob('*.html')) + list(ROOT.rglob('*.php')):
     if '.git' in path.parts:
         continue
@@ -104,7 +101,7 @@ immutable_runtime_group = (
     'trip-drawer-swipe|trip-mobile-modal-layout)\\.js$">'
 )
 require(immutable_runtime_group in htaccess,
-        'all dynamically versioned itinerary runtime scripts must share the immutable cache policy')
+        'versioned itinerary runtime files must retain the immutable static-file policy when directly servable')
 require('<FilesMatch "^(?:trip-dashboard-create|budget-live-redesign)\\.js$">' in htaccess,
         'unversioned application overrides must remain revalidated')
 
@@ -112,10 +109,8 @@ for filename, version_var in (
     ('itinerary-state-guard.js', '$stateGuardVersion'),
     ('itinerary-ui.js', '$uiVersion'),
     ('map-mobile-redesign.js', '$mapVersion'),
-    ('trip-drawer-swipe.js', '$tripDrawerSwipeVersion'),
     ('mobile-drag.js', '$mobileDragVersion'),
     ('itinerary-completion.js', '$completionVersion'),
-    ('trip-mobile-modal-layout.js', '$tripMobileModalVersion'),
     ('trip-delete.js', '$tripDeleteVersion'),
 ):
     require(filename in trip and version_var in trip,
@@ -123,14 +118,42 @@ for filename, version_var in (
     require(f'<link rel="preload" href="/{filename}?v=' in trip,
             f'{filename} must be preloaded from the document head')
 
-require("$tripStandaloneVersion = @filemtime(__DIR__ . '/trip-standalone.js') ?: time();" in trip,
-        'trip standalone helper must use a deployed-file cache key')
-require('<script src="/trip-standalone.js?v=__TRIP_STANDALONE_VERSION__"></script>' in trip,
-        'iOS standalone helper must execute synchronously from the document head')
+# The hosting layer currently returns 403 for newly introduced root-level JS paths.
+# Keep the helpers external, but deliver only an explicit three-file whitelist
+# through trip.php. This is not a generic filesystem endpoint.
+require("function tripRuntimeAssetMap(): array" in trip,
+        'trip renderer must define the explicit runtime derivative allow-list')
+for asset_name, filename in (
+    ('trip-standalone', 'trip-standalone.js'),
+    ('trip-drawer-swipe', 'trip-drawer-swipe.js'),
+    ('trip-mobile-modal-layout', 'trip-mobile-modal-layout.js'),
+):
+    require(f"'{asset_name}' => '{filename}'" in trip,
+            f'trip runtime derivative allow-list must include {asset_name}')
+    require((ROOT / filename).is_file(), f'externalized trip helper is missing: {filename}')
+    require(f"'{filename}'" in deploy, f'deploy webhook must publish externalized trip helper: {filename}')
 
-# These helpers used to be literal executable blocks in trip.php. They are static
-# behavior, so putting them back inline would unnecessarily keep script-src tied to
-# unsafe-inline and make the authenticated renderer larger on every request.
+require("function serveTripRuntimeAsset(string $asset): void" in trip,
+        'trip renderer must serve whitelisted runtime derivatives')
+require("header('Content-Type: application/javascript; charset=UTF-8');" in trip,
+        'trip runtime derivatives must use the JavaScript content type')
+require("header('Cache-Control: public, max-age=31536000, immutable');" in trip,
+        'trip runtime derivatives must be immutable when version matches')
+require("header('Location: ' . tripRuntimeAssetUrl($asset), true, 302);" in trip,
+        'stale runtime derivative versions must canonicalize to the deployed version')
+require("readfile($path);" in trip,
+        'runtime derivative response must read only the resolved whitelisted file')
+require("/trip-standalone.js?v=" not in trip and "/trip-drawer-swipe.js?v=" not in trip and "/trip-mobile-modal-layout.js?v=" not in trip,
+        'trip renderer must not regress to host-blocked direct helper URLs')
+require("$tripStandaloneUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-standalone')" in trip,
+        'iOS standalone helper must use the whitelisted derivative URL')
+require("$tripDrawerSwipeUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-drawer-swipe')" in trip,
+        'drawer helper must use the whitelisted derivative URL')
+require("$tripMobileModalUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-mobile-modal-layout')" in trip,
+        'mobile modal helper must use the whitelisted derivative URL')
+
+# These helpers used to be literal executable blocks in trip.php. They must stay
+# external even though delivery now passes through a PHP derivative route.
 for old_inline_marker in (
     "window.navigator.standalone === true",
     "drawer.dataset.mapSwipeFix === '1'",
@@ -139,13 +162,6 @@ for old_inline_marker in (
     require(old_inline_marker not in trip,
             f'static trip runtime must remain externalized: {old_inline_marker}')
 
-# A versioned URL is only safe if the deploy webhook actually publishes the file.
-# Keep renderer references and the production copy manifest coupled in one contract
-# so newly externalized runtime cannot silently become a live 404 again.
-for asset in ('trip-standalone.js', 'trip-drawer-swipe.js', 'trip-mobile-modal-layout.js'):
-    require((ROOT / asset).is_file(), f'externalized trip helper is missing: {asset}')
-    require(f"'{asset}'" in deploy, f'deploy webhook must publish externalized trip helper: {asset}')
-
 require("$uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();" in share,
         'share renderer must version itinerary-ui.js from the deployed file')
 require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
@@ -153,4 +169,4 @@ require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
 require("/itinerary-ui.js?v=1" not in share,
         'share renderer must never pin itinerary-ui.js to a fixed cache key')
 
-print('safe response header + layered CSP + HSTS pilot + delivery contracts: ok')
+print('safe response header + layered CSP + HSTS pilot + derivative delivery contracts: ok')

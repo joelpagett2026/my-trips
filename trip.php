@@ -7,6 +7,69 @@
 // are all part of that one shared template, so a template change applies
 // to every trip automatically.
 // ══════════════════════════════════════════════════════════════════════
+
+function tripRuntimeAssetMap(): array {
+  return [
+    'trip-standalone' => 'trip-standalone.js',
+    'trip-drawer-swipe' => 'trip-drawer-swipe.js',
+    'trip-mobile-modal-layout' => 'trip-mobile-modal-layout.js',
+  ];
+}
+
+function tripRuntimeAssetUrl(string $asset): string {
+  $filename = tripRuntimeAssetMap()[$asset] ?? '';
+  $path = $filename !== '' ? __DIR__ . '/' . $filename : '';
+  $version = ($path !== '' && is_file($path)) ? (string)filemtime($path) : '0';
+  return '/trip.php?asset=' . rawurlencode($asset) . '&v=' . rawurlencode($version);
+}
+
+function serveTripRuntimeAsset(string $asset): void {
+  if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') {
+    http_response_code(405);
+    header('Allow: GET, HEAD');
+    exit;
+  }
+
+  $filename = tripRuntimeAssetMap()[$asset] ?? '';
+  if ($filename === '') {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=UTF-8');
+    header('Cache-Control: no-store');
+    echo 'Runtime asset not found.';
+    exit;
+  }
+
+  $path = __DIR__ . '/' . $filename;
+  if (!is_file($path) || !is_readable($path)) {
+    http_response_code(404);
+    header('Content-Type: application/javascript; charset=UTF-8');
+    header('Cache-Control: no-store');
+    echo "throw new Error('Trip runtime asset is unavailable');";
+    exit;
+  }
+
+  $currentVersion = (string)filemtime($path);
+  $requestedVersion = trim((string)($_GET['v'] ?? ''));
+  if ($requestedVersion !== $currentVersion) {
+    header('Cache-Control: no-store');
+    header('Location: ' . tripRuntimeAssetUrl($asset), true, 302);
+    exit;
+  }
+
+  header('Content-Type: application/javascript; charset=UTF-8');
+  header('Cache-Control: public, max-age=31536000, immutable');
+  header('X-Robots-Tag: noindex, nofollow, noarchive', true);
+  if ($_SERVER['REQUEST_METHOD'] === 'GET') readfile($path);
+  exit;
+}
+
+// The host currently refuses newly introduced root-level JS URLs even when the
+// deployer copies the files successfully. Serve only these three explicit static
+// helpers through the already-proven trip.php endpoint instead of exposing a
+// generic file reader. The versioned response is still immutable and cacheable.
+$runtimeAsset = trim((string)($_GET['asset'] ?? ''));
+if ($runtimeAsset !== '') serveTripRuntimeAsset($runtimeAsset);
+
 require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/template-runtime.php';
 
@@ -77,19 +140,16 @@ $tripBootstrap = "// Trip data (rendered dynamically from the DB on every reques
 $page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
 if ($count === 0) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
 
-// Static authenticated-trip helpers are versioned external assets. Keeping the
-// iOS standalone detector synchronous in <head> preserves the existing behavior:
-// the html class is present before mobile layout CSS is evaluated.
-$tripStandaloneVersion = @filemtime(__DIR__ . '/trip-standalone.js') ?: time();
-$tripDrawerSwipeVersion = @filemtime(__DIR__ . '/trip-drawer-swipe.js') ?: time();
-$tripMobileModalVersion = @filemtime(__DIR__ . '/trip-mobile-modal-layout.js') ?: time();
+$tripStandaloneUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-standalone'), ENT_QUOTES, 'UTF-8');
+$tripDrawerSwipeUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-drawer-swipe'), ENT_QUOTES, 'UTF-8');
+$tripMobileModalUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-mobile-modal-layout'), ENT_QUOTES, 'UTF-8');
 
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
-<script src="/trip-standalone.js?v=__TRIP_STANDALONE_VERSION__"></script>
+<script src="__TRIP_STANDALONE_URL__"></script>
 <style>
 @media (max-width: 700px) {
   html.ios-standalone, html.ios-standalone body { width:100%; min-height:100%; }
@@ -143,7 +203,7 @@ $standaloneHead = <<<'HTML'
 }
 </style>
 HTML;
-$standaloneHead = str_replace('__TRIP_STANDALONE_VERSION__', (string)$tripStandaloneVersion, $standaloneHead);
+$standaloneHead = str_replace('__TRIP_STANDALONE_URL__', $tripStandaloneUrl, $standaloneHead);
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 
 // Keep the current authenticated session when navigating from the homepage or
@@ -168,10 +228,10 @@ $runtimePreloads =
   '<link rel="preload" href="/itinerary-state-guard.js?v=' . $stateGuardVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/itinerary-ui.js?v=' . $uiVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/map-mobile-redesign.js?v=' . $mapVersion . '" as="script">' . "\n"
-  . '<link rel="preload" href="/trip-drawer-swipe.js?v=' . $tripDrawerSwipeVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="' . $tripDrawerSwipeUrl . '" as="script">' . "\n"
   . '<link rel="preload" href="/mobile-drag.js?v=' . $mobileDragVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/itinerary-completion.js?v=' . $completionVersion . '" as="script">' . "\n"
-  . '<link rel="preload" href="/trip-mobile-modal-layout.js?v=' . $tripMobileModalVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="' . $tripMobileModalUrl . '" as="script">' . "\n"
   . '<link rel="preload" href="/trip-delete.js?v=' . $tripDeleteVersion . '" as="script">';
 $page = str_replace('</head>', $runtimePreloads . "\n</head>", $page, $runtimePreloadCount);
 if ($runtimePreloadCount !== 1) {
@@ -185,10 +245,10 @@ $page = str_replace(
   '<script src="/itinerary-state-guard.js?v=' . $stateGuardVersion . '"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=' . $uiVersion . '"></script>' . "\n"
   . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
-  . '<script src="/trip-drawer-swipe.js?v=' . $tripDrawerSwipeVersion . '"></script>' . "\n"
+  . '<script src="' . $tripDrawerSwipeUrl . '"></script>' . "\n"
   . '<script src="/mobile-drag.js?v=' . $mobileDragVersion . '"></script>' . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
-  . '<script src="/trip-mobile-modal-layout.js?v=' . $tripMobileModalVersion . '"></script>' . "\n"
+  . '<script src="' . $tripMobileModalUrl . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=' . $tripDeleteVersion . '"></script>' . "\n</body>",
   $page,
   $guardCount
