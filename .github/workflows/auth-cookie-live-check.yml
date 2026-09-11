@@ -1,0 +1,54 @@
+name: Verify live auth cookie migration
+
+on:
+  workflow_run:
+    workflows:
+      - Validate and deploy joelpagett.co.uk
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify auth endpoint expires secure host cookie
+        run: |
+          status=$(curl --show-error --silent \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data '{}' \
+            --dump-header /tmp/logout.headers \
+            --output /tmp/logout.json \
+            --write-out "%{http_code}" \
+            "https://joelpagett.co.uk/auth-v2.php?action=logout")
+          test "$status" = "200"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/logout.json').read_text())
+          if payload.get('ok') is not True or (payload.get('data') or {}).get('logged_out') is not True:
+              raise SystemExit(f'logout endpoint did not report success: {payload!r}')
+
+          cookies = []
+          for line in Path('/tmp/logout.headers').read_text(errors='replace').splitlines():
+              if line.lower().startswith('set-cookie:'):
+                  cookies.append(line.split(':', 1)[1].strip())
+
+          target = next((c for c in cookies if c.startswith('__Host-jh_session=')), None)
+          if not target:
+              raise SystemExit(f'logout did not emit __Host-jh_session expiry cookie: {cookies!r}')
+          lower = target.lower()
+          for required in ('path=/', 'secure', 'httponly', 'samesite=strict'):
+              if required not in lower:
+                  raise SystemExit(f'auth cookie missing {required}: {target}')
+          if 'max-age=0' not in lower and 'expires=' not in lower:
+              raise SystemExit(f'logout cookie is not expired: {target}')
+
+          print('live auth cookie migration endpoint: ok')
+          PY
