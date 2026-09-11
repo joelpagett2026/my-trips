@@ -23,6 +23,41 @@ require('Header always set X-Frame-Options "SAMEORIGIN"' in htaccess,
 require('Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"' in htaccess,
         'unused high-risk browser capabilities must stay disabled')
 
+# CSP is introduced in two layers. The low-risk structural directives are enforced
+# now; script/style/network source restrictions stay report-only until remaining
+# inline code and third-party integrations have completed their compatibility pass.
+enforced_csp = (
+    'Header always set Content-Security-Policy '
+    '"base-uri \'self\'; object-src \'none\'; frame-ancestors \'self\'"'
+)
+require(enforced_csp in htaccess,
+        'CSP must enforce self-only base URLs, no plugin objects, and same-origin framing')
+
+report_only_prefix = 'Header always set Content-Security-Policy-Report-Only "'
+require(report_only_prefix in htaccess,
+        'broader CSP source restrictions must remain staged in report-only mode')
+for directive in (
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "form-action 'self'",
+    "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "media-src 'self' data: blob:",
+    "frame-src 'self' https://www.google.com https://maps.google.com",
+):
+    require(directive in htaccess, f'report-only CSP must retain {directive}')
+require("'unsafe-eval'" not in htaccess,
+        'CSP must not permit eval/new Function execution')
+require("script-src *" not in htaccess and "default-src *" not in htaccess,
+        'CSP must not use wildcard script/default source permissions')
+
 require('<IfModule mod_deflate.c>' in htaccess and 'AddOutputFilterByType DEFLATE' in htaccess,
         'text compression must remain enabled when mod_deflate is available')
 for mime in ('text/html', 'text/css', 'application/javascript', 'application/json', 'image/svg+xml'):
@@ -65,6 +100,6 @@ require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
 require("/itinerary-ui.js?v=1" not in share,
         'share renderer must never pin itinerary-ui.js to a fixed cache key')
 
-# A strict CSP and HSTS still need their own compatibility pass because this
-# application uses inline itinerary scripts, Google Maps and public share links.
-print('safe response header + delivery contracts: ok')
+# HSTS remains a separate rollout: do not couple a persistent browser transport
+# commitment to the CSP compatibility stage.
+print('safe response header + staged CSP + delivery contracts: ok')
