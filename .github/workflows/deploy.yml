@@ -195,10 +195,53 @@ jobs:
           fi
 
           curl --fail --show-error --silent \
+            --dump-header /tmp/trip.headers \
             "https://joelpagett.co.uk/porto-2026" \
             --output /tmp/trip.html
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
+
+      - name: Verify staged CSP headers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          enforced_expected = "base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
+          report_required = (
+              "default-src 'self'",
+              "form-action 'self'",
+              "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io",
+              "object-src 'none'",
+              "frame-ancestors 'self'",
+          )
+
+          for label, filename in (('homepage', '/tmp/home.headers'), ('itinerary', '/tmp/trip.headers')):
+              lines = Path(filename).read_text(errors='replace').splitlines()
+              headers = {}
+              for line in lines:
+                  if ':' not in line:
+                      continue
+                  name, value = line.split(':', 1)
+                  headers.setdefault(name.strip().lower(), []).append(value.strip())
+
+              enforced = headers.get('content-security-policy', [])
+              report_only = headers.get('content-security-policy-report-only', [])
+              if enforced_expected not in enforced:
+                  raise SystemExit(f'{label} missing exact enforced structural CSP: {enforced!r}')
+              if len(report_only) != 1:
+                  raise SystemExit(f'{label} must emit exactly one report-only CSP: {report_only!r}')
+              staged = report_only[0]
+              for directive in report_required:
+                  if directive not in staged:
+                      raise SystemExit(f'{label} report-only CSP missing {directive}')
+              if "'unsafe-eval'" in staged or 'script-src *' in staged or 'default-src *' in staged:
+                  raise SystemExit(f'{label} report-only CSP is unexpectedly permissive')
+              if any('script-src' in value or 'style-src' in value for value in enforced):
+                  raise SystemExit(f'{label} must not enforce script/style sources during compatibility staging')
+          print('staged CSP headers verified on homepage and itinerary')
+          PY
 
       - name: Verify live cacheable itinerary core
         run: |
@@ -290,4 +333,4 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=check")
           test "$check_status" = "401"
 
-          echo 'PIN gate + response headers + dashboard session runtime + V4 activity editor + protected APIs: ok'
+          echo 'PIN gate + response headers + staged CSP + dashboard session runtime + V4 activity editor + protected APIs: ok'

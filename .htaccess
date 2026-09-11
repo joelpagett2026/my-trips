@@ -4,6 +4,13 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"
 
+# Start CSP with directives that are safe to enforce independently of the site's
+# remaining inline scripts/styles. The broader source policy stays report-only
+# until those inline dependencies and all Maps/geocoding integrations are fully
+# migrated, so this hardens embedding/plugin/base-tag behavior without risking UI.
+Header always set Content-Security-Policy "base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
+Header always set Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob:; frame-src 'self' https://www.google.com https://maps.google.com"
+
 # ══════════════════════════════════════════════════════════════════════
 # SHARED RENDERERS
 # Itineraries use trip.php + new-trip-v2.html. The raw shared template is never
