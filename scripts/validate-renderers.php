@@ -36,6 +36,12 @@ requireContract(($itineraryDiag['auth_headers_rewritten'] ?? 0) >= 1, 'itinerary
 requireContract(($itineraryDiag['maps_key_rewritten'] ?? 0) === 1, 'itinerary Maps key rewrite count changed');
 requireContract(($itineraryDiag['share_url_rewritten'] ?? 0) === 1, 'itinerary share URL rewrite count changed');
 requireContract(($itineraryDiag['hotel_lookup_rewritten'] ?? 0) === 1, 'itinerary hotel rewrite count changed');
+requireContract(($itineraryDiag['itinerary_font_delivery_optimized'] ?? 0) === 1,
+    'itinerary Google Font delivery optimization did not run');
+requireContract(strpos($itinerary, '<link rel="preconnect" href="https://fonts.googleapis.com">') !== false,
+    'itinerary must preconnect to fonts.googleapis.com');
+requireContract(strpos($itinerary, '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>') !== false,
+    'itinerary must preconnect to fonts.gstatic.com');
 requireContract(strpos($itinerary, "const MAPS_API_KEY = \"RendererContractTestKey1234567890\";") !== false,
     'itinerary did not receive configured browser Maps key');
 requireContract(strpos($itinerary, "'/share.php?share=1&t='") !== false,
@@ -50,6 +56,14 @@ assertOnlyConfiguredGoogleKeys($itinerary, 'itinerary');
 
 $dashboardSource = readTemplate('trips/index.html');
 [$dashboard, $dashboardDiag] = applyTripsDashboardRuntimeSafety($dashboardSource);
+requireContract(($dashboardDiag['dashboard_font_delivery_optimized'] ?? 0) === 1,
+    'Trips dashboard Google Font delivery optimization did not run');
+requireContract(strpos($dashboard, "@import url('https://fonts.googleapis.com") === false,
+    'Trips dashboard must not leave Google Fonts behind a CSS @import');
+requireContract(strpos($dashboard, '<link rel="preconnect" href="https://fonts.googleapis.com">') !== false,
+    'Trips dashboard must preconnect to fonts.googleapis.com');
+requireContract(strpos($dashboard, '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>') !== false,
+    'Trips dashboard must preconnect to fonts.gstatic.com');
 requireContract(($dashboardDiag['maps_key_rewritten'] ?? 0) === 1,
     'Trips dashboard Maps key rewrite count changed');
 requireContract(($dashboardDiag['travel_day_filter_rewritten'] ?? 0) === 1,
