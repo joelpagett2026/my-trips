@@ -156,6 +156,14 @@ jobs:
             "https://joelpagett.co.uk/" \
             --output /tmp/home.html
 
+      - name: Verify raw homepage source canonicalizes
+        run: |
+          index_status=$(curl --show-error --silent \
+            --output /tmp/index-redirect.html \
+            --write-out "%{http_code}" \
+            "https://joelpagett.co.uk/index.html")
+          test "$index_status" = "302"
+
       - name: Verify PIN gate assets and established headers
         run: |
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/home.html
