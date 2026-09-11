@@ -27,18 +27,37 @@ jobs:
           ! grep -q "drawer.dataset.mapSwipeFix === '1'" /tmp/trip.html
           ! grep -q "style.id = 'mobile-entry-modal-layout-fix'" /tmp/trip.html
 
+          # Owner metadata must be inert JSON, not executable per-trip constants.
+          grep -q '<script type="application/json" id="trip-runtime-data">' /tmp/trip.html
+          ! grep -q '// Trip data (rendered dynamically from the DB on every request)' /tmp/trip.html
+
           # The hosting layer rejects the newly introduced root-level JS paths.
           # Production must use the explicit trip.php derivative route instead.
           ! grep -Eq 'src="/trip-(standalone|drawer-swipe|mobile-modal-layout)\.js\?v=' /tmp/trip.html
 
           python - <<'PY'
           import html
+          import json
           import re
           import subprocess
           from pathlib import Path
 
           page = Path('/tmp/trip.html').read_text(errors='replace')
+          data_match = re.search(
+              r'<script type="application/json" id="trip-runtime-data">(.*?)</script>',
+              page,
+              re.S,
+          )
+          if not data_match:
+              raise SystemExit('live itinerary is missing inert trip runtime JSON')
+          trip_data = json.loads(data_match.group(1))
+          if trip_data.get('slug') != 'porto-2026' or trip_data.get('dest') != 'Porto':
+              raise SystemExit('live trip runtime JSON does not match Porto')
+          if set(trip_data) != {'dest', 'dep', 'ret', 'trav', 'status', 'slug'}:
+              raise SystemExit('trip runtime JSON contains unexpected fields')
+
           assets = (
+              'trip-json-bootstrap',
               'trip-standalone',
               'trip-drawer-swipe',
               'trip-mobile-modal-layout',
@@ -46,7 +65,7 @@ jobs:
 
           for index, asset in enumerate(assets):
               match = re.search(
-                  r'src="(/trip\.php\?asset=' + re.escape(asset) + r'(?:&amp;|&)v=\d+)"',
+                  r'src="(/trip\.php\?asset=' + re.escape(asset) + r'(?:&amp;|&)v=[0-9a-f]+)"',
                   page,
               )
               if not match:
@@ -64,6 +83,10 @@ jobs:
               if 'cache-control:' not in header_text or 'max-age=31536000' not in header_text or 'immutable' not in header_text:
                   raise SystemExit(f'{asset} is not immutable on production')
               subprocess.run(['node', '--check', str(body)], check=True)
+              if asset == 'trip-json-bootstrap':
+                  source = body.read_text(errors='replace')
+                  if "document.getElementById('trip-runtime-data')" not in source:
+                      raise SystemExit('JSON bootstrap derivative does not read inert trip data')
 
-          print('live externalized trip runtime derivatives: ok')
+          print('live externalized trip runtime + JSON bootstrap: ok')
           PY
