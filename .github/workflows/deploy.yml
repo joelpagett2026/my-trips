@@ -108,6 +108,9 @@ jobs:
       - name: Test itinerary item save transactions
         run: node scripts/test-item-save.js
 
+      - name: Test activity editor controller
+        run: node scripts/test-activity-editor.js
+
       - name: Test mobile modal overlay release
         run: node scripts/test-modal-overlay.js
 
@@ -189,18 +192,18 @@ jobs:
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
 
-      - name: Verify activity editor and protected APIs
+      - name: Verify live activity editor controller
         run: |
           curl --fail --show-error --silent \
-            "https://joelpagett.co.uk/activity-editor.js?verify-controller=1" \
-            --output /tmp/activity-editor.js
-          grep -q '__activityEditorControllerV1' /tmp/activity-editor.js
-          grep -q "save.addEventListener('click', onSaveClick)" /tmp/activity-editor.js
-          if grep -q "setImportant(overlay, 'pointer-events'" /tmp/activity-editor.js; then
-            echo 'live activity editor can override closed-overlay pointer safety'
-            exit 1
-          fi
+            "https://joelpagett.co.uk/trip-delete.js?verify-controller=4" \
+            --output /tmp/trip-delete.js
+          grep -q '__activityEditorControllerV4' /tmp/trip-delete.js
+          grep -q "version: '4.0.0'" /tmp/trip-delete.js
+          grep -q "overlay.style.removeProperty('pointer-events')" /tmp/trip-delete.js
+          grep -q "overlay.style.removeProperty('z-index')" /tmp/trip-delete.js
 
+      - name: Verify restored auth runtime
+        run: |
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/auth.js?verify-restored-gate=1" \
             --output /tmp/auth.js
@@ -210,6 +213,8 @@ jobs:
             exit 1
           fi
 
+      - name: Verify retired temporary access endpoint
+        run: |
           temp_status=$(curl --show-error --silent \
             --output /tmp/temp-access.json \
             --write-out "%{http_code}" \
@@ -219,12 +224,16 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=temporary_access")
           test "$temp_status" = "404"
 
+      - name: Verify protected record endpoint
+        run: |
           record_status=$(curl --show-error --silent \
             --output /tmp/record-unauth.json \
             --write-out "%{http_code}" \
             "https://joelpagett.co.uk/record.php?action=load&id=trip-registry")
           test "$record_status" = "401"
 
+      - name: Verify protected auth check endpoint
+        run: |
           check_status=$(curl --show-error --silent \
             --output /tmp/check-unauth.json \
             --write-out "%{http_code}" \
@@ -234,4 +243,4 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=check")
           test "$check_status" = "401"
 
-          echo 'PIN gate + response headers + dashboard session runtime + activity editor + protected APIs: ok'
+          echo 'PIN gate + response headers + dashboard session runtime + V4 activity editor + protected APIs: ok'
