@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 htaccess = (ROOT / '.htaccess').read_text(encoding='utf-8')
 runtime = (ROOT / 'template-runtime.php').read_text(encoding='utf-8')
 trip = (ROOT / 'trip.php').read_text(encoding='utf-8')
+standalone = (ROOT / 'trip-standalone.js').read_text(encoding='utf-8')
 share = (ROOT / 'share.php').read_text(encoding='utf-8')
 deploy = (ROOT / 'deploy-webhook.php').read_text(encoding='utf-8')
 
@@ -119,11 +120,13 @@ for filename, version_var in (
             f'{filename} must be preloaded from the document head')
 
 # The hosting layer currently returns 403 for newly introduced root-level JS paths.
-# Keep the helpers external, but deliver only an explicit three-file whitelist
-# through trip.php. This is not a generic filesystem endpoint.
+# Keep runtime helpers external, but deliver only explicit derivative aliases
+# through trip.php. The JSON bootstrap reuses trip-standalone.js, so no new
+# physical file or deploy-manifest entry is required.
 require("function tripRuntimeAssetMap(): array" in trip,
         'trip renderer must define the explicit runtime derivative allow-list')
 for asset_name, filename in (
+    ('trip-json-bootstrap', 'trip-standalone.js'),
     ('trip-standalone', 'trip-standalone.js'),
     ('trip-drawer-swipe', 'trip-drawer-swipe.js'),
     ('trip-mobile-modal-layout', 'trip-mobile-modal-layout.js'),
@@ -152,8 +155,27 @@ require("$tripDrawerSwipeUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-drawer
 require("$tripMobileModalUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-mobile-modal-layout')" in trip,
         'mobile modal helper must use the whitelisted derivative URL')
 
+# Owner per-trip metadata is now inert JSON. Only the external derivative parses
+# it, so DB-backed values are no longer emitted as executable JavaScript source.
+require('<script type="application/json" id="trip-runtime-data">' in trip,
+        'owner trip metadata must be rendered as an inert JSON block')
+require("$tripJsonBootstrapUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-json-bootstrap')" in trip,
+        'owner JSON bootstrap must use the explicit derivative URL')
+require("$tripData = json_encode([" in trip and 'JSON_HEX_TAG' in trip and 'JSON_HEX_AMP' in trip,
+        'owner trip JSON must be encoded with HTML-safe JSON flags')
+require("$tripBootstrap =" not in trip,
+        'owner renderer must not rebuild per-trip executable const declarations')
+require("// Trip data (rendered dynamically from the DB on every request)" not in trip,
+        'legacy executable owner bootstrap marker must remain removed')
+require("derivative === 'trip-json-bootstrap'" in standalone,
+        'shared runtime helper must distinguish the JSON bootstrap derivative')
+require("document.getElementById('trip-runtime-data')" in standalone,
+        'JSON bootstrap derivative must read only the inert owner data element')
+require("window.RECORD_ID = nextSlug" in standalone,
+        'JSON bootstrap derivative must restore the itinerary record identifier contract')
+
 # These helpers used to be literal executable blocks in trip.php. They must stay
-# external even though delivery now passes through a PHP derivative route.
+# external even though delivery passes through a PHP derivative route.
 for old_inline_marker in (
     "window.navigator.standalone === true",
     "drawer.dataset.mapSwipeFix === '1'",
@@ -169,4 +191,4 @@ require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
 require("/itinerary-ui.js?v=1" not in share,
         'share renderer must never pin itinerary-ui.js to a fixed cache key')
 
-print('safe response header + layered CSP + HSTS pilot + derivative delivery contracts: ok')
+print('safe response header + layered CSP + HSTS pilot + JSON bootstrap contracts: ok')
