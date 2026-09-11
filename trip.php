@@ -10,6 +10,7 @@
 
 function tripRuntimeAssetMap(): array {
   return [
+    'trip-json-bootstrap' => 'trip-standalone.js',
     'trip-standalone' => 'trip-standalone.js',
     'trip-drawer-swipe' => 'trip-drawer-swipe.js',
     'trip-mobile-modal-layout' => 'trip-mobile-modal-layout.js',
@@ -64,8 +65,8 @@ function serveTripRuntimeAsset(string $asset): void {
 }
 
 // The host currently refuses newly introduced root-level JS URLs even when the
-// deployer copies the files successfully. Serve only these three explicit static
-// helpers through the already-proven trip.php endpoint instead of exposing a
+// deployer copies the files successfully. Serve only these four explicit runtime
+// derivatives through the already-proven trip.php endpoint instead of exposing a
 // generic file reader. The versioned response is still immutable and cacheable.
 $runtimeAsset = trim((string)($_GET['asset'] ?? ''));
 if ($runtimeAsset !== '') serveTripRuntimeAsset($runtimeAsset);
@@ -136,9 +137,21 @@ if (($runtimeDiag['auth_const_removed'] ?? 0) !== 1
 }
 
 $sourceBootstrap = "// Read URL params\nconst params = new URLSearchParams(window.location.search);\nconst dest   = params.get('dest') || 'New Trip';\nconst dep    = params.get('dep')  || '';\nconst ret    = params.get('ret')  || '';\nconst trav   = params.get('trav') || '2';\nconst status = params.get('status') || 'upcoming';\nconst slug   = params.get('slug') || 'new-trip';\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
-$tripBootstrap = "// Trip data (rendered dynamically from the DB on every request)\nconst dest   = " . json_encode($dest) . ";\nconst dep    = " . json_encode($dep) . ";\nconst ret    = " . json_encode($ret) . ";\nconst trav   = " . json_encode($trav) . ";\nconst status = " . json_encode($status) . ";\nconst slug   = " . json_encode($slug) . ";\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
-$page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
-if ($count === 0) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
+$sourceBootstrapScript = "<script>\n// ── BAKE POINT (deploy webhook replaces this block) ──────────────────\n" . $sourceBootstrap . "\n</script>";
+$tripData = json_encode([
+  'dest' => (string)$dest,
+  'dep' => (string)$dep,
+  'ret' => (string)$ret,
+  'trav' => (string)$trav,
+  'status' => (string)$status,
+  'slug' => (string)$slug,
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+if ($tripData === false) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
+$tripJsonBootstrapUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-json-bootstrap'), ENT_QUOTES, 'UTF-8');
+$tripBootstrapScript = '<script type="application/json" id="trip-runtime-data">' . $tripData . '</script>' . "\n"
+  . '<script src="' . $tripJsonBootstrapUrl . '"></script>';
+$page = str_replace($sourceBootstrapScript, $tripBootstrapScript, $template, $count);
+if ($count !== 1) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
 
 $tripStandaloneUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-standalone'), ENT_QUOTES, 'UTF-8');
 $tripDrawerSwipeUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-drawer-swipe'), ENT_QUOTES, 'UTF-8');
@@ -225,7 +238,8 @@ $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion .
 // from <head> lets the browser fetch them in parallel while the document parses,
 // removing the network waterfall without changing execution timing.
 $runtimePreloads =
-  '<link rel="preload" href="/itinerary-state-guard.js?v=' . $stateGuardVersion . '" as="script">' . "\n"
+  '<link rel="preload" href="' . $tripJsonBootstrapUrl . '" as="script">' . "\n"
+  . '<link rel="preload" href="/itinerary-state-guard.js?v=' . $stateGuardVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/itinerary-ui.js?v=' . $uiVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/map-mobile-redesign.js?v=' . $mapVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="' . $tripDrawerSwipeUrl . '" as="script">' . "\n"
