@@ -23,6 +23,20 @@ function browserMapsKey(): string {
 function applyItineraryRuntimeSafety(string $html): array {
     $diagnostics = [];
 
+    // The itinerary stylesheet is large, so give it a deployment-specific URL
+    // generated from the actual file mtime. That makes one-year immutable browser
+    // caching safe without relying on someone remembering to bump a manual ?v=.
+    $stylePath = __DIR__ . '/itinerary-v2-style.css';
+    $styleVersion = is_file($stylePath) ? (string)filemtime($stylePath) : '1';
+    $html = preg_replace(
+        '~(/itinerary-v2-style\.css)\?v=[0-9]+~',
+        '$1?v=' . $styleVersion,
+        $html,
+        1,
+        $styleVersionCount
+    );
+    $diagnostics['itinerary_style_versioned'] = $styleVersionCount;
+
     $html = preg_replace(
         "/const AUTH_TOKEN = '(?:__DISABLED_LEGACY_AUTH_TOKEN__|[a-f0-9]{64})';/",
         "const AUTH_TOKEN = ''; // legacy constant intentionally disabled",
