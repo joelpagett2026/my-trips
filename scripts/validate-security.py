@@ -35,6 +35,13 @@ require('RewriteRule ^(?:db-config|auth-session|template-runtime|secrets)\\.php$
 require("'db-config.php'" in deploy and "'auth-session.php'" in deploy and "'template-runtime.php'" in deploy,
         'server-only helper denial must not accidentally remove required deployment includes')
 
+# The raw homepage template is source for home.php, not a public endpoint. Every
+# browser visit must pass through the renderer so cache-busted auth/database URLs,
+# registry compatibility and logout controls cannot be bypassed with /index.html.
+require('RewriteRule ^index\\.html$ / [R=302,L,QSA]' in htaccess
+        and 'RewriteRule ^$ home.php [L,QSA]' in htaccess,
+        'raw homepage source must canonicalize through the home.php renderer')
+
 # Legacy write/creation paths that bypass modern conflict/PIN/registry handling
 # must be unreachable.
 require('action=(save|set_setting|create_page)' in htaccess and 'RewriteRule ^api\\.php$ - [R=410,L]' in htaccess,
