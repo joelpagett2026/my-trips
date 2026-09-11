@@ -8,6 +8,7 @@ htaccess = (ROOT / '.htaccess').read_text(encoding='utf-8')
 runtime = (ROOT / 'template-runtime.php').read_text(encoding='utf-8')
 trip = (ROOT / 'trip.php').read_text(encoding='utf-8')
 share = (ROOT / 'share.php').read_text(encoding='utf-8')
+deploy = (ROOT / 'deploy-webhook.php').read_text(encoding='utf-8')
 
 
 def require(condition: bool, message: str) -> None:
@@ -138,8 +139,12 @@ for old_inline_marker in (
     require(old_inline_marker not in trip,
             f'static trip runtime must remain externalized: {old_inline_marker}')
 
+# A versioned URL is only safe if the deploy webhook actually publishes the file.
+# Keep renderer references and the production copy manifest coupled in one contract
+# so newly externalized runtime cannot silently become a live 404 again.
 for asset in ('trip-standalone.js', 'trip-drawer-swipe.js', 'trip-mobile-modal-layout.js'):
     require((ROOT / asset).is_file(), f'externalized trip helper is missing: {asset}')
+    require(f"'{asset}'" in deploy, f'deploy webhook must publish externalized trip helper: {asset}')
 
 require("$uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();" in share,
         'share renderer must version itinerary-ui.js from the deployed file')
