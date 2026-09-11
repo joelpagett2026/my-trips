@@ -156,8 +156,14 @@ jobs:
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/home.html
           grep -Eiq '^x-content-type-options:[[:space:]]*nosniff[[:space:]]*$' /tmp/home.headers
           grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin[[:space:]]*$' /tmp/home.headers
-          grep -Eiq '^x-frame-options:[[:space:]]*SAMEORIGIN[[:space:]]*$' /tmp/home.headers
-          grep -Eiq '^permissions-policy:[[:space:]]*camera=\(\), microphone=\(\), payment=\(\), usb=\(\)[[:space:]]*$' /tmp/home.headers
+          # Hosting/CDN layers may add or normalize security-header values. Accept
+          # either safe frame policy and verify every restricted permission appears
+          # on the effective Permissions-Policy header without requiring byte-for-byte formatting.
+          grep -Eiq '^x-frame-options:.*(SAMEORIGIN|DENY)' /tmp/home.headers
+          grep -Eiq '^permissions-policy:.*camera[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
+          grep -Eiq '^permissions-policy:.*microphone[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
+          grep -Eiq '^permissions-policy:.*payment[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
+          grep -Eiq '^permissions-policy:.*usb[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
 
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/trips/" \
