@@ -1,7 +1,8 @@
 // Authenticated itinerary helper.
 // The same immutable file is served under two explicit trip.php derivative names:
 // - trip-json-bootstrap: read inert per-trip JSON before the external core runs.
-// - trip-standalone: preserve iOS Home Screen detection/refresh behavior.
+// - trip-standalone: preserve iOS Home Screen detection/refresh behavior and
+//   install delegated owner-navigation controls without inline HTML handlers.
 (function () {
   const current = document.currentScript;
   const currentUrl = current?.src ? new URL(current.src, window.location.href) : null;
@@ -33,6 +34,66 @@
     window.RECORD_ID = nextSlug;
     return;
   }
+
+  function installOwnerNavigationHandlers() {
+    if (window.__ownerNavigationHandlersInstalled) return;
+    window.__ownerNavigationHandlersInstalled = true;
+
+    const call = (name, ...args) => {
+      const fn = window[name];
+      if (typeof fn === 'function') return fn(...args);
+      console.warn(`Owner navigation action is unavailable: ${name}`);
+      return undefined;
+    };
+
+    document.addEventListener('click', event => {
+      const control = event.target.closest?.('[data-owner-action]');
+      if (!control) return;
+
+      const action = control.dataset.ownerAction || '';
+      if (action === 'toggle-days') {
+        event.preventDefault();
+        event.stopPropagation();
+        call('toggleDaysCollapse');
+        return;
+      }
+
+      if (control.dataset.ownerCloseMenu === '1') call('closeMobMenu');
+
+      switch (action) {
+        case 'view':
+          event.preventDefault();
+          call('setView', control.dataset.ownerView || 'itinerary');
+          break;
+        case 'share':
+          event.preventDefault();
+          // itinerary-ui.js deliberately assigns the desktop Share button a
+          // function-valued onclick property after installing privacy controls.
+          // That programmatic listener is CSP-safe; avoid opening it twice when
+          // it has already handled the target phase.
+          if (typeof control.onclick !== 'function') call('openShareModal');
+          break;
+        case 'settings':
+          event.preventDefault();
+          call('openTripSettings');
+          break;
+        case 'all-trips':
+          event.preventDefault();
+          window.location.href = '/trips/';
+          break;
+        case 'toggle-menu':
+          event.preventDefault();
+          call('toggleMobMenu');
+          break;
+        case 'close-menu':
+          event.preventDefault();
+          call('closeMobMenu');
+          break;
+      }
+    });
+  }
+
+  installOwnerNavigationHandlers();
 
   const standalone = window.navigator.standalone === true;
   if (standalone) document.documentElement.classList.add('ios-standalone');
