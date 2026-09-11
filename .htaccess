@@ -13,6 +13,12 @@ Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
+# template-runtime.php is server-only except for one explicit derivative asset:
+# the sanitized, versioned itinerary engine used by authenticated trip pages.
+# Bare/direct helper requests remain forbidden by the rule immediately below.
+RewriteCond %{QUERY_STRING} (^|&)asset=itinerary-core(&|$) [NC]
+RewriteRule ^template-runtime\.php$ - [L]
+
 # Server-only include/configuration files live in public_html because the PHP
 # endpoints require them locally, but they are not browser endpoints. Block direct
 # HTTP execution even if one of them would otherwise produce an empty response.
