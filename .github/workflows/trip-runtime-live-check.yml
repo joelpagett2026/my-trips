@@ -56,6 +56,54 @@ jobs:
           if set(trip_data) != {'dest', 'dep', 'ret', 'trav', 'status', 'slug'}:
               raise SystemExit('trip runtime JSON contains unexpected fields')
 
+          # First inline-event tranche: owner navigation/chrome must now be
+          # declarative. Keep this count exact so a newly introduced inline nav
+          # handler cannot silently bypass the migration contract.
+          owner_action_count = len(re.findall(r'\bdata-owner-action="', page))
+          if owner_action_count != 18:
+              raise SystemExit(f'expected 18 owner data actions, found {owner_action_count}')
+          close_after_count = len(re.findall(r'\bdata-owner-close-menu="1"', page))
+          if close_after_count != 7:
+              raise SystemExit(f'expected 7 mobile close-then-act controls, found {close_after_count}')
+
+          forbidden_handlers = (
+              'onclick="setView(\'itinerary\')"',
+              'onclick="setView(\'bookings\')"',
+              'onclick="setView(\'map\')"',
+              'onclick="setView(\'budget\')"',
+              'onclick="event.stopPropagation();toggleDaysCollapse();"',
+              'onclick="openTripSettings()"',
+              'onclick="location.href=\'/trips/\'"',
+              'onclick="openShareModal()"',
+              'onclick="toggleMobMenu()"',
+              'onclick="closeMobMenu()"',
+              'onclick="closeMobMenu();setView(\'itinerary\')"',
+              'onclick="closeMobMenu();setView(\'budget\')"',
+              'onclick="closeMobMenu();setView(\'bookings\')"',
+              'onclick="closeMobMenu();setView(\'map\')"',
+              'onclick="closeMobMenu();openShareModal()"',
+              'onclick="closeMobMenu();openTripSettings()"',
+              'onclick="closeMobMenu();location.href=\'/trips/\'"',
+          )
+          for handler in forbidden_handlers:
+              if handler in page:
+                  raise SystemExit(f'owner navigation inline handler returned on production: {handler}')
+
+          for required in (
+              'data-owner-action="view" data-owner-view="itinerary"',
+              'data-owner-action="view" data-owner-view="bookings"',
+              'data-owner-action="view" data-owner-view="map"',
+              'data-owner-action="view" data-owner-view="budget"',
+              'data-owner-action="toggle-days"',
+              'data-owner-action="share"',
+              'data-owner-action="settings"',
+              'data-owner-action="all-trips"',
+              'data-owner-action="toggle-menu"',
+              'data-owner-action="close-menu"',
+          ):
+              if required not in page:
+                  raise SystemExit(f'live owner itinerary is missing {required}')
+
           assets = (
               'trip-json-bootstrap',
               'trip-standalone',
@@ -83,10 +131,12 @@ jobs:
               if 'cache-control:' not in header_text or 'max-age=31536000' not in header_text or 'immutable' not in header_text:
                   raise SystemExit(f'{asset} is not immutable on production')
               subprocess.run(['node', '--check', str(body)], check=True)
-              if asset == 'trip-json-bootstrap':
-                  source = body.read_text(errors='replace')
-                  if "document.getElementById('trip-runtime-data')" not in source:
-                      raise SystemExit('JSON bootstrap derivative does not read inert trip data')
+              source = body.read_text(errors='replace')
+              if asset == 'trip-json-bootstrap' and "document.getElementById('trip-runtime-data')" not in source:
+                  raise SystemExit('JSON bootstrap derivative does not read inert trip data')
+              if asset == 'trip-standalone':
+                  if 'installOwnerNavigationHandlers' not in source or "closest?.('[data-owner-action]')" not in source:
+                      raise SystemExit('owner navigation derivative is missing delegated action handling')
 
-          print('live externalized trip runtime + JSON bootstrap: ok')
+          print('live externalized runtime + JSON bootstrap + owner navigation handlers: ok')
           PY
