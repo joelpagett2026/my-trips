@@ -77,29 +77,19 @@ $tripBootstrap = "// Trip data (rendered dynamically from the DB on every reques
 $page = str_replace($sourceBootstrap, $tripBootstrap, $template, $count);
 if ($count === 0) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
 
+// Static authenticated-trip helpers are versioned external assets. Keeping the
+// iOS standalone detector synchronous in <head> preserves the existing behavior:
+// the html class is present before mobile layout CSS is evaluated.
+$tripStandaloneVersion = @filemtime(__DIR__ . '/trip-standalone.js') ?: time();
+$tripDrawerSwipeVersion = @filemtime(__DIR__ . '/trip-drawer-swipe.js') ?: time();
+$tripMobileModalVersion = @filemtime(__DIR__ . '/trip-mobile-modal-layout.js') ?: time();
+
 $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
 <link rel="manifest" href="/manifest.webmanifest">
-<script>
-(function () {
-  const standalone = window.navigator.standalone === true;
-  if (standalone) document.documentElement.classList.add('ios-standalone');
-
-  // iOS Home Screen apps can restore a previously suspended document without
-  // requesting it from the server again. If that happens, force one real
-  // navigation so newly deployed itinerary code is actually loaded.
-  if (standalone) {
-    window.addEventListener('pageshow', function (event) {
-      if (!event.persisted) return;
-      const url = new URL(window.location.href);
-      url.searchParams.set('_appfresh', Date.now().toString());
-      window.location.replace(url.toString());
-    });
-  }
-})();
-</script>
+<script src="/trip-standalone.js?v=__TRIP_STANDALONE_VERSION__"></script>
 <style>
 @media (max-width: 700px) {
   html.ios-standalone, html.ios-standalone body { width:100%; min-height:100%; }
@@ -153,6 +143,7 @@ $standaloneHead = <<<'HTML'
 }
 </style>
 HTML;
+$standaloneHead = str_replace('__TRIP_STANDALONE_VERSION__', (string)$tripStandaloneVersion, $standaloneHead);
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 
 // Keep the current authenticated session when navigating from the homepage or
@@ -177,8 +168,10 @@ $runtimePreloads =
   '<link rel="preload" href="/itinerary-state-guard.js?v=' . $stateGuardVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/itinerary-ui.js?v=' . $uiVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/map-mobile-redesign.js?v=' . $mapVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/trip-drawer-swipe.js?v=' . $tripDrawerSwipeVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/mobile-drag.js?v=' . $mobileDragVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/itinerary-completion.js?v=' . $completionVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/trip-mobile-modal-layout.js?v=' . $tripMobileModalVersion . '" as="script">' . "\n"
   . '<link rel="preload" href="/trip-delete.js?v=' . $tripDeleteVersion . '" as="script">';
 $page = str_replace('</head>', $runtimePreloads . "\n</head>", $page, $runtimePreloadCount);
 if ($runtimePreloadCount !== 1) {
@@ -187,177 +180,15 @@ if ($runtimePreloadCount !== 1) {
   exit;
 }
 
-$drawerSwipeFix = <<<'HTML'
-<script>
-(function () {
-  if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
-  const drawer = document.getElementById('drawer');
-  if (!drawer || drawer.dataset.mapSwipeFix === '1') return;
-  drawer.dataset.mapSwipeFix = '1';
-
-  let startY = 0, lastY = 0, tracking = false, eligible = false;
-  const scrollIsAtTop = () => {
-    const candidates = [drawer, document.getElementById('dr-body'), drawer.querySelector('.dr-scroll'), drawer.querySelector('.drawer-body')].filter(Boolean);
-    return candidates.every(el => (el.scrollTop || 0) <= 1);
-  };
-  const isOpen = () => drawer.classList.contains('open') || document.getElementById('drawer-overlay')?.classList.contains('open');
-
-  drawer.addEventListener('touchstart', e => {
-    if (!isOpen() || !e.touches || e.touches.length !== 1) return;
-    const target = e.target;
-    const inHeader = !!target.closest('.dr-head');
-    eligible = inHeader || scrollIsAtTop();
-    if (!eligible) return;
-    startY = lastY = e.touches[0].clientY;
-    tracking = true;
-  }, { passive: true });
-
-  drawer.addEventListener('touchmove', e => {
-    if (!tracking || !eligible || !e.touches || e.touches.length !== 1) return;
-    lastY = e.touches[0].clientY;
-    const dy = Math.max(0, lastY - startY);
-    if (dy > 0) {
-      drawer.style.transition = 'none';
-      drawer.style.transform = `translateY(${Math.min(dy, 180)}px)`;
-    }
-  }, { passive: true });
-
-  function finish() {
-    if (!tracking) return;
-    const dy = Math.max(0, lastY - startY);
-    tracking = false;
-    eligible = false;
-    drawer.style.transition = '';
-    drawer.style.transform = '';
-    if (dy >= 70 && typeof closeDrawer === 'function') closeDrawer();
-    startY = lastY = 0;
-  }
-
-  drawer.addEventListener('touchend', finish, { passive: true });
-  drawer.addEventListener('touchcancel', finish, { passive: true });
-})();
-</script>
-HTML;
-
-$mobileModalLayoutFix = <<<'HTML'
-<script>
-(function () {
-  if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
-  const style = document.createElement('style');
-  style.id = 'mobile-entry-modal-layout-fix';
-  style.textContent = `
-    @media (max-width:768px) {
-      #modal-overlay .modal-head {
-        display:grid !important;
-        grid-template-columns:minmax(104px,.72fr) minmax(170px,1.18fr) 40px !important;
-        align-items:center !important;
-        gap:6px !important;
-        position:relative !important;
-        padding:10px 12px 10px !important;
-        min-height:0 !important;
-      }
-      #modal-overlay .modal-title {
-        padding:0 !important;
-        min-height:40px !important;
-        display:flex !important;
-        align-items:center !important;
-        font-size:16px !important;
-        line-height:1.1 !important;
-        white-space:nowrap !important;
-      }
-      #modal-overlay .modal-tabs {
-        grid-column:auto !important;
-        display:flex !important;
-        width:100% !important;
-        min-width:0 !important;
-        min-height:38px !important;
-        margin:0 !important;
-        padding:3px !important;
-      }
-      #modal-overlay .modal-tab {
-        min-width:0 !important;
-        min-height:32px !important;
-        padding:6px 8px !important;
-        font-size:10.5px !important;
-        white-space:nowrap !important;
-      }
-      #modal-overlay .modal-close {
-        position:static !important;
-        width:40px !important;
-        height:40px !important;
-        min-width:40px !important;
-        margin:0 !important;
-        justify-self:end !important;
-        z-index:5 !important;
-      }
-      html.ios-standalone #modal-overlay .modal-head {
-        padding-top:calc(10px + env(safe-area-inset-top, 0px)) !important;
-      }
-      #modal-overlay .modal-body,
-      #modal-overlay #modal-body-single,
-      #modal-overlay #modal-body-bulk {
-        min-height:0 !important;
-        flex:1 1 0 !important;
-        overflow-y:auto !important;
-        padding:14px 14px 24px !important;
-        scroll-padding-bottom:92px !important;
-      }
-      #modal-overlay .field-textarea {
-        box-sizing:border-box !important;
-        min-height:112px !important;
-        max-height:180px !important;
-        height:112px !important;
-        padding:13px 14px !important;
-        line-height:22px !important;
-        overflow-y:auto !important;
-        transform:none !important;
-        -webkit-transform:none !important;
-      }
-      #modal-overlay .modal-foot {
-        flex:0 0 auto !important;
-        display:grid !important;
-        grid-template-columns:minmax(110px,.42fr) minmax(0,1fr) !important;
-        gap:10px !important;
-        padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px)) !important;
-      }
-      #modal-overlay .modal-foot .modal-btn {
-        min-height:48px !important;
-      }
-    }
-    @media (max-width:390px) {
-      #modal-overlay .modal-head {
-        grid-template-columns:minmax(96px,.68fr) minmax(154px,1.12fr) 38px !important;
-        gap:5px !important;
-        padding-left:10px !important;
-        padding-right:10px !important;
-      }
-      #modal-overlay .modal-title { font-size:15px !important; }
-      #modal-overlay .modal-close {
-        width:38px !important;
-        height:38px !important;
-        min-width:38px !important;
-      }
-      #modal-overlay .modal-tab {
-        padding-left:5px !important;
-        padding-right:5px !important;
-        font-size:10px !important;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-})();
-</script>
-HTML;
-
 $page = str_replace(
   '</body>',
   '<script src="/itinerary-state-guard.js?v=' . $stateGuardVersion . '"></script>' . "\n"
   . '<script src="/itinerary-ui.js?v=' . $uiVersion . '"></script>' . "\n"
   . '<script src="/map-mobile-redesign.js?v=' . $mapVersion . '"></script>' . "\n"
-  . $drawerSwipeFix . "\n"
+  . '<script src="/trip-drawer-swipe.js?v=' . $tripDrawerSwipeVersion . '"></script>' . "\n"
   . '<script src="/mobile-drag.js?v=' . $mobileDragVersion . '"></script>' . "\n"
   . '<script src="/itinerary-completion.js?v=' . $completionVersion . '"></script>' . "\n"
-  . $mobileModalLayoutFix . "\n"
+  . '<script src="/trip-mobile-modal-layout.js?v=' . $tripMobileModalVersion . '"></script>' . "\n"
   . '<script src="/trip-delete.js?v=' . $tripDeleteVersion . '"></script>' . "\n</body>",
   $page,
   $guardCount
