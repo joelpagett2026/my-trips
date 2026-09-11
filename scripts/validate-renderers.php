@@ -54,6 +54,49 @@ requireContract(!preg_match("/const AUTH_TOKEN = '[a-f0-9]{64}';/", $itinerary),
     'itinerary still contains legacy PIN-hash bearer credential');
 assertOnlyConfiguredGoogleKeys($itinerary, 'itinerary');
 
+// The owner itinerary core is extracted only after all runtime safety rewrites,
+// keeping the per-trip bootstrap inline while making the static engine cacheable.
+[$core, $coreDiag] = extractItineraryCoreScript($itinerary);
+requireContract(($coreDiag['itinerary_core_extracted'] ?? 0) === 1,
+    'itinerary core extraction boundary changed');
+requireContract(strlen($core) > 150000,
+    'itinerary core extraction is unexpectedly small and would not deliver the intended payload reduction');
+requireContract(strpos($core, "const MAPS_API_KEY = \"RendererContractTestKey1234567890\";") !== false,
+    'extracted itinerary core did not retain the sanitized Maps key');
+requireContract(strpos($core, "const AUTH_TOKEN = ''; // legacy constant intentionally disabled") !== false,
+    'extracted itinerary core did not retain the disabled legacy auth constant');
+requireContract(strpos($core, "'X-Auth-Token': (typeof getToken === 'function' ? getToken() : '')") !== false,
+    'extracted itinerary core did not retain dynamic session authentication');
+requireContract(strpos($core, 'dayDate >= ci && dayDate < co') !== false,
+    'extracted itinerary core lost the checkout-exclusive hotel lookup');
+requireContract(strpos($core, itineraryCoreSourceBootstrap()) === false,
+    'per-trip bootstrap must not be duplicated into the cacheable core');
+assertOnlyConfiguredGoogleKeys($core, 'itinerary core');
+
+[$externalized, $externalDiag] = externalizeItineraryCoreScript($itinerary);
+requireContract(($externalDiag['itinerary_core_externalized'] ?? 0) === 1,
+    'owner itinerary core was not externalized');
+requireContract(($externalDiag['itinerary_core_preloaded'] ?? 0) === 1,
+    'owner itinerary core was not preloaded from the document head');
+requireContract(strpos($externalized, itineraryCoreSourceBootstrap()) !== false,
+    'owner itinerary externalization must preserve the existing trip bootstrap contract');
+requireContract(strpos($externalized, '/template-runtime.php?asset=itinerary-core&amp;v=') !== false,
+    'owner itinerary must reference a versioned cacheable core asset');
+requireContract(strpos($externalized, "const AUTH_TOKEN = ''; // legacy constant intentionally disabled") === false,
+    'the static itinerary core should no longer be duplicated inline after externalization');
+requireContract(strlen($externalized) < strlen($itinerary) - 150000,
+    'externalized owner itinerary did not materially reduce the HTML payload');
+
+$tmpJs = tempnam(sys_get_temp_dir(), 'itinerary-core-');
+requireContract($tmpJs !== false, 'could not create temporary itinerary core syntax file');
+file_put_contents($tmpJs, ltrim($core, "\r\n"));
+$syntaxOutput = [];
+$syntaxStatus = 0;
+exec('node --check ' . escapeshellarg($tmpJs) . ' 2>&1', $syntaxOutput, $syntaxStatus);
+@unlink($tmpJs);
+requireContract($syntaxStatus === 0,
+    'extracted itinerary core is not valid JavaScript: ' . implode("\n", $syntaxOutput));
+
 $dashboardSource = readTemplate('trips/index.html');
 [$dashboard, $dashboardDiag] = applyTripsDashboardRuntimeSafety($dashboardSource);
 requireContract(($dashboardDiag['dashboard_font_delivery_optimized'] ?? 0) === 1,
