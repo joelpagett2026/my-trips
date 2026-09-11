@@ -200,6 +200,31 @@ jobs:
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
 
+      - name: Verify live cacheable itinerary core
+        run: |
+          python - <<'PY'
+          import html
+          import re
+          from pathlib import Path
+          page = Path('/tmp/trip.html').read_text()
+          match = re.search(r'src="(/template-runtime\.php\?asset=itinerary-core(?:&amp;|&)v=[a-f0-9]{20})"', page)
+          if not match:
+              raise SystemExit('live owner itinerary did not reference the versioned external core')
+          if "const AUTH_TOKEN = ''; // legacy constant intentionally disabled" in page:
+              raise SystemExit('large itinerary core is still duplicated inline in owner HTML')
+          Path('/tmp/itinerary-core.url').write_text(html.unescape(match.group(1)))
+          PY
+          core_url=$(cat /tmp/itinerary-core.url)
+          curl --fail --show-error --silent \
+            --dump-header /tmp/itinerary-core.headers \
+            "https://joelpagett.co.uk${core_url}" \
+            --output /tmp/itinerary-core.js
+          grep -q "const AUTH_TOKEN = ''; // legacy constant intentionally disabled" /tmp/itinerary-core.js
+          grep -q "'X-Auth-Token': (typeof getToken === 'function' ? getToken() : '')" /tmp/itinerary-core.js
+          grep -q 'dayDate >= ci && dayDate < co' /tmp/itinerary-core.js
+          grep -Eiq '^cache-control:.*max-age=31536000.*immutable' /tmp/itinerary-core.headers
+          node --check /tmp/itinerary-core.js
+
       - name: Verify live activity editor controller
         run: |
           curl --fail --show-error --silent \
