@@ -15,452 +15,458 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #eef0f0;
+    --panel: #ffffff;
+    --ink: #263238;
+    --muted: #7d898d;
+    --line: #e4e8e8;
+    --teal: #0e7a87;
+    --teal-bright: #11a8b9;
+    --teal-soft: #e8f5f6;
+    --orange: #d97808;
+    --orange-soft: #fff2df;
+    --green: #1a9452;
+    --green-soft: #e9f6ee;
+    --purple: #5c5fc7;
+    --purple-soft: #eeeeff;
+    --shadow: 0 10px 30px rgba(39, 54, 58, .07), 0 1px 3px rgba(39,54,58,.06);
+    --shadow-hover: 0 16px 38px rgba(39, 54, 58, .11), 0 2px 5px rgba(39,54,58,.07);
+    --radius: 22px;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Montserrat', sans-serif; background: #e8e8e8; color: #444444; min-height: 100vh; display: flex; flex-direction: column; padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
-  .hero { padding: 48px 24px 36px; text-align: center; }
-  .hero-avatar { width: 64px; height: 64px; background: linear-gradient(135deg, #0e7a87, #0fbdcf); border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #ffffff; box-shadow: 0 8px 24px rgba(14,122,135,0.3); }
-  .hero-title { font-size: 28px; font-weight: 800; color: #444444; letter-spacing: -0.02em; margin-bottom: 6px; }
-  .hero-sub { font-size: 13px; color: #888888; font-weight: 500; }
-
-  .columns {
-    flex: 1; width: 100%; max-width: 1950px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
-    padding: 8px 20px 48px; align-items: start; align-content: start;
+  html { background: var(--bg); }
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(255,255,255,.95), rgba(255,255,255,0) 40%),
+      var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
-  @media (max-width: 1500px) {
-    .columns { grid-template-columns: repeat(3, 1fr); max-width: 1200px; }
+  a { color: inherit; }
+
+  .topbar {
+    width: min(1550px, calc(100% - 56px));
+    margin: 0 auto;
+    min-height: 102px;
+    display: flex;
+    align-items: center;
+    padding: 18px 120px 16px 0;
+    position: relative;
   }
-  @media (max-width: 1240px) {
-    .columns { grid-template-columns: 1fr 1fr; max-width: 820px; }
+  .brand { display: flex; align-items: center; gap: 15px; min-width: 0; }
+  .brand-mark {
+    width: 54px; height: 54px; border-radius: 16px;
+    display: grid; place-items: center;
+    color: #fff;
+    background: linear-gradient(145deg, #0e7a87, #31a6bb);
+    box-shadow: 0 9px 24px rgba(14,122,135,.24);
+    flex: 0 0 auto;
   }
-  @media (max-width: 640px) {
-    .columns { grid-template-columns: 1fr; max-width: 560px; }
+  .brand-title { font-size: 22px; font-weight: 800; letter-spacing: -.035em; line-height: 1.05; }
+  .brand-sub { color: var(--muted); font-size: 11.5px; font-weight: 500; margin-top: 5px; }
+
+  .private-link, .settings-link {
+    position: fixed; top: 18px; z-index: 12;
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #8e999c; text-decoration: none;
+    background: rgba(255,255,255,.74);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    backdrop-filter: blur(8px);
+    transition: transform .16s ease, color .16s ease, background .16s ease;
   }
+  .private-link { right: 56px; }
+  .settings-link { right: 18px; }
+  .private-link:hover, .settings-link:hover { transform: translateY(-1px); color: var(--teal); background: #fff; }
 
-  .col { display: flex; flex-direction: column; gap: 10px; }
-  .col-body { display: flex; flex-direction: column; gap: 10px; }
-  .col-headrow { display: contents; }
-  .col-plus { display: none; }
-
-  /* ── MOBILE: compact rows, + expands, header opens the tool ── */
-  @media (max-width: 640px) {
-    .hero { padding: 24px 24px 14px; }
-    .hero-avatar { width: 44px; height: 44px; border-radius: 13px; margin-bottom: 10px; }
-    .hero-avatar svg { width: 22px; height: 22px; }
-    .hero-title { font-size: 21px; margin-bottom: 2px; }
-    .hero-sub { font-size: 11.5px; }
-    .columns { gap: 11px; padding: 2px 10px 20px; }
-    .col { gap: 8px; }
-
-    .col-headrow { display: block; position: relative; }
-    .col-head { padding: 16px 56px 16px 14px; gap: 12px; border-radius: 16px; }
-    .tool-icon { width: 40px; height: 40px; border-radius: 12px; }
-    .tool-icon svg { width: 21px; height: 21px; }
-    .ch-name { font-size: 15px; }
-    .ch-desc { font-size: 11px; margin-top: 3px; }
-    .col-head .tool-arrow { display: none; }
-
-    .col-plus {
-      display: flex; align-items: center; justify-content: center;
-      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-      width: 36px; height: 36px; border: none; border-radius: 11px;
-      background: rgba(14,122,135,0.1); color: #0e7a87; cursor: pointer;
-      transition: transform 0.2s ease, background 0.15s;
-    }
-    .col-plus svg { transition: transform 0.2s ease; width: 18px; height: 18px; }
-    .col.open .col-plus { background: #0e7a87; color: #ffffff; }
-    .col.open .col-plus svg { transform: rotate(45deg); }
-
-    .col.collapsible .col-body { display: none; }
-    .col.collapsible.open .col-body { display: flex; gap: 8px; padding-bottom: 2px; }
-    .col.collapsible.open .col-head { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(14,122,135,0.35); }
+  .dashboard {
+    width: min(1550px, calc(100% - 56px));
+    margin: 0 auto;
+    padding-bottom: 26px;
   }
 
-  /* Column header — links to the tool */
-  .col-head {
+  .coming-panel {
+    background: rgba(255,255,255,.9);
+    border: 1px solid rgba(255,255,255,.85);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 0 2px 14px; }
+  .section-title { font-size: 19px; font-weight: 800; letter-spacing: -.025em; }
+  .section-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+  .view-all { font-size: 10px; color: var(--teal); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+  .coming-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .coming-item {
+    min-width: 0;
     display: flex; align-items: center; gap: 12px;
-    background: #ffffff; border-radius: 16px;
-    padding: 14px 16px; text-decoration: none; color: inherit;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
-    transition: box-shadow 0.15s, transform 0.1s;
+    padding: 13px 13px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    text-decoration: none;
+    background: #fff;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
-  .col-head:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.06); transform: translateY(-1px); }
-  .col-head:hover .tool-arrow { color: #0e7a87; transform: translateX(2px); }
-  .tool-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(14,122,135,0.1); color: #0e7a87; }
-  .ch-name { font-size: 14px; font-weight: 700; color: #444444; letter-spacing: -0.01em; }
-  .ch-desc { font-size: 11px; color: #888888; font-weight: 500; margin-top: 2px; }
-  .tool-arrow { color: #b8b8b8; flex-shrink: 0; margin-left: auto; transition: color 0.15s, transform 0.15s; }
+  .coming-item:hover { transform: translateY(-1px); box-shadow: 0 7px 18px rgba(39,54,58,.08); border-color: #d9e1e2; }
+  .coming-icon { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--teal); background: var(--teal-soft); flex: 0 0 auto; }
+  .coming-icon.orange { color: var(--orange); background: var(--orange-soft); }
+  .coming-icon.purple { color: var(--purple); background: var(--purple-soft); }
+  .coming-icon.green { color: var(--green); background: var(--green-soft); }
+  .coming-copy { min-width: 0; flex: 1; }
+  .coming-label { font-size: 10px; font-weight: 650; color: #485357; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coming-value { font-size: 17px; font-weight: 800; letter-spacing: -.03em; color: var(--teal); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coming-value.orange { color: var(--orange); }
+  .coming-value.purple { color: var(--purple); }
+  .coming-value.green { color: var(--green); }
+  .coming-meta { font-size: 9.5px; color: var(--muted); font-weight: 500; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-arrow { color: #a7b0b3; flex: 0 0 auto; }
 
-  /* Generic card */
-  .hub-card {
-    background: #ffffff; border-radius: 16px;
-    padding: 16px; text-decoration: none; color: inherit; display: block;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
-    transition: box-shadow 0.15s, transform 0.1s; position: relative; overflow: hidden;
+  .main-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; }
+  .dash-card {
+    min-width: 0;
+    background: var(--panel);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,.9);
+    overflow: hidden;
+    transition: transform .16s ease, box-shadow .16s ease;
   }
-  a.hub-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.06); transform: translateY(-1px); }
-  .card-label { font-size: 9px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #999999; margin-bottom: 9px; }
+  a.dash-card { text-decoration: none; display: block; }
+  a.dash-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .third { grid-column: span 2; }
+  .half { grid-column: span 3; }
 
-  /* Stats strip */
-  .stats-strip { display: flex; align-items: center; background: #f2f2f2; border-radius: 10px; padding: 10px 0; }
-  .ss-stat { flex: 1; text-align: center; }
-  .ss-val { font-size: 20px; font-weight: 800; color: #444444; line-height: 1; letter-spacing: -0.02em; }
-  .ss-val.teal   { color: #0e7a87; }
-  .ss-val.orange { color: #e07b08; }
-  .ss-val.green  { color: #1a9e50; }
-  .ss-val.red    { color: #e53e3e; }
-  .ss-lbl { font-size: 9px; color: #999999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
-  .ss-divider { width: 1px; background: #e0e0e0; align-self: stretch; }
+  .card-head { display: flex; align-items: center; gap: 11px; padding: 16px 16px 13px; }
+  .card-head-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--teal); background: var(--teal-soft); flex: 0 0 auto; }
+  .card-head-icon.purple { color: var(--purple); background: var(--purple-soft); }
+  .head-copy { min-width: 0; }
+  .card-title { font-size: 16px; font-weight: 800; letter-spacing: -.025em; }
+  .card-sub { font-size: 10px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .card-arrow { margin-left: auto; color: #aab3b5; flex: 0 0 auto; }
 
-  /* Countdown / event rows */
-  .event-name { font-size: 15px; font-weight: 700; color: #444444; letter-spacing: -0.01em; }
-  .event-meta { font-size: 11px; color: #888888; font-weight: 500; margin-top: 3px; }
-  .cd-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-  .cd-block { background: rgba(14,122,135,0.1); border-radius: 10px; padding: 8px 14px; text-align: center; }
-  .cd-num { font-size: 22px; font-weight: 800; color: #0e7a87; line-height: 1; letter-spacing: -0.02em; }
-  .cd-num.amber { color: #e07b08; }
-  .cd-block.amber { background: rgba(240,145,10,0.1); }
-  .cd-unit { font-size: 8.5px; color: #999999; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .trip-hero {
+    margin: 0 16px;
+    min-height: 146px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    color: #fff;
+    background:
+      linear-gradient(135deg, rgba(6,78,88,.30), rgba(0,0,0,.50)),
+      radial-gradient(circle at 75% 20%, #49bcca 0, #1a93a3 24%, #0a6f7a 58%, #08525c 100%);
+  }
+  .trip-hero::after {
+    content: '';
+    position: absolute; inset: auto -8% -62% -8%; height: 92%;
+    background: rgba(255,255,255,.09); border-radius: 50%; transform: rotate(-4deg);
+  }
+  .trip-plane { position: absolute; right: 20px; top: 18px; opacity: .25; transform: rotate(-8deg); }
+  .trip-copy { position: relative; z-index: 2; min-width: 0; padding-right: 112px; }
+  .trip-name { font-size: 18px; font-weight: 800; letter-spacing: -.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trip-date { font-size: 10px; margin-top: 4px; opacity: .88; font-weight: 550; }
+  .trip-countdown {
+    position: absolute; right: 13px; bottom: 13px; z-index: 3;
+    min-width: 88px; padding: 9px 11px; border-radius: 13px;
+    background: rgba(22,48,52,.62); backdrop-filter: blur(10px);
+    text-align: center; box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
+  }
+  .trip-countdown strong { display: block; font-size: 18px; color: #ffd08b; letter-spacing: -.03em; }
+  .trip-countdown span { font-size: 8.5px; opacity: .88; font-weight: 600; }
 
-  /* Latest concert photo card */
-  .photo-card { padding: 0; }
-  .photo-card img { width: 100%; height: 120px; object-fit: cover; display: block; background: #f0f0f0; }
-  .photo-card .pc-body { padding: 12px 16px 14px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); margin: 13px 16px 16px; border-top: 1px solid var(--line); padding-top: 13px; }
+  .stat { text-align: center; padding: 0 8px; border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: 0; }
+  .stat-val { font-size: 16px; font-weight: 800; letter-spacing: -.03em; color: #223034; }
+  .stat-val.teal { color: var(--teal); }
+  .stat-val.orange { color: var(--orange); }
+  .stat-val.green { color: var(--green); }
+  .stat-lbl { font-size: 8.5px; color: var(--muted); margin-top: 2px; font-weight: 600; }
 
-  /* Holiday person cards */
-  .hpc-top { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
-  .hpc-top .tool-icon { width: 36px; height: 36px; border-radius: 10px; }
-  .hpc-name { font-size: 14px; font-weight: 700; color: #444444; letter-spacing: -0.01em; }
-  .hpc-period { font-size: 10px; color: #888888; font-weight: 500; margin-top: 2px; }
+  .allowance-wrap { padding: 4px 16px 16px; }
+  .person { padding: 13px 0; }
+  .person + .person { border-top: 1px solid var(--line); }
+  .person-top { display: grid; grid-template-columns: 42px 1fr auto auto; align-items: center; gap: 10px; }
+  .initials { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--teal-soft); color: var(--teal); font-size: 12px; font-weight: 800; }
+  .initials.gray { background: #f0f2f2; color: #708085; }
+  .person-name { font-size: 12.5px; font-weight: 750; }
+  .person-period { font-size: 9px; color: var(--muted); margin-top: 3px; }
+  .allow-stat { min-width: 56px; text-align: center; padding-left: 10px; border-left: 1px solid var(--line); }
+  .allow-stat strong { display: block; font-size: 17px; line-height: 1; letter-spacing: -.03em; }
+  .allow-stat span { font-size: 8.5px; color: var(--muted); font-weight: 550; }
+  .allow-stat.used strong { color: var(--orange); }
+  .allow-stat.remain strong { color: var(--green); }
+  .progress-line { display: flex; align-items: center; gap: 8px; padding-left: 52px; margin-top: 10px; }
+  .progress { height: 8px; background: #edf0f0; border-radius: 999px; overflow: hidden; flex: 1; }
+  .progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--teal), var(--teal-bright)); transition: width .45s ease; }
+  .progress-copy { font-size: 8.5px; color: var(--muted); min-width: 45px; text-align: right; }
 
-  .hub-footer { text-align: center; padding: 0 24px 32px; font-size: 11px; color: #999999; font-weight: 500; }
-  .hub-footer span { display: inline-block; width: 3px; height: 3px; background: #b8b8b8; border-radius: 50%; vertical-align: middle; margin: 0 8px 2px; }
-  .settings-link { position: fixed; top: 18px; right: 18px; z-index: 10; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #b8b8b8; transition: color 0.15s; }
-  .settings-link:hover { color: #0e7a87; }
-  .private-link { position: fixed; top: 18px; right: 56px; z-index: 10; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #b8b8b8; transition: color 0.15s; }
-  .private-link:hover { color: #0e7a87; }
+  .event-card-body { padding: 2px 16px 0; }
+  .event-preview { display: grid; grid-template-columns: 42% minmax(0,1fr); gap: 13px; align-items: stretch; }
+  .event-media {
+    min-height: 116px; border-radius: 15px; overflow: hidden; position: relative;
+    background: linear-gradient(135deg,#175b64,#151d27 70%);
+  }
+  .event-media img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
+  .media-placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.75); }
+  .media-placeholder.concert { background: radial-gradient(circle at 70% 15%, #a967b6, transparent 35%), linear-gradient(135deg,#0a6573,#1a1a28 75%); }
+  .media-placeholder.show { background: linear-gradient(135deg,#6c4a22,#1e2425); }
+  .media-placeholder.park { background: linear-gradient(135deg,#59b7c4,#167581); }
+  .event-copy { align-self: center; min-width: 0; }
+  .pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 8px; font-size: 8px; line-height: 1; font-weight: 800; letter-spacing: .035em; text-transform: uppercase; color: var(--orange); background: var(--orange-soft); margin-bottom: 8px; }
+  .event-title { font-size: 15px; font-weight: 800; line-height: 1.15; letter-spacing: -.025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-line { font-size: 9.5px; color: var(--muted); font-weight: 500; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-countdown { color: var(--teal); font-weight: 700; }
+  .event-stats { margin: 14px 0 16px; border-top: 1px solid var(--line); padding-top: 13px; }
+
+  .wide-body { padding: 0 16px 16px; }
+  .wide-preview { display: grid; grid-template-columns: minmax(180px, 31%) minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+  .wide-preview .event-media { height: 112px; min-height: 112px; }
+  .wide-copy { min-width: 0; }
+  .wide-copy .event-title { font-size: 16px; }
+  .wide-stats { display: grid; grid-template-columns: repeat(3, minmax(62px,1fr)); align-items: center; min-width: 250px; }
+
+  .skeleton { color: transparent !important; border-radius: 6px; background: linear-gradient(90deg, #eef1f1 25%, #f7f8f8 37%, #eef1f1 63%); background-size: 400% 100%; animation: shimmer 1.25s ease infinite; user-select: none; }
+  @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+  .hub-footer { text-align: center; padding: 18px 24px 30px; font-size: 9.5px; color: #98a1a4; font-weight: 500; }
+  .hub-footer span { display: inline-block; width: 3px; height: 3px; background: #aeb6b8; border-radius: 50%; vertical-align: middle; margin: 0 8px 2px; }
+
+  @media (max-width: 1250px) {
+    .coming-grid { grid-template-columns: repeat(3, 1fr); }
+    .main-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .third, .half { grid-column: span 1; }
+    .wide-preview { grid-template-columns: minmax(150px, 38%) minmax(0,1fr); }
+    .wide-stats { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 12px; min-width: 0; }
+  }
+  @media (max-width: 800px) {
+    .topbar, .dashboard { width: min(100% - 24px, 660px); }
+    .topbar { min-height: 84px; padding: 12px 112px 12px 2px; }
+    .brand-mark { width: 45px; height: 45px; border-radius: 13px; }
+    .brand-title { font-size: 19px; }
+    .brand-sub { font-size: 10px; }
+    .coming-panel { padding: 14px; border-radius: 18px; }
+    .coming-grid { grid-template-columns: 1fr 1fr; }
+    .coming-item:last-child { grid-column: 1 / -1; }
+    .main-grid { grid-template-columns: 1fr; gap: 12px; }
+    .third, .half { grid-column: span 1; }
+    .dash-card { border-radius: 18px; }
+  }
+  @media (max-width: 520px) {
+    .topbar, .dashboard { width: calc(100% - 18px); }
+    .coming-grid { grid-template-columns: 1fr; }
+    .coming-item:last-child { grid-column: auto; }
+    .section-head { align-items: center; }
+    .event-preview { grid-template-columns: 36% minmax(0,1fr); }
+    .wide-preview { grid-template-columns: 35% minmax(0,1fr); gap: 12px; }
+    .wide-stats { grid-template-columns: repeat(3, 1fr); }
+    .person-top { grid-template-columns: 38px 1fr auto auto; gap: 7px; }
+    .allow-stat { min-width: 49px; padding-left: 7px; }
+    .progress-line { padding-left: 45px; }
+    .trip-hero { min-height: 134px; }
+    .trip-copy { padding-right: 0; padding-bottom: 48px; }
+    .trip-countdown { left: 13px; right: auto; }
+  }
 </style>
 </head>
 <body>
 
 <a class="private-link" href="/private/" title="Private Log" aria-label="Private Log">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 </a>
-
 <a class="settings-link" href="/settings.html" title="Settings" aria-label="Settings">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v-.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 </a>
 
-<div class="hero">
-  <div class="hero-avatar">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-    </svg>
-  </div>
-  <div class="hero-title">Joel Pagett</div>
-  <div class="hero-sub">Personal tools &amp; trackers</div>
-</div>
-
-<div class="columns">
-
-  <!-- ── COLUMN 1: HOLIDAY PLANNER ── -->
-  <div class="col">
-    <a class="col-head" href="/trips/">
-      <div class="tool-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17.8 19.8 16 14l3.5-3.5c1.6-1.6 2.2-3.6 1.7-4.6-1-.5-3 .1-4.6 1.7L13 11 7.2 9.2c-.5-.2-1 0-1.3.4l-.4.6c-.3.5-.1 1.1.4 1.4L9 13.5 7 16H4l-1 1 3 1.5L7.5 21l1-1v-3l2.5-2 1.9 2.7c.3.5.9.6 1.4.4l.6-.4c.4-.3.6-.8.4-1.3z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="ch-name">Holiday Planner</div>
-        <div class="ch-desc">Itineraries, maps &amp; more</div>
-      </div>
-      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-
-    <div class="hub-card">
-      <div class="card-label">Stats</div>
-      <div class="stats-strip">
-        <div class="ss-stat">
-          <div class="ss-val teal" id="hp-trips">—</div>
-          <div class="ss-lbl">trips</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val" id="hp-upcoming">—</div>
-          <div class="ss-lbl">upcoming</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val green" id="hp-completed">—</div>
-          <div class="ss-lbl">completed</div>
-        </div>
-      </div>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
     </div>
-
-    <a class="hub-card" href="/trips/" id="next-trip-card" style="display:none;">
-      <div class="card-label">Next trip</div>
-      <div class="event-name" id="nt-name"></div>
-      <div class="event-meta" id="nt-meta"></div>
-      <div class="cd-row">
-        <div class="cd-block">
-          <div class="cd-num" id="nt-days">—</div>
-          <div class="cd-unit">days to go</div>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- ── COLUMN 2: HOLIDAY ALLOWANCE ── -->
-  <div class="col">
-    <a class="col-head" href="/holidays/">
-      <div class="tool-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
-      </div>
-      <div>
-        <div class="ch-name">Holiday Allowance</div>
-        <div class="ch-desc">Days off &amp; lieu tracking</div>
-      </div>
-      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-
-    <a class="hub-card" href="/holidays/2026-27.html">
-      <div class="hpc-top">
-        <div class="tool-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <div>
-          <div class="hpc-name">Joel</div>
-          <div class="hpc-period">2026/27 · Apr – Mar</div>
-        </div>
-        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-      <div class="stats-strip">
-        <div class="ss-stat">
-          <div class="ss-val" id="joel-trips">6</div>
-          <div class="ss-lbl">trips</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val orange" id="joel-used">23</div>
-          <div class="ss-lbl">days used</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val green" id="joel-rem">5</div>
-          <div class="ss-lbl">remaining</div>
-        </div>
-      </div>
-    </a>
-
-    <a class="hub-card" href="/holidays/jonathan/2026.html">
-      <div class="hpc-top">
-        <div class="tool-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <div>
-          <div class="hpc-name">Jonathan</div>
-          <div class="hpc-period">2026 · Jan – Dec</div>
-        </div>
-        <svg class="tool-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-      <div class="stats-strip">
-        <div class="ss-stat">
-          <div class="ss-val" id="jon-trips">0</div>
-          <div class="ss-lbl">trips</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val orange" id="jon-used">0</div>
-          <div class="ss-lbl">days used</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val green" id="jon-rem">28</div>
-          <div class="ss-lbl">remaining</div>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- ── COLUMN 3: CONCERT LOG ── -->
-  <div class="col">
-    <a class="col-head" href="/concerts/">
-      <div class="tool-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/>
-        </svg>
-      </div>
-      <div>
-        <div class="ch-name">Concert Log</div>
-        <div class="ch-desc">Log your live music</div>
-      </div>
-      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-
-    <a class="hub-card photo-card" href="/concerts/" id="latest-card" style="display:none;">
-      <img id="lc-img" alt="" style="display:none;">
-      <div class="pc-body">
-        <div class="card-label">Latest concert</div>
-        <div class="event-name" id="lc-name"></div>
-        <div class="event-meta" id="lc-meta"></div>
-      </div>
-    </a>
-
-    <a class="hub-card" href="/concerts/" id="next-show-card" style="display:none;">
-      <div class="card-label">Next show</div>
-      <div class="event-name" id="ns-name"></div>
-      <div class="event-meta" id="ns-meta"></div>
-      <div class="cd-row">
-        <div class="cd-block amber">
-          <div class="cd-num amber" id="ns-days">—</div>
-          <div class="cd-unit">days to go</div>
-        </div>
-      </div>
-    </a>
-
-    <div class="hub-card">
-      <div class="card-label">Stats</div>
-      <div class="stats-strip">
-        <div class="ss-stat">
-          <div class="ss-val teal" id="cl-concerts">—</div>
-          <div class="ss-lbl">concerts</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val" id="cl-festivals">—</div>
-          <div class="ss-lbl">festivals</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val orange" id="cl-artists">—</div>
-          <div class="ss-lbl">artists</div>
-        </div>
-      </div>
+    <div>
+      <div class="brand-title">Joel Pagett</div>
+      <div class="brand-sub">Personal tools &amp; trackers</div>
     </div>
   </div>
+</header>
 
-
-  <!-- ── COLUMN 4: STAGE SHOWS & MUSICALS ── -->
-  <div class="col">
-    <a class="col-head" href="/shows/">
-      <div class="tool-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="14" y1="4" x2="14" y2="7"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="17" x2="14" y2="20"/></svg>
-      </div>
+<main class="dashboard">
+  <section class="coming-panel">
+    <div class="section-head">
       <div>
-        <div class="ch-name">Stage Shows &amp; Musicals</div>
-        <div class="ch-desc">Theatre trips &amp; West End</div>
+        <div class="section-title">Coming up</div>
+        <div class="section-sub">Your next adventures at a glance</div>
       </div>
-      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-
-    <a class="hub-card photo-card" href="/shows/" id="latest-show-card" style="display:none;">
-      <img id="ls-img" alt="" style="display:none;">
-      <div class="pc-body">
-        <div class="card-label">Latest show</div>
-        <div class="event-name" id="ls-name"></div>
-        <div class="event-meta" id="ls-meta"></div>
-      </div>
-    </a>
-
-    <a class="hub-card" href="/shows/" id="next-stage-card" style="display:none;">
-      <div class="card-label">Next show</div>
-      <div class="event-name" id="nst-name"></div>
-      <div class="event-meta" id="nst-meta"></div>
-      <div class="cd-row">
-        <div class="cd-block">
-          <div class="cd-num" id="nst-days">—</div>
-          <div class="cd-unit">days to go</div>
-        </div>
-      </div>
-    </a>
-
-    <div class="hub-card">
-      <div class="card-label">Stats</div>
-      <div class="stats-strip">
-        <div class="ss-stat">
-          <div class="ss-val teal" id="sh-shows">—</div>
-          <div class="ss-lbl">shows</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val" id="sh-theatres">—</div>
-          <div class="ss-lbl">theatres</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val green" id="sh-year">—</div>
-          <div class="ss-lbl">this year</div>
-        </div>
-      </div>
+      <a class="view-all" href="/trips/">View trips <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a>
     </div>
-  </div>
-
-
-  <!-- ── COLUMN 5: THEME PARK LOG ── -->
-  <div class="col">
-    <a class="col-head" href="/parks/">
-      <div class="tool-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/><path d="M15 21v-3"/><path d="M20 21v-8"/></svg>
-      </div>
-      <div>
-        <div class="ch-name">Theme Park Tracker</div>
-        <div class="ch-desc">Parks &amp; coaster credits</div>
-      </div>
-      <svg class="tool-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </a>
-
-    <a class="hub-card photo-card" href="/parks/" id="latest-park-card" style="display:none;">
-      <img id="lp-img" alt="" style="display:none;">
-      <div class="pc-body">
-        <div class="card-label">Latest park visit</div>
-        <div class="event-name" id="lp-name"></div>
-        <div class="event-meta" id="lp-meta"></div>
-      </div>
-    </a>
-
-    <a class="hub-card" href="/parks/" id="next-park-card" style="display:none;">
-      <div class="card-label">Next park visit</div>
-      <div class="event-name" id="np-name"></div>
-      <div class="event-meta" id="np-meta"></div>
-      <div class="cd-row">
-        <div class="cd-block">
-          <div class="cd-num" id="np-days">—</div>
-          <div class="cd-unit">days to go</div>
-        </div>
-      </div>
-    </a>
-
-    <div class="hub-card">
-      <div class="card-label">Stats</div>
-      <div class="stats-strip">
-        <div class="ss-stat">
-          <div class="ss-val teal" id="pk-parks">—</div>
-          <div class="ss-lbl">parks</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val" id="pk-credits">—</div>
-          <div class="ss-lbl">credits</div>
-        </div>
-        <div class="ss-divider"></div>
-        <div class="ss-stat">
-          <div class="ss-val green" id="pk-year">—</div>
-          <div class="ss-lbl">this year</div>
-        </div>
-      </div>
+    <div class="coming-grid">
+      <a class="coming-item" href="/trips/">
+        <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span>
+        <span class="coming-copy"><span class="coming-label">Next Trip</span><span class="coming-value skeleton" id="cu-trip-value">Loading</span><span class="coming-meta skeleton" id="cu-trip-meta">Loading destination</span></span>
+        <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a class="coming-item" href="/holidays/">
+        <span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        <span class="coming-copy"><span class="coming-label">Holiday Remaining</span><span class="coming-value orange skeleton" id="cu-hol-value">Loading</span><span class="coming-meta skeleton" id="cu-hol-meta">Joel current allowance</span></span>
+        <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a class="coming-item" href="/concerts/">
+        <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+        <span class="coming-copy"><span class="coming-label">Next Concert</span><span class="coming-value skeleton" id="cu-concert-value">Loading</span><span class="coming-meta skeleton" id="cu-concert-meta">Loading concert</span></span>
+        <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a class="coming-item" href="/shows/">
+        <span class="coming-icon purple"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="14" y1="4" x2="14" y2="7"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="17" x2="14" y2="20"/></svg></span>
+        <span class="coming-copy"><span class="coming-label">Next Show</span><span class="coming-value purple skeleton" id="cu-show-value">Loading</span><span class="coming-meta skeleton" id="cu-show-meta">Loading show</span></span>
+        <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a class="coming-item" href="/parks/">
+        <span class="coming-icon green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/><path d="M15 21v-3"/><path d="M20 21v-8"/></svg></span>
+        <span class="coming-copy"><span class="coming-label">Next Park Visit</span><span class="coming-value green skeleton" id="cu-park-value">Loading</span><span class="coming-meta skeleton" id="cu-park-meta">Loading park</span></span>
+        <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
     </div>
-  </div>
+  </section>
 
-</div>
+  <section class="main-grid">
+    <a class="dash-card third" href="/trips/">
+      <div class="card-head">
+        <span class="card-head-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span>
+        <div class="head-copy"><div class="card-title">Holiday Planner</div><div class="card-sub">Plan your trips, itineraries, maps &amp; more</div></div>
+        <svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="trip-hero">
+        <svg class="trip-plane" width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
+        <div class="trip-copy"><div class="trip-name skeleton" id="trip-name">Loading next trip</div><div class="trip-date skeleton" id="trip-date">Loading dates</div></div>
+        <div class="trip-countdown"><strong class="skeleton" id="trip-days">—</strong><span id="trip-days-label">days until your trip</span></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-val teal skeleton" id="hp-trips">—</div><div class="stat-lbl">Total trips</div></div>
+        <div class="stat"><div class="stat-val orange skeleton" id="hp-upcoming">—</div><div class="stat-lbl">Upcoming</div></div>
+        <div class="stat"><div class="stat-val green skeleton" id="hp-completed">—</div><div class="stat-lbl">Completed</div></div>
+      </div>
+    </a>
 
-<div class="hub-footer">
-  joelpagett.co.uk <span></span> Personal use only
-</div>
+    <a class="dash-card third" href="/holidays/">
+      <div class="card-head">
+        <span class="card-head-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        <div class="head-copy"><div class="card-title">Holiday Allowance</div><div class="card-sub">Track your days off &amp; leave balance</div></div>
+        <svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="allowance-wrap">
+        <div class="person">
+          <div class="person-top">
+            <div class="initials">JP</div>
+            <div><div class="person-name">Joel</div><div class="person-period" id="joel-period">Current allowance</div></div>
+            <div class="allow-stat used"><strong class="skeleton" id="joel-used">—</strong><span>days used</span></div>
+            <div class="allow-stat remain"><strong class="skeleton" id="joel-rem">—</strong><span>remaining</span></div>
+          </div>
+          <div class="progress-line"><div class="progress"><span id="joel-progress"></span></div><div class="progress-copy" id="joel-pct">—</div></div>
+        </div>
+        <div class="person">
+          <div class="person-top">
+            <div class="initials gray">JW</div>
+            <div><div class="person-name">Jonathan</div><div class="person-period" id="jon-period">Current allowance</div></div>
+            <div class="allow-stat used"><strong class="skeleton" id="jon-used">—</strong><span>days used</span></div>
+            <div class="allow-stat remain"><strong class="skeleton" id="jon-rem">—</strong><span>remaining</span></div>
+          </div>
+          <div class="progress-line"><div class="progress"><span id="jon-progress"></span></div><div class="progress-copy" id="jon-pct">—</div></div>
+        </div>
+      </div>
+    </a>
+
+    <a class="dash-card third" href="/concerts/">
+      <div class="card-head">
+        <span class="card-head-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+        <div class="head-copy"><div class="card-title">Concert Log</div><div class="card-sub">Log your live music</div></div>
+        <svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="event-card-body">
+        <div class="event-preview">
+          <div class="event-media"><div class="media-placeholder concert"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/></svg></div><img id="concert-img" alt="" hidden></div>
+          <div class="event-copy"><span class="pill" id="concert-pill">Upcoming</span><div class="event-title skeleton" id="concert-name">Loading concert</div><div class="event-line skeleton" id="concert-place">Loading venue</div><div class="event-line"><span class="event-countdown" id="concert-countdown">—</span> <span id="concert-date"></span></div></div>
+        </div>
+        <div class="stats-row event-stats">
+          <div class="stat"><div class="stat-val teal skeleton" id="cl-concerts">—</div><div class="stat-lbl">Concerts</div></div>
+          <div class="stat"><div class="stat-val skeleton" id="cl-festivals">—</div><div class="stat-lbl">Festivals</div></div>
+          <div class="stat"><div class="stat-val orange skeleton" id="cl-artists">—</div><div class="stat-lbl">Artists</div></div>
+        </div>
+      </div>
+    </a>
+
+    <a class="dash-card half" href="/shows/">
+      <div class="card-head">
+        <span class="card-head-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="14" y1="4" x2="14" y2="7"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="17" x2="14" y2="20"/></svg></span>
+        <div class="head-copy"><div class="card-title">Stage Shows &amp; Musicals</div><div class="card-sub">Theatre trips &amp; West End</div></div>
+        <svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="wide-body">
+        <div class="wide-preview">
+          <div class="event-media"><div class="media-placeholder show"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg></div><img id="show-img" alt="" hidden></div>
+          <div class="wide-copy"><span class="pill" id="show-pill">Upcoming</span><div class="event-title skeleton" id="show-name">Loading show</div><div class="event-line skeleton" id="show-place">Loading theatre</div><div class="event-line"><span class="event-countdown" id="show-countdown">—</span> <span id="show-date"></span></div></div>
+          <div class="wide-stats">
+            <div class="stat"><div class="stat-val teal skeleton" id="sh-shows">—</div><div class="stat-lbl">Shows</div></div>
+            <div class="stat"><div class="stat-val skeleton" id="sh-theatres">—</div><div class="stat-lbl">Theatres</div></div>
+            <div class="stat"><div class="stat-val green skeleton" id="sh-year">—</div><div class="stat-lbl">This Year</div></div>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a class="dash-card half" href="/parks/">
+      <div class="card-head">
+        <span class="card-head-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/><path d="M15 21v-3"/><path d="M20 21v-8"/></svg></span>
+        <div class="head-copy"><div class="card-title">Theme Park Tracker</div><div class="card-sub">Parks &amp; coaster credits</div></div>
+        <svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="wide-body">
+        <div class="wide-preview">
+          <div class="event-media"><div class="media-placeholder park"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/></svg></div><img id="park-img" alt="" hidden></div>
+          <div class="wide-copy"><span class="pill" id="park-pill">Upcoming</span><div class="event-title skeleton" id="park-name">Loading park</div><div class="event-line skeleton" id="park-place">Loading location</div><div class="event-line"><span class="event-countdown" id="park-countdown">—</span> <span id="park-date"></span></div></div>
+          <div class="wide-stats">
+            <div class="stat"><div class="stat-val teal skeleton" id="pk-parks">—</div><div class="stat-lbl">Parks</div></div>
+            <div class="stat"><div class="stat-val skeleton" id="pk-credits">—</div><div class="stat-lbl">Credits</div></div>
+            <div class="stat"><div class="stat-val green skeleton" id="pk-year">—</div><div class="stat-lbl">This Year</div></div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </section>
+</main>
+
+<footer class="hub-footer">joelpagett.co.uk <span></span> Personal use only</footer>
 
 <script src="/auth.js?v=3" defer></script>
 <script src="/db.js?v=3" defer></script>
 <script>
+const $ = id => document.getElementById(id);
+const DAY_MS = 86400000;
+
+function clearSkeleton(el) { if (el) el.classList.remove('skeleton'); }
+function setText(id, value) { const el = $(id); if (!el) return; el.textContent = value; clearSkeleton(el); }
+function setImg(id, src) {
+  const img = $(id);
+  if (!img || !src) return;
+  img.src = src;
+  img.hidden = false;
+  const placeholder = img.previousElementSibling;
+  if (placeholder) placeholder.style.display = 'none';
+}
+function dayWord(n) { return n === 1 ? 'day' : 'days'; }
+function safeDate(d) { const x = d instanceof Date ? d : new Date(d); return Number.isNaN(x.getTime()) ? null : x; }
+function fmtDate(d, includeYear = true) {
+  d = safeDate(d); if (!d) return '';
+  return d.toLocaleDateString('en-GB', includeYear ? { day:'numeric', month:'short', year:'numeric' } : { day:'numeric', month:'short' });
+}
 function parseDMY(s) {
   s = (s || '').trim();
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -471,237 +477,232 @@ function parseDMY(s) {
   if (m) return new Date(+m[1], 0, 1);
   return null;
 }
-
-async function loadStats() {
-  // ── Holiday Planner column ──
-  try {
-    const registry = await window.dbLoad('registry');
-    if (registry && registry.trips) {
-      const trips = Object.values(registry.trips).filter(t => !t.deleted);
-      const now = new Date();
-      const upcoming = trips.filter(t => t.startDate && new Date(t.startDate) > now);
-      document.getElementById('hp-trips').textContent = trips.length;
-      document.getElementById('hp-upcoming').textContent = upcoming.length;
-      document.getElementById('hp-completed').textContent = trips.length - upcoming.length;
-
-      const next = upcoming.sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0];
-      if (next) {
-        const days = Math.ceil((new Date(next.startDate) - now) / 86400000);
-        document.getElementById('next-trip-card').style.display = 'block';
-        document.getElementById('nt-name').textContent = next.name;
-        const start = new Date(next.startDate);
-        let meta = start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-        if (next.endDate) meta += ' – ' + new Date(next.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-        document.getElementById('nt-meta').textContent = meta;
-        document.getElementById('nt-days').textContent = days;
-      }
-    }
-  } catch(e) {}
-
-  // ── Concert Log column ──
-  try {
-    const concerts = await window.dbLoad('concerts');
-    const list = (concerts && Array.isArray(concerts.list)) ? concerts.list : [];
-    const today = new Date(); today.setHours(0,0,0,0);
-    const dated = list.filter(c => parseDMY(c.date));
-    const upcoming = dated.filter(c => parseDMY(c.date) > today).sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
-    const seen = list.filter(c => { const d = parseDMY(c.date); return !d || d <= today; });
-
-    document.getElementById('cl-concerts').textContent  = seen.filter(c => c.type !== 'festival').length;
-    document.getElementById('cl-festivals').textContent = seen.filter(c => c.type === 'festival').length;
-    const artists = new Set();
-    const add = s => (s || '').split(',').forEach(a => { const k = a.trim().toLowerCase(); if (k) artists.add(k); });
-    seen.forEach(c => {
-      if (c.type === 'festival') (c.artistsSeen || []).forEach(a => { const k = a.trim().toLowerCase(); if (k) artists.add(k); });
-      else { add(c.artist); add(c.support); add(c.guests); }
-    });
-    document.getElementById('cl-artists').textContent = artists.size;
-
-    // Latest concert (with photo)
-    const latest = seen.filter(c => parseDMY(c.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date))[0];
-    if (latest) {
-      document.getElementById('latest-card').style.display = 'block';
-      document.getElementById('lc-name').textContent = latest.artist || latest.name || '';
-      document.getElementById('lc-meta').textContent =
-        [latest.venue || latest.location, latest.date].filter(Boolean).join(' · ');
-      if (latest.thumb) {
-        const img = document.getElementById('lc-img');
-        img.src = latest.thumb;
-        img.style.display = 'block';
-      }
-    }
-
-    // Next show countdown
-    const next = upcoming[0];
-    if (next) {
-      const days = Math.round((parseDMY(next.date) - today) / 86400000);
-      document.getElementById('next-show-card').style.display = 'block';
-      document.getElementById('ns-name').textContent = next.artist || next.name || '';
-      document.getElementById('ns-meta').textContent =
-        [next.venue || next.location, next.date].filter(Boolean).join(' · ');
-      document.getElementById('ns-days').textContent = days;
-    }
-  } catch(e) {}
-}
-
-function parseMY(str) {
-  str = (str || '').trim();
-  let m = str.match(/^(\d{1,2})\/(\d{4})$/);
+function parseMY(s) {
+  s = (s || '').trim();
+  let m = s.match(/^(\d{1,2})\/(\d{4})$/);
   if (m) return new Date(+m[2], +m[1] - 1, 1);
-  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return new Date(+m[3], +m[2] - 1, 1);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
   return null;
 }
-function fmtMY(str) {
-  const d = parseMY(str);
-  return d ? d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : (str || '');
+function fmtMY(s) { const d = parseMY(s); return d ? d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : (s || ''); }
+function daysUntil(d) { const today = new Date(); today.setHours(0,0,0,0); d = safeDate(d); if (!d) return null; d.setHours(0,0,0,0); return Math.ceil((d - today) / DAY_MS); }
+function monthsUntil(d) { const now = new Date(); d = safeDate(d); if (!d) return null; return Math.max(0, (d.getFullYear()-now.getFullYear())*12 + d.getMonth()-now.getMonth()); }
+function countdownText(n, unit='day') { if (n === null || n === undefined) return '—'; if (unit === 'month') return `${n} ${n === 1 ? 'month' : 'months'}`; return `${n} ${dayWord(n)}`; }
+function eventName(obj) { return obj?.artist || obj?.name || obj?.park || 'No upcoming event'; }
+function parseTripArray(html) {
+  const allowanceMatch = html.match(/const\s+ALLOWANCE\s*=\s*(\d+)/);
+  const tripsMatch = html.match(/const\s+trips\s*=\s*(\[.*?\]);/s);
+  let trips = [];
+  if (tripsMatch) { try { trips = JSON.parse(tripsMatch[1]); } catch(e) {} }
+  return { allowance: allowanceMatch ? Number(allowanceMatch[1]) : 28, trips };
+}
+async function fetchHolidayPage(url) {
+  const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+  if (!r.ok) throw new Error('Holiday page unavailable');
+  return parseTripArray(await r.text());
+}
+
+async function loadTrips() {
+  try {
+    // home.php deliberately rewrites this compatibility call to dbLoadRegistry().
+    const registry = await window.dbLoad('registry');
+    const raw = registry && registry.trips ? registry.trips : [];
+    const trips = (Array.isArray(raw) ? raw : Object.values(raw || {})).filter(t => t && !t.deleted);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const startOf = t => safeDate(t.startDate || t.start || t.date);
+    const endOf = t => safeDate(t.endDate || t.end || t.startDate || t.start || t.date);
+    const upcoming = trips.filter(t => { const d = startOf(t); return d && d >= today; }).sort((a,b)=>startOf(a)-startOf(b));
+    const completed = trips.filter(t => { const d = endOf(t); return d && d < today; });
+    setText('hp-trips', trips.length);
+    setText('hp-upcoming', upcoming.length);
+    setText('hp-completed', completed.length);
+
+    const next = upcoming[0];
+    if (next) {
+      const start = startOf(next), end = endOf(next), days = daysUntil(start);
+      const name = next.name || next.dest || next.destination || 'Next trip';
+      setText('trip-name', name);
+      setText('trip-date', end && end.getTime() !== start.getTime() ? `${fmtDate(start)} – ${fmtDate(end)}` : fmtDate(start));
+      setText('trip-days', days);
+      $('trip-days-label').textContent = `${dayWord(days)} until your trip`;
+      setText('cu-trip-value', countdownText(days));
+      setText('cu-trip-meta', name);
+    } else {
+      setText('trip-name', 'No upcoming trip');
+      setText('trip-date', 'Add your next itinerary');
+      setText('trip-days', '—');
+      $('trip-days-label').textContent = 'nothing booked yet';
+      setText('cu-trip-value', 'Nothing booked');
+      setText('cu-trip-meta', `${trips.length} trips recorded`);
+    }
+  } catch(e) {
+    ['hp-trips','hp-upcoming','hp-completed','trip-name','trip-date','trip-days','cu-trip-value','cu-trip-meta'].forEach(id => setText(id,'—'));
+  }
+}
+
+async function loadHolidayAllowance() {
+  const now = new Date();
+  const joelStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const joelEndShort = String((joelStartYear + 1) % 100).padStart(2,'0');
+  const joelPath = `/holidays/${joelStartYear}-${joelEndShort}.html`;
+  const calYear = now.getFullYear();
+  setText('joel-period', `${joelStartYear}/${joelEndShort} · Apr – Mar`);
+  setText('jon-period', `${calYear} · Jan – Dec`);
+
+  try {
+    const joel = await fetchHolidayPage(joelPath);
+    const used = joel.trips.reduce((n,t)=>n+(parseFloat(t.hol)||0),0);
+    const rem = joel.allowance - used;
+    const pct = Math.max(0, Math.min(100, Math.round((used / joel.allowance) * 100)));
+    setText('joel-used', used);
+    setText('joel-rem', rem);
+    $('joel-progress').style.width = pct + '%';
+    $('joel-pct').textContent = pct + '% used';
+    setText('cu-hol-value', `${rem} ${dayWord(rem)}`);
+    setText('cu-hol-meta', `of ${joel.allowance} remaining · Joel`);
+  } catch(e) {
+    ['joel-used','joel-rem','cu-hol-value','cu-hol-meta'].forEach(id=>setText(id,'—'));
+    $('joel-pct').textContent = 'Unavailable';
+  }
+
+  try {
+    const sourceYears = [calYear - 1, calYear, calYear + 1];
+    const pages = await Promise.all(sourceYears.map(async y => {
+      const endShort = String((y + 1) % 100).padStart(2,'0');
+      try { return await fetchHolidayPage(`/holidays/${y}-${endShort}.html`); } catch(e) { return { allowance: 28, trips: [] }; }
+    }));
+    const all = pages.flatMap(p => p.trips).filter(t => {
+      const p = String(t.start || '').split('/');
+      return p.length === 3 && Number(p[2]) === calYear;
+    });
+    const allowance = 28;
+    const used = all.reduce((n,t)=>n+(parseFloat(t.hol)||0),0);
+    const rem = allowance - used;
+    const pct = Math.max(0, Math.min(100, Math.round((used / allowance) * 100)));
+    setText('jon-used', used);
+    setText('jon-rem', rem);
+    $('jon-progress').style.width = pct + '%';
+    $('jon-pct').textContent = pct + '% used';
+  } catch(e) {
+    ['jon-used','jon-rem'].forEach(id=>setText(id,'—'));
+    $('jon-pct').textContent = 'Unavailable';
+  }
+}
+
+async function loadConcerts() {
+  try {
+    const rec = await window.dbLoad('concerts');
+    const list = rec && Array.isArray(rec.list) ? rec.list : [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dated = list.filter(c=>parseDMY(c.date));
+    const upcoming = dated.filter(c=>parseDMY(c.date)>today).sort((a,b)=>parseDMY(a.date)-parseDMY(b.date));
+    const seen = list.filter(c=>{ const d=parseDMY(c.date); return !d || d<=today; });
+    setText('cl-concerts', seen.filter(c=>c.type!=='festival').length);
+    setText('cl-festivals', seen.filter(c=>c.type==='festival').length);
+    const artists = new Set();
+    const add = s => String(s || '').split(',').forEach(a=>{ const k=a.trim().toLowerCase(); if(k) artists.add(k); });
+    seen.forEach(c=>{ if(c.type==='festival') (c.artistsSeen||[]).forEach(add); else { add(c.artist); add(c.support); add(c.guests); } });
+    setText('cl-artists', artists.size);
+
+    const next = upcoming[0];
+    const latest = seen.filter(c=>parseDMY(c.date)).sort((a,b)=>parseDMY(b.date)-parseDMY(a.date))[0];
+    const lead = next || latest;
+    if (lead) {
+      const isNext = !!next;
+      const d = parseDMY(lead.date);
+      const days = isNext ? daysUntil(d) : null;
+      $('concert-pill').textContent = isNext ? 'Upcoming' : 'Latest';
+      setText('concert-name', eventName(lead));
+      setText('concert-place', lead.venue || lead.location || '');
+      $('concert-countdown').textContent = isNext ? countdownText(days) + ' ·' : '';
+      $('concert-date').textContent = lead.date || '';
+      if (lead.thumb) setImg('concert-img', lead.thumb);
+      setText('cu-concert-value', isNext ? countdownText(days) : 'No upcoming');
+      setText('cu-concert-meta', isNext ? eventName(next) : (latest ? `Latest: ${eventName(latest)}` : 'No concerts logged'));
+    } else {
+      ['concert-name','concert-place'].forEach(id=>setText(id,'No concerts logged'));
+      setText('cu-concert-value','Nothing booked'); setText('cu-concert-meta','Add your next concert');
+      $('concert-countdown').textContent=''; $('concert-date').textContent='';
+    }
+  } catch(e) {
+    ['cl-concerts','cl-festivals','cl-artists','concert-name','concert-place','cu-concert-value','cu-concert-meta'].forEach(id=>setText(id,'—'));
+  }
 }
 
 async function loadShows() {
   try {
     const rec = await window.dbLoad('shows');
-    const list = (rec && Array.isArray(rec.list)) ? rec.list : [];
+    const list = rec && Array.isArray(rec.list) ? rec.list : [];
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const upcoming = list.filter(c => { const d = parseMY(c.date); return d && d > monthStart; })
-                         .sort((a, b) => parseMY(a.date) - parseMY(b.date));
-    const seen = list.filter(c => { const d = parseMY(c.date); return !d || d <= monthStart; });
-
-    document.getElementById('sh-shows').textContent = seen.length;
-    document.getElementById('sh-theatres').textContent =
-      new Set(seen.map(c => (c.theatre || '').trim().toLowerCase()).filter(Boolean)).size;
-    document.getElementById('sh-year').textContent =
-      seen.filter(c => (c.date || '').includes(String(new Date().getFullYear()))).length;
-
-    const place = c => [c.theatre, c.location].filter(Boolean).join(', ');
-
-    const latest = seen.filter(c => parseMY(c.date)).sort((a, b) => parseMY(b.date) - parseMY(a.date))[0];
-    if (latest) {
-      document.getElementById('latest-show-card').style.display = 'block';
-      document.getElementById('ls-name').textContent = latest.name;
-      document.getElementById('ls-meta').textContent = [place(latest), fmtMY(latest.date)].filter(Boolean).join(' · ');
-      if (latest.thumb) {
-        const img = document.getElementById('ls-img');
-        img.src = latest.thumb;
-        img.style.display = 'block';
-      }
-    }
-
+    const upcoming = list.filter(c=>{ const d=parseMY(c.date); return d && d>monthStart; }).sort((a,b)=>parseMY(a.date)-parseMY(b.date));
+    const seen = list.filter(c=>{ const d=parseMY(c.date); return !d || d<=monthStart; });
+    setText('sh-shows', seen.length);
+    setText('sh-theatres', new Set(seen.map(c=>(c.theatre||'').trim().toLowerCase()).filter(Boolean)).size);
+    setText('sh-year', seen.filter(c=>(c.date||'').includes(String(now.getFullYear()))).length);
+    const latest = seen.filter(c=>parseMY(c.date)).sort((a,b)=>parseMY(b.date)-parseMY(a.date))[0];
     const next = upcoming[0];
-    if (next) {
-      const d = parseMY(next.date);
-      const months = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
-      document.getElementById('next-stage-card').style.display = 'block';
-      document.getElementById('nst-name').textContent = next.name;
-      document.getElementById('nst-meta').textContent = [place(next), fmtMY(next.date)].filter(Boolean).join(' · ');
-      document.getElementById('nst-days').textContent = months;
-      document.querySelector('#next-stage-card .cd-unit').textContent = months === 1 ? 'month to go' : 'months to go';
+    const lead = next || latest;
+    if (lead) {
+      const isNext=!!next, d=parseMY(lead.date), months=isNext?monthsUntil(d):null;
+      $('show-pill').textContent=isNext?'Upcoming':'Latest';
+      setText('show-name',lead.name||'Show');
+      setText('show-place',[lead.theatre,lead.location].filter(Boolean).join(', '));
+      $('show-countdown').textContent=isNext?countdownText(months,'month')+' ·':'';
+      $('show-date').textContent=fmtMY(lead.date);
+      if (lead.thumb) setImg('show-img',lead.thumb);
+      setText('cu-show-value',isNext?countdownText(months,'month'):'No upcoming');
+      setText('cu-show-meta',isNext?(lead.name||'Next show'):(latest?`Latest: ${latest.name||'Show'}`:'No shows logged'));
+    } else {
+      setText('show-name','No shows logged'); setText('show-place','Add your next show');
+      setText('cu-show-value','Nothing booked'); setText('cu-show-meta','Add your next show');
+      $('show-countdown').textContent=''; $('show-date').textContent='';
     }
-  } catch(e) {}
+  } catch(e) {
+    ['sh-shows','sh-theatres','sh-year','show-name','show-place','cu-show-value','cu-show-meta'].forEach(id=>setText(id,'—'));
+  }
 }
 
 async function loadParks() {
   try {
     const rec = await window.dbLoad('parks');
-    const list = (rec && Array.isArray(rec.list)) ? rec.list : [];
+    const list = rec && Array.isArray(rec.list) ? rec.list : [];
     const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = list.filter(v => { const d = parseDMY(v.date); return d && d > today; })
-                         .sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
-    const seen = list.filter(v => { const d = parseDMY(v.date); return !d || d <= today; });
-
+    const upcoming = list.filter(v=>{const d=parseDMY(v.date); return d&&d>today;}).sort((a,b)=>parseDMY(a.date)-parseDMY(b.date));
+    const seen = list.filter(v=>{const d=parseDMY(v.date); return !d||d<=today;});
     const credits = new Set();
-    seen.forEach(v => (v.coasters || []).forEach(c => {
-      if (!(c || '').trim()) return;
-      credits.add((v.park || '').trim().toLowerCase() + '|' + c.trim().toLowerCase());
-    }));
-
-    document.getElementById('pk-parks').textContent =
-      new Set(seen.map(v => (v.park || '').trim().toLowerCase()).filter(Boolean)).size;
-    document.getElementById('pk-credits').textContent = credits.size;
-    document.getElementById('pk-year').textContent =
-      seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length;
-
-    const place = v => [v.location, v.country].map(s => (s || '').trim()).filter(Boolean).join(', ');
-
-    const latest = seen.filter(v => parseDMY(v.date)).sort((a, b) => parseDMY(b.date) - parseDMY(a.date))[0];
-    if (latest) {
-      document.getElementById('latest-park-card').style.display = 'block';
-      document.getElementById('lp-name').textContent = latest.park || '';
-      document.getElementById('lp-meta').textContent = [place(latest), latest.date].filter(Boolean).join(' · ');
-      if (latest.thumb) {
-        const img = document.getElementById('lp-img');
-        img.src = latest.thumb;
-        img.style.display = 'block';
-      }
+    seen.forEach(v=>(v.coasters||[]).forEach(c=>{ const name=(c||'').trim(); if(name) credits.add((v.park||'').trim().toLowerCase()+'|'+name.toLowerCase()); }));
+    setText('pk-parks',new Set(seen.map(v=>(v.park||'').trim().toLowerCase()).filter(Boolean)).size);
+    setText('pk-credits',credits.size);
+    setText('pk-year',seen.filter(v=>{const d=parseDMY(v.date); return d&&d.getFullYear()===new Date().getFullYear();}).length);
+    const latest=seen.filter(v=>parseDMY(v.date)).sort((a,b)=>parseDMY(b.date)-parseDMY(a.date))[0];
+    const next=upcoming[0];
+    const lead=next||latest;
+    if(lead){
+      const isNext=!!next,d=parseDMY(lead.date),days=isNext?daysUntil(d):null;
+      $('park-pill').textContent=isNext?'Upcoming':'Latest';
+      setText('park-name',lead.park||'Theme park');
+      setText('park-place',[lead.location,lead.country].map(s=>(s||'').trim()).filter(Boolean).join(', '));
+      $('park-countdown').textContent=isNext?countdownText(days)+' ·':'';
+      $('park-date').textContent=lead.date||'';
+      if(lead.thumb) setImg('park-img',lead.thumb);
+      setText('cu-park-value',isNext?countdownText(days):'No upcoming');
+      setText('cu-park-meta',isNext?(lead.park||'Next park visit'):(latest?`Latest: ${latest.park||'Park'}`:'No parks logged'));
+    } else {
+      setText('park-name','No park visits logged'); setText('park-place','Add your next park');
+      setText('cu-park-value','Nothing booked'); setText('cu-park-meta','Add your next park');
+      $('park-countdown').textContent=''; $('park-date').textContent='';
     }
-
-    const next = upcoming[0];
-    if (next) {
-      const days = Math.round((parseDMY(next.date) - today) / 86400000);
-      document.getElementById('next-park-card').style.display = 'block';
-      document.getElementById('np-name').textContent = next.park || '';
-      document.getElementById('np-meta').textContent = [place(next), next.date].filter(Boolean).join(' · ');
-      document.getElementById('np-days').textContent = days;
-      document.querySelector('#next-park-card .cd-unit').textContent = days === 1 ? 'day to go' : 'days to go';
-    }
-  } catch(e) {}
+  } catch(e) {
+    ['pk-parks','pk-credits','pk-year','park-name','park-place','cu-park-value','cu-park-meta'].forEach(id=>setText(id,'—'));
+  }
 }
 
-loadStats();
-loadShows();
-loadParks();
-
-// ── MOBILE: compact rows — "+" expands, tapping the row opens the tool ──
-(function () {
-  const mq = window.matchMedia('(max-width: 640px)');
-  const OPEN_KEY = 'hub_open_cols';
-  let openSet;
-  try { openSet = new Set(JSON.parse(localStorage.getItem(OPEN_KEY) || '[]')); }
-  catch (e) { openSet = new Set(); }
-
-  document.querySelectorAll('.col').forEach((col, i) => {
-    const head = col.querySelector('.col-head');
-    if (!head) return;
-    const key = head.getAttribute('href') || String(i);
-
-    // Move every card below the header into a collapsible body
-    const body = document.createElement('div');
-    body.className = 'col-body';
-    while (head.nextElementSibling) body.appendChild(head.nextElementSibling);
-
-    // Wrap the header so the "+" can sit alongside it (buttons can't live inside a link)
-    const row = document.createElement('div');
-    row.className = 'col-headrow';
-    col.insertBefore(row, head);
-    row.appendChild(head);
-
-    const plus = document.createElement('button');
-    plus.className = 'col-plus';
-    plus.type = 'button';
-    plus.setAttribute('aria-label', 'Expand');
-    plus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-    row.appendChild(plus);
-
-    col.appendChild(body);
-
-    if (openSet.has(key)) col.classList.add('open');
-
-    plus.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      const nowOpen = !col.classList.contains('open');
-      col.classList.toggle('open', nowOpen);
-      if (nowOpen) openSet.add(key); else openSet.delete(key);
-      try { localStorage.setItem(OPEN_KEY, JSON.stringify([...openSet])); } catch (e) {}
-    });
-  });
-
-  function sync() {
-    document.querySelectorAll('.col').forEach(col => col.classList.toggle('collapsible', mq.matches));
-  }
-  sync();
-  mq.addEventListener('change', sync);
-})();
+async function initDashboard() {
+  await Promise.allSettled([loadTrips(), loadHolidayAllowance(), loadConcerts(), loadShows(), loadParks()]);
+}
+document.addEventListener('DOMContentLoaded', initDashboard, { once: true });
 </script>
 </body>
 </html>
