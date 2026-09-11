@@ -23,13 +23,15 @@ require('Header always set X-Frame-Options "SAMEORIGIN"' in htaccess,
 require('Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"' in htaccess,
         'unused high-risk browser capabilities must stay disabled')
 
-# HSTS begins as a short, reversible pilot. The one-day lifetime limits blast
-# radius while transport behavior is observed. Subdomains/preload are forbidden
-# until they receive an explicit later review rather than being enabled casually.
-require('Header always set Strict-Transport-Security "max-age=86400"' in htaccess,
-        'HSTS pilot must remain exactly one day')
-require('includeSubDomains' not in htaccess and 'preload' not in htaccess,
-        'HSTS pilot must not commit subdomains or browser preload yet')
+# HSTS begins as a short, reversible pilot. Validate the emitted header line
+# itself rather than scanning comments, so documentation can safely mention later
+# options such as includeSubDomains/preload without weakening the contract.
+hsts_lines = [
+    line.strip() for line in htaccess.splitlines()
+    if line.strip().startswith('Header always set Strict-Transport-Security ')
+]
+require(hsts_lines == ['Header always set Strict-Transport-Security "max-age=86400"'],
+        'HSTS pilot must be exactly one day with no subdomain/preload directives')
 
 # CSP is introduced in two layers. The low-risk structural directives are enforced
 # now; script/style/network source restrictions stay report-only until remaining
