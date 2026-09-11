@@ -58,6 +58,31 @@ jobs:
       - name: Validate web app manifest JSON
         run: python -m json.tool manifest.webmanifest >/dev/null
 
+      - name: Verify HSTS rollout preconditions
+        run: |
+          curl --fail --show-error --silent \
+            --output /dev/null \
+            "https://joelpagett.co.uk/"
+
+          http_status=$(curl --show-error --silent \
+            --output /dev/null \
+            --dump-header /tmp/http-redirect.headers \
+            --write-out "%{http_code}" \
+            "http://joelpagett.co.uk/")
+          case "$http_status" in
+            301|302|307|308) ;;
+            *)
+              echo "HTTP homepage returned ${http_status}; expected an HTTPS redirect before enabling HSTS"
+              exit 1
+              ;;
+          esac
+          if ! grep -Eiq '^location:[[:space:]]*https://joelpagett\.co\.uk/?' /tmp/http-redirect.headers; then
+            echo 'HTTP homepage does not redirect to the canonical HTTPS host'
+            cat /tmp/http-redirect.headers
+            exit 1
+          fi
+          echo 'HSTS preconditions: canonical HTTPS works and HTTP redirects to it'
+
       - name: Validate source credential hygiene
         run: python scripts/validate-source-hygiene.py
 
@@ -180,6 +205,9 @@ jobs:
           grep -Eiq '^permissions-policy:.*microphone[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
           grep -Eiq '^permissions-policy:.*payment[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
           grep -Eiq '^permissions-policy:.*usb[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
+
+      - name: Verify live HSTS pilot header
+        run: grep -Eiq '^strict-transport-security:[[:space:]]*max-age=86400[[:space:]]*$' /tmp/home.headers
 
       - name: Verify itinerary and dashboard runtime
         run: |
@@ -333,4 +361,4 @@ jobs:
             "https://joelpagett.co.uk/auth-v2.php?action=check")
           test "$check_status" = "401"
 
-          echo 'PIN gate + response headers + staged CSP + dashboard session runtime + V4 activity editor + protected APIs: ok'
+          echo 'PIN gate + response headers + HSTS pilot + staged CSP + dashboard session runtime + V4 activity editor + protected APIs: ok'
