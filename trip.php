@@ -62,6 +62,38 @@ function externalizeOwnerNavigationHandlers(string $html): array {
   ]];
 }
 
+function externalizeOwnerActivityHandlers(string $html): array {
+  // V4 already owns the activity modal Save/Delete/× controls and drawer Edit/
+  // Remove actions. Owner HTML can therefore remove their executable attributes
+  // without creating a second action controller. Cancel/overlay close are routed
+  // through the existing delegated owner listener.
+  $replacements = [
+    ['<button class="modal-close" onclick="closeModal()">', '<button class="modal-close">', 1],
+    ['<button class="modal-btn danger" id="modal-delete-btn" style="display:none" onclick="deleteCurrentItem()">', '<button class="modal-btn danger" id="modal-delete-btn" style="display:none">', 1],
+    ['<button class="modal-btn secondary" onclick="closeModal()">Cancel</button>', '<button class="modal-btn secondary" data-owner-action="close-activity-modal">Cancel</button>', 1],
+    ['<button class="modal-btn primary" id="modal-save-btn" onclick="saveItem()">', '<button class="modal-btn primary" id="modal-save-btn">', 1],
+    ['<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>', '<div class="drawer-overlay" id="drawer-overlay" data-owner-action="close-drawer"></div>', 1],
+    ['<button class="dr-text-btn" onclick="editCurrentItem()">', '<button class="dr-text-btn" data-activity-action="edit">', 1],
+    ['<button class="dr-text-btn dr-text-btn--danger" onclick="deleteCurrentItem()">', '<button class="dr-text-btn dr-text-btn--danger" data-activity-action="remove">', 1],
+  ];
+
+  $total = 0;
+  $valid = true;
+  $counts = [];
+  foreach ($replacements as [$from, $to, $expected]) {
+    $html = str_replace($from, $to, $html, $count);
+    $counts[$from] = $count;
+    $total += $count;
+    if ($count !== $expected) $valid = false;
+  }
+
+  return [$html, [
+    'owner_activity_handlers_externalized' => $total,
+    'owner_activity_handler_contract_valid' => $valid ? 1 : 0,
+    'owner_activity_handler_counts' => $counts,
+  ]];
+}
+
 function serveTripRuntimeAsset(string $asset): void {
   if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') {
     http_response_code(405);
@@ -320,6 +352,17 @@ if (($ownerNavDiag['owner_navigation_handler_contract_valid'] ?? 0) !== 1
     || ($ownerNavDiag['owner_navigation_handlers_externalized'] ?? 0) !== 18) {
   http_response_code(500);
   echo 'This trip could not be rendered safely because owner navigation changed unexpectedly.';
+  exit;
+}
+
+// Second CSP event-handler tranche: activity modal/drawer controls already owned
+// by the V4 controller lose their source onclicks; only Cancel/overlay close need
+// declarative delegated actions. Public share markup remains unchanged.
+[$page, $ownerActivityDiag] = externalizeOwnerActivityHandlers($page);
+if (($ownerActivityDiag['owner_activity_handler_contract_valid'] ?? 0) !== 1
+    || ($ownerActivityDiag['owner_activity_handlers_externalized'] ?? 0) !== 7) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because activity controls changed unexpectedly.';
   exit;
 }
 
