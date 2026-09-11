@@ -119,13 +119,13 @@
   .coming-icon.orange { color: var(--orange); background: var(--orange-soft); }
   .coming-icon.purple { color: var(--purple); background: var(--purple-soft); }
   .coming-icon.green { color: var(--green); background: var(--green-soft); }
-  .coming-copy { min-width: 0; flex: 1; }
-  .coming-label { font-size: 10px; font-weight: 650; color: #485357; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .coming-value { font-size: 17px; font-weight: 800; letter-spacing: -.03em; color: var(--teal); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coming-copy { min-width: 0; flex: 1; display: block; line-height: 1.15; }
+  .coming-label { display: block; font-size: 9.5px; font-weight: 700; color: #485357; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coming-value { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.03em; color: var(--teal); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .coming-value.orange { color: var(--orange); }
   .coming-value.purple { color: var(--purple); }
   .coming-value.green { color: var(--green); }
-  .coming-meta { font-size: 9.5px; color: var(--muted); font-weight: 500; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .coming-meta { display: block; font-size: 8.5px; color: var(--muted); font-weight: 500; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini-arrow { color: #a7b0b3; flex: 0 0 auto; }
 
   .main-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; }
@@ -462,7 +462,17 @@ function setImg(id, src) {
   if (placeholder) placeholder.style.display = 'none';
 }
 function dayWord(n) { return n === 1 ? 'day' : 'days'; }
-function safeDate(d) { const x = d instanceof Date ? d : new Date(d); return Number.isNaN(x.getTime()) ? null : x; }
+function safeDate(d) {
+  if (d instanceof Date) return Number.isNaN(d.getTime()) ? null : new Date(d.getTime());
+  const s = String(d || '').trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  const x = new Date(s);
+  return Number.isNaN(x.getTime()) ? null : x;
+}
 function fmtDate(d, includeYear = true) {
   d = safeDate(d); if (!d) return '';
   return d.toLocaleDateString('en-GB', includeYear ? { day:'numeric', month:'short', year:'numeric' } : { day:'numeric', month:'short' });
@@ -510,8 +520,8 @@ async function loadTrips() {
     const raw = registry && registry.trips ? registry.trips : [];
     const trips = (Array.isArray(raw) ? raw : Object.values(raw || {})).filter(t => t && !t.deleted);
     const today = new Date(); today.setHours(0,0,0,0);
-    const startOf = t => safeDate(t.startDate || t.start || t.date);
-    const endOf = t => safeDate(t.endDate || t.end || t.startDate || t.start || t.date);
+    const startOf = t => safeDate(t.dep || t.startDate || t.start || t.date);
+    const endOf = t => safeDate(t.ret || t.endDate || t.end || t.dep || t.startDate || t.start || t.date);
     const upcoming = trips.filter(t => { const d = startOf(t); return d && d >= today; }).sort((a,b)=>startOf(a)-startOf(b));
     const completed = trips.filter(t => { const d = endOf(t); return d && d < today; });
     setText('hp-trips', trips.length);
@@ -521,7 +531,7 @@ async function loadTrips() {
     const next = upcoming[0];
     if (next) {
       const start = startOf(next), end = endOf(next), days = daysUntil(start);
-      const name = next.name || next.dest || next.destination || 'Next trip';
+      const name = next.dest || next.name || next.destination || 'Next trip';
       setText('trip-name', name);
       setText('trip-date', end && end.getTime() !== start.getTime() ? `${fmtDate(start)} – ${fmtDate(end)}` : fmtDate(start));
       setText('trip-days', days);
@@ -645,14 +655,26 @@ async function loadShows() {
     const next = upcoming[0];
     const lead = next || latest;
     if (lead) {
-      const isNext=!!next, d=parseMY(lead.date), months=isNext?monthsUntil(d):null;
+      const isNext = !!next;
+      const d = parseMY(lead.date);
+      const exactDay = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(lead.date || '').trim());
+      let showCountdown = '';
+      if (isNext) {
+        if (exactDay) {
+          const days = daysUntil(d);
+          showCountdown = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : countdownText(days);
+        } else {
+          const months = monthsUntil(d);
+          showCountdown = months === 0 ? 'This month' : months === 1 ? 'Next month' : countdownText(months, 'month');
+        }
+      }
       $('show-pill').textContent=isNext?'Upcoming':'Latest';
       setText('show-name',lead.name||'Show');
       setText('show-place',[lead.theatre,lead.location].filter(Boolean).join(', '));
-      $('show-countdown').textContent=isNext?countdownText(months,'month')+' ·':'';
+      $('show-countdown').textContent=isNext?showCountdown+' ·':'';
       $('show-date').textContent=fmtMY(lead.date);
       if (lead.thumb) setImg('show-img',lead.thumb);
-      setText('cu-show-value',isNext?countdownText(months,'month'):'No upcoming');
+      setText('cu-show-value',isNext?showCountdown:'No upcoming');
       setText('cu-show-meta',isNext?(lead.name||'Next show'):(latest?`Latest: ${latest.name||'Show'}`:'No shows logged'));
     } else {
       setText('show-name','No shows logged'); setText('show-place','Add your next show');
@@ -672,7 +694,11 @@ async function loadParks() {
     const upcoming = list.filter(v=>{const d=parseDMY(v.date); return d&&d>today;}).sort((a,b)=>parseDMY(a.date)-parseDMY(b.date));
     const seen = list.filter(v=>{const d=parseDMY(v.date); return !d||d<=today;});
     const credits = new Set();
-    seen.forEach(v=>(v.coasters||[]).forEach(c=>{ const name=(c||'').trim(); if(name) credits.add((v.park||'').trim().toLowerCase()+'|'+name.toLowerCase()); }));
+    const coasterName = c => typeof c === 'string' ? c.replace(/\s*\*\s*$/, '').trim() : String(c?.name || '').trim();
+    seen.forEach(v => (Array.isArray(v.coasters) ? v.coasters : []).forEach(c => {
+      const name = coasterName(c);
+      if (name) credits.add((v.park || '').trim().toLowerCase() + '|' + name.toLowerCase());
+    }));
     setText('pk-parks',new Set(seen.map(v=>(v.park||'').trim().toLowerCase()).filter(Boolean)).size);
     setText('pk-credits',credits.size);
     setText('pk-year',seen.filter(v=>{const d=parseDMY(v.date); return d&&d.getFullYear()===new Date().getFullYear();}).length);
