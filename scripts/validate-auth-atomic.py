@@ -16,6 +16,7 @@ def require(ok: bool, message: str) -> None:
 
 auth_v2 = read("auth-v2.php")
 auth_session = read("auth-session.php")
+auth_js = read("auth.js")
 
 # PIN changes must be all-or-nothing: update the PIN, revoke old sessions and
 # create the replacement session in one transaction.
@@ -41,9 +42,7 @@ require("INTERVAL 5 MINUTE" in auth_session,
 require("SELECT (expires_at > NOW()) AS is_valid, last_seen_at" in auth_session,
         "session validation must use DB time and read last_seen in one query")
 
-# Stage one of the browser-token migration: issue a host-only HttpOnly cookie while
-# retaining the header credential as a compatibility fallback. The __Host- prefix
-# plus Secure + Path=/ prevents Domain/path weakening by the browser.
+# The real browser credential must live in a host-only Secure/HttpOnly cookie.
 require("const AUTH_SESSION_COOKIE = '__Host-jh_session';" in auth_session,
         "session cookie must use the __Host- prefix")
 for cookie_flag in (
@@ -58,25 +57,58 @@ require("function requestAuthToken(string $headerFallback = '')" in auth_session
 require("$_COOKIE[AUTH_SESSION_COOKIE]" in auth_session,
         "credential resolver must support the HttpOnly session cookie")
 require("$_SERVER['HTTP_X_AUTH_TOKEN']" in auth_session,
-        "legacy header fallback must remain during the migration stage")
+        "temporary legacy header migration must remain available")
 require("$resolved = requestAuthToken($token);" in auth_session,
         "all isAuthorizedToken callers must transparently gain cookie support")
 
+# Stage two: authentication JSON may expose only a non-secret compatibility marker,
+# never either generated 256-bit session credential.
+require("const AUTH_BROWSER_SESSION_MARKER = 'cookie-session';" in auth_v2,
+        "auth endpoint must define the non-secret browser marker")
+require(auth_v2.count("'session_token' => AUTH_BROWSER_SESSION_MARKER") >= 3,
+        "login/check/PIN-change responses must return only the browser marker")
+require("'session_token' => $sessionToken" not in auth_v2,
+        "login must never serialize the raw session token")
+require("'session_token' => $newSessionToken" not in auth_v2,
+        "PIN change must never serialize the replacement raw session token")
 require("$sessionToken = issueAuthSession();" in auth_v2 and
         "setAuthSessionCookie($sessionToken);" in auth_v2,
-        "successful login must issue the HttpOnly cookie")
-require("$token = requestAuthToken();" in auth_v2,
-        "auth check/change/logout paths must resolve cookie credentials")
+        "successful login must put the real credential only into HttpOnly cookie transport")
 require("$pdo->commit();\n        setAuthSessionCookie($newSessionToken);" in auth_v2,
         "PIN change must set the replacement cookie only after transaction commit")
+require("$hadCookie = trim((string)($_COOKIE[AUTH_SESSION_COOKIE] ?? '')) !== '';" in auth_v2 and
+        "if (!$hadCookie) setAuthSessionCookie($token);" in auth_v2,
+        "a successful legacy header check must migrate that session into HttpOnly cookie transport")
 require("clearAuthSessionCookie();" in auth_v2,
         "logout must expire the browser cookie")
-require("'session_token' => $sessionToken" in auth_v2 and
-        "'session_token' => $newSessionToken" in auth_v2,
-        "stage one must retain legacy token JSON until browser storage is migrated")
+
+# Browser storage is now explicitly non-secret. A valid legacy token can be read
+# once for migration, but every successful check/login overwrites storage with the
+# harmless marker and authority remains locked until /check succeeds server-side.
+require("const SESSION_MARKER = 'cookie-session';" in auth_js,
+        "browser auth code must use the same non-secret marker")
+require("function storeSession()" in auth_js and
+        "sessionToken: SESSION_MARKER" in auth_js,
+        "browser storage must persist only the marker")
+require("storeSession(sessionToken)" not in auth_js,
+        "browser storage helper must not accept a raw credential")
+require("/^[a-f0-9]{64}$/i.test(value) || value === SESSION_MARKER" in auth_js,
+        "browser may recognize a legacy raw token only for one-time migration")
+require("fetch('/auth-v2.php?action=check'" in auth_js and
+        "credentials: 'same-origin'" in auth_js,
+        "browser must ask the server to validate cookie/session authority on startup")
+require("if (await validateCurrentSession()) return;" in auth_js,
+        "private UI must wait for successful server-side session validation")
+require("window._mytripsAuthed === true" in auth_js,
+        "isAuthed must reflect validated runtime authority, not storage contents")
+require("storeSession();\n        announceAuthed();" in auth_js,
+        "successful validation must overwrite any legacy token before unlocking the UI")
+require("json.data.session_token !== SESSION_MARKER" in auth_js,
+        "new PIN login must require the expected non-secret server marker")
 
 # Every protected data endpoint still funnels through isAuthorizedToken(), so the
-# helper-level cookie fallback applies uniformly without risky endpoint rewrites.
+# cookie-first helper applies uniformly without risky endpoint rewrites. Existing
+# clients may continue sending a harmless X-Auth-Token marker.
 for endpoint in (
     "api.php", "record.php", "record-delete.php", "trip-create.php",
     "trip-delete.php", "place-photo.php", "backup-export.php", "share.php",
@@ -88,4 +120,4 @@ for endpoint in (
 require("Could not revoke the server session" in auth_v2,
         "logout must surface server revocation failures")
 
-print("auth + HttpOnly cookie migration contracts: ok")
+print("auth + non-secret browser session contracts: ok")
