@@ -70,11 +70,22 @@ require("Shared itinerary could not be initialized safely." in share,
         "share preload drift must fail closed instead of returning a blank shell")
 
 # Share-management actions other than public load must require the normal random
-# authenticated owner session.
+# authenticated owner session and explicitly reject foreign browser requests. The
+# public capability route must run before this same-origin check so links opened
+# from messages/search/apps remain usable.
+require("function requireShareManagementSameOrigin" in share,
+        "owner share management must have an explicit same-origin browser guard")
+require("HTTP_SEC_FETCH_SITE" in share and "'cross-site'" in share,
+        "share-management guard must reject cross-site Fetch Metadata requests")
+require("HTTP_ORIGIN" in share and "joelpagett\\.co\\.uk" in share,
+        "share-management guard must reject foreign Origin headers")
 require("function requireShareOwnerSession" in share and "isAuthorizedToken($token, false)" in share,
         "share creation/list/revoke must require a real owner session")
-require(share.index("if ($shareAction === 'share_load')") < share.index("requireShareOwnerSession();"),
-        "only share_load may run before owner-session enforcement")
+public_pos = share.index("if ($shareAction === 'share_load')")
+guard_pos = share.index("requireShareManagementSameOrigin();")
+auth_pos = share.index("requireShareOwnerSession();")
+require(public_pos < guard_pos < auth_pos,
+        "public share_load must bypass the owner-only origin/session guards")
 
 # Owner UI must expose both explicit choices and never install those controls on a
 # public shared copy.
@@ -87,4 +98,4 @@ require("params.has('share')" in ui,
 require("/share.php?share=1&t=" in ui,
         "new share links must use the sanitized share renderer")
 
-print("share privacy contracts: ok")
+print("share privacy + same-origin management contracts: ok")
