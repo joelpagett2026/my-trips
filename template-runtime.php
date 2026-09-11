@@ -15,6 +15,77 @@ function browserMapsKey(): string {
     return runtimeConfigValue('MAPS_BROWSER_KEY');
 }
 
+function itineraryCoreSourceBootstrap(): string {
+    return "// Read URL params\nconst params = new URLSearchParams(window.location.search);\nconst dest   = params.get('dest') || 'New Trip';\nconst dep    = params.get('dep')  || '';\nconst ret    = params.get('ret')  || '';\nconst trav   = params.get('trav') || '2';\nconst status = params.get('status') || 'upcoming';\nconst slug   = params.get('slug') || 'new-trip';\n\n// Use slug as the database record ID\nconst RECORD_ID = slug;";
+}
+
+function itineraryCoreVersion(): string {
+    static $version = null;
+    if ($version !== null) return $version;
+
+    $templatePath = __DIR__ . '/new-trip-v2.html';
+    $templateHash = is_file($templatePath) ? (hash_file('sha256', $templatePath) ?: '') : '';
+    $runtimeHash = hash_file('sha256', __FILE__) ?: '';
+    $keyHash = hash('sha256', browserMapsKey());
+    $version = substr(hash('sha256', $templateHash . '|' . $runtimeHash . '|' . $keyHash), 0, 20);
+    return $version;
+}
+
+function itineraryCoreAssetUrl(): string {
+    return '/template-runtime.php?asset=itinerary-core&v=' . rawurlencode(itineraryCoreVersion());
+}
+
+/**
+ * Extract the static portion of the large final itinerary script. The small trip
+ * bootstrap remains in HTML because trip.php replaces it with per-trip metadata.
+ */
+function extractItineraryCoreScript(string $html): array {
+    $bootstrap = itineraryCoreSourceBootstrap();
+    $bootstrapPos = strpos($html, $bootstrap);
+    if ($bootstrapPos === false) return ['', ['itinerary_core_extracted' => 0]];
+
+    $coreStart = $bootstrapPos + strlen($bootstrap);
+    $closing = "\n</script>\n</body>";
+    $coreEnd = strrpos($html, $closing);
+    if ($coreEnd === false || $coreEnd <= $coreStart) {
+        return ['', ['itinerary_core_extracted' => 0]];
+    }
+
+    return [substr($html, $coreStart, $coreEnd - $coreStart), ['itinerary_core_extracted' => 1]];
+}
+
+/**
+ * Replace the static portion of the giant inline itinerary script with one
+ * immutable, versioned external request. The trip bootstrap stays inline so the
+ * existing authenticated renderer can continue substituting DB-backed metadata.
+ */
+function externalizeItineraryCoreScript(string $html): array {
+    $bootstrap = itineraryCoreSourceBootstrap();
+    $bootstrapPos = strpos($html, $bootstrap);
+    if ($bootstrapPos === false) return [$html, ['itinerary_core_externalized' => 0, 'itinerary_core_preloaded' => 0]];
+
+    $coreStart = $bootstrapPos + strlen($bootstrap);
+    $closing = "\n</script>\n</body>";
+    $coreEnd = strrpos($html, $closing);
+    if ($coreEnd === false || $coreEnd <= $coreStart) {
+        return [$html, ['itinerary_core_externalized' => 0, 'itinerary_core_preloaded' => 0]];
+    }
+
+    $assetUrl = itineraryCoreAssetUrl();
+    $tail = substr($html, $coreEnd + strlen("\n</script>"));
+    $html = substr($html, 0, $coreStart)
+        . "\n</script>\n<script src=\"" . htmlspecialchars($assetUrl, ENT_QUOTES, 'UTF-8') . "\"></script>"
+        . $tail;
+
+    $preload = '<link rel="preload" href="' . htmlspecialchars($assetUrl, ENT_QUOTES, 'UTF-8') . '" as="script">';
+    $html = str_replace('</head>', $preload . "\n</head>", $html, $preloadCount);
+
+    return [$html, [
+        'itinerary_core_externalized' => 1,
+        'itinerary_core_preloaded' => $preloadCount,
+    ]];
+}
+
 /**
  * Remove legacy credentials from the shared itinerary source, apply the known
  * hotel compatibility correction, and inject only the explicitly public browser
@@ -118,6 +189,19 @@ function hotelForDay(dayIdx) {
 JS;
     $html = str_replace($oldHotelLookup, $newHotelLookup, $html, $hotelLookupCount);
     $diagnostics['hotel_lookup_rewritten'] = $hotelLookupCount;
+
+    // Only authenticated owner trip pages externalize the static core in this
+    // first guarded stage. Share pages still embed their redacted payload by
+    // replacing code inside the inline engine, so they deliberately stay on the
+    // established inline path until that payload handoff is migrated separately.
+    $executedScript = basename((string)($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    if ($executedScript === 'trip.php') {
+        [$html, $coreDiag] = externalizeItineraryCoreScript($html);
+        $diagnostics += $coreDiag;
+    } else {
+        $diagnostics['itinerary_core_externalized'] = 0;
+        $diagnostics['itinerary_core_preloaded'] = 0;
+    }
 
     return [$html, $diagnostics];
 }
@@ -295,4 +379,61 @@ function applyGoogleMapsScriptRuntimeSafety(string $html): array {
         $count
     );
     return [$html, ['maps_script_key_rewritten' => $count]];
+}
+
+function serveItineraryCoreAsset(): void {
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') {
+        http_response_code(405);
+        header('Allow: GET, HEAD');
+        exit;
+    }
+
+    $currentVersion = itineraryCoreVersion();
+    $requestedVersion = trim((string)($_GET['v'] ?? ''));
+    if ($requestedVersion !== $currentVersion) {
+        header('Cache-Control: no-store');
+        header('Location: ' . itineraryCoreAssetUrl(), true, 302);
+        exit;
+    }
+
+    $template = @file_get_contents(__DIR__ . '/new-trip-v2.html');
+    if ($template === false) {
+        http_response_code(500);
+        header('Content-Type: application/javascript; charset=UTF-8');
+        header('Cache-Control: no-store');
+        echo "throw new Error('Itinerary core is unavailable');";
+        exit;
+    }
+
+    // Direct execution of this helper is never trip.php, so the sanitizer keeps
+    // the full inline engine intact for extraction while still applying every
+    // credential, Maps, share-URL and hotel compatibility rewrite.
+    [$safeTemplate, $diag] = applyItineraryRuntimeSafety($template);
+    $safe = ($diag['auth_const_removed'] ?? 0) === 1
+        && ($diag['auth_headers_rewritten'] ?? 0) >= 1
+        && ($diag['maps_key_rewritten'] ?? 0) === 1
+        && ($diag['share_url_rewritten'] ?? 0) === 1
+        && ($diag['hotel_lookup_rewritten'] ?? 0) === 1;
+    [$core, $coreDiag] = extractItineraryCoreScript($safeTemplate);
+    if (!$safe || ($coreDiag['itinerary_core_extracted'] ?? 0) !== 1 || trim($core) === '') {
+        http_response_code(500);
+        header('Content-Type: application/javascript; charset=UTF-8');
+        header('Cache-Control: no-store');
+        echo "throw new Error('Itinerary core safety contract failed');";
+        exit;
+    }
+
+    header('Content-Type: application/javascript; charset=UTF-8');
+    header('Cache-Control: public, max-age=31536000, immutable');
+    header('X-Robots-Tag: noindex, nofollow, noarchive', true);
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') echo ltrim($core, "\r\n");
+    exit;
+}
+
+// template-runtime.php is normally include-only and blocked at the web edge.
+// One explicit, versioned asset request is allowed by .htaccess so owner trip
+// pages can reuse the large static itinerary engine from the browser cache.
+if (basename((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === basename(__FILE__)
+    && ($_GET['asset'] ?? '') === 'itinerary-core') {
+    serveItineraryCoreAsset();
 }
