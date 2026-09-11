@@ -261,16 +261,29 @@ if ($preloadCount !== 1) {
 }
 
 // Use current script versions just like the authenticated trip renderer. This
-// avoids a shared link being pinned to an old auth/database client generation.
+// avoids a shared link being pinned to an old client generation while allowing
+// versioned static assets to remain immutable in the browser cache.
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
+$uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();
 $page = preg_replace('~src="/auth\\.js\\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\\.js\\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
+
+// Begin fetching the shared UI helper while the browser is still parsing the
+// large itinerary document. The normal body-end script remains in place so its
+// execution timing and read-only behaviour are unchanged.
+$uiPreload = '<link rel="preload" href="/itinerary-ui.js?v=' . $uiVersion . '" as="script">';
+$page = str_replace('</head>', $uiPreload . "\n</head>", $page, $uiPreloadCount);
+if ($uiPreloadCount !== 1) {
+    http_response_code(500);
+    echo 'Shared itinerary shell is incomplete.';
+    exit;
+}
 
 $page = str_replace(
     '</body>',
     '<script>window.__MYTRIPS_SHARE_SHOW_REFS__=' . ($shared['show_refs'] ? 'true' : 'false') . ';</script>' . "\n"
-    . '<script src="/itinerary-ui.js?v=1"></script>' . "\n</body>",
+    . '<script src="/itinerary-ui.js?v=' . $uiVersion . '"></script>' . "\n</body>",
     $page,
     $uiCount
 );
