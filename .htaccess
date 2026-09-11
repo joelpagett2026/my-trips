@@ -4,6 +4,11 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"
 
+# HSTS starts with a deliberately short one-day pilot. Do not add includeSubDomains
+# or preload until the canonical host and any intended subdomains have completed a
+# longer compatibility period. Browsers ignore this header on plain HTTP responses.
+Header always set Strict-Transport-Security "max-age=86400"
+
 # Start CSP with directives that are safe to enforce independently of the site's
 # remaining inline scripts/styles. The broader source policy stays report-only
 # until those inline dependencies and all Maps/geocoding integrations are fully
