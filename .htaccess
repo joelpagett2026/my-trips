@@ -20,7 +20,9 @@ RewriteEngine On
 RewriteRule ^(?:db-config|auth-session|template-runtime|secrets)\.php$ - [F,L]
 
 # Render the homepage through a small PHP shell so critical auth/database assets
-# always receive fresh version URLs after a security deployment.
+# always receive fresh version URLs after a security deployment. Do not allow the
+# raw source template to be requested directly and bypass those runtime fixes.
+RewriteRule ^index\.html$ / [R=302,L,QSA]
 RewriteRule ^$ home.php [L,QSA]
 
 RewriteRule ^trips/index\.html$ /trips/ [R=302,L,QSA]
