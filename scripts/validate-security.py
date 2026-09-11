@@ -28,6 +28,13 @@ auth_session = read('auth-session.php')
 settings = read('settings.html')
 db_config = read('db-config.php')
 
+# Server-only include/configuration files may need to live under public_html for
+# local PHP require/include calls, but they must never become HTTP endpoints.
+require('RewriteRule ^(?:db-config|auth-session|template-runtime|secrets)\\.php$ - [F,L]' in htaccess,
+        'server-only PHP include/configuration paths must be denied at the web edge')
+require("'db-config.php'" in deploy and "'auth-session.php'" in deploy and "'template-runtime.php'" in deploy,
+        'server-only helper denial must not accidentally remove required deployment includes')
+
 # Legacy write/creation paths that bypass modern conflict/PIN/registry handling
 # must be unreachable.
 require('action=(save|set_setting|create_page)' in htaccess and 'RewriteRule ^api\\.php$ - [R=410,L]' in htaccess,
