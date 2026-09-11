@@ -168,6 +168,25 @@ $completionVersion = @filemtime(__DIR__ . '/itinerary-completion.js') ?: time();
 $tripDeleteVersion = @filemtime(__DIR__ . '/trip-delete.js') ?: time();
 $page = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
 $page = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
+
+// The large itinerary shell has several body-end helpers that must keep their
+// existing synchronous execution order. Preloading their exact versioned URLs
+// from <head> lets the browser fetch them in parallel while the document parses,
+// removing the network waterfall without changing execution timing.
+$runtimePreloads =
+  '<link rel="preload" href="/itinerary-state-guard.js?v=' . $stateGuardVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/itinerary-ui.js?v=' . $uiVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/map-mobile-redesign.js?v=' . $mapVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/mobile-drag.js?v=' . $mobileDragVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/itinerary-completion.js?v=' . $completionVersion . '" as="script">' . "\n"
+  . '<link rel="preload" href="/trip-delete.js?v=' . $tripDeleteVersion . '" as="script">';
+$page = str_replace('</head>', $runtimePreloads . "\n</head>", $page, $runtimePreloadCount);
+if ($runtimePreloadCount !== 1) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because the page head is incomplete.';
+  exit;
+}
+
 $drawerSwipeFix = <<<'HTML'
 <script>
 (function () {

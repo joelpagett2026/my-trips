@@ -49,8 +49,9 @@ require("$tripDeleteVersion = @filemtime(__DIR__ . '/trip-delete.js')" in render
 
 require("trip-delete" in htaccess and "%{HTTP:Sec-Fetch-Site} ^cross-site$" in htaccess,
         "trip-delete.php must inherit same-origin API restrictions")
-require("trip-dashboard-create|trip-delete|budget-live-redesign" in htaccess,
-        "trip-delete.js must bypass the long JavaScript cache")
+require("itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete" in htaccess
+        and 'Header set Cache-Control "public, max-age=31536000, immutable"' in htaccess,
+        "versioned trip-delete.js must use the immutable runtime cache policy")
 require("'trip-delete.php'" in deploy and "'trip-delete.js'" in deploy,
         "atomic delete endpoint/client must be deployed")
 
