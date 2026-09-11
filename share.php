@@ -64,6 +64,22 @@ function shareRequestBody(): array {
     return $decoded;
 }
 
+function requireShareManagementSameOrigin(): void {
+    // Public shared itineraries are intentionally cross-site navigable capability
+    // URLs, so this guard applies only after the public share_load branch has
+    // returned. Owner-only create/list/revoke actions must reject explicit foreign
+    // browser requests before session authentication is attempted. CLI requests
+    // without browser Origin/Fetch-Metadata headers remain available with a valid
+    // owner credential for controlled administration.
+    $fetchSite = strtolower(trim((string)($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '')));
+    if ($fetchSite === 'cross-site') shareFail('Cross-site request blocked', 403);
+
+    $origin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
+    if ($origin !== '' && !preg_match('~^https://(?:www\\.)?joelpagett\\.co\\.uk$~i', $origin)) {
+        shareFail('Cross-site request blocked', 403);
+    }
+}
+
 function requireShareOwnerSession(): void {
     $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
     if (!isAuthorizedToken($token, false)) shareFail('Unauthorised', 401);
@@ -160,6 +176,7 @@ if (in_array($shareAction, ['share_load', 'create_share', 'list_shares', 'revoke
         shareOk(loadSharedTrip($shareToken));
     }
 
+    requireShareManagementSameOrigin();
     requireShareOwnerSession();
     ensureShareTable();
     $body = shareRequestBody();
