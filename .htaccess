@@ -153,7 +153,7 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 # These assets receive file-modification versions from the PHP renderers, so a
 # deployment automatically creates a new URL whenever the file changes. Long-term
 # immutable caching then makes repeat itinerary loads effectively local for them.
-<FilesMatch "^(?:auth|db|map-mobile-redesign|itinerary-completion|itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete)\.js$">
+<FilesMatch "^(?:auth|db|map-mobile-redesign|itinerary-completion|itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete|trip-standalone|trip-drawer-swipe|trip-mobile-modal-layout)\.js$">
   Header set Cache-Control "public, max-age=31536000, immutable"
 </FilesMatch>
 <FilesMatch "^itinerary-v2-style\.css$">
