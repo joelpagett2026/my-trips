@@ -2,7 +2,7 @@
 // The same immutable file is served under two explicit trip.php derivative names:
 // - trip-json-bootstrap: read inert per-trip JSON before the external core runs.
 // - trip-standalone: preserve iOS Home Screen detection/refresh behavior and
-//   install delegated owner-navigation controls without inline HTML handlers.
+//   install delegated owner controls without inline HTML handlers.
 (function () {
   const current = document.currentScript;
   const currentUrl = current?.src ? new URL(current.src, window.location.href) : null;
@@ -88,6 +88,14 @@
         case 'close-menu':
           event.preventDefault();
           call('closeMobMenu');
+          break;
+        case 'close-activity-modal':
+          event.preventDefault();
+          call('closeModal');
+          break;
+        case 'close-drawer':
+          event.preventDefault();
+          call('closeDrawer');
           break;
       }
     });
