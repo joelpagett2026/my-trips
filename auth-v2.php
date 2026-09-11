@@ -1,7 +1,8 @@
 <?php
 // MY TRIPS — authentication v2
-// Issues random, expiring server-side session tokens. The browser submits only
-// the four PIN digits over same-origin HTTPS; hashing and comparison happen here.
+// Issues random, expiring server-side sessions. During the cookie migration the
+// same token is also returned for legacy clients, while modern browser requests
+// can authenticate with the Secure/HttpOnly host cookie.
 require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/auth-session.php';
 
@@ -58,8 +59,12 @@ if ($action === 'login') {
         }
 
         clearFailedLogins();
+        $sessionToken = issueAuthSession();
+        setAuthSessionCookie($sessionToken);
         authOk([
-            'session_token' => issueAuthSession(),
+            // Temporary compatibility field. A later guarded client migration will
+            // remove the raw token from browser storage and then this JSON field.
+            'session_token' => $sessionToken,
             'expires_in' => AUTH_SESSION_TTL_SECONDS,
         ]);
     } catch (Throwable $e) {
@@ -69,7 +74,7 @@ if ($action === 'login') {
 
 if ($action === 'check') {
     try {
-        $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
+        $token = requestAuthToken();
         if (!isValidAuthSession($token)) authFail('Session expired', 401);
         authOk(['valid' => true, 'expires_in_max' => AUTH_SESSION_TTL_SECONDS]);
     } catch (Throwable $e) {
@@ -78,7 +83,7 @@ if ($action === 'check') {
 }
 
 if ($action === 'change_pin') {
-    $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
+    $token = requestAuthToken();
     if (!isAuthorizedToken($token, false)) authFail('Unauthorised', 401);
 
     $newPin = validatedPin($body, 'new_pin');
@@ -111,8 +116,10 @@ if ($action === 'change_pin') {
             ->execute([$newSessionHash]);
 
         $pdo->commit();
+        setAuthSessionCookie($newSessionToken);
         authOk([
             'changed' => true,
+            // Temporary compatibility field until the browser no longer stores it.
             'session_token' => $newSessionToken,
             'expires_in' => AUTH_SESSION_TTL_SECONDS,
         ]);
@@ -123,7 +130,8 @@ if ($action === 'change_pin') {
 }
 
 if ($action === 'logout') {
-    $token = (string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? '');
+    $token = requestAuthToken();
+    clearAuthSessionCookie();
     $hash = authTokenHash($token);
     if ($hash === null) authOk(['logged_out' => true]);
 
