@@ -184,10 +184,85 @@ $cityTagCleanupScript = <<<'HTML'
 </script>
 HTML;
 
+// Porto had a historical porto-2026-v2 registry slug, while all legacy Porto
+// routes now redirect to the canonical porto-2026 itinerary record. Read the
+// canonical itinerary cover and apply it to either registry/card identity so the
+// dashboard cannot stay on an older image because of that alias.
+$legacyPortoCoverScript = <<<'HTML'
+<script>
+(() => {
+  let running = false;
+  let repaired = false;
+
+  async function repairPortoCover() {
+    if (running || repaired || typeof window.dbLoad !== 'function') return;
+    running = true;
+    try {
+      const trip = await window.dbLoad('porto-2026');
+      const meta = trip && trip.meta ? trip.meta : {};
+      const cover = (typeof meta.coverPhoto === 'string' && meta.coverPhoto)
+        ? meta.coverPhoto
+        : (typeof meta._coverPhoto === 'string' ? meta._coverPhoto : '');
+      if (!cover) return;
+
+      let found = false;
+      document.querySelectorAll('.trip-card').forEach(card => {
+        const destination = String(card.querySelector('.card-dest')?.textContent || '').trim().toLowerCase();
+        const href = String(card.getAttribute('href') || '');
+        if (destination !== 'porto' && !href.includes('porto-2026')) return;
+        const area = card.querySelector('.card-image-area');
+        if (!area) return;
+        found = true;
+        const map = area.querySelector('.card-map');
+        if (map) map.remove();
+        let image = Array.from(area.children).find(child => child.tagName === 'IMG');
+        if (!image) {
+          image = document.createElement('img');
+          image.alt = 'Porto';
+          image.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+          area.insertBefore(image, area.firstChild);
+        }
+        image.src = cover;
+      });
+
+      if (found && typeof window.dbLoadRegistry === 'function' && typeof window.dbSaveRegistry === 'function') {
+        try {
+          const registry = await window.dbLoadRegistry();
+          const entry = Array.isArray(registry)
+            ? registry.find(t => t && ['porto-2026', 'porto-2026-v2'].includes(t.slug))
+            : null;
+          if (entry && String(entry.photo || '') !== cover) {
+            entry.photo = cover;
+            await window.dbSaveRegistry(registry);
+          }
+        } catch (err) {
+          console.warn('Porto card registry repair failed:', err);
+        }
+      }
+
+      repaired = found;
+    } catch (err) {
+      console.warn('Porto card cover repair failed:', err);
+    } finally {
+      running = false;
+    }
+  }
+
+  const schedule = () => setTimeout(repairPortoCover, 0);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', schedule, { once: true });
+  } else {
+    schedule();
+  }
+  new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+HTML;
+
 // Override the legacy two-step dashboard creator only after its original script
 // has loaded. The replacement uses trip-create.php to commit the itinerary and
 // registry entry atomically.
-$createScript = '<script src="/trip-dashboard-create.js?v=2"></script>' . "\n" . $cityTagCleanupScript;
+$createScript = '<script src="/trip-dashboard-create.js?v=2"></script>' . "\n" . $cityTagCleanupScript . "\n" . $legacyPortoCoverScript;
 $page = str_replace('</body>', $createScript . "\n</body>", $page, $createScriptCount);
 if ($createScriptCount !== 1) {
     http_response_code(500);
