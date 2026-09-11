@@ -111,7 +111,7 @@ function applyTripsDashboardRuntimeSafety(string $html): array {
 
     $html = str_replace(
         ".filter((c,i,a) => a.indexOf(c) === i) // dedupe",
-        ".filter((c,i,a) => a.indexOf(c) === i && String(c).trim().toLowerCase() !== 'travel day') // dedupe + exclude non-location label",
+        ".filter((c,i,a) => a.indexOf(c) === i && String(c).trim().toLowerCase() !== 'travel day' && !(t.slug === 'dubai-2025' && String(c).trim().toLowerCase() === 'doha')) // dedupe + exclude non-location/transfer labels",
         $html,
         $travelDayCount
     );
