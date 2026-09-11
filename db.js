@@ -389,7 +389,7 @@ async function dbComputeRoute(origin, destination, waypoints = []) {
     return result || null;
 }
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
     document.addEventListener('mytrips:record-loaded', event => {
         const detail = event?.detail || {};
         if (!detail.id || detail.id === 'trip-registry') return;
