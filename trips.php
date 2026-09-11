@@ -158,6 +158,8 @@ $page = preg_replace('~src="/db\\.js\\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion
 // Remove a grey city tag only when it repeats the card's main destination AND
 // the card has at least one other distinct place tag. Single-destination trips
 // such as Gothenburg and Hamburg keep their one useful destination pill.
+// Porto is intentionally kept as a destination pill alongside Aveiro, Braga and
+// Guimarães so the card lists the main city as well as the day-trip locations.
 // Cards are populated asynchronously, so observe additions and clean them as
 // they appear rather than depending on a brittle source-code replacement.
 $cityTagCleanupScript = <<<'HTML'
@@ -170,6 +172,18 @@ $cityTagCleanupScript = <<<'HTML'
       if (!destination) return;
       const destinationKey = normalize(destination.textContent);
       const tags = Array.from(card.querySelectorAll('.city-tag'));
+
+      if (destinationKey === 'porto') {
+        const hasPorto = tags.some(tag => normalize(tag.textContent) === 'porto');
+        if (!hasPorto && tags.length) {
+          const portoTag = document.createElement('span');
+          portoTag.className = 'city-tag';
+          portoTag.textContent = 'Porto';
+          tags[0].parentNode.insertBefore(portoTag, tags[0]);
+        }
+        return;
+      }
+
       const hasOtherPlace = tags.some(tag => normalize(tag.textContent) !== destinationKey);
       if (!hasOtherPlace) return;
       tags.forEach(tag => {
