@@ -37,6 +37,16 @@ function applyItineraryRuntimeSafety(string $html): array {
     );
     $diagnostics['itinerary_style_versioned'] = $styleVersionCount;
 
+    // Google Fonts is a render-blocking third-party dependency. Establish the two
+    // required connections as soon as the itinerary head is parsed, before the
+    // stylesheet request has to discover fonts.gstatic.com itself.
+    $fontStylesheet = '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">';
+    $fontOptimized = '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n"
+        . '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n"
+        . $fontStylesheet;
+    $html = str_replace($fontStylesheet, $fontOptimized, $html, $fontDeliveryCount);
+    $diagnostics['itinerary_font_delivery_optimized'] = $fontDeliveryCount;
+
     $html = preg_replace(
         "/const AUTH_TOKEN = '(?:__DISABLED_LEGACY_AUTH_TOKEN__|[a-f0-9]{64})';/",
         "const AUTH_TOKEN = ''; // legacy constant intentionally disabled",
@@ -113,6 +123,17 @@ JS;
 }
 
 function applyTripsDashboardRuntimeSafety(string $html): array {
+    // CSS @import delays discovery of Google Fonts until after the inline stylesheet
+    // has started parsing. Promote it to normal head links and preconnect first so
+    // dashboard text can settle sooner without changing the Montserrat face/weights.
+    $fontImport = "@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');";
+    $html = str_replace($fontImport, '', $html, $fontImportCount);
+    $dashboardFontHead = '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n"
+        . '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n"
+        . '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">';
+    $html = str_replace('<style>', $dashboardFontHead . "\n<style>", $html, $fontHeadCount);
+    $fontDeliveryCount = ($fontImportCount === 1 && $fontHeadCount === 1) ? 1 : 0;
+
     $key = browserMapsKey();
     $replacement = 'const GOOGLE_MAPS_API_KEY = ' . json_encode($key, JSON_UNESCAPED_SLASHES) . ';';
     $html = preg_replace(
@@ -199,6 +220,7 @@ JS;
     );
 
     return [$html, [
+        'dashboard_font_delivery_optimized' => $fontDeliveryCount,
         'maps_key_rewritten' => $mapsCount,
         'travel_day_filter_rewritten' => $travelDayCount,
         'registry_error_handling_rewritten' => $registryErrorCount,
