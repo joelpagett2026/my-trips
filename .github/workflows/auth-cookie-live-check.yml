@@ -15,6 +15,20 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     steps:
+      - name: Verify non-secret browser auth runtime
+        run: |
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/auth.js?verify-cookie-session-marker=1" \
+            --output /tmp/auth.js
+          grep -q "const SESSION_MARKER = 'cookie-session';" /tmp/auth.js
+          grep -q "function storeSession()" /tmp/auth.js
+          grep -q "sessionToken: SESSION_MARKER" /tmp/auth.js
+          grep -q "fetch('/auth-v2.php?action=check'" /tmp/auth.js
+          if grep -q 'function storeSession(sessionToken)' /tmp/auth.js; then
+            echo 'live auth.js still accepts a raw session credential for browser storage'
+            exit 1
+          fi
+
       - name: Verify auth endpoint expires secure host cookie
         run: |
           status=$(curl --show-error --silent \
@@ -50,5 +64,5 @@ jobs:
           if 'max-age=0' not in lower and 'expires=' not in lower:
               raise SystemExit(f'logout cookie is not expired: {target}')
 
-          print('live auth cookie migration endpoint: ok')
+          print('live non-secret auth runtime + HttpOnly cookie transport: ok')
           PY
