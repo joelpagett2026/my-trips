@@ -346,6 +346,28 @@ async function dbSaveRegistry(trips) {
     return dbSave('trip-registry', { trips });
 }
 
+// The itinerary owns the selected cover image (`meta.coverPhoto`) while the
+// dashboard card reads the registry's `photo` field. Keep those two copies in
+// lockstep whenever an itinerary record is loaded. This also repairs older
+// mismatches automatically the next time a trip is opened.
+async function syncLoadedTripCoverToRegistry(id, data) {
+    if (!id || id === 'trip-registry' || !data || !data.meta) return;
+    if (!Object.prototype.hasOwnProperty.call(data.meta, 'coverPhoto')) return;
+
+    const coverPhoto = typeof data.meta.coverPhoto === 'string' ? data.meta.coverPhoto : '';
+    try {
+        const registry = await dbLoadRegistry();
+        const entry = Array.isArray(registry) ? registry.find(t => t && t.slug === id) : null;
+        if (!entry || String(entry.photo || '') === coverPhoto) return;
+        entry.photo = coverPhoto;
+        await dbSaveRegistry(registry);
+    } catch (err) {
+        // Card sync should never block the itinerary itself. A later load/save
+        // will retry, while the itinerary record remains the source of truth.
+        console.warn('Trip card cover photo sync failed:', err);
+    }
+}
+
 async function dbCreateShare(tripId) {
     const result = await apiCall('create_share', {}, { trip_id: tripId });
     return result ? result.token : null;
@@ -365,6 +387,14 @@ async function dbPlaceDetails(placeId) {
 async function dbComputeRoute(origin, destination, waypoints = []) {
     const result = await apiCall('routes_compute', {}, { origin, destination, waypoints });
     return result || null;
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('mytrips:record-loaded', event => {
+        const detail = event?.detail || {};
+        if (!detail.id || detail.id === 'trip-registry') return;
+        void syncLoadedTripCoverToRegistry(detail.id, detail.data);
+    });
 }
 
 if (typeof window !== 'undefined') {
