@@ -5,6 +5,7 @@
 const AUTH_SESSION_TTL_SECONDS = 43200; // 12 hours
 const AUTH_MAX_FAILURES = 8;
 const AUTH_FAILURE_WINDOW_SECONDS = 900; // 15 minutes
+const AUTH_SESSION_COOKIE = '__Host-jh_session';
 
 function activePinHash(): string {
     // The database value is authoritative. A missing/invalid row or database read
@@ -112,6 +113,42 @@ function authTokenHash(string $token): ?string {
     return hash('sha256', $token);
 }
 
+/**
+ * Resolve the current session credential. The host-only HttpOnly cookie wins once
+ * present; the legacy X-Auth-Token header remains a migration fallback so current
+ * browser code and controlled CLI tooling keep working during the staged rollout.
+ */
+function requestAuthToken(string $headerFallback = ''): string {
+    $cookie = trim((string)($_COOKIE[AUTH_SESSION_COOKIE] ?? ''));
+    if ($cookie !== '') return $cookie;
+    $headerFallback = trim($headerFallback);
+    if ($headerFallback !== '') return $headerFallback;
+    return trim((string)($_SERVER['HTTP_X_AUTH_TOKEN'] ?? ''));
+}
+
+function setAuthSessionCookie(string $token): void {
+    if (authTokenHash($token) === null) {
+        throw new InvalidArgumentException('Invalid session token');
+    }
+    setcookie(AUTH_SESSION_COOKIE, $token, [
+        'expires' => time() + AUTH_SESSION_TTL_SECONDS,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
+}
+
+function clearAuthSessionCookie(): void {
+    setcookie(AUTH_SESSION_COOKIE, '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
+}
+
 function issueAuthSession(): string {
     ensureAuthTables();
     $token = bin2hex(random_bytes(32));
@@ -161,7 +198,8 @@ function isValidAuthSession(string $token): bool {
 }
 
 function isAuthorizedToken(string $token, bool $unusedLegacyFlag = false): bool {
-    return $token !== '' && isValidAuthSession($token);
+    $resolved = requestAuthToken($token);
+    return $resolved !== '' && isValidAuthSession($resolved);
 }
 
 function revokeAuthSession(string $token): void {
