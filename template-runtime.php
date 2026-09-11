@@ -179,7 +179,7 @@ observeDashboardMap('map-dubai', () => makeMap('map-dubai',[24.4,54.8],7,[[48.85
 observeDashboardMap('map-cr', () => makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#0e7a87'));
 observeDashboardMap('map-china', () => makeMap('map-china',[33.5,109.0],4,[[31.2304,121.4737],[31.2989,120.5853],[30.5728,104.0668],[30.9964,103.6673],[34.3416,108.9398],[39.9042,116.4074]],'#0e7a87'));
 JS;
-    $html = str_replace($oldStaticMapCalls, $newStaticMapCalls, $staticMapDeferCount);
+    $html = str_replace($oldStaticMapCalls, $newStaticMapCalls, $html, $staticMapDeferCount);
 
     // Dynamic registry cards are constructed before they are inserted into the
     // document, so install the observer on the next task and then run the original
