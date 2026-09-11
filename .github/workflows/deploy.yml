@@ -156,6 +156,8 @@ jobs:
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/home.html
           grep -Eiq '^x-content-type-options:[[:space:]]*nosniff[[:space:]]*$' /tmp/home.headers
           grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin[[:space:]]*$' /tmp/home.headers
+          grep -Eiq '^x-frame-options:[[:space:]]*SAMEORIGIN[[:space:]]*$' /tmp/home.headers
+          grep -Eiq '^permissions-policy:[[:space:]]*camera=\(\), microphone=\(\), payment=\(\), usb=\(\)[[:space:]]*$' /tmp/home.headers
 
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/trips/" \
