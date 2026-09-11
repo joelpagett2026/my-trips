@@ -146,25 +146,32 @@ jobs:
           print(f'deployed against verified database with {count} active itineraries')
           PY
 
-      - name: Verify restored PIN gate runtime
+      - name: Fetch live homepage response
         run: |
           curl --fail --show-error --silent \
             --dump-header /tmp/home.headers \
             "https://joelpagett.co.uk/" \
             --output /tmp/home.html
+
+      - name: Verify PIN gate assets and established headers
+        run: |
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/home.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/home.html
           grep -Eiq '^x-content-type-options:[[:space:]]*nosniff[[:space:]]*$' /tmp/home.headers
           grep -Eiq '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin[[:space:]]*$' /tmp/home.headers
-          # Hosting/CDN layers may add or normalize security-header values. Accept
-          # either safe frame policy and verify every restricted permission appears
-          # on the effective Permissions-Policy header without requiring byte-for-byte formatting.
-          grep -Eiq '^x-frame-options:.*(SAMEORIGIN|DENY)' /tmp/home.headers
+
+      - name: Verify live frame protection header
+        run: grep -Eiq '^x-frame-options:.*(SAMEORIGIN|DENY)' /tmp/home.headers
+
+      - name: Verify live browser permissions header
+        run: |
           grep -Eiq '^permissions-policy:.*camera[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
           grep -Eiq '^permissions-policy:.*microphone[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
           grep -Eiq '^permissions-policy:.*payment[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
           grep -Eiq '^permissions-policy:.*usb[[:space:]]*=[[:space:]]*\(\)' /tmp/home.headers
 
+      - name: Verify itinerary and dashboard runtime
+        run: |
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/trips/" \
             --output /tmp/trips.html
@@ -182,6 +189,8 @@ jobs:
           grep -Eq 'src="/auth\.js\?v=[0-9]+"' /tmp/trip.html
           grep -Eq 'src="/db\.js\?v=[0-9]+"' /tmp/trip.html
 
+      - name: Verify activity editor and protected APIs
+        run: |
           curl --fail --show-error --silent \
             "https://joelpagett.co.uk/activity-editor.js?verify-controller=1" \
             --output /tmp/activity-editor.js
