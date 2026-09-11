@@ -1,13 +1,14 @@
 <?php
 // MY TRIPS — authentication v2
-// Issues random, expiring server-side sessions. During the cookie migration the
-// same token is also returned for legacy clients, while modern browser requests
-// can authenticate with the Secure/HttpOnly host cookie.
+// The raw random session credential is carried only by the Secure/HttpOnly cookie.
+// JSON retains a non-secret marker for compatibility with older cached browser JS.
 require_once __DIR__ . '/db-config.php';
 require_once __DIR__ . '/auth-session.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
+
+const AUTH_BROWSER_SESSION_MARKER = 'cookie-session';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'error'=>'POST required']); exit; }
@@ -62,9 +63,9 @@ if ($action === 'login') {
         $sessionToken = issueAuthSession();
         setAuthSessionCookie($sessionToken);
         authOk([
-            // Temporary compatibility field. A later guarded client migration will
-            // remove the raw token from browser storage and then this JSON field.
-            'session_token' => $sessionToken,
+            // Non-secret compatibility marker. Older cached clients still expect
+            // this key to be truthy, but the actual credential never enters JSON.
+            'session_token' => AUTH_BROWSER_SESSION_MARKER,
             'expires_in' => AUTH_SESSION_TTL_SECONDS,
         ]);
     } catch (Throwable $e) {
@@ -74,9 +75,19 @@ if ($action === 'login') {
 
 if ($action === 'check') {
     try {
+        $hadCookie = trim((string)($_COOKIE[AUTH_SESSION_COOKIE] ?? '')) !== '';
         $token = requestAuthToken();
         if (!isValidAuthSession($token)) authFail('Session expired', 401);
-        authOk(['valid' => true, 'expires_in_max' => AUTH_SESSION_TTL_SECONDS]);
+
+        // Seamless one-time migration for a still-valid legacy header session:
+        // once its next auth check succeeds, move that credential behind HttpOnly.
+        if (!$hadCookie) setAuthSessionCookie($token);
+
+        authOk([
+            'valid' => true,
+            'session_token' => AUTH_BROWSER_SESSION_MARKER,
+            'expires_in_max' => AUTH_SESSION_TTL_SECONDS,
+        ]);
     } catch (Throwable $e) {
         authFail('Authentication service is temporarily unavailable', 503);
     }
@@ -119,8 +130,7 @@ if ($action === 'change_pin') {
         setAuthSessionCookie($newSessionToken);
         authOk([
             'changed' => true,
-            // Temporary compatibility field until the browser no longer stores it.
-            'session_token' => $newSessionToken,
+            'session_token' => AUTH_BROWSER_SESSION_MARKER,
             'expires_in' => AUTH_SESSION_TTL_SECONDS,
         ]);
     } catch (Throwable $e) {
