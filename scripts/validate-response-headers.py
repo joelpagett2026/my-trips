@@ -155,8 +155,8 @@ require("$tripDrawerSwipeUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-drawer
 require("$tripMobileModalUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-mobile-modal-layout')" in trip,
         'mobile modal helper must use the whitelisted derivative URL')
 
-# Owner per-trip metadata is now inert JSON. Only the external derivative parses
-# it, so DB-backed values are no longer emitted as executable JavaScript source.
+# Owner per-trip metadata is inert JSON. Only the external derivative parses it,
+# so DB-backed values are no longer emitted as executable JavaScript source.
 require('<script type="application/json" id="trip-runtime-data">' in trip,
         'owner trip metadata must be rendered as an inert JSON block')
 require("$tripJsonBootstrapUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-json-bootstrap')" in trip,
@@ -173,6 +173,42 @@ require("document.getElementById('trip-runtime-data')" in standalone,
         'JSON bootstrap derivative must read only the inert owner data element')
 require("window.RECORD_ID = nextSlug" in standalone,
         'JSON bootstrap derivative must restore the itinerary record identifier contract')
+
+# First event-handler CSP tranche: authenticated owner navigation/chrome is
+# converted to declarative data attributes after the large core is externalized.
+# Public shares deliberately retain the established markup until their own stage.
+require('function externalizeOwnerNavigationHandlers(string $html): array' in trip,
+        'owner renderer must externalize its navigation event handlers')
+require("'owner_navigation_handlers_externalized' => $total" in trip and
+        "'owner_navigation_handler_contract_valid' => $valid ? 1 : 0" in trip,
+        'owner navigation migration must publish exact-count diagnostics')
+require("($ownerNavDiag['owner_navigation_handlers_externalized'] ?? 0) !== 18" in trip,
+        'owner navigation migration must fail closed unless exactly 18 handlers move')
+for marker in (
+    'data-owner-action="view" data-owner-view="itinerary"',
+    'data-owner-action="view" data-owner-view="bookings"',
+    'data-owner-action="view" data-owner-view="map"',
+    'data-owner-action="view" data-owner-view="budget"',
+    'data-owner-action="toggle-days"',
+    'data-owner-action="share"',
+    'data-owner-action="settings"',
+    'data-owner-action="all-trips"',
+    'data-owner-action="toggle-menu"',
+    'data-owner-action="close-menu"',
+    'data-owner-close-menu="1"',
+):
+    require(marker in trip, f'owner navigation migration must emit {marker}')
+require('installOwnerNavigationHandlers' in standalone and
+        "closest?.('[data-owner-action]')" in standalone and
+        "control.dataset.ownerCloseMenu === '1'" in standalone,
+        'external owner runtime must install delegated data-action navigation')
+for action in ('view', 'share', 'settings', 'all-trips', 'toggle-menu', 'close-menu'):
+    require(f"case '{action}':" in standalone,
+            f'delegated owner runtime must handle {action}')
+require("action === 'toggle-days'" in standalone and "event.stopPropagation();" in standalone,
+        'days-collapse control must retain its stop-propagation behavior')
+require('externalizeOwnerNavigationHandlers' not in share,
+        'public share renderer must remain outside the owner navigation migration tranche')
 
 # These helpers used to be literal executable blocks in trip.php. They must stay
 # external even though delivery passes through a PHP derivative route.
@@ -191,4 +227,4 @@ require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
 require("/itinerary-ui.js?v=1" not in share,
         'share renderer must never pin itinerary-ui.js to a fixed cache key')
 
-print('safe response header + layered CSP + HSTS pilot + JSON bootstrap contracts: ok')
+print('safe response header + layered CSP + JSON bootstrap + owner navigation contracts: ok')

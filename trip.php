@@ -24,6 +24,44 @@ function tripRuntimeAssetUrl(string $asset): string {
   return '/trip.php?asset=' . rawurlencode($asset) . '&v=' . rawurlencode($version);
 }
 
+function externalizeOwnerNavigationHandlers(string $html): array {
+  $replacements = [
+    ['onclick="setView(\'itinerary\')"', 'data-owner-action="view" data-owner-view="itinerary"', 1],
+    ['onclick="setView(\'bookings\')"', 'data-owner-action="view" data-owner-view="bookings"', 1],
+    ['onclick="setView(\'map\')"', 'data-owner-action="view" data-owner-view="map"', 1],
+    ['onclick="setView(\'budget\')"', 'data-owner-action="view" data-owner-view="budget"', 1],
+    ['onclick="event.stopPropagation();toggleDaysCollapse();"', 'data-owner-action="toggle-days"', 1],
+    ['onclick="openTripSettings()"', 'data-owner-action="settings"', 1],
+    ['onclick="location.href=\'/trips/\'"', 'data-owner-action="all-trips"', 1],
+    ['onclick="openShareModal()"', 'data-owner-action="share"', 1],
+    ['onclick="toggleMobMenu()"', 'data-owner-action="toggle-menu"', 1],
+    ['onclick="closeMobMenu()"', 'data-owner-action="close-menu"', 2],
+    ['onclick="closeMobMenu();setView(\'itinerary\')"', 'data-owner-action="view" data-owner-view="itinerary" data-owner-close-menu="1"', 1],
+    ['onclick="closeMobMenu();setView(\'budget\')"', 'data-owner-action="view" data-owner-view="budget" data-owner-close-menu="1"', 1],
+    ['onclick="closeMobMenu();setView(\'bookings\')"', 'data-owner-action="view" data-owner-view="bookings" data-owner-close-menu="1"', 1],
+    ['onclick="closeMobMenu();setView(\'map\')"', 'data-owner-action="view" data-owner-view="map" data-owner-close-menu="1"', 1],
+    ['onclick="closeMobMenu();openShareModal()"', 'data-owner-action="share" data-owner-close-menu="1"', 1],
+    ['onclick="closeMobMenu();openTripSettings()"', 'data-owner-action="settings" data-owner-close-menu="1"', 1],
+    ['onclick="closeMobMenu();location.href=\'/trips/\'"', 'data-owner-action="all-trips" data-owner-close-menu="1"', 1],
+  ];
+
+  $total = 0;
+  $valid = true;
+  $counts = [];
+  foreach ($replacements as [$from, $to, $expected]) {
+    $html = str_replace($from, $to, $html, $count);
+    $counts[$from] = $count;
+    $total += $count;
+    if ($count !== $expected) $valid = false;
+  }
+
+  return [$html, [
+    'owner_navigation_handlers_externalized' => $total,
+    'owner_navigation_handler_contract_valid' => $valid ? 1 : 0,
+    'owner_navigation_handler_counts' => $counts,
+  ]];
+}
+
 function serveTripRuntimeAsset(string $asset): void {
   if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') {
     http_response_code(405);
@@ -273,4 +311,16 @@ if ($guardCount === 0) {
   exit;
 }
 $page = preg_replace('/<title>.*?<\/title>/', '<title>' . htmlspecialchars($dest) . ' · Itinerary</title>', $page);
+
+// First CSP event-handler tranche: remove owner navigation/chrome inline events
+// only. Generated itinerary controls and public share markup intentionally remain
+// on the existing path until their own guarded migrations.
+[$page, $ownerNavDiag] = externalizeOwnerNavigationHandlers($page);
+if (($ownerNavDiag['owner_navigation_handler_contract_valid'] ?? 0) !== 1
+    || ($ownerNavDiag['owner_navigation_handlers_externalized'] ?? 0) !== 18) {
+  http_response_code(500);
+  echo 'This trip could not be rendered safely because owner navigation changed unexpectedly.';
+  exit;
+}
+
 echo $page;
