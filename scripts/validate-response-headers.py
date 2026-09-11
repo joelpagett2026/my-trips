@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Focused contracts for browser security headers and safe delivery caching."""
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,9 +24,6 @@ require('Header always set X-Frame-Options "SAMEORIGIN"' in htaccess,
 require('Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"' in htaccess,
         'unused high-risk browser capabilities must stay disabled')
 
-# HSTS begins as a short, reversible pilot. Validate the emitted header line
-# itself rather than scanning comments, so documentation can safely mention later
-# options such as includeSubDomains/preload without weakening the contract.
 hsts_lines = [
     line.strip() for line in htaccess.splitlines()
     if line.strip().startswith('Header always set Strict-Transport-Security ')
@@ -33,15 +31,33 @@ hsts_lines = [
 require(hsts_lines == ['Header always set Strict-Transport-Security "max-age=86400"'],
         'HSTS pilot must be exactly one day with no subdomain/preload directives')
 
-# CSP is introduced in two layers. The low-risk structural directives are enforced
-# now; script/style/network source restrictions stay report-only until remaining
-# inline code and third-party integrations have completed their compatibility pass.
-enforced_csp = (
+# CSP is layered so already-proven structural protection remains stable while more
+# independent directives can be promoted without touching script/style execution.
+structural_csp = (
     'Header always set Content-Security-Policy '
     '"base-uri \'self\'; object-src \'none\'; frame-ancestors \'self\'"'
 )
-require(enforced_csp in htaccess,
+require(structural_csp in htaccess,
         'CSP must enforce self-only base URLs, no plugin objects, and same-origin framing')
+low_risk_csp = (
+    'Header always add Content-Security-Policy '
+    '"form-action \'self\'; manifest-src \'self\'; worker-src \'self\' blob:; '
+    'media-src \'self\' data: blob:"'
+)
+require(low_risk_csp in htaccess,
+        'CSP must enforce same-origin forms/manifests and restricted workers/media')
+
+# Guard the assumptions behind those promoted directives. There should be no
+# source-controlled external form target or external manifest; active media/worker
+# additions deserve an explicit policy review before they can land.
+for path in list(ROOT.rglob('*.html')) + list(ROOT.rglob('*.php')):
+    if '.git' in path.parts:
+        continue
+    text = path.read_text(encoding='utf-8', errors='ignore')
+    require(not re.search(r'<form\b[^>]*\baction\s*=\s*["\']https?://', text, re.I),
+            f'external form action requires CSP review: {path.relative_to(ROOT)}')
+    require(not re.search(r'<link\b[^>]*\brel\s*=\s*["\']manifest["\'][^>]*\bhref\s*=\s*["\']https?://', text, re.I),
+            f'external manifest requires CSP review: {path.relative_to(ROOT)}')
 
 report_only_prefix = 'Header always set Content-Security-Policy-Report-Only "'
 require(report_only_prefix in htaccess,
@@ -56,7 +72,7 @@ for directive in (
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io",
+    "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io https://nominatim.openstreetmap.org",
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "media-src 'self' data: blob:",
@@ -110,4 +126,4 @@ require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
 require("/itinerary-ui.js?v=1" not in share,
         'share renderer must never pin itinerary-ui.js to a fixed cache key')
 
-print('safe response header + staged CSP + HSTS pilot + delivery contracts: ok')
+print('safe response header + layered CSP + HSTS pilot + delivery contracts: ok')

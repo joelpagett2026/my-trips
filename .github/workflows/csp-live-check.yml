@@ -1,0 +1,55 @@
+name: Verify live layered CSP
+
+on:
+  workflow_run:
+    workflows:
+      - Validate and deploy joelpagett.co.uk
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify layered CSP on production
+        run: |
+          curl --fail --show-error --silent --dump-header /tmp/home.headers \
+            "https://joelpagett.co.uk/" --output /dev/null
+          curl --fail --show-error --silent --dump-header /tmp/trip.headers \
+            "https://joelpagett.co.uk/porto-2026" --output /dev/null
+
+          python - <<'PY'
+          from pathlib import Path
+
+          structural = "base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
+          promoted = "form-action 'self'; manifest-src 'self'; worker-src 'self' blob:; media-src 'self' data: blob:"
+          nominatim = 'https://nominatim.openstreetmap.org'
+
+          for label, filename in (('homepage', '/tmp/home.headers'), ('itinerary', '/tmp/trip.headers')):
+              headers = {}
+              for line in Path(filename).read_text(errors='replace').splitlines():
+                  if ':' not in line:
+                      continue
+                  name, value = line.split(':', 1)
+                  headers.setdefault(name.strip().lower(), []).append(value.strip())
+
+              enforced = headers.get('content-security-policy', [])
+              if not any(structural in value for value in enforced):
+                  raise SystemExit(f'{label} missing structural CSP: {enforced!r}')
+              if not any(promoted in value for value in enforced):
+                  raise SystemExit(f'{label} missing promoted low-risk CSP: {enforced!r}')
+
+              staged = headers.get('content-security-policy-report-only', [])
+              if len(staged) != 1 or nominatim not in staged[0]:
+                  raise SystemExit(f'{label} report-only CSP missing audited Nominatim connection: {staged!r}')
+
+              hsts = headers.get('strict-transport-security', [])
+              if 'max-age=86400' not in hsts:
+                  raise SystemExit(f'{label} no longer carries the HSTS pilot: {hsts!r}')
+
+          print('live layered CSP + HSTS pilot: ok')
+          PY
