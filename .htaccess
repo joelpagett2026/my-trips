@@ -13,6 +13,12 @@ Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
+# Server-only include/configuration files live in public_html because the PHP
+# endpoints require them locally, but they are not browser endpoints. Block direct
+# HTTP execution even if one of them would otherwise produce an empty response.
+# Internal PHP require/include calls bypass mod_rewrite and continue to work.
+RewriteRule ^(?:db-config|auth-session|template-runtime|secrets)\.php$ - [F,L]
+
 # Render the homepage through a small PHP shell so critical auth/database assets
 # always receive fresh version URLs after a security deployment.
 RewriteRule ^$ home.php [L,QSA]

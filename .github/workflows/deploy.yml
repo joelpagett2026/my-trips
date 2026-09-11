@@ -213,6 +213,20 @@ jobs:
             exit 1
           fi
 
+      - name: Verify server-only PHP helpers are blocked
+        run: |
+          for helper in db-config.php auth-session.php template-runtime.php secrets.php; do
+            status=$(curl --show-error --silent \
+              --output "/tmp/${helper}.blocked" \
+              --write-out "%{http_code}" \
+              "https://joelpagett.co.uk/${helper}")
+            if [ "$status" != "403" ]; then
+              echo "server-only helper ${helper} returned HTTP ${status}, expected 403"
+              exit 1
+            fi
+          done
+          echo 'server-only PHP helper paths: blocked'
+
       - name: Verify retired temporary access endpoint
         run: |
           temp_status=$(curl --show-error --silent \
