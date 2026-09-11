@@ -144,6 +144,60 @@ function applyTripsDashboardRuntimeSafety(string $html): array {
         $mapsCount
     );
 
+    // Map-only dashboard cards used to trigger Google Maps almost immediately,
+    // including cards far below the viewport. Observe the card area first and only
+    // start the existing map renderer as it approaches the screen. A generous root
+    // margin keeps the transition invisible during normal scrolling while avoiding
+    // initial Google Maps/network work when every visible card already has a photo.
+    $oldStaticMapCalls = <<<'JS'
+makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#0e7a87');
+makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#0e7a87');
+makeMap('map-dubai',[24.4,54.8],7,[[48.8566,2.3522],[25.2532,51.6100],[25.2048,55.2708],[24.4539,54.3773],[25.2048,55.2708]],'#0e7a87');
+makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#0e7a87');
+makeMap('map-china',[33.5,109.0],4,[[31.2304,121.4737],[31.2989,120.5853],[30.5728,104.0668],[30.9964,103.6673],[34.3416,108.9398],[39.9042,116.4074]],'#0e7a87');
+JS;
+    $newStaticMapCalls = <<<'JS'
+function observeDashboardMap(id, render) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = () => {
+    if (el.dataset.mapStarted === '1') return;
+    el.dataset.mapStarted = '1';
+    Promise.resolve(render()).catch(err => console.warn('Card map error:', err));
+  };
+  if (!('IntersectionObserver' in window)) { start(); return; }
+  const observer = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return;
+    observer.disconnect();
+    start();
+  }, { rootMargin:'320px 0px' });
+  observer.observe(el);
+}
+observeDashboardMap('map-canada', () => makeMap('map-canada',[45.5,-76.5],5,[[43.6532,-79.3832],[43.0896,-79.0849],[45.5017,-73.5673],[46.8139,-71.2080],[45.8833,-78.3667],[43.6532,-79.3832]],'#0e7a87'));
+observeDashboardMap('map-hk', () => makeMap('map-hk',[22.5,117.5],5,[[22.3193,114.1694],[25.0330,121.5654],[22.9997,120.2270],[22.3193,114.1694]],'#0e7a87'));
+observeDashboardMap('map-dubai', () => makeMap('map-dubai',[24.4,54.8],7,[[48.8566,2.3522],[25.2532,51.6100],[25.2048,55.2708],[24.4539,54.3773],[25.2048,55.2708]],'#0e7a87'));
+observeDashboardMap('map-cr', () => makeMap('map-cr',[9.8,-83.8],7,[[9.9281,-84.0907],[10.5369,-83.5038],[9.6557,-82.7533],[10.4678,-84.6442],[10.3100,-84.8200],[9.3918,-84.1569],[9.1552,-83.7361],[9.9281,-84.0907]],'#0e7a87'));
+observeDashboardMap('map-china', () => makeMap('map-china',[33.5,109.0],4,[[31.2304,121.4737],[31.2989,120.5853],[30.5728,104.0668],[30.9964,103.6673],[34.3416,108.9398],[39.9042,116.4074]],'#0e7a87'));
+JS;
+    $html = str_replace($oldStaticMapCalls, $newStaticMapCalls, $staticMapDeferCount);
+
+    // Dynamic registry cards are constructed before they are inserted into the
+    // document, so install the observer on the next task and then run the original
+    // map/geocode body only when that card is near the viewport.
+    $html = str_replace(
+        "  if (!t.photo) setTimeout(async () => {\n",
+        "  if (!t.photo) setTimeout(() => observeDashboardMap(mapId, async () => {\n",
+        $html,
+        $dynamicMapOpenCount
+    );
+    $html = str_replace(
+        "  }, 100);\n\n  return a;",
+        "  }), 0);\n\n  return a;",
+        $html,
+        $dynamicMapCloseCount
+    );
+    $mapDeferCount = ($staticMapDeferCount === 1 && $dynamicMapOpenCount === 1 && $dynamicMapCloseCount === 1) ? 1 : 0;
+
     $html = str_replace(
         ".filter((c,i,a) => a.indexOf(c) === i) // dedupe",
         ".filter((c,i,a) => a.indexOf(c) === i && String(c).trim().toLowerCase() !== 'travel day' && !(t.slug === 'dubai-2025' && String(c).trim().toLowerCase() === 'doha')) // dedupe + exclude non-location/transfer labels",
@@ -221,6 +275,7 @@ JS;
 
     return [$html, [
         'dashboard_font_delivery_optimized' => $fontDeliveryCount,
+        'dashboard_map_render_deferred' => $mapDeferCount,
         'maps_key_rewritten' => $mapsCount,
         'travel_day_filter_rewritten' => $travelDayCount,
         'registry_error_handling_rewritten' => $registryErrorCount,
