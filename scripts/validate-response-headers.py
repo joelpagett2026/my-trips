@@ -99,7 +99,8 @@ require("$stylePath = __DIR__ . '/itinerary-v2-style.css';" in runtime and
 
 immutable_runtime_group = (
     '<FilesMatch "^(?:auth|db|map-mobile-redesign|itinerary-completion|'
-    'itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete)\\.js$">'
+    'itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete|trip-standalone|'
+    'trip-drawer-swipe|trip-mobile-modal-layout)\\.js$">'
 )
 require(immutable_runtime_group in htaccess,
         'all dynamically versioned itinerary runtime scripts must share the immutable cache policy')
@@ -110,14 +111,35 @@ for filename, version_var in (
     ('itinerary-state-guard.js', '$stateGuardVersion'),
     ('itinerary-ui.js', '$uiVersion'),
     ('map-mobile-redesign.js', '$mapVersion'),
+    ('trip-drawer-swipe.js', '$tripDrawerSwipeVersion'),
     ('mobile-drag.js', '$mobileDragVersion'),
     ('itinerary-completion.js', '$completionVersion'),
+    ('trip-mobile-modal-layout.js', '$tripMobileModalVersion'),
     ('trip-delete.js', '$tripDeleteVersion'),
 ):
     require(filename in trip and version_var in trip,
             f'{filename} must retain a file-versioned owner itinerary URL')
     require(f'<link rel="preload" href="/{filename}?v=' in trip,
             f'{filename} must be preloaded from the document head')
+
+require("$tripStandaloneVersion = @filemtime(__DIR__ . '/trip-standalone.js') ?: time();" in trip,
+        'trip standalone helper must use a deployed-file cache key')
+require('<script src="/trip-standalone.js?v=__TRIP_STANDALONE_VERSION__"></script>' in trip,
+        'iOS standalone helper must execute synchronously from the document head')
+
+# These helpers used to be literal executable blocks in trip.php. They are static
+# behavior, so putting them back inline would unnecessarily keep script-src tied to
+# unsafe-inline and make the authenticated renderer larger on every request.
+for old_inline_marker in (
+    "window.navigator.standalone === true",
+    "drawer.dataset.mapSwipeFix === '1'",
+    "style.id = 'mobile-entry-modal-layout-fix'",
+):
+    require(old_inline_marker not in trip,
+            f'static trip runtime must remain externalized: {old_inline_marker}')
+
+for asset in ('trip-standalone.js', 'trip-drawer-swipe.js', 'trip-mobile-modal-layout.js'):
+    require((ROOT / asset).is_file(), f'externalized trip helper is missing: {asset}')
 
 require("$uiVersion = @filemtime(__DIR__ . '/itinerary-ui.js') ?: time();" in share,
         'share renderer must version itinerary-ui.js from the deployed file')
