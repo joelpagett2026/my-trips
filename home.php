@@ -120,6 +120,140 @@ if ($registryCount !== 1) {
     exit;
 }
 
+// Small production polish layer for the redesigned dashboard. Keep this isolated
+// in the renderer so the source template remains compatible with the existing
+// homepage runtime contract while live data edge cases are normalised safely.
+$dashboardPolishStyle = <<<'HTML'
+<style id="homepage-dashboard-polish">
+  .coming-copy{min-width:0;flex:1;display:block;line-height:1.15}
+  .coming-label{display:block;font-size:9.5px;font-weight:700;color:#485357;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .coming-value{display:block;margin-top:4px}
+  .coming-meta{display:block;margin-top:3px;font-size:8.5px}
+</style>
+HTML;
+
+$dashboardPolishScript = <<<'HTML'
+<script id="homepage-dashboard-polish-runtime">
+(() => {
+  // Registry trip dates are historically a mix of dd/mm/yyyy and ISO strings.
+  // Normalise both so upcoming/completed counts and the next-trip card stay live.
+  safeDate = function(d) {
+    if (d instanceof Date) return Number.isNaN(d.getTime()) ? null : new Date(d.getTime());
+    const s = String(d || '').trim();
+    if (!s) return null;
+    let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    const x = new Date(s);
+    return Number.isNaN(x.getTime()) ? null : x;
+  };
+
+  // Shows can be stored as either full dates or month/year. Avoid awkward
+  // "0 months" wording when an event is this month.
+  loadShows = async function() {
+    try {
+      const rec = await window.dbLoad('shows');
+      const list = rec && Array.isArray(rec.list) ? rec.list : [];
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const upcoming = list.filter(c => { const d = parseMY(c.date); return d && d >= monthStart; })
+                           .sort((a,b) => parseMY(a.date) - parseMY(b.date));
+      const seen = list.filter(c => { const d = parseMY(c.date); return !d || d < monthStart; });
+      setText('sh-shows', seen.length);
+      setText('sh-theatres', new Set(seen.map(c => (c.theatre || '').trim().toLowerCase()).filter(Boolean)).size);
+      setText('sh-year', seen.filter(c => (c.date || '').includes(String(now.getFullYear()))).length);
+      const latest = seen.filter(c => parseMY(c.date)).sort((a,b) => parseMY(b.date) - parseMY(a.date))[0];
+      const next = upcoming[0];
+      const lead = next || latest;
+      if (lead) {
+        const isNext = !!next;
+        const d = parseMY(lead.date);
+        const exactDay = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(lead.date || '').trim());
+        let showCountdown = '';
+        if (isNext) {
+          if (exactDay) {
+            const days = daysUntil(d);
+            showCountdown = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : countdownText(days);
+          } else {
+            const months = monthsUntil(d);
+            showCountdown = months === 0 ? 'This month' : months === 1 ? 'Next month' : countdownText(months, 'month');
+          }
+        }
+        $('show-pill').textContent = isNext ? 'Upcoming' : 'Latest';
+        setText('show-name', lead.name || 'Show');
+        setText('show-place', [lead.theatre, lead.location].filter(Boolean).join(', '));
+        $('show-countdown').textContent = isNext ? showCountdown + ' ·' : '';
+        $('show-date').textContent = fmtMY(lead.date);
+        if (lead.thumb) setImg('show-img', lead.thumb);
+        setText('cu-show-value', isNext ? showCountdown : 'No upcoming');
+        setText('cu-show-meta', isNext ? (lead.name || 'Next show') : (latest ? `Latest: ${latest.name || 'Show'}` : 'No shows logged'));
+      } else {
+        setText('show-name', 'No shows logged');
+        setText('show-place', 'Add your next show');
+        setText('cu-show-value', 'Nothing booked');
+        setText('cu-show-meta', 'Add your next show');
+        $('show-countdown').textContent = '';
+        $('show-date').textContent = '';
+      }
+    } catch(e) {
+      ['sh-shows','sh-theatres','sh-year','show-name','show-place','cu-show-value','cu-show-meta'].forEach(id => setText(id,'—'));
+    }
+  };
+
+  // Park coaster entries support both legacy strings and current object records.
+  // The previous dashboard assumed strings, which caused the whole card to fail.
+  loadParks = async function() {
+    try {
+      const rec = await window.dbLoad('parks');
+      const list = rec && Array.isArray(rec.list) ? rec.list : [];
+      const today = new Date(); today.setHours(0,0,0,0);
+      const upcoming = list.filter(v => { const d = parseDMY(v.date); return d && d > today; })
+                           .sort((a,b) => parseDMY(a.date) - parseDMY(b.date));
+      const seen = list.filter(v => { const d = parseDMY(v.date); return !d || d <= today; });
+      const credits = new Set();
+      const coasterName = c => typeof c === 'string'
+        ? c.replace(/\s*\*\s*$/, '').trim()
+        : String(c?.name || '').trim();
+      seen.forEach(v => (Array.isArray(v.coasters) ? v.coasters : []).forEach(c => {
+        const name = coasterName(c);
+        if (name) credits.add((v.park || '').trim().toLowerCase() + '|' + name.toLowerCase());
+      }));
+      setText('pk-parks', new Set(seen.map(v => (v.park || '').trim().toLowerCase()).filter(Boolean)).size);
+      setText('pk-credits', credits.size);
+      setText('pk-year', seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length);
+      const latest = seen.filter(v => parseDMY(v.date)).sort((a,b) => parseDMY(b.date) - parseDMY(a.date))[0];
+      const next = upcoming[0];
+      const lead = next || latest;
+      if (lead) {
+        const isNext = !!next;
+        const d = parseDMY(lead.date);
+        const days = isNext ? daysUntil(d) : null;
+        $('park-pill').textContent = isNext ? 'Upcoming' : 'Latest';
+        setText('park-name', lead.park || 'Theme park');
+        setText('park-place', [lead.location, lead.country].map(s => (s || '').trim()).filter(Boolean).join(', '));
+        $('park-countdown').textContent = isNext ? countdownText(days) + ' ·' : '';
+        $('park-date').textContent = lead.date || '';
+        if (lead.thumb) setImg('park-img', lead.thumb);
+        setText('cu-park-value', isNext ? countdownText(days) : 'No upcoming');
+        setText('cu-park-meta', isNext ? (lead.park || 'Next park visit') : (latest ? `Latest: ${latest.park || 'Park'}` : 'No parks logged'));
+      } else {
+        $('park-pill').textContent = 'No visits';
+        setText('park-name', 'No park visits logged');
+        setText('park-place', 'Add your next park');
+        setText('cu-park-value', 'Nothing booked');
+        setText('cu-park-meta', 'Add your next park');
+        $('park-countdown').textContent = '';
+        $('park-date').textContent = '';
+      }
+    } catch(e) {
+      ['pk-parks','pk-credits','pk-year','park-name','park-place','cu-park-value','cu-park-meta'].forEach(id => setText(id,'—'));
+    }
+  };
+})();
+</script>
+HTML;
+
 // Add an explicit homepage logout control. It sits alongside the existing
 // Private Log and Settings shortcuts, revokes the current server session, clears
 // both browser session stores, then immediately returns to the PIN gate.
@@ -187,11 +321,11 @@ $logoutScript = <<<'HTML'
 HTML;
 
 $headCount = 0;
-$html = str_replace('</head>', $logoutStyle . "\n</head>", $html, $headCount);
+$html = str_replace('</head>', $dashboardPolishStyle . "\n" . $logoutStyle . "\n</head>", $html, $headCount);
 $bodyOpenCount = 0;
 $html = str_replace('<body>', '<body>' . "\n" . $logoutButton, $html, $bodyOpenCount);
 $bodyCloseCount = 0;
-$html = str_replace('</body>', $logoutScript . "\n</body>", $html, $bodyCloseCount);
+$html = str_replace('</body>', $dashboardPolishScript . "\n" . $logoutScript . "\n</body>", $html, $bodyCloseCount);
 if ($headCount !== 1 || $bodyOpenCount !== 1 || $bodyCloseCount !== 1) {
     http_response_code(500);
     echo '<!doctype html><title>Homepage unavailable</title><p>The homepage controls could not be attached safely.</p>';
