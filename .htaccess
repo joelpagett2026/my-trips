@@ -9,12 +9,16 @@ Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=
 # longer compatibility period. Browsers ignore this header on plain HTTP responses.
 Header always set Strict-Transport-Security "max-age=86400"
 
-# Start CSP with directives that are safe to enforce independently of the site's
-# remaining inline scripts/styles. The broader source policy stays report-only
-# until those inline dependencies and all Maps/geocoding integrations are fully
-# migrated, so this hardens embedding/plugin/base-tag behavior without risking UI.
+# CSP is deliberately layered. Keep the first structural policy stable because it
+# is already production-proven, then enforce additional low-risk directives in a
+# second policy. Multiple CSP response headers are cumulative in browsers.
 Header always set Content-Security-Policy "base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
-Header always set Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob:; frame-src 'self' https://www.google.com https://maps.google.com"
+Header always add Content-Security-Policy "form-action 'self'; manifest-src 'self'; worker-src 'self' blob:; media-src 'self' data: blob:"
+
+# Script/style/network restrictions remain report-only while inline handlers and
+# browser integrations are migrated. Nominatim is an audited dashboard geocoding
+# fallback alongside Google Maps and Photon/Komoot.
+Header always set Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://photon.komoot.io https://nominatim.openstreetmap.org; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob:; frame-src 'self' https://www.google.com https://maps.google.com"
 
 # ══════════════════════════════════════════════════════════════════════
 # SHARED RENDERERS
