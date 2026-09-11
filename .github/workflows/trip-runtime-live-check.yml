@@ -1,0 +1,60 @@
+name: Verify live externalized trip runtime
+
+on:
+  workflow_run:
+    workflows:
+      - Validate and deploy joelpagett.co.uk
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify static trip helpers are external and immutable
+        run: |
+          curl --fail --show-error --silent \
+            --output /tmp/trip.html \
+            'https://joelpagett.co.uk/porto-2026'
+
+          # These implementation markers belonged to the old inline blocks and
+          # must never return to the authenticated itinerary HTML.
+          ! grep -q "window.navigator.standalone === true" /tmp/trip.html
+          ! grep -q "drawer.dataset.mapSwipeFix === '1'" /tmp/trip.html
+          ! grep -q "style.id = 'mobile-entry-modal-layout-fix'" /tmp/trip.html
+
+          python - <<'PY'
+          import html
+          import re
+          import subprocess
+          from pathlib import Path
+
+          page = Path('/tmp/trip.html').read_text(errors='replace')
+          assets = (
+              'trip-standalone.js',
+              'trip-drawer-swipe.js',
+              'trip-mobile-modal-layout.js',
+          )
+
+          for index, asset in enumerate(assets):
+              match = re.search(r'src="(/' + re.escape(asset) + r'\?v=\d+)"', page)
+              if not match:
+                  raise SystemExit(f'live itinerary is missing versioned {asset}')
+              url = 'https://joelpagett.co.uk' + html.unescape(match.group(1))
+              headers = Path(f'/tmp/runtime-{index}.headers')
+              body = Path(f'/tmp/runtime-{index}.js')
+              subprocess.run([
+                  'curl', '--fail', '--show-error', '--silent',
+                  '--dump-header', str(headers), '--output', str(body), url,
+              ], check=True)
+              header_text = headers.read_text(errors='replace').lower()
+              if 'cache-control:' not in header_text or 'max-age=31536000' not in header_text or 'immutable' not in header_text:
+                  raise SystemExit(f'{asset} is not immutable on production')
+              subprocess.run(['node', '--check', str(body)], check=True)
+
+          print('live externalized trip runtime: ok')
+          PY
