@@ -23,6 +23,16 @@ require('Header always set X-Frame-Options "SAMEORIGIN"' in htaccess,
 require('Header always set Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"' in htaccess,
         'unused high-risk browser capabilities must stay disabled')
 
+# HSTS begins as a short, reversible pilot. Validate the emitted header line
+# itself rather than scanning comments, so documentation can safely mention later
+# options such as includeSubDomains/preload without weakening the contract.
+hsts_lines = [
+    line.strip() for line in htaccess.splitlines()
+    if line.strip().startswith('Header always set Strict-Transport-Security ')
+]
+require(hsts_lines == ['Header always set Strict-Transport-Security "max-age=86400"'],
+        'HSTS pilot must be exactly one day with no subdomain/preload directives')
+
 # CSP is introduced in two layers. The low-risk structural directives are enforced
 # now; script/style/network source restrictions stay report-only until remaining
 # inline code and third-party integrations have completed their compatibility pass.
@@ -100,6 +110,4 @@ require('<link rel="preload" href="/itinerary-ui.js?v=' in share,
 require("/itinerary-ui.js?v=1" not in share,
         'share renderer must never pin itinerary-ui.js to a fixed cache key')
 
-# HSTS remains a separate rollout: do not couple a persistent browser transport
-# commitment to the CSP compatibility stage.
-print('safe response header + staged CSP + delivery contracts: ok')
+print('safe response header + staged CSP + HSTS pilot + delivery contracts: ok')
