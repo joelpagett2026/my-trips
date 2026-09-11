@@ -27,6 +27,10 @@ jobs:
           ! grep -q "drawer.dataset.mapSwipeFix === '1'" /tmp/trip.html
           ! grep -q "style.id = 'mobile-entry-modal-layout-fix'" /tmp/trip.html
 
+          # The hosting layer rejects the newly introduced root-level JS paths.
+          # Production must use the explicit trip.php derivative route instead.
+          ! grep -Eq 'src="/trip-(standalone|drawer-swipe|mobile-modal-layout)\.js\?v=' /tmp/trip.html
+
           python - <<'PY'
           import html
           import re
@@ -35,15 +39,18 @@ jobs:
 
           page = Path('/tmp/trip.html').read_text(errors='replace')
           assets = (
-              'trip-standalone.js',
-              'trip-drawer-swipe.js',
-              'trip-mobile-modal-layout.js',
+              'trip-standalone',
+              'trip-drawer-swipe',
+              'trip-mobile-modal-layout',
           )
 
           for index, asset in enumerate(assets):
-              match = re.search(r'src="(/' + re.escape(asset) + r'\?v=\d+)"', page)
+              match = re.search(
+                  r'src="(/trip\.php\?asset=' + re.escape(asset) + r'(?:&amp;|&)v=\d+)"',
+                  page,
+              )
               if not match:
-                  raise SystemExit(f'live itinerary is missing versioned {asset}')
+                  raise SystemExit(f'live itinerary is missing versioned derivative {asset}')
               url = 'https://joelpagett.co.uk' + html.unescape(match.group(1))
               headers = Path(f'/tmp/runtime-{index}.headers')
               body = Path(f'/tmp/runtime-{index}.js')
@@ -52,9 +59,11 @@ jobs:
                   '--dump-header', str(headers), '--output', str(body), url,
               ], check=True)
               header_text = headers.read_text(errors='replace').lower()
+              if 'content-type: application/javascript' not in header_text:
+                  raise SystemExit(f'{asset} did not use JavaScript content type on production')
               if 'cache-control:' not in header_text or 'max-age=31536000' not in header_text or 'immutable' not in header_text:
                   raise SystemExit(f'{asset} is not immutable on production')
               subprocess.run(['node', '--check', str(body)], check=True)
 
-          print('live externalized trip runtime: ok')
+          print('live externalized trip runtime derivatives: ok')
           PY
