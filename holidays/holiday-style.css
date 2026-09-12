@@ -200,6 +200,13 @@ body {
 }
 .add-card:hover { border-color: #0e7a87; color: #0e7a87; background: rgba(14,122,135,0.04); }
 
+/* iOS tracker-card spacing guard
+   Safe-area insets belong to page chrome, not each repeated content card. */
+.c-card-body,
+.p-card-body {
+  padding: 12px 14px 14px !important;
+}
+
 /* ── PRINT STYLES ── */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
