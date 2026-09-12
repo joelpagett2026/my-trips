@@ -218,3 +218,202 @@ async function bootstrapAuth() {
 }
 
 void bootstrapAuth();
+
+// ══════════════════════════════════════════════════════════════════════
+// SECTION COLOUR THEMES
+// Theme Park Tracker uses the same muted green as Attractions in Trip Planning.
+// The recolour is intentionally runtime-scoped to /parks/ so the shared Holiday
+// Allowance stylesheet can stay shared without leaking green into other sections.
+// ══════════════════════════════════════════════════════════════════════
+(function installSectionColourSchemes() {
+    const rawPath = window.location.pathname || '/';
+    const path = rawPath.replace(/\/+$/, '') || '/';
+
+    const PARK_GREEN = '#6c8966';
+    const PARK_GREEN_MID = '#7f9d77';
+    const PARK_GREEN_DARK = '#55704f';
+
+    function replaceParksColour(value) {
+        if (typeof value !== 'string' || !value) return value;
+        return value
+            .replace(/#0e7a87/gi, PARK_GREEN)
+            .replace(/#12a0af/gi, PARK_GREEN_MID)
+            .replace(/#0a6570/gi, PARK_GREEN_DARK)
+            .replace(/#0e3a3f/gi, '#40513c')
+            .replace(/#1a2a2a/gi, '#2d382b')
+            .replace(/#f4fafb/gi, '#f4f7f3')
+            .replace(/#e6f9f7/gi, '#edf3eb')
+            .replace(/#dfe5e5/gi, '#e4e9e2')
+            .replace(/rgba\(\s*14\s*,\s*122\s*,\s*135\s*,/gi, 'rgba(108,137,102,')
+            .replace(/rgb\(\s*14\s*,\s*122\s*,\s*135\s*\)/gi, 'rgb(108,137,102)')
+            .replace(/rgba\(\s*18\s*,\s*160\s*,\s*175\s*,/gi, 'rgba(127,157,119,')
+            .replace(/rgb\(\s*18\s*,\s*160\s*,\s*175\s*\)/gi, 'rgb(127,157,119)')
+            .replace(/rgba\(\s*10\s*,\s*101\s*,\s*112\s*,/gi, 'rgba(85,112,79,')
+            .replace(/rgb\(\s*10\s*,\s*101\s*,\s*112\s*\)/gi, 'rgb(85,112,79)');
+    }
+
+    // Give the Theme Park Tracker tile on the main dashboard its own green identity
+    // without recolouring the other dashboard sections.
+    if (path === '/') {
+        const style = document.createElement('style');
+        style.id = 'parks-dashboard-colour-theme';
+        style.textContent = `
+          a.dash-card[href="/parks/"] .card-head-icon {
+            color: ${PARK_GREEN} !important;
+            background: #edf1ed !important;
+          }
+          a.dash-card[href="/parks/"] .card-arrow,
+          a.dash-card[href="/parks/"] .stat-val.teal,
+          a.dash-card[href="/parks/"] .stat-val.green,
+          a.dash-card[href="/parks/"] .wide-value,
+          a.dash-card[href="/parks/"] .wide-stat strong {
+            color: ${PARK_GREEN} !important;
+          }
+          a.dash-card[href="/parks/"] .pill {
+            color: ${PARK_GREEN} !important;
+            background: #edf1ed !important;
+          }
+          a.dash-card[href="/parks/"] .media-placeholder.park {
+            background: linear-gradient(135deg, #849b7f, #4f684b 75%) !important;
+          }
+        `;
+        document.head.appendChild(style);
+        return;
+    }
+
+    if (!(path === '/parks' || path.startsWith('/parks/'))) return;
+    document.documentElement.classList.add('theme-parks-green');
+
+    function transformStyleDeclaration(style) {
+        if (!style) return;
+        for (const property of Array.from(style)) {
+            const current = style.getPropertyValue(property);
+            const themed = replaceParksColour(current);
+            if (themed !== current) {
+                style.setProperty(property, themed, style.getPropertyPriority(property));
+            }
+        }
+    }
+
+    function transformCssRules(rules) {
+        if (!rules) return;
+        for (const rule of Array.from(rules)) {
+            if (rule.style) transformStyleDeclaration(rule.style);
+            if (rule.cssRules) {
+                try { transformCssRules(rule.cssRules); } catch {}
+            }
+        }
+    }
+
+    function transformStyleSheet(sheet) {
+        if (!sheet) return;
+        try { transformCssRules(sheet.cssRules); } catch {}
+    }
+
+    function transformAttributes(element) {
+        if (!element || element.nodeType !== 1) return;
+        if (element.closest && element.closest('#pin-overlay')) return;
+        for (const attribute of ['style', 'fill', 'stroke']) {
+            if (!element.hasAttribute || !element.hasAttribute(attribute)) continue;
+            const current = element.getAttribute(attribute);
+            const themed = replaceParksColour(current);
+            if (themed !== current) element.setAttribute(attribute, themed);
+        }
+    }
+
+    function transformNode(node) {
+        if (!node || node.nodeType !== 1) return;
+        const element = node;
+        if (element.closest && element.closest('#pin-overlay')) return;
+
+        if (element.tagName === 'STYLE') {
+            if (element.parentElement === document.head) {
+                queueMicrotask(() => transformStyleSheet(element.sheet));
+            }
+            return;
+        }
+
+        if (element.tagName === 'LINK' && /(?:^|\s)stylesheet(?:\s|$)/i.test(element.rel || '')) {
+            const apply = () => transformStyleSheet(element.sheet);
+            if (element.sheet) queueMicrotask(apply);
+            element.addEventListener('load', apply, { once: true });
+            return;
+        }
+
+        transformAttributes(element);
+        if (element.querySelectorAll) {
+            element.querySelectorAll('[style],[fill],[stroke]').forEach(transformAttributes);
+        }
+    }
+
+    // Start watching immediately so page-specific style blocks that appear after
+    // auth.js are themed as the HTML parser adds them.
+    const themeObserver = new MutationObserver(records => {
+        records.forEach(record => {
+            record.addedNodes.forEach(transformNode);
+        });
+    });
+    themeObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Catch anything that was already present, plus the shared stylesheet once it
+    // has loaded. This keeps the whole /parks/ section on one palette without
+    // changing Holiday Allowance, Concerts, Shows, Trips or Private Area.
+    const applyParksTheme = () => {
+        Array.from(document.styleSheets).forEach(transformStyleSheet);
+        if (document.body) transformNode(document.body);
+    };
+    applyParksTheme();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyParksTheme, { once: true });
+    }
+
+    // parks/map.html draws the park pins with Google Maps' JS symbol API, so those
+    // colours never pass through CSS. Wrap its callback before the page assigns it
+    // and swap the old teal marker fill for the new Attractions green.
+    if (path === '/parks/map.html') {
+        let mapsReady = null;
+
+        function patchGoogleMarkerColour() {
+            try {
+                const maps = window.google && window.google.maps;
+                const OriginalMarker = maps && maps.Marker;
+                if (!OriginalMarker || OriginalMarker.__parksGreenPatched) return;
+
+                function GreenMarker(options) {
+                    let themedOptions = options;
+                    if (options && options.icon && typeof options.icon === 'object') {
+                        const currentFill = String(options.icon.fillColor || '');
+                        const themedFill = replaceParksColour(currentFill);
+                        if (themedFill !== currentFill) {
+                            themedOptions = Object.assign({}, options, {
+                                icon: Object.assign({}, options.icon, { fillColor: themedFill })
+                            });
+                        }
+                    }
+                    return new OriginalMarker(themedOptions);
+                }
+
+                GreenMarker.prototype = OriginalMarker.prototype;
+                Object.setPrototypeOf(GreenMarker, OriginalMarker);
+                Object.defineProperty(GreenMarker, '__parksGreenPatched', { value: true });
+                maps.Marker = GreenMarker;
+            } catch {}
+        }
+
+        try {
+            Object.defineProperty(window, 'gmReady', {
+                configurable: true,
+                enumerable: true,
+                get() { return mapsReady; },
+                set(fn) {
+                    mapsReady = (typeof fn === 'function')
+                        ? function (...args) {
+                            patchGoogleMarkerColour();
+                            return fn.apply(this, args);
+                        }
+                        : fn;
+                }
+            });
+        } catch {}
+    }
+})();
