@@ -49,6 +49,84 @@ HTML;
     return $source;
 }
 
+function attachMobileScrollToBottom(string $source, string $colour, string $label): string {
+    $widget = <<<HTML
+<style id="mobile-scroll-bottom-style">
+#mobile-scroll-bottom { display:none; }
+@media (max-width:700px), (display-mode:standalone) and (max-width:900px) {
+  #mobile-scroll-bottom {
+    position:fixed;
+    right:18px;
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    width:48px;
+    height:48px;
+    border:0;
+    border-radius:50%;
+    background:{$colour};
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 7px 22px rgba(0,0,0,.22),0 1px 4px rgba(0,0,0,.18);
+    z-index:460;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:opacity .18s ease,transform .18s ease;
+  }
+  #mobile-scroll-bottom:active { transform:scale(.94); }
+  #mobile-scroll-bottom.is-hidden { opacity:0; pointer-events:none; transform:translateY(8px); }
+  #mobile-scroll-bottom svg { width:22px; height:22px; }
+}
+</style>
+<script id="mobile-scroll-bottom-script">
+(() => {
+  const install = () => {
+    const isMobileBrowser = window.matchMedia('(max-width: 700px)').matches;
+    const isStandalone = window.navigator.standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches;
+    if (!isMobileBrowser && !(isStandalone && window.innerWidth <= 900)) return;
+    if (document.getElementById('mobile-scroll-bottom')) return;
+
+    const button = document.createElement('button');
+    button.id = 'mobile-scroll-bottom';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Scroll to bottom');
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+    const syncVisibility = () => {
+      const scroller = document.scrollingElement || document.documentElement;
+      const maxScroll = Math.max(0, scroller.scrollHeight - window.innerHeight);
+      button.classList.toggle('is-hidden', window.scrollY >= maxScroll - 28 || maxScroll < 80);
+    };
+
+    button.addEventListener('click', () => {
+      const scroller = document.scrollingElement || document.documentElement;
+      window.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+    });
+    window.addEventListener('scroll', syncVisibility, { passive:true });
+    window.addEventListener('resize', syncVisibility, { passive:true });
+    document.body.appendChild(button);
+    requestAnimationFrame(syncVisibility);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once:true });
+  } else {
+    install();
+  }
+})();
+</script>
+HTML;
+
+    $source = str_replace('</body>', $widget . "\n</body>", $bodyCount);
+    if ($bodyCount !== 1) {
+        http_response_code(500);
+        echo $label . ' mobile scroll control could not be attached.';
+        exit;
+    }
+    return $source;
+}
+
 $parkPalette = [
     '#0e7a87' => '#6c8966', '#12a0af' => '#7f9d77', '#11a8b9' => '#7f9d77',
     '#0a6570' => '#55704f', '#0e3a3f' => '#40513c', '#1a2a2a' => '#2d382b',
@@ -91,7 +169,7 @@ $showPalette = [
     'rgba(255,149,0,0.25)' => 'rgba(82,107,130,0.22)',
 ];
 
-function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label): void {
+function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label, ?string $scrollColour = null): void {
     $template = @file_get_contents($templatePath);
     $sharedCss = @file_get_contents(__DIR__ . '/holidays/holiday-style.css');
     if ($template === false || $sharedCss === false) {
@@ -129,6 +207,9 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
         }
     }
     $template = attachMobileCenteredNavTitle($template, $label);
+    if ($scrollColour !== null) {
+        $template = attachMobileScrollToBottom($template, $scrollColour, $label);
+    }
     echo $template;
     exit;
 }
@@ -155,7 +236,10 @@ if ($section === 'concerts') {
         'artists' => __DIR__ . '/concerts/artists.html',
     ];
     if (!isset($templates[$page])) { http_response_code(404); echo 'Concert Log page not found.'; exit; }
-    renderSharedCssSection($templates[$page], $concertPalette, 'concert-orange-section-theme', 'Concert Log');
+    renderSharedCssSection(
+        $templates[$page], $concertPalette, 'concert-orange-section-theme', 'Concert Log',
+        $page === 'index' ? '#c9792b' : null
+    );
 }
 
 if ($section === 'shows') {
@@ -164,7 +248,10 @@ if ($section === 'shows') {
         'list' => __DIR__ . '/shows/list.html',
     ];
     if (!isset($templates[$page])) { http_response_code(404); echo 'Shows page not found.'; exit; }
-    renderSharedCssSection($templates[$page], $showPalette, 'shows-blue-section-theme', 'Shows');
+    renderSharedCssSection(
+        $templates[$page], $showPalette, 'shows-blue-section-theme', 'Shows',
+        $page === 'index' ? '#4f78a8' : null
+    );
 }
 
 if ($section !== 'parks') { http_response_code(404); echo 'Section not found.'; exit; }
@@ -179,6 +266,9 @@ if ($template === false) { http_response_code(500); echo 'Theme Park Tracker is 
 $template = applySectionPalette($template, $parkPalette);
 $template = str_replace('href="/holidays/holiday-style.css"', 'href="/holidays/holiday-style.css?v=parks-green-20260912"', $template);
 $template = attachMobileCenteredNavTitle($template, 'Theme Park Tracker');
+if ($page === 'index') {
+    $template = attachMobileScrollToBottom($template, '#6c8966', 'Theme Park Tracker');
+}
 if ($page === 'map') {
     [$template, $diag] = applyGoogleMapsScriptRuntimeSafety($template);
     if (($diag['maps_script_key_rewritten'] ?? 0) !== 1) { http_response_code(500); echo 'Park map could not be rendered safely.'; exit; }
