@@ -129,6 +129,28 @@ $dashboardPolishStyle = <<<'HTML'
   .coming-label{display:block;font-size:9.5px;font-weight:700;color:#485357;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .coming-value{display:block;margin-top:4px}
   .coming-meta{display:block;margin-top:3px;font-size:8.5px}
+
+  /* Theme Park Tracker uses the same green family as Attractions. Scope the
+     colour to the two homepage links only so every other dashboard card keeps
+     its own palette. */
+  a.dash-card[href="/parks/"] .card-head-icon,
+  a.coming-item[href="/parks/"] .coming-icon{
+    color:#6c8966!important;
+    background:#edf1ed!important;
+  }
+  a.dash-card[href="/parks/"] .card-arrow,
+  a.dash-card[href="/parks/"] .pill,
+  a.dash-card[href="/parks/"] .event-countdown,
+  a.dash-card[href="/parks/"] .wide-stats .stat-val,
+  a.coming-item[href="/parks/"] .coming-value{
+    color:#6c8966!important;
+  }
+  a.dash-card[href="/parks/"] .pill{
+    background:#edf1ed!important;
+  }
+  a.dash-card[href="/parks/"] .media-placeholder.park{
+    background:linear-gradient(135deg,#849b7f,#4f684b 75%)!important;
+  }
 </style>
 HTML;
 
