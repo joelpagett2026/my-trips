@@ -11,6 +11,44 @@ function applySectionPalette(string $source, array $replacement): string {
     return str_ireplace(array_keys($replacement), array_values($replacement), $source);
 }
 
+function attachMobileCenteredNavTitle(string $source, string $label): string {
+    $mobileNavStyle = <<<'HTML'
+<style id="mobile-centered-nav-title">
+@media (max-width: 700px), (display-mode: standalone) and (max-width: 900px) {
+  .nav {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+  }
+  .nav .nav-back {
+    justify-self: start !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .nav .nav-title {
+    justify-self: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .nav .nav-actions {
+    justify-self: end !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+</style>
+HTML;
+
+    $source = str_replace('</head>', $mobileNavStyle . "\n</head>", $source, $headCount);
+    if ($headCount !== 1) {
+        http_response_code(500);
+        echo $label . ' mobile navigation could not be attached.';
+        exit;
+    }
+    return $source;
+}
+
 $parkPalette = [
     '#0e7a87' => '#6c8966', '#12a0af' => '#7f9d77', '#11a8b9' => '#7f9d77',
     '#0a6570' => '#55704f', '#0e3a3f' => '#40513c', '#1a2a2a' => '#2d382b',
@@ -88,6 +126,7 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
             exit;
         }
     }
+    $template = attachMobileCenteredNavTitle($template, $label);
     echo $template;
     exit;
 }
@@ -137,6 +176,7 @@ $template = @file_get_contents($templates[$page]);
 if ($template === false) { http_response_code(500); echo 'Theme Park Tracker is unavailable.'; exit; }
 $template = applySectionPalette($template, $parkPalette);
 $template = str_replace('href="/holidays/holiday-style.css"', 'href="/holidays/holiday-style.css?v=parks-green-20260912"', $template);
+$template = attachMobileCenteredNavTitle($template, 'Theme Park Tracker');
 if ($page === 'map') {
     [$template, $diag] = applyGoogleMapsScriptRuntimeSafety($template);
     if (($diag['maps_script_key_rewritten'] ?? 0) !== 1) { http_response_code(500); echo 'Park map could not be rendered safely.'; exit; }
