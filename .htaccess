@@ -108,7 +108,7 @@ RewriteRule ^trips/?$ trips.php [L,QSA]
 # back in from an inline style or a stale shared stylesheet.
 RewriteRule ^parks/index\.html$ /parks/ [R=302,L,QSA]
 RewriteRule ^parks/?$ parks-map.php?page=index [L,QSA]
-RewriteRule ^parks/map\.html$ parks-map.php?page=map [L,QSA]
+RewriteRule ^parks/map\.html$ parks-map.php [L,QSA]
 RewriteRule ^parks/credits\.html$ parks-map.php?page=credits [L,QSA]
 RewriteRule ^parks/coasters\.html$ parks-map.php?page=coasters [L,QSA]
 
