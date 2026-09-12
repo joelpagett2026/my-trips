@@ -4,6 +4,69 @@
 (function () {
   if (typeof window === 'undefined') return;
 
+  function installMobileScrollToBottom() {
+    const isMobileBrowser = window.matchMedia('(max-width: 700px)').matches;
+    const isStandalone = window.navigator.standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches;
+    if (!isMobileBrowser && !(isStandalone && window.innerWidth <= 900)) return;
+    if (document.getElementById('mobile-scroll-bottom')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobile-scroll-bottom-style';
+    style.textContent = `
+      #mobile-scroll-bottom {
+        position: fixed;
+        right: 18px;
+        bottom: calc(18px + env(safe-area-inset-bottom));
+        width: 48px;
+        height: 48px;
+        border: 0;
+        border-radius: 50%;
+        background: #0e7a87;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 7px 22px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.18);
+        z-index: 460;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity .18s ease, transform .18s ease;
+      }
+      #mobile-scroll-bottom:active { transform: scale(.94); }
+      #mobile-scroll-bottom.is-hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+      #mobile-scroll-bottom svg { width: 22px; height: 22px; }
+    `;
+    document.head.appendChild(style);
+
+    const button = document.createElement('button');
+    button.id = 'mobile-scroll-bottom';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Scroll to bottom');
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+    const syncVisibility = () => {
+      const scroller = document.scrollingElement || document.documentElement;
+      const maxScroll = Math.max(0, scroller.scrollHeight - window.innerHeight);
+      button.classList.toggle('is-hidden', window.scrollY >= maxScroll - 28 || maxScroll < 80);
+    };
+
+    button.addEventListener('click', () => {
+      const scroller = document.scrollingElement || document.documentElement;
+      window.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+    });
+    window.addEventListener('scroll', syncVisibility, { passive: true });
+    window.addEventListener('resize', syncVisibility, { passive: true });
+    document.body.appendChild(button);
+    requestAnimationFrame(syncVisibility);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installMobileScrollToBottom, { once: true });
+  } else {
+    installMobileScrollToBottom();
+  }
+
   function currentPhoto() {
     const preview = document.getElementById('m-photo-preview');
     const img = document.getElementById('m-photo-img');
