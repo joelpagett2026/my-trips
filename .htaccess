@@ -149,6 +149,9 @@ RewriteRule ^([a-z0-9-]+)/?$ trip.php?slug=$1 [L,QSA]
 <FilesMatch "^(?:trip-dashboard-create|budget-live-redesign)\.js$">
   Header set Cache-Control "no-cache, must-revalidate"
 </FilesMatch>
+<FilesMatch "^holiday-style\.css$">
+  Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>
 
 # These assets receive file-modification versions from the PHP renderers, so a
 # deployment automatically creates a new URL whenever the file changes. Long-term
