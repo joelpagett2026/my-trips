@@ -87,6 +87,8 @@ $showPalette = [
     'rgba(17,168,185,' => 'rgba(107,145,189,', 'rgba(10,101,112,' => 'rgba(61,95,134,',
     'rgb(14,122,135)' => 'rgb(79,120,168)', 'rgb(18,160,175)' => 'rgb(107,145,189)',
     'rgb(17,168,185)' => 'rgb(107,145,189)', 'rgb(10,101,112)' => 'rgb(61,95,134)',
+    'rgba(255,149,0,0.18)' => 'rgba(82,107,130,0.10)', '#c07000' => '#526b82',
+    'rgba(255,149,0,0.25)' => 'rgba(82,107,130,0.22)',
 ];
 
 function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label): void {
