@@ -151,6 +151,24 @@ $dashboardPolishStyle = <<<'HTML'
   a.dash-card[href="/parks/"] .media-placeholder.park{
     background:linear-gradient(135deg,#849b7f,#4f684b 75%)!important;
   }
+
+  /* Holiday Allowance uses its own muted purple family. Keep this scoped to the
+     Holiday card and Coming Up item so Trip Planning stays teal. */
+  a.dash-card[href="/holidays/"] .card-head-icon,
+  a.dash-card[href="/holidays/"] .initials,
+  a.coming-item[href="/holidays/"] .coming-icon{
+    color:#76699f!important;
+    background:#f0edf7!important;
+  }
+  a.dash-card[href="/holidays/"] .card-arrow,
+  a.dash-card[href="/holidays/"] .allow-stat.used strong,
+  a.dash-card[href="/holidays/"] .allow-stat.remain strong,
+  a.coming-item[href="/holidays/"] .coming-value{
+    color:#76699f!important;
+  }
+  a.dash-card[href="/holidays/"] .progress > span{
+    background:linear-gradient(90deg,#76699f,#9182bd)!important;
+  }
 </style>
 HTML;
 
