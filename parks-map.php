@@ -49,6 +49,17 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
         echo $label . ' is unavailable.';
         exit;
     }
+
+    // holiday-style.css also contains a Theme Park-only override block with
+    // !important green rules. Concerts and Holiday Allowance share the structural
+    // CSS but must never inherit those park-specific rules, so remove that block
+    // before recolouring and inlining the shared stylesheet.
+    $parkThemeMarker = '/* ── THEME PARK TRACKER — GREEN SECTION THEME ──';
+    $parkThemePos = strpos($sharedCss, $parkThemeMarker);
+    if ($parkThemePos !== false) {
+        $sharedCss = substr($sharedCss, 0, $parkThemePos);
+    }
+
     $template = applySectionPalette($template, $palette);
     $sharedCss = applySectionPalette($sharedCss, $palette);
     $themeStyle = '<style id="' . $styleId . '">' . "\n" . $sharedCss . "\n</style>";
