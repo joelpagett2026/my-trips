@@ -169,6 +169,27 @@ $dashboardPolishStyle = <<<'HTML'
   a.dash-card[href="/holidays/"] .progress > span{
     background:linear-gradient(90deg,#76699f,#9182bd)!important;
   }
+
+  /* Concert Log uses the same orange family on the homepage as inside the
+     Concert section, including its Coming Up item. */
+  a.dash-card[href="/concerts/"] .card-head-icon,
+  a.coming-item[href="/concerts/"] .coming-icon{
+    color:#c9792b!important;
+    background:#fff1e6!important;
+  }
+  a.dash-card[href="/concerts/"] .card-arrow,
+  a.dash-card[href="/concerts/"] .pill,
+  a.dash-card[href="/concerts/"] .event-countdown,
+  a.dash-card[href="/concerts/"] .wide-stats .stat-val,
+  a.coming-item[href="/concerts/"] .coming-value{
+    color:#c9792b!important;
+  }
+  a.dash-card[href="/concerts/"] .pill{
+    background:#fff1e6!important;
+  }
+  a.dash-card[href="/concerts/"] .media-placeholder.concert{
+    background:linear-gradient(135deg,#dc9351,#9f5e22 75%)!important;
+  }
 </style>
 HTML;
 
