@@ -2,12 +2,16 @@
 // MY TRIPS — Auth (PIN gate)
 // The browser submits only the four PIN digits to the same-origin HTTPS auth
 // endpoint. The real session credential lives only in a Secure/HttpOnly cookie;
-// browser storage contains a non-secret compatibility marker for older clients.
+// browser storage contains a fixed non-secret compatibility marker only.
 // ══════════════════════════════════════════════════════════════════════
 
 const IS_SHARE_VIEW = new URLSearchParams(window.location.search).has('share');
 const SESSION_KEY = 'jh_auth';
 const SESSION_MARKER = 'cookie-session';
+// Deliberately public/non-secret. This is 64 hex characters only so older cached
+// auth.js builds (which expected a legacy 64-hex token shape) recognise the local
+// browser as already unlocked while the real authority remains the HttpOnly cookie.
+const STORAGE_COMPAT_MARKER = 'c00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5e';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 
 function getStoredSession() {
@@ -17,11 +21,11 @@ function getStoredSession() {
     } catch { return null; }
 }
 
-// Never persist a server credential. The marker is deliberately non-secret: it
-// only keeps older callers that expect a truthy `sessionToken` working. The server
-// validates the HttpOnly cookie on every protected request.
+// Never persist a server credential. The stored value is deliberately non-secret:
+// it only keeps older callers that expect a legacy-shaped `sessionToken` working.
+// The server validates the HttpOnly cookie on every protected request.
 function storeSession() {
-    const payload = JSON.stringify({ sessionToken: SESSION_MARKER, ts: Date.now() });
+    const payload = JSON.stringify({ sessionToken: STORAGE_COMPAT_MARKER, ts: Date.now() });
     try { localStorage.setItem(SESSION_KEY, payload); } catch {}
     try { sessionStorage.setItem(SESSION_KEY, payload); } catch {}
 }
@@ -35,8 +39,8 @@ function storedLegacyHeaderToken() {
     const s = getStoredSession();
     if (!s || !Number.isFinite(Number(s.ts)) || (Date.now() - Number(s.ts)) >= SESSION_TTL) return '';
     const value = String(s.sessionToken || '');
-    // A valid pre-cookie raw token is sent only to /check once so the server can
-    // migrate it into the HttpOnly cookie. The marker itself is harmless to send.
+    // A valid pre-cookie raw token (or the fixed non-secret cache marker) is sent
+    // only to /check; cookie-first server validation remains authoritative.
     if (/^[a-f0-9]{64}$/i.test(value) || value === SESSION_MARKER) return value;
     return '';
 }
@@ -190,8 +194,8 @@ async function validateCurrentSession() {
             return false;
         }
 
-        // This overwrites any still-valid legacy 64-character token with the
-        // non-secret marker immediately after the server has moved it to HttpOnly.
+        // This overwrites any still-valid legacy raw token or old text marker with
+        // the fixed cache-compatible non-secret marker after cookie validation.
         storeSession();
         announceAuthed();
         return true;
