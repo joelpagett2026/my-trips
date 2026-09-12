@@ -1,5 +1,5 @@
 <?php
-// Section renderer for Theme Park Tracker, Holiday Allowance and Concert Log.
+// Section renderer for Theme Park Tracker, Holiday Allowance, Concert Log and Shows.
 require_once __DIR__ . '/template-runtime.php';
 
 header('Content-Type: text/html; charset=UTF-8');
@@ -41,6 +41,16 @@ $concertPalette = [
     'rgb(17,168,185)' => 'rgb(220,147,81)', 'rgb(10,101,112)' => 'rgb(159,94,34)',
 ];
 
+$showPalette = [
+    '#0e7a87' => '#4f78a8', '#12a0af' => '#6b91bd', '#11a8b9' => '#6b91bd',
+    '#0a6570' => '#3d5f86', '#0e3a3f' => '#2f4767', '#1a2a2a' => '#29313a',
+    '#f4fafb' => '#f2f6fa', '#e6f9f7' => '#eaf1f7', '#dfe5e5' => '#dfe8f0',
+    'rgba(14,122,135,' => 'rgba(79,120,168,', 'rgba(18,160,175,' => 'rgba(107,145,189,',
+    'rgba(17,168,185,' => 'rgba(107,145,189,', 'rgba(10,101,112,' => 'rgba(61,95,134,',
+    'rgb(14,122,135)' => 'rgb(79,120,168)', 'rgb(18,160,175)' => 'rgb(107,145,189)',
+    'rgb(17,168,185)' => 'rgb(107,145,189)', 'rgb(10,101,112)' => 'rgb(61,95,134)',
+];
+
 function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label): void {
     $template = @file_get_contents($templatePath);
     $sharedCss = @file_get_contents(__DIR__ . '/holidays/holiday-style.css');
@@ -51,9 +61,9 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
     }
 
     // holiday-style.css also contains a Theme Park-only override block with
-    // !important green rules. Concerts and Holiday Allowance share the structural
-    // CSS but must never inherit those park-specific rules, so remove that block
-    // before recolouring and inlining the shared stylesheet.
+    // !important green rules. Other sections share the structural CSS but must
+    // never inherit those park-specific rules, so remove that block before
+    // recolouring and inlining the shared stylesheet.
     $parkThemeMarker = '/* ── THEME PARK TRACKER — GREEN SECTION THEME ──';
     $parkThemePos = strpos($sharedCss, $parkThemeMarker);
     if ($parkThemePos !== false) {
@@ -83,7 +93,7 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
 }
 
 $section = strtolower(trim((string)($_GET['section'] ?? 'parks')));
-$defaultPage = in_array($section, ['holidays', 'concerts'], true) ? 'index' : 'map';
+$defaultPage = in_array($section, ['holidays', 'concerts', 'shows'], true) ? 'index' : 'map';
 $page = strtolower(trim((string)($_GET['page'] ?? $defaultPage)));
 
 if ($section === 'holidays') {
@@ -105,6 +115,15 @@ if ($section === 'concerts') {
     ];
     if (!isset($templates[$page])) { http_response_code(404); echo 'Concert Log page not found.'; exit; }
     renderSharedCssSection($templates[$page], $concertPalette, 'concert-orange-section-theme', 'Concert Log');
+}
+
+if ($section === 'shows') {
+    $templates = [
+        'index' => __DIR__ . '/shows/index.html',
+        'list' => __DIR__ . '/shows/list.html',
+    ];
+    if (!isset($templates[$page])) { http_response_code(404); echo 'Shows page not found.'; exit; }
+    renderSharedCssSection($templates[$page], $showPalette, 'shows-blue-section-theme', 'Shows');
 }
 
 if ($section !== 'parks') { http_response_code(404); echo 'Section not found.'; exit; }

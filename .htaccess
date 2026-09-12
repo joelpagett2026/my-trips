@@ -131,6 +131,12 @@ RewriteRule ^concerts/index\.html$ /concerts/ [R=302,L,QSA]
 RewriteRule ^concerts/?$ parks-map.php?section=concerts&page=index [L,QSA]
 RewriteRule ^concerts/artists\.html$ parks-map.php?section=concerts&page=artists [L,QSA]
 
+# Shows uses the same render-time section theming. The main tracker and full
+# theatre list are converted to the section's blue palette before delivery.
+RewriteRule ^shows/index\.html$ /shows/ [R=302,L,QSA]
+RewriteRule ^shows/?$ parks-map.php?section=shows&page=index [L,QSA]
+RewriteRule ^shows/list\.html$ parks-map.php?section=shows&page=list [L,QSA]
+
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]

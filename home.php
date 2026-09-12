@@ -190,6 +190,27 @@ $dashboardPolishStyle = <<<'HTML'
   a.dash-card[href="/concerts/"] .media-placeholder.concert{
     background:linear-gradient(135deg,#dc9351,#9f5e22 75%)!important;
   }
+
+  /* Stage Shows & Musicals uses a muted blue family on both the homepage card
+     and the Coming Up item so it matches the section pages. */
+  a.dash-card[href="/shows/"] .card-head-icon,
+  a.coming-item[href="/shows/"] .coming-icon{
+    color:#4f78a8!important;
+    background:#eaf1f7!important;
+  }
+  a.dash-card[href="/shows/"] .card-arrow,
+  a.dash-card[href="/shows/"] .pill,
+  a.dash-card[href="/shows/"] .event-countdown,
+  a.dash-card[href="/shows/"] .wide-stats .stat-val,
+  a.coming-item[href="/shows/"] .coming-value{
+    color:#4f78a8!important;
+  }
+  a.dash-card[href="/shows/"] .pill{
+    background:#eaf1f7!important;
+  }
+  a.dash-card[href="/shows/"] .media-placeholder.show{
+    background:linear-gradient(135deg,#6b91bd,#3d5f86 75%)!important;
+  }
 </style>
 HTML;
 
