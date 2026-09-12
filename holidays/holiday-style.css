@@ -280,3 +280,116 @@ body {
   border: 1.5px solid #0e7a87;
 }
 .nav-btn.print-btn:hover { background: rgba(14,122,135,0.08); }
+
+/* ── THEME PARK TRACKER — GREEN SECTION THEME ──
+   Uses the same muted green family as Attractions in the itinerary.
+   The selectors identify Theme Park pages by their page-only DOM anchors so
+   Holiday Allowance and the other trackers keep their own colour schemes. */
+:root {
+  --parks-green: #6c8966;
+  --parks-green-mid: #7f9d77;
+  --parks-green-dark: #55704f;
+  --parks-green-soft: #edf1ed;
+  --parks-green-soft-2: #f4f7f3;
+}
+
+/* Main Theme Park Tracker */
+body:has(#year-sections) .nav .nav-btn {
+  background: linear-gradient(135deg, var(--parks-green) 0%, var(--parks-green-mid) 100%) !important;
+  box-shadow: 0 2px 8px rgba(108,137,102,.25) !important;
+}
+body:has(#year-sections) .nav .nav-btn:hover {
+  background: linear-gradient(135deg, var(--parks-green-dark) 0%, var(--parks-green) 100%) !important;
+}
+body:has(#year-sections) .section-title .year,
+body:has(#year-sections) .p-stars svg.on,
+body:has(#year-sections) .dash-stat-icon,
+body:has(#year-sections) .dash-stat-val,
+body:has(#year-sections) .tc-rank,
+body:has(#year-sections) .detail-stars svg.on,
+body:has(#year-sections) .c-rate,
+body:has(#year-sections) .star-picker button.on {
+  color: var(--parks-green) !important;
+}
+body:has(#year-sections) .p-card.upcoming {
+  box-shadow: 0 0 0 2px var(--parks-green), 0 2px 8px rgba(0,0,0,.08) !important;
+}
+body:has(#year-sections) .cd-pill { background: rgba(108,137,102,.92) !important; }
+body:has(#year-sections) .p-badge,
+body:has(#year-sections) .p-tag {
+  background: rgba(108,137,102,.16) !important;
+  color: var(--parks-green-dark) !important;
+  border-color: rgba(108,137,102,.28) !important;
+}
+body:has(#year-sections) .tc-rate,
+body:has(#year-sections) .cl-rate {
+  background: rgba(108,137,102,.13) !important;
+  color: var(--parks-green-dark) !important;
+}
+body:has(#year-sections) .tc-rate.top,
+body:has(#year-sections) .cl-rate.top,
+body:has(#year-sections) .p-tag.upcoming,
+body:has(#year-sections) .d-btn.edit,
+body:has(#year-sections) .m-btn.save {
+  background: var(--parks-green) !important;
+  color: #fff !important;
+  border-color: var(--parks-green) !important;
+}
+body:has(#year-sections) .d-btn.edit:hover,
+body:has(#year-sections) .m-btn.save:hover { background: var(--parks-green-dark) !important; }
+body:has(#year-sections) .f-input:focus,
+body:has(#year-sections) .f-textarea:focus,
+body:has(#year-sections) .c-rate:focus { border-color: var(--parks-green) !important; }
+body:has(#year-sections) .add-coaster:hover,
+body:has(#year-sections) .photo-drop:hover {
+  border-color: var(--parks-green) !important;
+  color: var(--parks-green) !important;
+  background: var(--parks-green-soft-2) !important;
+}
+body:has(#year-sections) .suggest-item:hover {
+  background: #edf3eb !important;
+  color: var(--parks-green-dark) !important;
+}
+body:has(#year-sections) .dash-stat { background: var(--parks-green-soft) !important; }
+body:has(#year-sections) a.dash-stat:hover { background: #e4e9e2 !important; }
+body:has(#year-sections) .dash-countdown,
+body:has(#year-sections) .dash-hero {
+  background: linear-gradient(135deg,#2d382b 0%,#40513c 100%) !important;
+}
+body:has(#year-sections) a[href="/parks/coasters.html"] {
+  background: linear-gradient(135deg,var(--parks-green) 0%,var(--parks-green-mid) 100%) !important;
+  box-shadow: 0 2px 8px rgba(108,137,102,.25) !important;
+}
+
+/* Coaster Credits */
+body:has(#count-line):has(.segmented) .search:focus { border-color: var(--parks-green) !important; }
+body:has(#count-line):has(.segmented) .seg.on,
+body:has(#count-line):has(.segmented) .group-head { color: var(--parks-green-dark) !important; }
+body:has(#count-line):has(.segmented) .seg.on { background: var(--parks-green-soft) !important; }
+body:has(#count-line):has(.segmented) .c-rate {
+  background: rgba(108,137,102,.13) !important;
+  color: var(--parks-green-dark) !important;
+}
+body:has(#count-line):has(.segmented) .c-rate.ten {
+  background: var(--parks-green) !important;
+  color: #fff !important;
+}
+
+/* Top Rated Coasters */
+body:has(#top-grid):has(#saving) .sec-title .accent,
+body:has(#top-grid):has(#saving) .tc-photo:hover .ph-empty,
+body:has(#top-grid):has(#saving) .tc-photo .ph-busy { color: var(--parks-green) !important; }
+body:has(#top-grid):has(#saving) .tc-card.elite {
+  box-shadow: 0 0 0 2px var(--parks-green), 0 4px 14px rgba(108,137,102,.20) !important;
+}
+body:has(#top-grid):has(#saving) .tc-card.elite .rank-badge {
+  background: rgba(108,137,102,.78) !important;
+}
+body:has(#top-grid):has(#saving) .tc-score {
+  background: rgba(108,137,102,.13) !important;
+  color: var(--parks-green-dark) !important;
+}
+body:has(#top-grid):has(#saving) .tc-score.ten {
+  background: var(--parks-green) !important;
+  color: #fff !important;
+}
