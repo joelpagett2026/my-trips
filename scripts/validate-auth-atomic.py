@@ -82,18 +82,21 @@ require("$hadCookie = trim((string)($_COOKIE[AUTH_SESSION_COOKIE] ?? '')) !== ''
 require("clearAuthSessionCookie();" in auth_v2,
         "logout must expire the browser cookie")
 
-# Browser storage is now explicitly non-secret. A valid legacy token can be read
-# once for migration, but every successful check/login overwrites storage with the
-# harmless marker and authority remains locked until /check succeeds server-side.
+# Browser storage remains explicitly non-secret. STORAGE_COMPAT_MARKER is a fixed,
+# public 64-hex marker only so older immutable-cached auth.js builds recognise a
+# truthy-looking legacy session and stop re-prompting between pages. It is never a
+# server credential; every current-page bootstrap still validates the HttpOnly cookie.
 require("const SESSION_MARKER = 'cookie-session';" in auth_js,
-        "browser auth code must use the same non-secret marker")
+        "browser auth code must retain the server marker")
+require("const STORAGE_COMPAT_MARKER = 'c00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5ec00c1e5e';" in auth_js,
+        "browser storage must use the fixed non-secret cache compatibility marker")
 require("function storeSession()" in auth_js and
-        "sessionToken: SESSION_MARKER" in auth_js,
-        "browser storage must persist only the marker")
+        "sessionToken: STORAGE_COMPAT_MARKER" in auth_js,
+        "browser storage must persist only the cache-compatible non-secret marker")
 require("storeSession(sessionToken)" not in auth_js,
         "browser storage helper must not accept a raw credential")
 require("/^[a-f0-9]{64}$/i.test(value) || value === SESSION_MARKER" in auth_js,
-        "browser may recognize a legacy raw token only for one-time migration")
+        "browser may recognize a legacy-shaped marker/token only for migration/compatibility")
 require("fetch('/auth-v2.php?action=check'" in auth_js and
         "credentials: 'same-origin'" in auth_js,
         "browser must ask the server to validate cookie/session authority on startup")
