@@ -102,7 +102,15 @@ RewriteRule ^settings/?$ settings.php [L,QSA]
 # Public pages that need a browser Maps key are rendered through PHP so the key
 # can be centrally restricted/rotated without committing the active value again.
 RewriteRule ^trips/?$ trips.php [L,QSA]
-RewriteRule ^parks/map\.html$ parks-map.php [L,QSA]
+
+# Theme Park Tracker has its own section renderer. Route every public Theme Park
+# screen through the same server-side palette transform so teal can never leak
+# back in from an inline style or a stale shared stylesheet.
+RewriteRule ^parks/index\.html$ /parks/ [R=302,L,QSA]
+RewriteRule ^parks/?$ parks-map.php?page=index [L,QSA]
+RewriteRule ^parks/map\.html$ parks-map.php?page=map [L,QSA]
+RewriteRule ^parks/credits\.html$ parks-map.php?page=credits [L,QSA]
+RewriteRule ^parks/coasters\.html$ parks-map.php?page=coasters [L,QSA]
 
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
