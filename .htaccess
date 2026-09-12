@@ -125,6 +125,12 @@ RewriteRule ^holidays/jonathan/?$ parks-map.php?section=holidays&page=jonathan [
 RewriteRule ^holidays/jonathan/2026\.html$ parks-map.php?section=holidays&page=jonathan-2026 [L,QSA]
 RewriteRule ^holidays/jonathan/2027\.html$ parks-map.php?section=holidays&page=jonathan-2027 [L,QSA]
 
+# Concert Log uses the same render-time section theming. Both the main log and
+# artist view are rendered through the orange palette before delivery.
+RewriteRule ^concerts/index\.html$ /concerts/ [R=302,L,QSA]
+RewriteRule ^concerts/?$ parks-map.php?section=concerts&page=index [L,QSA]
+RewriteRule ^concerts/artists\.html$ parks-map.php?section=concerts&page=artists [L,QSA]
+
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
