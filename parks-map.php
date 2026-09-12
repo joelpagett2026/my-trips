@@ -118,11 +118,13 @@ function attachMobileScrollToBottom(string $source, string $colour, string $labe
 </script>
 HTML;
 
-    $source = str_replace('</body>', $widget . "\n</body>", $bodyCount);
-    if ($bodyCount !== 1) {
-        http_response_code(500);
-        echo $label . ' mobile scroll control could not be attached.';
-        exit;
+    // Install in the document head. The script waits for DOMContentLoaded before
+    // touching <body>, so this works even when a source template has a non-standard
+    // or missing closing body tag. Never replace the whole page with an error just
+    // because presentation-only scroll controls cannot find </body>.
+    $source = str_replace('</head>', $widget . "\n</head>", $source, $headCount);
+    if ($headCount !== 1) {
+        $source .= "\n" . $widget;
     }
     return $source;
 }
