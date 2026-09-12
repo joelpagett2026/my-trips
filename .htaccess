@@ -112,6 +112,19 @@ RewriteRule ^parks/map\.html$ parks-map.php [L,QSA]
 RewriteRule ^parks/credits\.html$ parks-map.php?page=credits [L,QSA]
 RewriteRule ^parks/coasters\.html$ parks-map.php?page=coasters [L,QSA]
 
+# Holiday Allowance uses the same render-time theming pattern as Theme Parks.
+# The shared stylesheet and every page-level teal accent are converted to the
+# section's muted purple palette before delivery, including Jonathan's pages.
+RewriteRule ^holidays/index\.html$ /holidays/ [R=302,L,QSA]
+RewriteRule ^holidays/?$ parks-map.php?section=holidays&page=index [L,QSA]
+RewriteRule ^holidays/2025-26\.html$ parks-map.php?section=holidays&page=2025-26 [L,QSA]
+RewriteRule ^holidays/2026-27\.html$ parks-map.php?section=holidays&page=2026-27 [L,QSA]
+RewriteRule ^holidays/2027-28\.html$ parks-map.php?section=holidays&page=2027-28 [L,QSA]
+RewriteRule ^holidays/jonathan/index\.html$ /holidays/jonathan/ [R=302,L,QSA]
+RewriteRule ^holidays/jonathan/?$ parks-map.php?section=holidays&page=jonathan [L,QSA]
+RewriteRule ^holidays/jonathan/2026\.html$ parks-map.php?section=holidays&page=jonathan-2026 [L,QSA]
+RewriteRule ^holidays/jonathan/2027\.html$ parks-map.php?section=holidays&page=jonathan-2027 [L,QSA]
+
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
