@@ -21,8 +21,13 @@ jobs:
             "https://joelpagett.co.uk/auth.js?verify-cookie-session-marker=1" \
             --output /tmp/auth.js
           grep -q "const SESSION_MARKER = 'cookie-session';" /tmp/auth.js
+          if grep -q "const STORAGE_COMPAT_MARKER =" /tmp/auth.js; then
+            grep -Eq "const STORAGE_COMPAT_MARKER = '[a-f0-9]{64}';" /tmp/auth.js
+            grep -q "sessionToken: STORAGE_COMPAT_MARKER" /tmp/auth.js
+          else
+            grep -q "sessionToken: SESSION_MARKER" /tmp/auth.js
+          fi
           grep -q "function storeSession()" /tmp/auth.js
-          grep -q "sessionToken: SESSION_MARKER" /tmp/auth.js
           grep -q "fetch('/auth-v2.php?action=check'" /tmp/auth.js
           if grep -q 'function storeSession(sessionToken)' /tmp/auth.js; then
             echo 'live auth.js still accepts a raw session credential for browser storage'
