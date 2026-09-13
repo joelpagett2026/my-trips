@@ -3,10 +3,10 @@
   'use strict';
 
   // Guard against the shared helper being included more than once.
-  if (window.__trackerDetailEnhancementsV2) return;
-  window.__trackerDetailEnhancementsV2 = true;
+  if (window.__trackerDetailEnhancementsV3) return;
+  window.__trackerDetailEnhancementsV3 = true;
 
-  const MOBILE_QUERY = '(max-width: 768px)';
+  const MOBILE_QUERY = '(max-width: 768px), (display-mode: standalone) and (max-width: 900px)';
   const DETAIL_SELECTOR = '.detail-overlay';
   const CARD_SELECTOR = '.detail-card';
   const MODAL_SELECTOR = '#overlay.modal-overlay';
@@ -55,29 +55,56 @@
       #tracker-modal-delete:hover,
       #modal-delete:hover { color: #a62f2f !important; }
 
-      @media (max-width: 768px) {
+      .tracker-drawer-handle { display: none; }
+
+      @media (max-width: 768px), (display-mode: standalone) and (max-width: 900px) {
         .detail-card {
           will-change: transform;
           transform: translate3d(0,0,0);
         }
-        .detail-card::before {
-          content: '';
-          position: absolute;
-          top: 8px;
-          left: 50%;
+
+        /* Mobile/app details close with the swipe gesture, so the X is redundant. */
+        .detail-close { display: none !important; }
+
+        /* The grabber now sits over the lower edge of the image rather than the
+           very top of the sheet. It is inserted next to whichever detail image
+           the tracker uses, including the square Private Log photo. */
+        .tracker-drawer-handle {
+          display: block;
           width: 38px;
           height: 4px;
+          flex: 0 0 4px;
           border-radius: 999px;
-          transform: translateX(-50%);
-          background: rgba(255,255,255,0.92);
-          box-shadow: 0 1px 5px rgba(0,0,0,0.28);
+          margin: -12px auto 8px;
+          position: relative;
           z-index: 60;
+          background: rgba(255,255,255,0.94);
+          box-shadow: 0 1px 5px rgba(0,0,0,0.30);
           pointer-events: none;
         }
         .detail-card.tracker-dragging { transition: none !important; }
       }
     `;
     document.head.appendChild(style);
+  }
+
+  function prepareMobileChrome(root) {
+    (root || document).querySelectorAll(CARD_SELECTOR).forEach(card => {
+      const photo = card.querySelector('.detail-photo, .detail-photo-thumb');
+      const existing = card.querySelector('.tracker-drawer-handle');
+
+      if (!photo) {
+        if (existing) existing.remove();
+        return;
+      }
+      if (existing && existing.previousElementSibling === photo) return;
+      if (existing) existing.remove();
+
+      const handle = document.createElement('span');
+      handle.className = 'tracker-drawer-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      photo.insertAdjacentElement('afterend', handle);
+    });
   }
 
   function prepareEditButtons(root) {
@@ -147,10 +174,10 @@
   // drawer is at the top, a downward pull from anywhere on the card may close it.
   // A 70px pull is enough, matching trip-drawer-swipe.js.
   function initSwipeForOverlay(overlay) {
-    if (!overlay || overlay.dataset.trackerSwipeReady === '2') return;
+    if (!overlay || overlay.dataset.trackerSwipeReady === '3') return;
     const card = overlay.querySelector(CARD_SELECTOR);
     if (!card) return;
-    overlay.dataset.trackerSwipeReady = '2';
+    overlay.dataset.trackerSwipeReady = '3';
 
     let startY = 0;
     let lastY = 0;
@@ -183,11 +210,14 @@
 
       const rect = card.getBoundingClientRect();
       const touch = event.touches[0];
-      const inHandleArea = (touch.clientY - rect.top) <= 90;
+      const handle = card.querySelector('.tracker-drawer-handle');
+      const handleRect = handle ? handle.getBoundingClientRect() : null;
+      const onHandle = !!handleRect && touch.clientY >= handleRect.top - 28 && touch.clientY <= handleRect.bottom + 28;
+      const inFallbackTopArea = !handle && (touch.clientY - rect.top) <= 90;
 
-      // As on the itinerary drawer, the top/handle area always works. When the
-      // detail is already scrolled fully to the top, the whole card is draggable.
-      eligible = inHandleArea || scrollIsAtTop();
+      // The visible grabber is the preferred start point. As before, when the
+      // detail is already at the top the whole card can still be pulled down.
+      eligible = onHandle || inFallbackTopArea || scrollIsAtTop();
       if (!eligible) return;
 
       startY = lastY = touch.clientY;
@@ -249,12 +279,14 @@
     if (typeof MutationObserver === 'undefined') return;
     new MutationObserver(() => {
       document.querySelectorAll(DETAIL_SELECTOR).forEach(initSwipeForOverlay);
+      prepareMobileChrome(document);
       prepareEditButtons(document);
     }).observe(document.body, { childList: true, subtree: true });
   }
 
   function init() {
     addStyles();
+    prepareMobileChrome(document);
     prepareEditButtons(document);
     initDeleteRelocation();
     initSwipeDrawers();
