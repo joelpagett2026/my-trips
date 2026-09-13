@@ -267,103 +267,107 @@ function applyHomepageTrackerLayout() {
       .main-grid > a.dash-card[href="/trips/"] .trip-feature-shell{
         display:grid;
         grid-template-columns:minmax(0,1.65fr) minmax(220px,.72fr);
-        gap:12px;
-        padding:0 16px 16px;
+        gap:10px;
+        padding:0 16px 12px;
       }
       .main-grid > a.dash-card[href="/trips/"] .trip-hero{
         margin:0!important;
-        min-height:228px!important;
-        border-radius:18px!important;
+        min-height:188px!important;
+        border-radius:16px!important;
       }
       .main-grid > a.dash-card[href="/trips/"] .trip-name{
-        font-size:24px!important;
+        font-size:22px!important;
         letter-spacing:-.035em!important;
       }
       .main-grid > a.dash-card[href="/trips/"] .trip-date{
-        margin-top:6px!important;
-        font-size:11px!important;
+        margin-top:4px!important;
+        font-size:10.5px!important;
       }
       .main-grid > a.dash-card[href="/trips/"] .trip-countdown{
-        right:16px!important;
-        bottom:16px!important;
-        min-width:110px!important;
-        padding:12px 14px!important;
-        border-radius:15px!important;
+        right:14px!important;
+        bottom:14px!important;
+        min-width:96px!important;
+        padding:9px 12px!important;
+        border-radius:13px!important;
       }
       .main-grid > a.dash-card[href="/trips/"] .trip-countdown strong{
-        font-size:24px!important;
+        font-size:21px!important;
       }
 
       .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
         display:flex!important;
         flex-direction:column;
         margin:0!important;
-        padding:16px!important;
+        padding:10px!important;
         border:1px solid #e4eaea!important;
-        border-radius:18px;
+        border-radius:16px;
         background:linear-gradient(180deg,#f8fafa 0%,#f0f4f4 100%);
         min-width:0;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stats-head{
-        padding:2px 2px 12px;
-        margin-bottom:2px;
+        padding:0 2px 7px;
+        margin-bottom:0;
         border-bottom:1px solid #dfe6e6;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stats-eyebrow{
         display:block;
         color:#0e7a87;
-        font-size:8.5px;
+        font-size:8px;
         font-weight:800;
         letter-spacing:.08em;
         text-transform:uppercase;
-        margin-bottom:4px;
+        margin-bottom:2px;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stats-head strong{
         display:block;
         color:#263238;
-        font-size:14px;
+        font-size:13px;
         font-weight:800;
         letter-spacing:-.02em;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat{
         display:grid;
-        grid-template-columns:36px minmax(0,1fr) auto;
-        gap:10px;
+        grid-template-columns:30px minmax(0,1fr) auto;
+        gap:8px;
         align-items:center;
-        padding:12px 2px;
+        padding:6px 2px;
         border-bottom:1px solid #e0e6e6;
         min-width:0;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon{
-        width:36px;
-        height:36px;
-        border-radius:11px;
+        width:30px;
+        height:30px;
+        border-radius:9px;
         display:grid;
         place-items:center;
         color:#0e7a87;
         background:#e3f0f1;
       }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon svg{
+        width:18px;
+        height:18px;
+      }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat-label{
         color:#68777b;
-        font-size:10px;
+        font-size:9.5px;
         font-weight:700;
-        line-height:1.25;
+        line-height:1.2;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{
         color:#0e7a87;
-        font-size:18px;
+        font-size:16.5px;
         font-weight:800;
         letter-spacing:-.035em;
         white-space:nowrap;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stats-cta{
         margin-top:auto;
-        padding:12px 2px 1px;
+        padding:7px 2px 0;
         display:flex;
         align-items:center;
         justify-content:space-between;
         color:#0e7a87;
-        font-size:9.5px;
+        font-size:9px;
         font-weight:800;
         letter-spacing:.01em;
       }
@@ -377,10 +381,10 @@ function applyHomepageTrackerLayout() {
         }
         .main-grid > a.dash-card[href="/holidays/"] .allowance-wrap{
           display:block!important;
-          padding:2px 16px 16px!important;
+          padding:0 16px 10px!important;
         }
         .main-grid > a.dash-card[href="/holidays/"] .person{
-          padding:13px 0!important;
+          padding:9px 0!important;
         }
         .main-grid > a.dash-card[href="/holidays/"] .person + .person{
           border-left:0!important;
