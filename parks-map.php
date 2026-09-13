@@ -266,7 +266,7 @@ $privatePalette = [
     'rgb(15,189,207)' => 'rgb(214,107,112)',
 ];
 
-function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label, ?string $scrollColour = null): void {
+function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label, ?string $scrollColour = null, bool $fullscreenDetail = false): void {
     $template = @file_get_contents($templatePath);
     $sharedCss = @file_get_contents(__DIR__ . '/holidays/holiday-style.css');
     if ($template === false || $sharedCss === false) {
@@ -307,6 +307,9 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
     if ($scrollColour !== null) {
         $template = attachMobileScrollToBottom($template, $scrollColour, $label);
     }
+    if ($fullscreenDetail) {
+        $template = attachParkMobileFullscreenDetail($template);
+    }
     echo $template;
     exit;
 }
@@ -335,7 +338,8 @@ if ($section === 'concerts') {
     if (!isset($templates[$page])) { http_response_code(404); echo 'Concert Log page not found.'; exit; }
     renderSharedCssSection(
         $templates[$page], $concertPalette, 'concert-orange-section-theme', 'Concert Log',
-        $page === 'index' ? '#c9792b' : null
+        $page === 'index' ? '#c9792b' : null,
+        $page === 'index'
     );
 }
 
@@ -347,7 +351,8 @@ if ($section === 'shows') {
     if (!isset($templates[$page])) { http_response_code(404); echo 'Shows page not found.'; exit; }
     renderSharedCssSection(
         $templates[$page], $showPalette, 'shows-blue-section-theme', 'Shows',
-        $page === 'index' ? '#4f78a8' : null
+        $page === 'index' ? '#4f78a8' : null,
+        $page === 'index'
     );
 }
 
