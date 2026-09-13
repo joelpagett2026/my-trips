@@ -419,3 +419,18 @@ if (typeof window !== 'undefined') {
         dbComputeRoute,
     });
 }
+
+// Tracker templates share the same detail-drawer interaction layer. Load it only
+// for tracker routes so trip itinerary pages and settings keep their own UI code.
+(function loadTrackerDetailEnhancements() {
+    if (typeof document === 'undefined' || typeof location === 'undefined') return;
+    const path = String(location.pathname || '').toLowerCase();
+    if (!/^\/(?:parks|shows|concerts|private)(?:\/|$)/.test(path)) return;
+    if (document.querySelector('script[data-tracker-detail-enhancements]')) return;
+
+    const script = document.createElement('script');
+    script.src = '/tracker-detail-enhancements.js?v=20260913-1';
+    script.async = false;
+    script.dataset.trackerDetailEnhancements = '1';
+    (document.head || document.documentElement).appendChild(script);
+})();
