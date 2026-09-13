@@ -13,6 +13,16 @@ ob_start();
 include $core;
 $page = ob_get_clean();
 
+// Keep the renderer contract explicit here: home-core.php must already have
+// rewritten the legacy homepage compatibility call to the authoritative trip registry.
+$registryNeedle = "const registry = { trips: await window.dbLoadRegistry() };";
+$registryCount = substr_count($page, $registryNeedle);
+if ($registryCount !== 1) {
+    http_response_code(500);
+    echo '<!doctype html><title>Homepage unavailable</title><p>The trip summary could not be attached safely.</p>';
+    exit;
+}
+
 $theme = <<<'CSS'
 /* Full colour-backed treatment for the five main homepage sections. */
 .main-grid > a.dash-card[href="/trips/"],
