@@ -129,6 +129,92 @@ HTML;
     return $source;
 }
 
+function attachParkMobileFullscreenDetail(string $source): string {
+    $enhancement = <<<'HTML'
+<style id="park-mobile-fullscreen-detail">
+@media (max-width: 700px), (display-mode: standalone) and (max-width: 900px) {
+  .detail-overlay {
+    padding: 0 !important;
+    align-items: flex-start !important;
+    justify-content: stretch !important;
+    background: #ffffff !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detail-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .detail-photo { width: 100% !important; }
+  .detail-body {
+    padding: 20px 18px calc(28px + env(safe-area-inset-bottom)) !important;
+  }
+  .detail-close {
+    top: calc(12px + env(safe-area-inset-top)) !important;
+    right: 12px !important;
+  }
+  html.park-detail-open #mobile-scroll-bottom {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+html.park-detail-open,
+html.park-detail-open body {
+  overflow: hidden !important;
+}
+</style>
+<script id="park-mobile-fullscreen-detail-script">
+(() => {
+  const install = () => {
+    const isMobileBrowser = window.matchMedia('(max-width: 700px)').matches;
+    const isStandalone = window.navigator.standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches;
+    if (!isMobileBrowser && !(isStandalone && window.innerWidth <= 900)) return;
+
+    const originalOpen = window.openDetail;
+    const originalClose = window.closeDetail;
+    if (typeof originalOpen !== 'function' || typeof originalClose !== 'function') return;
+    if (originalOpen.__parkFullscreenDetail) return;
+
+    const wrappedOpen = function(id) {
+      const result = originalOpen(id);
+      document.documentElement.classList.add('park-detail-open');
+      const overlay = document.getElementById('detail-overlay');
+      if (overlay) overlay.scrollTop = 0;
+      return result;
+    };
+    wrappedOpen.__parkFullscreenDetail = true;
+
+    window.openDetail = wrappedOpen;
+    window.closeDetail = function() {
+      document.documentElement.classList.remove('park-detail-open');
+      return originalClose();
+    };
+    window.addEventListener('pagehide', () => {
+      document.documentElement.classList.remove('park-detail-open');
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once:true });
+  } else {
+    install();
+  }
+})();
+</script>
+HTML;
+
+    $source = str_replace('</head>', $enhancement . "\n</head>", $source, $headCount);
+    if ($headCount !== 1) {
+        $source .= "\n" . $enhancement;
+    }
+    return $source;
+}
+
 $parkPalette = [
     '#0e7a87' => '#6c8966', '#12a0af' => '#7f9d77', '#11a8b9' => '#7f9d77',
     '#0a6570' => '#55704f', '#0e3a3f' => '#40513c', '#1a2a2a' => '#2d382b',
@@ -289,6 +375,7 @@ $template = str_replace('href="/holidays/holiday-style.css"', 'href="/holidays/h
 $template = attachMobileCenteredNavTitle($template, 'Theme Park Tracker');
 if ($page === 'index') {
     $template = attachMobileScrollToBottom($template, '#6c8966', 'Theme Park Tracker');
+    $template = attachParkMobileFullscreenDetail($template);
 }
 if ($page === 'map') {
     [$template, $diag] = applyGoogleMapsScriptRuntimeSafety($template);
