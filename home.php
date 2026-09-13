@@ -90,8 +90,8 @@ if ($html === false) {
 
 $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
 $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
-$html = preg_replace('~src="/auth\.js\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $html);
-$html = preg_replace('~src="/db\.js\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $html);
+$html = preg_replace('~src="/auth\\.js\\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $html);
+$html = preg_replace('~src="/db\\.js\\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $html);
 
 // index.html still references the retired generic "registry" record for the
 // Holiday Planner summary. The live planner uses trip-registry via dbLoadRegistry().
@@ -274,6 +274,62 @@ $dashboardPolishScript = <<<'HTML'
     if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
     const x = new Date(s);
     return Number.isNaN(x.getTime()) ? null : x;
+  };
+
+  function setTripHeroPhoto(trip) {
+    const hero = document.querySelector('.trip-hero');
+    if (!hero) return;
+    const photo = String(trip?.photo || trip?.thumbnail || trip?.thumb || '').trim();
+    if (!photo) {
+      hero.style.removeProperty('background-image');
+      hero.style.removeProperty('background-size');
+      hero.style.removeProperty('background-position');
+      hero.style.removeProperty('background-repeat');
+      return;
+    }
+    hero.style.backgroundImage = `linear-gradient(135deg, rgba(6,49,57,.42), rgba(0,0,0,.58)), url(${JSON.stringify(photo)})`;
+    hero.style.backgroundSize = 'cover';
+    hero.style.backgroundPosition = 'center';
+    hero.style.backgroundRepeat = 'no-repeat';
+  }
+
+  loadTrips = async function() {
+    try {
+      const raw = await window.dbLoadRegistry();
+      const trips = (Array.isArray(raw) ? raw : Object.values(raw || {})).filter(t => t && !t.deleted);
+      const today = new Date(); today.setHours(0,0,0,0);
+      const startOf = t => safeDate(t.dep || t.startDate || t.start || t.date);
+      const endOf = t => safeDate(t.ret || t.endDate || t.end || t.dep || t.startDate || t.start || t.date);
+      const upcoming = trips.filter(t => { const d = startOf(t); return d && d >= today; }).sort((a,b)=>startOf(a)-startOf(b));
+      const completed = trips.filter(t => { const d = endOf(t); return d && d < today; });
+      setText('hp-trips', trips.length);
+      setText('hp-upcoming', upcoming.length);
+      setText('hp-completed', completed.length);
+
+      const next = upcoming[0];
+      if (next) {
+        const start = startOf(next), end = endOf(next), days = daysUntil(start);
+        const name = next.dest || next.name || next.destination || 'Next trip';
+        setTripHeroPhoto(next);
+        setText('trip-name', name);
+        setText('trip-date', end && end.getTime() !== start.getTime() ? `${fmtDate(start)} – ${fmtDate(end)}` : fmtDate(start));
+        setText('trip-days', days);
+        $('trip-days-label').textContent = `${dayWord(days)} until your trip`;
+        setText('cu-trip-value', countdownText(days));
+        setText('cu-trip-meta', name);
+      } else {
+        setTripHeroPhoto(null);
+        setText('trip-name', 'No upcoming trip');
+        setText('trip-date', 'Add your next itinerary');
+        setText('trip-days', '—');
+        $('trip-days-label').textContent = 'nothing booked yet';
+        setText('cu-trip-value', 'Nothing booked');
+        setText('cu-trip-meta', `${trips.length} trips recorded`);
+      }
+    } catch(e) {
+      setTripHeroPhoto(null);
+      ['hp-trips','hp-upcoming','hp-completed','trip-name','trip-date','trip-days','cu-trip-value','cu-trip-meta'].forEach(id => setText(id,'—'));
+    }
   };
 
   loadShows = async function() {
