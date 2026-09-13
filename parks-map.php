@@ -49,6 +49,112 @@ HTML;
     return $source;
 }
 
+function attachMobileSectionSpacing(string $source): string {
+    $spacing = <<<'HTML'
+<style id="mobile-section-spacing-system">
+@media (max-width: 700px), (display-mode: standalone) and (max-width: 900px) {
+  /* One mobile rhythm across every tracker, matching the roomier Concert detail. */
+  .section,
+  .sec-ongoing,
+  .sec-all {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  .concerts-grid,
+  .shows-grid,
+  .p-grid,
+  .trips-grid,
+  .cards-grid {
+    gap: 14px !important;
+  }
+
+  .c-card-body,
+  .s-card-body,
+  .p-card-body {
+    padding: 16px 18px 18px !important;
+  }
+  .c-card-name,
+  .s-card-name,
+  .p-card-name {
+    line-height: 1.3 !important;
+  }
+  .c-pill-row,
+  .s-pill-row,
+  .p-pill-row,
+  .p-card-foot {
+    margin-top: 8px !important;
+  }
+  .c-card-meta,
+  .p-card-meta,
+  .p-card-dates,
+  .s-card-theatre,
+  .s-card-date,
+  .s-card-comedian {
+    margin-top: 6px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Full-screen/detail hierarchy. */
+  .detail-body > .detail-name,
+  .detail-head-text > .detail-name {
+    line-height: 1.24 !important;
+    margin-bottom: 10px !important;
+  }
+  .detail-body > .detail-pill-row {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+  }
+  .detail-body > .detail-tour {
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+    line-height: 1.4 !important;
+  }
+  .detail-body > .s-card-comedian {
+    margin-top: 12px !important;
+    margin-bottom: 5px !important;
+    line-height: 1.4 !important;
+  }
+  .detail-body > .detail-meta,
+  .detail-head-text > .detail-meta,
+  .detail-head-text > .detail-dates {
+    margin-top: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Private detail uses a split header/column structure rather than detail-body. */
+  .detail-header {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  .detail-cols {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  .detail-head-text .detail-name { line-height: 1.24 !important; }
+  .profile-block { margin-top: 22px; }
+  .profile-block-title { margin-bottom: 12px !important; }
+  .profile-grid { gap: 10px !important; }
+
+  /* Add/edit sheets keep the same 18px horizontal measure. */
+  .modal {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  .modal-title {
+    line-height: 1.24 !important;
+    margin-bottom: 14px !important;
+  }
+  .f-group { margin-bottom: 16px !important; }
+  .modal-actions { margin-top: 20px !important; }
+}
+</style>
+HTML;
+
+    $source = str_replace('</head>', $spacing . "\n</head>", $source, $headCount);
+    if ($headCount !== 1) $source .= "\n" . $spacing;
+    return $source;
+}
+
 function attachMobileScrollToBottom(string $source, string $colour, string $label): string {
     $widget = <<<HTML
 <style id="mobile-scroll-bottom-style">
@@ -118,10 +224,6 @@ function attachMobileScrollToBottom(string $source, string $colour, string $labe
 </script>
 HTML;
 
-    // Install in the document head. The script waits for DOMContentLoaded before
-    // touching <body>, so this works even when a source template has a non-standard
-    // or missing closing body tag. Never replace the whole page with an error just
-    // because presentation-only scroll controls cannot find </body>.
     $source = str_replace('</head>', $widget . "\n</head>", $source, $headCount);
     if ($headCount !== 1) {
         $source .= "\n" . $widget;
@@ -160,33 +262,6 @@ function attachParkMobileFullscreenDetail(string $source): string {
   html.park-detail-open #mobile-scroll-bottom {
     opacity: 0 !important;
     pointer-events: none !important;
-  }
-
-  /* Give Concert and Shows headings more breathing room in full-screen detail. */
-  body:has(.concerts-grid) .detail-body > .detail-name,
-  body:has(.shows-grid) .detail-body > .detail-name {
-    line-height: 1.24 !important;
-    margin-bottom: 10px !important;
-  }
-  body:has(.concerts-grid) .detail-body > .detail-pill-row,
-  body:has(.shows-grid) .detail-body > .detail-pill-row {
-    margin-top: 0 !important;
-    margin-bottom: 10px !important;
-  }
-  body:has(.concerts-grid) .detail-body > .detail-tour {
-    margin-top: 0 !important;
-    margin-bottom: 12px !important;
-    line-height: 1.4 !important;
-  }
-  body:has(.shows-grid) .detail-body > .s-card-comedian {
-    margin-top: 12px !important;
-    margin-bottom: 5px !important;
-    line-height: 1.4 !important;
-  }
-  body:has(.concerts-grid) .detail-body > .detail-meta,
-  body:has(.shows-grid) .detail-body > .detail-meta {
-    margin-top: 12px !important;
-    line-height: 1.4 !important;
   }
 }
 html.park-detail-open,
@@ -302,10 +377,6 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
         exit;
     }
 
-    // holiday-style.css also contains a Theme Park-only override block with
-    // !important green rules. Other sections share the structural CSS but must
-    // never inherit those park-specific rules, so remove that block before
-    // recolouring and inlining the shared stylesheet.
     $parkThemeMarker = '/* ── THEME PARK TRACKER — GREEN SECTION THEME ──';
     $parkThemePos = strpos($sharedCss, $parkThemeMarker);
     if ($parkThemePos !== false) {
@@ -331,6 +402,7 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
         }
     }
     $template = attachMobileCenteredNavTitle($template, $label);
+    $template = attachMobileSectionSpacing($template);
     if ($scrollColour !== null) {
         $template = attachMobileScrollToBottom($template, $scrollColour, $label);
     }
@@ -389,6 +461,7 @@ if ($section === 'private') {
     if ($template === false) { http_response_code(500); echo 'Private Log is unavailable.'; exit; }
     $template = applySectionPalette($template, $privatePalette);
     $template = attachMobileCenteredNavTitle($template, 'Private Log');
+    $template = attachMobileSectionSpacing($template);
     echo $template;
     exit;
 }
@@ -405,6 +478,7 @@ if ($template === false) { http_response_code(500); echo 'Theme Park Tracker is 
 $template = applySectionPalette($template, $parkPalette);
 $template = str_replace('href="/holidays/holiday-style.css"', 'href="/holidays/holiday-style.css?v=parks-green-20260912"', $template);
 $template = attachMobileCenteredNavTitle($template, 'Theme Park Tracker');
+$template = attachMobileSectionSpacing($template);
 if ($page === 'index') {
     $template = attachMobileScrollToBottom($template, '#6c8966', 'Theme Park Tracker');
     $template = attachParkMobileFullscreenDetail($template);
