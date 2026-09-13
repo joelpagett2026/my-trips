@@ -5,81 +5,18 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 $core = __DIR__ . '/home-core.php';
-if (is_file($core)) {
-    ob_start();
-    include $core;
-    $page = ob_get_clean();
-} else {
-    // Recovery-safe fallback: render directly from the checked-in homepage source.
-    // This keeps production usable even if a deployment ever copies home.php before
-    // its optional helper file.
-    $templatePath = __DIR__ . '/index.html';
-    $page = @file_get_contents($templatePath);
-    if ($page === false) {
-        http_response_code(500);
-        echo '<!doctype html><title>Homepage unavailable</title><p>The homepage template could not be loaded.</p>';
-        exit;
-    }
-
-    $authVersion = @filemtime(__DIR__ . '/auth.js') ?: time();
-    $dbVersion = @filemtime(__DIR__ . '/db.js') ?: time();
-    $page = preg_replace('~src="/auth\\.js\\?v=[^"]+"~', 'src="/auth.js?v=' . $authVersion . '"', $page);
-    $page = preg_replace('~src="/db\\.js\\?v=[^"]+"~', 'src="/db.js?v=' . $dbVersion . '"', $page);
-
-    $page = str_replace(
-        "const registry = await window.dbLoad('registry');",
-        "const registry = { trips: await window.dbLoadRegistry() };",
-        $page,
-        $registryCount
-    );
-    if ($registryCount !== 1) {
-        http_response_code(500);
-        echo '<!doctype html><title>Homepage unavailable</title><p>The trip summary could not be attached safely.</p>';
-        exit;
-    }
-
-    $quickLinksPanel = <<<'HTML'
-<section class="coming-panel quick-links-panel">
-  <div class="section-head">
-    <div>
-      <div class="section-title">Quick links</div>
-      <div class="section-sub">Jump straight to a section</div>
-    </div>
-  </div>
-  <div class="coming-grid">
-    <a class="coming-item" href="/trips/"><span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span><span class="coming-copy"><span class="coming-label">Trips</span></span><span class="mini-arrow">›</span></a>
-    <a class="coming-item" href="/holidays/"><span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="coming-copy"><span class="coming-label">Holiday Tracker</span></span><span class="mini-arrow">›</span></a>
-    <a class="coming-item" href="/concerts/"><span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/></svg></span><span class="coming-copy"><span class="coming-label">Concert Log</span></span><span class="mini-arrow">›</span></a>
-    <a class="coming-item" href="/shows/"><span class="coming-icon purple"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg></span><span class="coming-copy"><span class="coming-label">Show Tracker</span></span><span class="mini-arrow">›</span></a>
-    <a class="coming-item" href="/parks/"><span class="coming-icon green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/></svg></span><span class="coming-copy"><span class="coming-label">Theme Parks</span></span><span class="mini-arrow">›</span></a>
-  </div>
-</section>
-HTML;
-    $page = preg_replace('~<section class="coming-panel">.*?</section>~s', $quickLinksPanel, $page, 1, $quickLinksCount);
-    if ($quickLinksCount !== 1) {
-        http_response_code(500);
-        echo '<!doctype html><title>Homepage unavailable</title><p>The quick links could not be attached safely.</p>';
-        exit;
-    }
-
-    $fallbackPolish = <<<'CSS'
-.quick-links-panel .section-head{padding-bottom:12px}.quick-links-panel .coming-item{min-height:64px;padding:14px 16px}.quick-links-panel .coming-label{font-size:12.5px;font-weight:800;color:#263238}.quick-links-panel .mini-arrow{margin-left:auto;font-size:22px;line-height:1;color:#a7b0b3}.quick-links-panel a[href="/holidays/"] .coming-icon{color:#76699f!important;background:#f0edf7!important}.quick-links-panel a[href="/concerts/"] .coming-icon{color:#c9792b!important;background:#fff1e6!important}.quick-links-panel a[href="/shows/"] .coming-icon{color:#4f78a8!important;background:#eaf1f7!important}.quick-links-panel a[href="/parks/"] .coming-icon{color:#6c8966!important;background:#edf1ed!important}
-CSS;
-    $page = str_ireplace('</head>', "<style id=\"homepage-fallback-polish\">{$fallbackPolish}</style>\n</head>", $page);
-}
-
-// Keep the renderer contract explicit here: the served homepage must use the
-// authoritative trip registry, whether it came from home-core.php or the fallback.
-$registryNeedle = "const registry = { trips: await window.dbLoadRegistry() };";
-$registryCount = substr_count($page, $registryNeedle);
-if ($registryCount !== 1) {
+if (!is_file($core)) {
     http_response_code(500);
-    echo '<!doctype html><title>Homepage unavailable</title><p>The trip summary could not be attached safely.</p>';
+    echo '<!doctype html><title>Homepage unavailable</title><p>The homepage renderer could not be loaded.</p>';
     exit;
 }
 
+ob_start();
+include $core;
+$page = ob_get_clean();
+
 $theme = <<<'CSS'
-/* Full colour-backed treatment for the five main homepage sections. */
+/* Colour-backed treatment for the five main homepage sections. */
 .main-grid > a.dash-card[href="/trips/"],
 .main-grid > a.dash-card[href="/holidays/"],
 .main-grid > a.dash-card[href="/concerts/"],
@@ -136,12 +73,71 @@ $theme = <<<'CSS'
 .main-grid > a.dash-card[href="/shows/"] .card-arrow,
 .main-grid > a.dash-card[href="/parks/"] .card-arrow{color:rgba(255,255,255,.9)!important}
 
+/* Holiday Planner stats: integrated into the teal card instead of a white box. */
 body .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
-  background:rgba(255,255,255,.95)!important;
-  border-color:rgba(255,255,255,.42)!important;
-  box-shadow:0 8px 24px rgba(4,67,75,.11)!important;
+  position:relative;
+  overflow:hidden;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:7px 4px 2px!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stats-row:before{
+  content:"";
+  position:absolute;
+  inset:-18px -20px auto -20px;
+  height:72px;
+  background:rgba(255,255,255,.055);
+  border-radius:0 0 50% 50%;
+  pointer-events:none;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stats-head{
+  position:relative;
+  padding:0 2px 8px!important;
+  border:0!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stats-eyebrow{
+  color:rgba(255,255,255,.62)!important;
+  letter-spacing:.12em!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stats-head strong{
+  color:#fff!important;
+  font-size:14px!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stat{
+  position:relative;
+  grid-template-columns:28px minmax(0,1fr) auto!important;
+  gap:8px!important;
+  padding:8px 2px!important;
+  border:0!important;
+  border-top:1px solid rgba(255,255,255,.14)!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon{
+  width:28px!important;
+  height:28px!important;
+  border-radius:9px!important;
+  color:#fff!important;
+  background:rgba(255,255,255,.13)!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon svg{width:16px!important;height:16px!important}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stat-label{
+  color:rgba(255,255,255,.82)!important;
+  font-size:9.5px!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{
+  color:#fff!important;
+  font-size:17px!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .travel-stats-cta{
+  position:relative;
+  margin-top:2px!important;
+  padding:9px 2px 1px!important;
+  border-top:1px solid rgba(255,255,255,.14)!important;
+  color:#fff!important;
 }
 
+/* Holiday Allowance on purple. */
 body .main-grid > a.dash-card[href="/holidays/"] .person + .person,
 body .main-grid > a.dash-card[href="/holidays/"] .allow-stat{border-color:rgba(255,255,255,.18)!important}
 .main-grid > a.dash-card[href="/holidays/"] .allow-stat.used strong,
@@ -179,6 +175,14 @@ body .main-grid > a.dash-card[href="/parks/"] .stat{border-color:rgba(255,255,25
   .main-grid > a.dash-card[href="/concerts/"],
   .main-grid > a.dash-card[href="/shows/"],
   .main-grid > a.dash-card[href="/parks/"]{box-shadow:0 8px 24px rgba(39,54,58,.10)!important}
+  body .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{padding:4px 4px 0!important}
+  body .main-grid > a.dash-card[href="/trips/"] .travel-stats-head{padding:0 2px 10px!important}
+  body .main-grid > a.dash-card[href="/trips/"] .travel-stat{
+    grid-template-columns:32px minmax(0,1fr) auto!important;
+    padding:10px 2px!important;
+  }
+  body .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon{width:32px!important;height:32px!important}
+  body .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{font-size:19px!important}
 }
 CSS;
 
