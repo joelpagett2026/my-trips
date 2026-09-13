@@ -217,4 +217,42 @@ async function bootstrapAuth() {
     showPinWhenReady();
 }
 
+function applyHomepageTrackerLayout() {
+    if (!['/', '/home.php', '/index.html'].includes(window.location.pathname)) return;
+    const style = document.createElement('style');
+    style.id = 'homepage-tracker-grid-layout';
+    style.textContent = `
+      @media (min-width:1251px) {
+        .main-grid > a.dash-card[href="/trips/"],
+        .main-grid > a.dash-card[href="/holidays/"] { grid-column: span 3; }
+
+        .main-grid > a.dash-card[href="/concerts/"],
+        .main-grid > a.dash-card[href="/shows/"],
+        .main-grid > a.dash-card[href="/parks/"] { grid-column: span 2; }
+
+        .main-grid > a.dash-card[href="/shows/"] .wide-preview,
+        .main-grid > a.dash-card[href="/parks/"] .wide-preview {
+          grid-template-columns: 42% minmax(0,1fr);
+          gap: 13px;
+          align-items: stretch;
+        }
+        .main-grid > a.dash-card[href="/shows/"] .wide-preview .event-media,
+        .main-grid > a.dash-card[href="/parks/"] .wide-preview .event-media {
+          height: auto;
+          min-height: 116px;
+        }
+        .main-grid > a.dash-card[href="/shows/"] .wide-stats,
+        .main-grid > a.dash-card[href="/parks/"] .wide-stats {
+          grid-column: 1 / -1;
+          min-width: 0;
+          border-top: 1px solid var(--line);
+          padding-top: 13px;
+          margin-top: 1px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+}
+
+applyHomepageTrackerLayout();
 void bootstrapAuth();
