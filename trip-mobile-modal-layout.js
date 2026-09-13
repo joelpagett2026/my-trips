@@ -5,13 +5,33 @@
   style.id = 'mobile-entry-modal-layout-fix';
   style.textContent = `
     @media (max-width:768px) {
+      /* Match the 18px Concert/mobile content rhythm across itinerary drawers. */
+      .drawer .dr-head {
+        padding-left:18px !important;
+        padding-right:18px !important;
+      }
+      .drawer .dr-body {
+        padding-left:18px !important;
+        padding-right:18px !important;
+        padding-bottom:calc(28px + env(safe-area-inset-bottom,0px)) !important;
+      }
+      .drawer .dr-title {
+        line-height:1.24 !important;
+      }
+      .drawer .dr-kicker {
+        margin-bottom:8px !important;
+      }
+      .drawer .dr-section-h {
+        margin-bottom:12px !important;
+      }
+
       #modal-overlay .modal-head {
         display:grid !important;
         grid-template-columns:minmax(104px,.72fr) minmax(170px,1.18fr) 40px !important;
         align-items:center !important;
         gap:6px !important;
         position:relative !important;
-        padding:10px 12px 10px !important;
+        padding:10px 18px 10px !important;
         min-height:0 !important;
       }
       #modal-overlay .modal-title {
@@ -20,7 +40,7 @@
         display:flex !important;
         align-items:center !important;
         font-size:16px !important;
-        line-height:1.1 !important;
+        line-height:1.24 !important;
         white-space:nowrap !important;
       }
       #modal-overlay .modal-tabs {
@@ -57,7 +77,7 @@
         min-height:0 !important;
         flex:1 1 0 !important;
         overflow-y:auto !important;
-        padding:14px 14px 24px !important;
+        padding:16px 18px 28px !important;
         scroll-padding-bottom:92px !important;
       }
       #modal-overlay .field-textarea {
@@ -76,7 +96,7 @@
         display:grid !important;
         grid-template-columns:minmax(110px,.42fr) minmax(0,1fr) !important;
         gap:10px !important;
-        padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px)) !important;
+        padding:10px 18px calc(10px + env(safe-area-inset-bottom,0px)) !important;
       }
       #modal-overlay .modal-foot .modal-btn {
         min-height:48px !important;
@@ -86,8 +106,8 @@
       #modal-overlay .modal-head {
         grid-template-columns:minmax(96px,.68fr) minmax(154px,1.12fr) 38px !important;
         gap:5px !important;
-        padding-left:10px !important;
-        padding-right:10px !important;
+        padding-left:18px !important;
+        padding-right:18px !important;
       }
       #modal-overlay .modal-title { font-size:15px !important; }
       #modal-overlay .modal-close {
