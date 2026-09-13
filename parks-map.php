@@ -171,6 +171,15 @@ $showPalette = [
     'rgba(255,149,0,0.25)' => 'rgba(82,107,130,0.22)',
 ];
 
+$privatePalette = [
+    '#0e7a87' => '#8f2f36', '#0a6570' => '#8f2f36', '#0fbdcf' => '#d66b70',
+    '#12a0af' => '#d66b70', '#11a8b9' => '#d66b70',
+    'rgba(14,122,135,' => 'rgba(143,47,54,', 'rgba(10,101,112,' => 'rgba(143,47,54,',
+    'rgba(15,189,207,' => 'rgba(214,107,112,',
+    'rgb(14,122,135)' => 'rgb(143,47,54)', 'rgb(10,101,112)' => 'rgb(143,47,54)',
+    'rgb(15,189,207)' => 'rgb(214,107,112)',
+];
+
 function renderSharedCssSection(string $templatePath, array $palette, string $styleId, string $label, ?string $scrollColour = null): void {
     $template = @file_get_contents($templatePath);
     $sharedCss = @file_get_contents(__DIR__ . '/holidays/holiday-style.css');
@@ -217,7 +226,7 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
 }
 
 $section = strtolower(trim((string)($_GET['section'] ?? 'parks')));
-$defaultPage = in_array($section, ['holidays', 'concerts', 'shows'], true) ? 'index' : 'map';
+$defaultPage = in_array($section, ['holidays', 'concerts', 'shows', 'private'], true) ? 'index' : 'map';
 $page = strtolower(trim((string)($_GET['page'] ?? $defaultPage)));
 
 if ($section === 'holidays') {
@@ -254,6 +263,16 @@ if ($section === 'shows') {
         $templates[$page], $showPalette, 'shows-blue-section-theme', 'Shows',
         $page === 'index' ? '#4f78a8' : null
     );
+}
+
+if ($section === 'private') {
+    if ($page !== 'index') { http_response_code(404); echo 'Private Log page not found.'; exit; }
+    $template = @file_get_contents(__DIR__ . '/private/index.html');
+    if ($template === false) { http_response_code(500); echo 'Private Log is unavailable.'; exit; }
+    $template = applySectionPalette($template, $privatePalette);
+    $template = attachMobileCenteredNavTitle($template, 'Private Log');
+    echo $template;
+    exit;
 }
 
 if ($section !== 'parks') { http_response_code(404); echo 'Section not found.'; exit; }
