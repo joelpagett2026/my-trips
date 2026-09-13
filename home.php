@@ -109,12 +109,69 @@ if ($registryCount !== 1) {
     exit;
 }
 
+$quickLinksPanel = <<<'HTML'
+<section class="coming-panel quick-links-panel">
+  <div class="section-head">
+    <div>
+      <div class="section-title">Quick links</div>
+      <div class="section-sub">Jump straight to a section</div>
+    </div>
+  </div>
+  <div class="coming-grid">
+    <a class="coming-item" href="/trips/">
+      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Trips</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="coming-item" href="/holidays/">
+      <span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Holiday Tracker</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="coming-item" href="/concerts/">
+      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Concert Log</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="coming-item" href="/shows/">
+      <span class="coming-icon purple"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="14" y1="4" x2="14" y2="7"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="17" x2="14" y2="20"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Show Tracker</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <a class="coming-item" href="/parks/">
+      <span class="coming-icon green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/><path d="M15 21v-3"/><path d="M20 21v-8"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Theme Parks</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </div>
+</section>
+HTML;
+
+$html = preg_replace(
+    '~<section class="coming-panel">.*?</section>~s',
+    $quickLinksPanel,
+    $html,
+    1,
+    $quickLinksCount
+);
+if ($quickLinksCount !== 1) {
+    http_response_code(500);
+    echo '<!doctype html><title>Homepage unavailable</title><p>The quick links could not be attached safely.</p>';
+    exit;
+}
+
 $dashboardPolishStyle = <<<'HTML'
 <style id="homepage-dashboard-polish">
   .coming-copy{min-width:0;flex:1;display:block;line-height:1.15}
   .coming-label{display:block;font-size:9.5px;font-weight:700;color:#485357;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .coming-value{display:block;margin-top:4px}
   .coming-meta{display:block;margin-top:3px;font-size:8.5px}
+
+  .quick-links-panel .section-head{padding-bottom:12px;align-items:flex-end;}
+  .quick-links-panel .coming-item{min-height:64px;padding:14px 16px;}
+  .quick-links-panel .coming-copy{line-height:1.2;}
+  .quick-links-panel .coming-label{font-size:12.5px;font-weight:800;color:#263238;line-height:1.2;}
+  .quick-links-panel .mini-arrow{margin-left:auto;}
 
   a.dash-card[href="/parks/"] .card-head-icon,
   a.coming-item[href="/parks/"] .coming-icon{
