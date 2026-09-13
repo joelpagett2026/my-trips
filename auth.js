@@ -217,14 +217,100 @@ async function bootstrapAuth() {
     showPinWhenReady();
 }
 
+function isHomepage() {
+    return ['/', '/home.php', '/index.html'].includes(window.location.pathname);
+}
+
 function applyHomepageTrackerLayout() {
-    if (!['/', '/home.php', '/index.html'].includes(window.location.pathname)) return;
+    if (!isHomepage()) return;
+
+    const tripCard = document.querySelector('.main-grid > a.dash-card[href="/trips/"]');
+    const statsRow = tripCard?.querySelector('.stats-row');
+    if (statsRow) {
+        statsRow.classList.add('travel-stats-row');
+        statsRow.innerHTML = `
+          <div class="travel-stat">
+            <span class="travel-stat-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
+            <span class="travel-stat-copy"><span class="travel-stat-label">Trips taken</span><strong class="travel-stat-value" id="hp-stat-trips">59</strong></span>
+          </div>
+          <div class="travel-stat">
+            <span class="travel-stat-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2C8 6 8 18 12 22"/><path d="M12 2c4 4 4 16 0 20"/><path d="M2 12h20"/><path d="M3.5 7h17M3.5 17h17"/></svg></span>
+            <span class="travel-stat-copy"><span class="travel-stat-label">Countries visited</span><strong class="travel-stat-value" id="hp-stat-countries">34</strong></span>
+          </div>
+          <div class="travel-stat">
+            <span class="travel-stat-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg></span>
+            <span class="travel-stat-copy"><span class="travel-stat-label">Miles travelled</span><strong class="travel-stat-value" id="hp-stat-miles">206,825</strong></span>
+          </div>`;
+    }
+
     const style = document.createElement('style');
     style.id = 'homepage-tracker-grid-layout';
     style.textContent = `
+      .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
+        display:grid!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:10px!important;
+        margin:14px 16px 16px!important;
+        padding:0!important;
+        border-top:0!important;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stat{
+        min-width:0;
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:11px 12px;
+        border-radius:13px;
+        background:#f2f5f5;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon{
+        width:34px;
+        height:34px;
+        border-radius:10px;
+        flex:0 0 34px;
+        display:grid;
+        place-items:center;
+        color:#0e7a87;
+        background:#e5f1f2;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stat-copy{min-width:0;display:block;}
+      .main-grid > a.dash-card[href="/trips/"] .travel-stat-label{
+        display:block;
+        color:#7d898d;
+        font-size:8.5px;
+        line-height:1.2;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.035em;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{
+        display:block;
+        margin-top:3px;
+        color:#0e7a87;
+        font-size:17px;
+        line-height:1;
+        font-weight:800;
+        letter-spacing:-.03em;
+        white-space:nowrap;
+      }
+
       @media (min-width:1251px) {
-        .main-grid > a.dash-card[href="/trips/"],
-        .main-grid > a.dash-card[href="/holidays/"] { grid-column: span 3; }
+        .main-grid > a.dash-card[href="/trips/"] { grid-column: span 4!important; }
+        .main-grid > a.dash-card[href="/holidays/"] { grid-column: span 2!important; }
+
+        .main-grid > a.dash-card[href="/trips/"] .trip-hero{
+          min-height:190px!important;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .trip-name{font-size:22px!important;}
+        .main-grid > a.dash-card[href="/trips/"] .trip-date{font-size:11px!important;}
+        .main-grid > a.dash-card[href="/trips/"] .trip-countdown{
+          min-width:102px!important;
+          padding:11px 13px!important;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .trip-countdown strong{font-size:22px!important;}
 
         .main-grid > a.dash-card[href="/concerts/"],
         .main-grid > a.dash-card[href="/shows/"],
@@ -250,9 +336,139 @@ function applyHomepageTrackerLayout() {
           margin-top: 1px;
         }
       }
+
+      @media (max-width:640px) {
+        .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
+          grid-template-columns:1fr!important;
+          gap:8px!important;
+          margin:14px 18px 18px!important;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .travel-stat{padding:10px 12px;}
+        .main-grid > a.dash-card[href="/trips/"] .travel-stat-copy{
+          width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{margin-top:0;font-size:18px;}
+        .main-grid > a.dash-card[href="/trips/"] .trip-hero{min-height:165px!important;}
+      }
     `;
     document.head.appendChild(style);
 }
 
+async function updateHomepageTravelStats() {
+    if (!isHomepage() || typeof window.dbLoadRegistry !== 'function') return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const planned = {
+        'china-2026':      { endDate:'2026-04-17', countries:['cn'],      estimatedMiles:12790, addToStats:false },
+        'dubai-2025':      { endDate:'2026-01-09', countries:['ae','fr'], estimatedMiles:7012,  addToStats:false },
+        'costa-rica-2025': { endDate:'2025-04-21', countries:['es','cr'], estimatedMiles:11911, addToStats:false },
+        'canada-2027':     { endDate:'2027-10-10', countries:['ca'],      estimatedMiles:7820,  addToStats:true  },
+        'hk-taiwan-2027':  { endDate:'2027-04-12', countries:['hk','tw'], estimatedMiles:12802, addToStats:true  },
+    };
+
+    const countries = new Set(['ae','at','be','ca','ch','cn','cr','cy','cz','de','dk','es','fi','fr','gb','gr','hr','hu','id','ie','it','je','jp','kr','lu','mc','my','nl','se','sg','tr','us','za']);
+    let miles = 206825;
+    let tripCount = 58;
+
+    Object.values(planned).forEach(trip => {
+        if (!trip.addToStats || new Date(trip.endDate) > today) return;
+        trip.countries.forEach(cc => countries.add(cc));
+        miles += trip.estimatedMiles;
+        tripCount++;
+    });
+
+    const london = [51.5074, -0.1278];
+    const coords = {
+        ae:[25.2048,55.2708], at:[48.2082,16.3738], au:[-33.8688,151.2093], be:[50.8503,4.3517],
+        ca:[43.7001,-79.4163], ch:[46.9481,7.4474], cn:[39.9042,116.4074], cr:[9.9281,-84.0907],
+        cy:[35.1856,33.3823], cz:[50.0755,14.4378], de:[52.5200,13.4050], dk:[55.6761,12.5683],
+        es:[40.4168,-3.7038], fi:[60.1699,24.9384], fr:[48.8566,2.3522], gb:[51.5074,-0.1278],
+        gr:[37.9838,23.7275], hk:[22.3193,114.1694], hr:[45.8150,15.9819], hu:[47.4979,19.0402],
+        id:[-6.2088,106.8456], ie:[53.3498,-6.2603], it:[41.9028,12.4964], je:[49.2144,-2.1313],
+        jp:[35.6762,139.6503], kr:[37.5665,126.9780], lu:[49.8153,6.1296], mc:[43.7384,7.4246],
+        my:[3.1390,101.6869], nl:[52.3676,4.9041], nz:[-36.8485,174.7633], pl:[52.2297,21.0122],
+        pt:[38.7169,-9.1395], ro:[44.4268,26.1025], se:[59.3293,18.0686], sg:[1.3521,103.8198],
+        th:[13.7563,100.5018], tr:[41.0082,28.9784], tw:[25.0330,121.5654], us:[40.7128,-74.0060],
+        za:[-33.9249,18.4241],
+    };
+
+    const haversineKm = ([lat1, lon1], [lat2, lon2]) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2
+          + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    const estimateMiles = flags => {
+        let maxKm = 0;
+        flags.forEach(cc => {
+            if (!coords[cc]) return;
+            maxKm = Math.max(maxKm, haversineKm(london, coords[cc]));
+        });
+        return Math.round(maxKm * 2 * 0.6214 * 1.15);
+    };
+
+    const parseDate = value => {
+        const s = String(value || '').trim();
+        let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+        m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+        m = s.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+        if (m) {
+            const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+            if (months[m[2]] !== undefined) return new Date(+m[3], months[m[2]], +m[1]);
+        }
+        return null;
+    };
+
+    const alreadyCounted = new Set([
+        'china-2026', 'dubai-2025', 'costa-rica-2025',
+        ...Object.entries(planned).filter(([, trip]) => trip.addToStats).map(([slug]) => slug),
+    ]);
+
+    try {
+        const raw = await window.dbLoadRegistry();
+        const trips = (Array.isArray(raw) ? raw : Object.values(raw || {})).filter(t => t && !t.deleted);
+        trips.forEach(t => {
+            if (alreadyCounted.has(t.slug)) return;
+            const dep = parseDate(t.dep || t.startDate || t.start || t.date);
+            if (!dep || dep > today) return;
+
+            const flags = Array.from(new Set((Array.isArray(t.flags) ? t.flags : [])
+              .map(cc => String(cc || '').trim().toLowerCase())
+              .filter(cc => /^[a-z]{2}$/.test(cc))));
+            flags.forEach(cc => countries.add(cc));
+            if (flags.length && !['porto-2026', 'porto-2026-v2'].includes(t.slug)) {
+                miles += estimateMiles(flags);
+            }
+            tripCount++;
+        });
+    } catch {
+        // Keep the known baseline values already rendered in the card.
+        return;
+    }
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    };
+    setValue('hp-stat-trips', tripCount.toLocaleString('en-GB'));
+    setValue('hp-stat-countries', countries.size.toLocaleString('en-GB'));
+    setValue('hp-stat-miles', miles.toLocaleString('en-GB'));
+}
+
+function scheduleHomepageTravelStats() {
+    if (!isHomepage()) return;
+    const run = () => void updateHomepageTravelStats();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run, { once: true });
+    else run();
+}
+
 applyHomepageTrackerLayout();
+scheduleHomepageTravelStats();
 void bootstrapAuth();
