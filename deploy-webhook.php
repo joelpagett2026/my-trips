@@ -186,6 +186,7 @@ $coreFiles = [
     'backup-export.php',
     'auth.js',
     'db.js',
+    'tracker-detail-enhancements.js',
     'itinerary-state-guard.js',
     'itinerary-ui.js',
     'itinerary-completion.js',
