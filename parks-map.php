@@ -161,6 +161,33 @@ function attachParkMobileFullscreenDetail(string $source): string {
     opacity: 0 !important;
     pointer-events: none !important;
   }
+
+  /* Give Concert and Shows headings more breathing room in full-screen detail. */
+  body:has(.concerts-grid) .detail-body > .detail-name,
+  body:has(.shows-grid) .detail-body > .detail-name {
+    line-height: 1.24 !important;
+    margin-bottom: 10px !important;
+  }
+  body:has(.concerts-grid) .detail-body > .detail-pill-row,
+  body:has(.shows-grid) .detail-body > .detail-pill-row {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+  }
+  body:has(.concerts-grid) .detail-body > .detail-tour {
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+    line-height: 1.4 !important;
+  }
+  body:has(.shows-grid) .detail-body > .s-card-comedian {
+    margin-top: 12px !important;
+    margin-bottom: 5px !important;
+    line-height: 1.4 !important;
+  }
+  body:has(.concerts-grid) .detail-body > .detail-meta,
+  body:has(.shows-grid) .detail-body > .detail-meta {
+    margin-top: 12px !important;
+    line-height: 1.4 !important;
+  }
 }
 html.park-detail-open,
 html.park-detail-open body {
