@@ -225,130 +225,235 @@ function applyHomepageTrackerLayout() {
     if (!isHomepage()) return;
 
     const tripCard = document.querySelector('.main-grid > a.dash-card[href="/trips/"]');
+    const hero = tripCard?.querySelector('.trip-hero');
     const statsRow = tripCard?.querySelector('.stats-row');
-    if (statsRow) {
+
+    if (tripCard && hero && statsRow) {
         statsRow.classList.add('travel-stats-row');
         statsRow.innerHTML = `
-          <div class="travel-stat">
-            <span class="travel-stat-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
-            <span class="travel-stat-copy"><span class="travel-stat-label">Trips taken</span><strong class="travel-stat-value" id="hp-stat-trips">59</strong></span>
+          <div class="travel-stats-head">
+            <span class="travel-stats-eyebrow">Travel at a glance</span>
+            <strong>Your travel history</strong>
           </div>
           <div class="travel-stat">
-            <span class="travel-stat-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2C8 6 8 18 12 22"/><path d="M12 2c4 4 4 16 0 20"/><path d="M2 12h20"/><path d="M3.5 7h17M3.5 17h17"/></svg></span>
-            <span class="travel-stat-copy"><span class="travel-stat-label">Countries visited</span><strong class="travel-stat-value" id="hp-stat-countries">34</strong></span>
+            <span class="travel-stat-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
+            <span class="travel-stat-label">Trips taken</span>
+            <strong class="travel-stat-value" id="hp-stat-trips">59</strong>
           </div>
           <div class="travel-stat">
-            <span class="travel-stat-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg></span>
-            <span class="travel-stat-copy"><span class="travel-stat-label">Miles travelled</span><strong class="travel-stat-value" id="hp-stat-miles">206,825</strong></span>
-          </div>`;
+            <span class="travel-stat-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2C8 6 8 18 12 22"/><path d="M12 2c4 4 4 16 0 20"/><path d="M2 12h20"/><path d="M3.5 7h17M3.5 17h17"/></svg></span>
+            <span class="travel-stat-label">Countries visited</span>
+            <strong class="travel-stat-value" id="hp-stat-countries">34</strong>
+          </div>
+          <div class="travel-stat">
+            <span class="travel-stat-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg></span>
+            <span class="travel-stat-label">Miles travelled</span>
+            <strong class="travel-stat-value" id="hp-stat-miles">206,825</strong>
+          </div>
+          <div class="travel-stats-cta">Open trip planner <span aria-hidden="true">→</span></div>`;
+
+        if (!tripCard.querySelector('.trip-feature-shell')) {
+            const shell = document.createElement('div');
+            shell.className = 'trip-feature-shell';
+            hero.parentNode.insertBefore(shell, hero);
+            shell.appendChild(hero);
+            shell.appendChild(statsRow);
+        }
     }
 
     const style = document.createElement('style');
     style.id = 'homepage-tracker-grid-layout';
     style.textContent = `
+      .main-grid > a.dash-card[href="/trips/"] .trip-feature-shell{
+        display:grid;
+        grid-template-columns:minmax(0,1.75fr) minmax(265px,.72fr);
+        gap:14px;
+        padding:0 16px 16px;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .trip-hero{
+        margin:0!important;
+        min-height:228px!important;
+        border-radius:18px!important;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .trip-name{
+        font-size:24px!important;
+        letter-spacing:-.035em!important;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .trip-date{
+        margin-top:6px!important;
+        font-size:11px!important;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .trip-countdown{
+        right:16px!important;
+        bottom:16px!important;
+        min-width:110px!important;
+        padding:12px 14px!important;
+        border-radius:15px!important;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .trip-countdown strong{
+        font-size:24px!important;
+      }
+
       .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
-        display:grid!important;
-        grid-template-columns:repeat(3,minmax(0,1fr))!important;
-        gap:10px!important;
-        margin:14px 16px 16px!important;
-        padding:0!important;
-        border-top:0!important;
+        display:flex!important;
+        flex-direction:column;
+        margin:0!important;
+        padding:16px!important;
+        border:1px solid #e4eaea!important;
+        border-radius:18px;
+        background:linear-gradient(180deg,#f8fafa 0%,#f0f4f4 100%);
+        min-width:0;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stats-head{
+        padding:2px 2px 12px;
+        margin-bottom:2px;
+        border-bottom:1px solid #dfe6e6;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stats-eyebrow{
+        display:block;
+        color:#0e7a87;
+        font-size:8.5px;
+        font-weight:800;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        margin-bottom:4px;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stats-head strong{
+        display:block;
+        color:#263238;
+        font-size:14px;
+        font-weight:800;
+        letter-spacing:-.02em;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat{
-        min-width:0;
-        display:flex;
-        align-items:center;
+        display:grid;
+        grid-template-columns:36px minmax(0,1fr) auto;
         gap:10px;
-        padding:11px 12px;
-        border-radius:13px;
-        background:#f2f5f5;
+        align-items:center;
+        padding:12px 2px;
+        border-bottom:1px solid #e0e6e6;
+        min-width:0;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon{
-        width:34px;
-        height:34px;
-        border-radius:10px;
-        flex:0 0 34px;
+        width:36px;
+        height:36px;
+        border-radius:11px;
         display:grid;
         place-items:center;
         color:#0e7a87;
-        background:#e5f1f2;
+        background:#e3f0f1;
       }
-      .main-grid > a.dash-card[href="/trips/"] .travel-stat-copy{min-width:0;display:block;}
       .main-grid > a.dash-card[href="/trips/"] .travel-stat-label{
-        display:block;
-        color:#7d898d;
-        font-size:8.5px;
-        line-height:1.2;
+        color:#68777b;
+        font-size:10px;
         font-weight:700;
-        text-transform:uppercase;
-        letter-spacing:.035em;
-        white-space:nowrap;
-        overflow:hidden;
-        text-overflow:ellipsis;
+        line-height:1.25;
       }
       .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{
-        display:block;
-        margin-top:3px;
         color:#0e7a87;
-        font-size:17px;
-        line-height:1;
+        font-size:18px;
         font-weight:800;
-        letter-spacing:-.03em;
+        letter-spacing:-.035em;
         white-space:nowrap;
+      }
+      .main-grid > a.dash-card[href="/trips/"] .travel-stats-cta{
+        margin-top:auto;
+        padding:12px 2px 1px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        color:#0e7a87;
+        font-size:9.5px;
+        font-weight:800;
+        letter-spacing:.01em;
       }
 
       @media (min-width:1251px) {
-        .main-grid > a.dash-card[href="/trips/"] { grid-column: span 4!important; }
-        .main-grid > a.dash-card[href="/holidays/"] { grid-column: span 2!important; }
-
-        .main-grid > a.dash-card[href="/trips/"] .trip-hero{
-          min-height:190px!important;
+        .main-grid > a.dash-card[href="/trips/"]{
+          grid-column:1 / -1!important;
         }
-        .main-grid > a.dash-card[href="/trips/"] .trip-name{font-size:22px!important;}
-        .main-grid > a.dash-card[href="/trips/"] .trip-date{font-size:11px!important;}
-        .main-grid > a.dash-card[href="/trips/"] .trip-countdown{
-          min-width:102px!important;
-          padding:11px 13px!important;
+        .main-grid > a.dash-card[href="/holidays/"]{
+          grid-column:1 / -1!important;
         }
-        .main-grid > a.dash-card[href="/trips/"] .trip-countdown strong{font-size:22px!important;}
+        .main-grid > a.dash-card[href="/holidays/"] .allowance-wrap{
+          display:grid;
+          grid-template-columns:repeat(2,minmax(0,1fr));
+          gap:0;
+          padding:2px 16px 16px!important;
+        }
+        .main-grid > a.dash-card[href="/holidays/"] .person{
+          padding:13px 18px!important;
+        }
+        .main-grid > a.dash-card[href="/holidays/"] .person + .person{
+          border-top:0!important;
+          border-left:1px solid var(--line)!important;
+        }
 
         .main-grid > a.dash-card[href="/concerts/"],
         .main-grid > a.dash-card[href="/shows/"],
-        .main-grid > a.dash-card[href="/parks/"] { grid-column: span 2; }
-
+        .main-grid > a.dash-card[href="/parks/"]{
+          grid-column:span 2!important;
+        }
         .main-grid > a.dash-card[href="/shows/"] .wide-preview,
-        .main-grid > a.dash-card[href="/parks/"] .wide-preview {
-          grid-template-columns: 42% minmax(0,1fr);
-          gap: 13px;
-          align-items: stretch;
+        .main-grid > a.dash-card[href="/parks/"] .wide-preview{
+          grid-template-columns:42% minmax(0,1fr);
+          gap:13px;
+          align-items:stretch;
         }
         .main-grid > a.dash-card[href="/shows/"] .wide-preview .event-media,
-        .main-grid > a.dash-card[href="/parks/"] .wide-preview .event-media {
-          height: auto;
-          min-height: 116px;
+        .main-grid > a.dash-card[href="/parks/"] .wide-preview .event-media{
+          height:auto;
+          min-height:116px;
         }
         .main-grid > a.dash-card[href="/shows/"] .wide-stats,
-        .main-grid > a.dash-card[href="/parks/"] .wide-stats {
-          grid-column: 1 / -1;
-          min-width: 0;
-          border-top: 1px solid var(--line);
-          padding-top: 13px;
-          margin-top: 1px;
+        .main-grid > a.dash-card[href="/parks/"] .wide-stats{
+          grid-column:1 / -1;
+          min-width:0;
+          border-top:1px solid var(--line);
+          padding-top:13px;
+          margin-top:1px;
         }
       }
 
-      @media (max-width:640px) {
+      @media (min-width:801px) and (max-width:1250px) {
+        .main-grid > a.dash-card[href="/trips/"],
+        .main-grid > a.dash-card[href="/holidays/"]{
+          grid-column:1 / -1!important;
+        }
+      }
+
+      @media (max-width:800px) {
+        .main-grid > a.dash-card[href="/trips/"] .trip-feature-shell{
+          grid-template-columns:1fr;
+          gap:12px;
+          padding:0 18px 18px;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .trip-hero{
+          min-height:178px!important;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .trip-name{
+          font-size:20px!important;
+        }
         .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
-          grid-template-columns:1fr!important;
-          gap:8px!important;
-          margin:14px 18px 18px!important;
+          padding:14px!important;
         }
-        .main-grid > a.dash-card[href="/trips/"] .travel-stat{padding:10px 12px;}
-        .main-grid > a.dash-card[href="/trips/"] .travel-stat-copy{
-          width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+        .main-grid > a.dash-card[href="/trips/"] .travel-stat{
+          grid-template-columns:34px minmax(0,1fr) auto;
+          padding:10px 2px;
         }
-        .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{margin-top:0;font-size:18px;}
-        .main-grid > a.dash-card[href="/trips/"] .trip-hero{min-height:165px!important;}
+        .main-grid > a.dash-card[href="/trips/"] .travel-stat-icon{
+          width:34px;height:34px;
+        }
+        .main-grid > a.dash-card[href="/trips/"] .travel-stat-value{
+          font-size:18px;
+        }
+        .main-grid > a.dash-card[href="/holidays/"] .allowance-wrap{
+          display:block;
+        }
+        .main-grid > a.dash-card[href="/holidays/"] .person + .person{
+          border-left:0!important;
+          border-top:1px solid var(--line)!important;
+        }
       }
     `;
     document.head.appendChild(style);
