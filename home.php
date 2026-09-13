@@ -1,11 +1,6 @@
 <?php
 require_once __DIR__ . '/db-config.php';
 
-// Historical itinerary cleanup: Dubai 2025/26 and China 2026 were imported from
-// spreadsheets where sightseeing rows were originally stored as ticketed
-// attractions. They are itinerary places, so normalise them to Point of Interest
-// records. The migration is idempotent and only touches attraction/ticket items;
-// transport, hotels and meals are left unchanged.
 function normalizeHistoricalThingsToPointsOfInterest(): void {
     $pdo = null;
     try {
@@ -34,9 +29,6 @@ function normalizeHistoricalThingsToPointsOfInterest(): void {
                     $item['type'] = 'place';
                     $item['status'] = null;
 
-                    // Point-of-interest records may retain a useful website or
-                    // note, but no longer carry ticket/booking identifiers or
-                    // prices simply because they came from the spreadsheet.
                     if (isset($item['booking']) && is_array($item['booking'])) {
                         $note = trim((string)($item['booking']['note'] ?? ''));
                         $url  = trim((string)($item['booking']['url'] ?? ''));
@@ -83,9 +75,6 @@ function normalizeHistoricalThingsToPointsOfInterest(): void {
 
 normalizeHistoricalThingsToPointsOfInterest();
 
-// MY TRIPS — homepage renderer
-// Keep the presentation in index.html but attach cache-busted critical runtimes so
-// an old authentication script can never survive a security deployment.
 header('Content-Type: text/html; charset=UTF-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
@@ -120,9 +109,6 @@ if ($registryCount !== 1) {
     exit;
 }
 
-// Small production polish layer for the redesigned dashboard. Keep this isolated
-// in the renderer so the source template remains compatible with the existing
-// homepage runtime contract while live data edge cases are normalised safely.
 $dashboardPolishStyle = <<<'HTML'
 <style id="homepage-dashboard-polish">
   .coming-copy{min-width:0;flex:1;display:block;line-height:1.15}
@@ -130,9 +116,6 @@ $dashboardPolishStyle = <<<'HTML'
   .coming-value{display:block;margin-top:4px}
   .coming-meta{display:block;margin-top:3px;font-size:8.5px}
 
-  /* Theme Park Tracker uses the same green family as Attractions. Scope the
-     colour to the two homepage links only so every other dashboard card keeps
-     its own palette. */
   a.dash-card[href="/parks/"] .card-head-icon,
   a.coming-item[href="/parks/"] .coming-icon{
     color:#6c8966!important;
@@ -145,15 +128,11 @@ $dashboardPolishStyle = <<<'HTML'
   a.coming-item[href="/parks/"] .coming-value{
     color:#6c8966!important;
   }
-  a.dash-card[href="/parks/"] .pill{
-    background:#edf1ed!important;
-  }
+  a.dash-card[href="/parks/"] .pill{background:#edf1ed!important;}
   a.dash-card[href="/parks/"] .media-placeholder.park{
     background:linear-gradient(135deg,#849b7f,#4f684b 75%)!important;
   }
 
-  /* Holiday Allowance uses its own muted purple family. Keep this scoped to the
-     Holiday card and Coming Up item so Trip Planning stays teal. */
   a.dash-card[href="/holidays/"] .card-head-icon,
   a.dash-card[href="/holidays/"] .initials,
   a.coming-item[href="/holidays/"] .coming-icon{
@@ -163,15 +142,11 @@ $dashboardPolishStyle = <<<'HTML'
   a.dash-card[href="/holidays/"] .card-arrow,
   a.dash-card[href="/holidays/"] .allow-stat.used strong,
   a.dash-card[href="/holidays/"] .allow-stat.remain strong,
-  a.coming-item[href="/holidays/"] .coming-value{
-    color:#76699f!important;
-  }
+  a.coming-item[href="/holidays/"] .coming-value{color:#76699f!important;}
   a.dash-card[href="/holidays/"] .progress > span{
     background:linear-gradient(90deg,#76699f,#9182bd)!important;
   }
 
-  /* Concert Log uses the same orange family on the homepage as inside the
-     Concert section, including its Coming Up item. */
   a.dash-card[href="/concerts/"] .card-head-icon,
   a.coming-item[href="/concerts/"] .coming-icon{
     color:#c9792b!important;
@@ -181,18 +156,12 @@ $dashboardPolishStyle = <<<'HTML'
   a.dash-card[href="/concerts/"] .pill,
   a.dash-card[href="/concerts/"] .event-countdown,
   a.dash-card[href="/concerts/"] .wide-stats .stat-val,
-  a.coming-item[href="/concerts/"] .coming-value{
-    color:#c9792b!important;
-  }
-  a.dash-card[href="/concerts/"] .pill{
-    background:#fff1e6!important;
-  }
+  a.coming-item[href="/concerts/"] .coming-value{color:#c9792b!important;}
+  a.dash-card[href="/concerts/"] .pill{background:#fff1e6!important;}
   a.dash-card[href="/concerts/"] .media-placeholder.concert{
     background:linear-gradient(135deg,#dc9351,#9f5e22 75%)!important;
   }
 
-  /* Stage Shows & Musicals uses a muted blue family on both the homepage card
-     and the Coming Up item so it matches the section pages. */
   a.dash-card[href="/shows/"] .card-head-icon,
   a.coming-item[href="/shows/"] .coming-icon{
     color:#4f78a8!important;
@@ -202,14 +171,35 @@ $dashboardPolishStyle = <<<'HTML'
   a.dash-card[href="/shows/"] .pill,
   a.dash-card[href="/shows/"] .event-countdown,
   a.dash-card[href="/shows/"] .wide-stats .stat-val,
-  a.coming-item[href="/shows/"] .coming-value{
-    color:#4f78a8!important;
-  }
-  a.dash-card[href="/shows/"] .pill{
-    background:#eaf1f7!important;
-  }
+  a.coming-item[href="/shows/"] .coming-value{color:#4f78a8!important;}
+  a.dash-card[href="/shows/"] .pill{background:#eaf1f7!important;}
   a.dash-card[href="/shows/"] .media-placeholder.show{
     background:linear-gradient(135deg,#6b91bd,#3d5f86 75%)!important;
+  }
+
+  /* Shared Concert-style mobile spacing, without touching each section's colour. */
+  @media (max-width:800px), (display-mode:standalone) and (max-width:900px) {
+    .coming-panel{padding:18px!important;}
+    .coming-grid{gap:14px!important;}
+    .coming-item{padding:16px 18px!important;gap:12px!important;}
+    .coming-copy{line-height:1.3!important;}
+    .coming-value{margin-top:6px!important;}
+    .coming-meta{margin-top:5px!important;line-height:1.4!important;}
+    .main-grid{gap:14px!important;}
+    .card-head{padding:18px 18px 14px!important;}
+    .card-title{line-height:1.24!important;}
+    .card-sub{margin-top:5px!important;line-height:1.4!important;}
+    .trip-hero{margin-left:18px!important;margin-right:18px!important;padding:18px!important;}
+    .trip-name{line-height:1.24!important;}
+    .trip-date{margin-top:6px!important;line-height:1.4!important;}
+    .stats-row{margin-left:18px!important;margin-right:18px!important;margin-bottom:18px!important;}
+    .allowance-wrap{padding-left:18px!important;padding-right:18px!important;padding-bottom:18px!important;}
+    .event-card-body{padding-left:18px!important;padding-right:18px!important;}
+    .wide-body{padding-left:18px!important;padding-right:18px!important;padding-bottom:18px!important;}
+    .event-preview,.wide-preview{gap:14px!important;}
+    .event-title{line-height:1.24!important;}
+    .event-line{margin-top:6px!important;line-height:1.4!important;}
+    .pill{margin-bottom:10px!important;}
   }
 </style>
 HTML;
@@ -217,8 +207,6 @@ HTML;
 $dashboardPolishScript = <<<'HTML'
 <script id="homepage-dashboard-polish-runtime">
 (() => {
-  // Registry trip dates are historically a mix of dd/mm/yyyy and ISO strings.
-  // Normalise both so upcoming/completed counts and the next-trip card stay live.
   safeDate = function(d) {
     if (d instanceof Date) return Number.isNaN(d.getTime()) ? null : new Date(d.getTime());
     const s = String(d || '').trim();
@@ -231,8 +219,6 @@ $dashboardPolishScript = <<<'HTML'
     return Number.isNaN(x.getTime()) ? null : x;
   };
 
-  // Shows can be stored as either full dates or month/year. Avoid awkward
-  // "0 months" wording when an event is this month.
   loadShows = async function() {
     try {
       const rec = await window.dbLoad('shows');
@@ -283,8 +269,6 @@ $dashboardPolishScript = <<<'HTML'
     }
   };
 
-  // Park coaster entries support both legacy strings and current object records.
-  // The previous dashboard assumed strings, which caused the whole card to fail.
   loadParks = async function() {
     try {
       const rec = await window.dbLoad('parks');
@@ -336,9 +320,6 @@ $dashboardPolishScript = <<<'HTML'
 </script>
 HTML;
 
-// Add an explicit homepage logout control. It sits alongside the existing
-// Private Log and Settings shortcuts, revokes the current server session, clears
-// both browser session stores, then immediately returns to the PIN gate.
 $logoutStyle = <<<'HTML'
 <style>
   .home-logout-btn{position:fixed;top:18px;right:100px;z-index:11;height:36px;padding:0 12px;border:0;border-radius:10px;background:rgba(255,255,255,.82);color:#888;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 .5px rgba(0,0,0,.05);transition:color .15s,background .15s,box-shadow .15s,transform .1s;backdrop-filter:blur(8px)}
