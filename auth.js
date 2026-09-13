@@ -266,8 +266,8 @@ function applyHomepageTrackerLayout() {
     style.textContent = `
       .main-grid > a.dash-card[href="/trips/"] .trip-feature-shell{
         display:grid;
-        grid-template-columns:minmax(0,1.75fr) minmax(265px,.72fr);
-        gap:14px;
+        grid-template-columns:minmax(0,1.65fr) minmax(220px,.72fr);
+        gap:12px;
         padding:0 16px 16px;
       }
       .main-grid > a.dash-card[href="/trips/"] .trip-hero{
@@ -370,23 +370,21 @@ function applyHomepageTrackerLayout() {
 
       @media (min-width:1251px) {
         .main-grid > a.dash-card[href="/trips/"]{
-          grid-column:1 / -1!important;
+          grid-column:span 4!important;
         }
         .main-grid > a.dash-card[href="/holidays/"]{
-          grid-column:1 / -1!important;
+          grid-column:span 2!important;
         }
         .main-grid > a.dash-card[href="/holidays/"] .allowance-wrap{
-          display:grid;
-          grid-template-columns:repeat(2,minmax(0,1fr));
-          gap:0;
+          display:block!important;
           padding:2px 16px 16px!important;
         }
         .main-grid > a.dash-card[href="/holidays/"] .person{
-          padding:13px 18px!important;
+          padding:13px 0!important;
         }
         .main-grid > a.dash-card[href="/holidays/"] .person + .person{
-          border-top:0!important;
-          border-left:1px solid var(--line)!important;
+          border-left:0!important;
+          border-top:1px solid var(--line)!important;
         }
 
         .main-grid > a.dash-card[href="/concerts/"],
