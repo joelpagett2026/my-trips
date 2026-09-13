@@ -210,6 +210,7 @@ $coreFiles = [
     'settings.html',
     'settings.php',
     'home.php',
+    'home-core.php',
     'index.html',
     'trip.php',
     'share.php',
