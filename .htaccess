@@ -137,6 +137,11 @@ RewriteRule ^shows/index\.html$ /shows/ [R=302,L,QSA]
 RewriteRule ^shows/?$ parks-map.php?section=shows&page=index [L,QSA]
 RewriteRule ^shows/list\.html$ parks-map.php?section=shows&page=list [L,QSA]
 
+# Private Log keeps its neutral layout but swaps the teal interface accents for
+# a restrained dark-red / light-red palette at render time.
+RewriteRule ^private/index\.html$ /private/ [R=302,L,QSA]
+RewriteRule ^private/?$ parks-map.php?section=private&page=index [L,QSA]
+
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
