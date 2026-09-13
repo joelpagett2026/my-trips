@@ -11,6 +11,46 @@ function applySectionPalette(string $source, array $replacement): string {
     return str_ireplace(array_keys($replacement), array_values($replacement), $source);
 }
 
+function attachTrackerDetailEnhancements(string $source, string $label): string {
+    $helperPath = __DIR__ . '/tracker-detail-enhancements.js';
+    if (!is_file($helperPath)) {
+        http_response_code(500);
+        echo $label . ' detail controls are unavailable.';
+        exit;
+    }
+
+    // Do not rely on db.js to bootstrap this helper: older tracker pages used a
+    // fixed immutable db.js URL, so iOS could legitimately keep a pre-loader copy.
+    // The renderer emits the helper directly with a content-derived cache key and
+    // places it before db.js, which also prevents the db.js fallback loader from
+    // creating a duplicate request.
+    $hash = @hash_file('sha256', $helperPath);
+    $version = is_string($hash) && $hash !== '' ? substr($hash, 0, 16) : (string)(@filemtime($helperPath) ?: time());
+    $tag = '<script src="/tracker-detail-enhancements.js?v=' . $version . '" data-tracker-detail-enhancements="1"></script>';
+    $pattern = '~<script\s+src=["\']/db\.js\?v=[^"\']+["\']\s*></script>~i';
+    $source = preg_replace_callback(
+        $pattern,
+        static fn(array $match): string => $tag . "\n" . $match[0],
+        $source,
+        1,
+        $count
+    );
+    if ($source === null) {
+        http_response_code(500);
+        echo $label . ' detail controls could not be attached.';
+        exit;
+    }
+    if (($count ?? 0) !== 1) {
+        $source = str_replace('</head>', $tag . "\n</head>", $source, $headCount);
+        if ($headCount !== 1) {
+            http_response_code(500);
+            echo $label . ' detail controls could not be attached.';
+            exit;
+        }
+    }
+    return $source;
+}
+
 function attachMobileCenteredNavTitle(string $source, string $label): string {
     $mobileNavStyle = <<<'HTML'
 <style id="mobile-centered-nav-title">
@@ -401,6 +441,9 @@ function renderSharedCssSection(string $templatePath, array $palette, string $st
             exit;
         }
     }
+    if ($label !== 'Holiday Allowance' && strpos($template, 'detail-overlay') !== false) {
+        $template = attachTrackerDetailEnhancements($template, $label);
+    }
     $template = attachMobileCenteredNavTitle($template, $label);
     $template = attachMobileSectionSpacing($template);
     if ($scrollColour !== null) {
@@ -460,6 +503,9 @@ if ($section === 'private') {
     $template = @file_get_contents(__DIR__ . '/private/index.html');
     if ($template === false) { http_response_code(500); echo 'Private Log is unavailable.'; exit; }
     $template = applySectionPalette($template, $privatePalette);
+    if (strpos($template, 'detail-overlay') !== false) {
+        $template = attachTrackerDetailEnhancements($template, 'Private Log');
+    }
     $template = attachMobileCenteredNavTitle($template, 'Private Log');
     $template = attachMobileSectionSpacing($template);
     echo $template;
@@ -477,6 +523,9 @@ $template = @file_get_contents($templates[$page]);
 if ($template === false) { http_response_code(500); echo 'Theme Park Tracker is unavailable.'; exit; }
 $template = applySectionPalette($template, $parkPalette);
 $template = str_replace('href="/holidays/holiday-style.css"', 'href="/holidays/holiday-style.css?v=parks-green-20260912"', $template);
+if (strpos($template, 'detail-overlay') !== false) {
+    $template = attachTrackerDetailEnhancements($template, 'Theme Park Tracker');
+}
 $template = attachMobileCenteredNavTitle($template, 'Theme Park Tracker');
 $template = attachMobileSectionSpacing($template);
 if ($page === 'index') {
