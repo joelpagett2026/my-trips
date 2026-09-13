@@ -14,6 +14,53 @@
     const style = document.createElement('style');
     style.id = 'mobile-scroll-bottom-style';
     style.textContent = `
+      /* Shared 18px mobile rhythm used by the tracker homepages. */
+      .section {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+        padding-bottom: 24px !important;
+      }
+      .trips-grid { gap: 14px !important; }
+      .card-body { padding: 16px 18px 18px !important; }
+      .card-dest {
+        line-height: 1.3 !important;
+        margin-bottom: 6px !important;
+      }
+      .card-dates {
+        line-height: 1.4 !important;
+        margin-bottom: 10px !important;
+      }
+      .card-cities {
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+      }
+      .card-footer { padding-top: 8px !important; }
+      .year-divider {
+        margin-left: 18px !important;
+        margin-right: 18px !important;
+      }
+      .modal {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+      }
+      .modal-title {
+        line-height: 1.24 !important;
+        margin-bottom: 6px !important;
+      }
+      .modal-sub {
+        line-height: 1.4 !important;
+        margin-bottom: 20px !important;
+      }
+      .modal-field { margin-bottom: 16px !important; }
+      @media (max-width: 400px) {
+        .section {
+          padding-left: 18px !important;
+          padding-right: 18px !important;
+          padding-bottom: 24px !important;
+        }
+        .trips-grid { gap: 14px !important; }
+      }
+
       #mobile-scroll-bottom {
         position: fixed;
         right: 18px;
