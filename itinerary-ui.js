@@ -422,11 +422,33 @@
     const style = document.createElement('style');
     style.id = 'trip-planning-overview-redesign';
     style.textContent = `
+      @media (min-width:769px) {
+        :root { --rp-w:510px; }
+      }
       #rp-readiness .tpo-card {
         background:var(--surface,#fff);
         border-radius:0 0 12px 12px;
-        padding:7px 7px 6px;
+        padding:6px 9px 8px;
         overflow:hidden;
+      }
+      #rp-readiness .tpo-progress-pct {
+        width:max-content;
+        min-width:42px;
+        height:20px;
+        margin:0 auto 7px;
+        padding:0 9px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border:1px solid rgba(14,122,135,.14);
+        border-radius:999px;
+        background:rgba(14,122,135,.09);
+        box-shadow:0 1px 3px rgba(14,122,135,.05);
+        font-size:9.5px;
+        line-height:1;
+        font-weight:800;
+        letter-spacing:.02em;
+        color:#0e7a87;
       }
       #rp-readiness .tpo-cats {
         display:grid;
@@ -441,7 +463,7 @@
         flex-direction:column;
         align-items:center;
         text-align:center;
-        padding:0 3px;
+        padding:0 4px;
       }
       #rp-readiness .tpo-cat + .tpo-cat::before {
         content:'';
@@ -453,15 +475,15 @@
         background:var(--line,rgba(0,0,0,.07));
       }
       #rp-readiness .tpo-icon-wrap {
-        width:34px;
-        height:34px;
+        width:35px;
+        height:35px;
         position:relative;
-        flex:0 0 34px;
-        margin-bottom:2px;
+        flex:0 0 35px;
+        margin-bottom:3px;
       }
       #rp-readiness .tpo-icon {
-        width:34px;
-        height:34px;
+        width:35px;
+        height:35px;
         border-radius:50%;
         display:flex;
         align-items:center;
@@ -489,7 +511,7 @@
         overflow:hidden;
         text-overflow:ellipsis;
         white-space:nowrap;
-        font-size:8px;
+        font-size:8.3px;
         line-height:1.1;
         font-weight:800;
         letter-spacing:.01em;
@@ -502,58 +524,25 @@
         font-weight:600;
       }
       #rp-readiness .tpo-count {
-        margin-top:1px;
+        margin-top:2px;
         font-size:13px;
         line-height:1;
         font-weight:800;
       }
-      #rp-readiness .tpo-progress {
-        display:flex;
-        align-items:center;
-        gap:7px;
-        padding:0 4px;
-        margin-top:6px;
-        height:10px;
-      }
-      #rp-readiness .tpo-progress-track {
-        position:relative;
-        flex:1;
-        height:6px;
-        border-radius:999px;
-        overflow:hidden;
-        background:rgba(14,122,135,.12);
-      }
-      #rp-readiness .tpo-progress-fill {
-        position:absolute;
-        inset:0 auto 0 0;
-        height:100%;
-        border-radius:inherit;
-        background:linear-gradient(90deg,#0e7a87 0%,#0d9e8c 100%);
-        transition:width .25s ease;
-      }
-      #rp-readiness .tpo-progress-pct {
-        width:29px;
-        flex:0 0 29px;
-        text-align:right;
-        font-size:9px;
-        line-height:1;
-        font-weight:800;
-        color:#0e7a87;
-      }
       @media (max-width:768px) {
         #rp-readiness .tpo-card {
-          padding-top:12px;
+          padding-top:8px;
           padding-bottom:10px;
+        }
+        #rp-readiness .tpo-progress-pct {
+          margin-bottom:8px;
+          height:21px;
+          font-size:10px;
         }
         #rp-readiness .tpo-icon-wrap { margin-bottom:5px; }
         #rp-readiness .tpo-name { line-height:1.2; }
         #rp-readiness .tpo-status { margin-top:3px; line-height:1.2; }
         #rp-readiness .tpo-count { margin-top:3px; }
-        #rp-readiness .tpo-progress {
-          margin-top:10px;
-          margin-bottom:1px;
-          height:12px;
-        }
       }
       @media (max-width:420px) {
         #rp-readiness .tpo-card { padding-left:5px;padding-right:5px; }
@@ -664,6 +653,7 @@
 
       root.innerHTML = `
         <div class="tpo-card" aria-label="Trip planning progress ${pct}%">
+          <div class="tpo-progress-pct" role="status" aria-label="Trip planning progress ${pct}%">${pct}%</div>
           <div class="tpo-cats">
             ${categories.map(category => `
               <div class="tpo-cat ${category.className || ''}">
@@ -675,12 +665,6 @@
                 <div class="tpo-status" style="color:${category.ok ? category.color : 'var(--text3,#9aacb0)'}">${category.ok ? 'Complete' : 'Planned'}</div>
                 <div class="tpo-count" style="color:${category.color}">${category.count}</div>
               </div>`).join('')}
-          </div>
-          <div class="tpo-progress">
-            <div class="tpo-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
-              <div class="tpo-progress-fill" style="width:${pct}%"></div>
-            </div>
-            <div class="tpo-progress-pct">${pct}%</div>
           </div>
         </div>`;
     }
