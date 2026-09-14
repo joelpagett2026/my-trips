@@ -35,12 +35,16 @@ require('RewriteRule ^(?:db-config|auth-session|template-runtime|secrets)\\.php$
 require("'db-config.php'" in deploy and "'auth-session.php'" in deploy and "'template-runtime.php'" in deploy,
         'server-only helper denial must not accidentally remove required deployment includes')
 
-# The raw homepage template is source for home.php, not a public endpoint. Every
-# browser visit must pass through the renderer so cache-busted auth/database URLs,
-# registry compatibility and logout controls cannot be bypassed with /index.html.
-require('RewriteRule ^index\\.html$ / [R=302,L,QSA]' in htaccess
-        and 'RewriteRule ^$ home.php [L,QSA]' in htaccess,
-        'raw homepage source must canonicalize through the home.php renderer')
+# The raw homepage template is source for a PHP renderer, not a public endpoint.
+# Every browser visit must pass through the renderer so cache-busted auth/database
+# URLs, registry compatibility and logout controls cannot be bypassed via index.html.
+optimized_home = 'RewriteRule ^$ home-optimized.php [L,QSA]' in htaccess
+legacy_home = 'RewriteRule ^$ home.php [L,QSA]' in htaccess
+require('RewriteRule ^index\\.html$ / [R=302,L,QSA]' in htaccess and (optimized_home or legacy_home),
+        'raw homepage source must canonicalize through an approved homepage renderer')
+if optimized_home:
+    require("'home-optimized.php'" in deploy and "'home-optimized.js'" in deploy and "'home-summary.php'" in deploy,
+            'optimized homepage route must deploy all optimization assets atomically')
 
 # Legacy write/creation paths that bypass modern conflict/PIN/registry handling
 # must be unreachable.
@@ -130,7 +134,9 @@ require("date('Y-m-d H:i:s'" not in auth_session and 'strtotime(' not in auth_se
 
 # Authenticated APIs are same-origin only. Apache strips any legacy API CORS
 # header and rejects explicit foreign browser origins before PHP executes.
-require('<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\\.php$">' in htaccess,
+base_api_match = '<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export)\\.php$">'
+optimized_api_match = '<FilesMatch "^(api|auth-v2|record|record-delete|trip-create|trip-delete|place-photo|backup-export|home-summary)\\.php$">'
+require((optimized_api_match if optimized_home else base_api_match) in htaccess,
         'authenticated API response header policy must include all protected endpoints')
 require('Header always unset Access-Control-Allow-Origin' in htaccess,
         'authenticated APIs must not expose wildcard cross-origin responses')
@@ -138,6 +144,9 @@ require('%{HTTP:Sec-Fetch-Site} ^cross-site$' in htaccess,
         'cross-site Fetch Metadata requests must be rejected')
 require('%{HTTP:Origin} !^https://(?:www\\.)?joelpagett\\.co\\.uk$' in htaccess,
         'foreign Origin headers must be rejected')
+if optimized_home:
+    require('backup-export|home-summary' in htaccess,
+            'homepage summary endpoint must be covered by same-origin edge protection')
 
 # Snapshot baseline must come from the real server-loaded record, not whichever
 # temporary/default STATE happens to exist when the safety script loads.
