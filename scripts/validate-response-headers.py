@@ -97,12 +97,12 @@ require("$stylePath = __DIR__ . '/itinerary-v2-style.css';" in runtime and
         'itinerary CSS cache key must be generated from the deployed file mtime')
 
 immutable_runtime_group = (
-    '<FilesMatch "^(?:auth|db|map-mobile-redesign|itinerary-completion|'
+    '<FilesMatch "^(?:auth|db|home-optimized|map-mobile-redesign|itinerary-completion|'
     'itinerary-state-guard|itinerary-ui|mobile-drag|trip-delete|trip-standalone|'
     'trip-drawer-swipe|trip-mobile-modal-layout)\\.js$">'
 )
 require(immutable_runtime_group in htaccess,
-        'versioned itinerary runtime files must retain the immutable static-file policy when directly servable')
+        'versioned itinerary/homepage runtime files must retain the immutable static-file policy when directly servable')
 require('<FilesMatch "^(?:trip-dashboard-create|budget-live-redesign)\\.js$">' in htaccess,
         'unversioned application overrides must remain revalidated')
 
