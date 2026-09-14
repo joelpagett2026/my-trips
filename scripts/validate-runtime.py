@@ -26,6 +26,7 @@ deploy = read("deploy-webhook.php")
 template = read("new-trip-v2.html")
 dashboard = read("trips/index.html")
 home = read("home.php")
+home_core = read("home-core.php")
 homepage = read("index.html")
 record = read("record.php")
 db = read("db.js")
@@ -84,7 +85,7 @@ require("Couldn’t save itinerary changes. Nothing was overwritten." in runtime
         "rendered dashboard must surface registry save failures instead of swallowing them")
 require("const registry = await window.dbLoad('registry');" in homepage,
         "homepage compatibility source changed; update its trip-registry rewrite deliberately")
-require("const registry = { trips: await window.dbLoadRegistry() };" in home and "registryCount !== 1" in home,
+require("const registry = { trips: await window.dbLoadRegistry() };" in home_core and "registryCount !== 1" in home_core,
         "homepage renderer must load Holiday Planner stats from the authoritative trip registry")
 require("removeTravelDayFrontCardTags" not in auth and "MutationObserver" not in auth,
         "auth.js must not contain dashboard presentation patches")
