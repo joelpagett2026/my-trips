@@ -6,13 +6,13 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: private, max-age=20, stale-while-revalidate=40');
 header('Vary: X-Auth-Token');
 
-function homeSummaryFail(string $message, int $status = 400): never {
+function homeSummaryFail(string $message, int $status = 400): void {
     http_response_code($status);
     echo json_encode(['ok' => false, 'error' => $message], JSON_UNESCAPED_SLASHES);
     exit;
 }
 
-function homeSummaryOk(array $data): never {
+function homeSummaryOk(array $data): void {
     echo json_encode(['ok' => true, 'data' => $data], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -30,7 +30,7 @@ function decodeRecord(?string $raw): array {
     return is_array($decoded) ? $decoded : [];
 }
 
-function dashboardDate(mixed $value, DateTimeZone $tz): ?DateTimeImmutable {
+function dashboardDate($value, DateTimeZone $tz): ?DateTimeImmutable {
     $s = trim((string)$value);
     if ($s === '') return null;
     foreach (['!d/m/Y', '!m/Y', '!Y-m-d', '!Y'] as $format) {
@@ -38,7 +38,7 @@ function dashboardDate(mixed $value, DateTimeZone $tz): ?DateTimeImmutable {
         $errors = DateTimeImmutable::getLastErrors();
         if ($d instanceof DateTimeImmutable && ($errors === false || (($errors['warning_count'] ?? 0) === 0 && ($errors['error_count'] ?? 0) === 0))) return $d;
     }
-    try { return new DateTimeImmutable($s, $tz); } catch (Throwable) { return null; }
+    try { return new DateTimeImmutable($s, $tz); } catch (Throwable $e) { return null; }
 }
 
 function stripImageFields(array $item): array {
@@ -88,8 +88,8 @@ try {
     $records = [];
     foreach ($stmt->fetchAll() as $row) $records[(string)$row['id']] = decodeRecord((string)($row['data'] ?? ''));
 
-    $registry = $records['trip-registry']['trips'] ?? [];
-    $registry = is_array($registry) ? array_values(array_filter($registry, 'is_array')) : [];
+    $registryRecord = is_array($records['trip-registry'] ?? null) ? $records['trip-registry'] : [];
+    $registry = is_array($registryRecord['trips'] ?? null) ? array_values(array_filter($registryRecord['trips'], 'is_array')) : [];
     $nextTripIndex = null;
     $nextTrips = [];
     foreach ($registry as $i => $trip) {
@@ -113,9 +113,9 @@ try {
         $lightTrips[] = $clean;
     }
 
-    $concerts = $records['concerts'];
-    $shows = $records['shows'];
-    $parks = $records['parks'];
+    $concerts = is_array($records['concerts'] ?? null) ? $records['concerts'] : [];
+    $shows = is_array($records['shows'] ?? null) ? $records['shows'] : [];
+    $parks = is_array($records['parks'] ?? null) ? $records['parks'] : [];
     $concerts['list'] = keepLeadThumbs(is_array($concerts['list'] ?? null) ? $concerts['list'] : [], 'concerts', $today, $monthStart, $tz);
     $shows['list'] = keepLeadThumbs(is_array($shows['list'] ?? null) ? $shows['list'] : [], 'shows', $today, $monthStart, $tz);
     $parks['list'] = keepLeadThumbs(is_array($parks['list'] ?? null) ? $parks['list'] : [], 'parks', $today, $monthStart, $tz);
