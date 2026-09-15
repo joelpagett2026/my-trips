@@ -1,9 +1,42 @@
 // Authenticated itinerary: final mobile Add/Edit modal layout compatibility rules.
 (function () {
   if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
+
+  // Production kill-switch for the temporary Activity Editor touch diagnostics.
+  // This lives in the filemtime-versioned mobile runtime so iOS cannot keep using
+  // an older cached copy of activity-editor.js that still paints the debug panel.
+  if (!window.__activityTouchDiagnostics) {
+    window.__activityTouchDiagnostics = {
+      version: 'disabled-production',
+      enabled: false,
+      snapshot() { return { enabled: false }; }
+    };
+  }
+
+  function removeActivityDiagnostic() {
+    const panel = document.getElementById('activity-touch-diagnostic');
+    if (panel) panel.remove();
+  }
+
+  // Defence in depth: remove a panel if a previously cached diagnostic script
+  // somehow executes before/alongside this runtime.
+  const diagnosticObserver = new MutationObserver(removeActivityDiagnostic);
+  diagnosticObserver.observe(document.documentElement, { childList: true, subtree: true });
+  window.setTimeout(() => diagnosticObserver.disconnect(), 10000);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', removeActivityDiagnostic, { once: true });
+  } else {
+    removeActivityDiagnostic();
+  }
+
   const style = document.createElement('style');
   style.id = 'mobile-entry-modal-layout-fix';
   style.textContent = `
+    #activity-touch-diagnostic {
+      display:none !important;
+      visibility:hidden !important;
+    }
+
     @media (max-width:768px) {
       /* Match the 18px Concert/mobile content rhythm across itinerary drawers. */
       .drawer .dr-head {
