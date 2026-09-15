@@ -60,9 +60,17 @@ jobs:
 
       - name: Verify HSTS rollout preconditions
         run: |
-          curl --fail --show-error --silent \
+          https_status=$(curl --show-error --silent \
             --output /dev/null \
-            "https://joelpagett.co.uk/"
+            --write-out "%{http_code}" \
+            "https://joelpagett.co.uk/")
+          case "$https_status" in
+            200|401) ;;
+            *)
+              echo "HTTPS homepage returned ${https_status}; expected 200 or the PIN-protected 401 response"
+              exit 1
+              ;;
+          esac
 
           http_status=$(curl --show-error --silent \
             --output /dev/null \
