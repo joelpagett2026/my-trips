@@ -1,5 +1,54 @@
 // Authenticated itinerary: final mobile Add/Edit modal layout compatibility rules.
 (function () {
+  // Trip Planning Overview polish applies at every viewport size.
+  const overviewStyle = document.createElement('style');
+  overviewStyle.id = 'trip-planning-overview-polish';
+  overviewStyle.textContent = `
+    #rp-readiness .tpo-icon { border-radius:50% !important; }
+    #rp-readiness .tpo-cat--things .tpo-icon { border-radius:50% !important; }
+    .rp2-section-head:has(+ #rp-readiness) { position:relative !important; padding-right:82px !important; }
+    .rp2-section-head .tpo-progress-pct {
+      position:absolute !important;
+      right:12px !important;
+      top:50% !important;
+      transform:translateY(-50%) !important;
+      width:max-content !important;
+      min-width:48px !important;
+      height:24px !important;
+      margin:0 !important;
+      padding:0 10px !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      border:1px solid rgba(255,255,255,.28) !important;
+      border-radius:999px !important;
+      background:rgba(255,255,255,.94) !important;
+      box-shadow:0 1px 4px rgba(0,0,0,.12) !important;
+      font-size:10px !important;
+      line-height:1 !important;
+      font-weight:800 !important;
+      letter-spacing:.02em !important;
+      color:#0e7a87 !important;
+      z-index:3 !important;
+    }
+  `;
+  document.head.appendChild(overviewStyle);
+
+  function placeOverviewPercentage() {
+    const root = document.getElementById('rp-readiness');
+    const pill = root?.querySelector('.tpo-progress-pct');
+    const header = root?.previousElementSibling;
+    if (!pill || !header || !header.classList.contains('rp2-section-head')) return;
+    if (pill.parentElement !== header) header.appendChild(pill);
+  }
+
+  const overviewRoot = document.getElementById('rp-readiness');
+  if (overviewRoot) {
+    const overviewObserver = new MutationObserver(placeOverviewPercentage);
+    overviewObserver.observe(overviewRoot, { childList:true, subtree:true });
+    placeOverviewPercentage();
+  }
+
   if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
 
   // Production kill-switch for the temporary Activity Editor touch diagnostics.
