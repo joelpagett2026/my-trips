@@ -73,7 +73,16 @@ $theme = <<<'CSS'
 .main-grid > a.dash-card[href="/shows/"] .card-arrow,
 .main-grid > a.dash-card[href="/parks/"] .card-arrow{color:rgba(255,255,255,.9)!important}
 
-/* Holiday Planner stats: integrated into the teal card instead of a white box. */
+/* Keep the Holiday Planner photo clean: no decorative plane or image overlay. */
+body .main-grid > a.dash-card[href="/trips/"] .trip-plane{
+  display:none!important;
+}
+body .main-grid > a.dash-card[href="/trips/"] .trip-hero::after{
+  display:none!important;
+  content:none!important;
+}
+
+/* Holiday Planner stats: plain and integrated directly into the teal card. */
 body .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
   position:relative;
   overflow:hidden;
@@ -84,13 +93,8 @@ body .main-grid > a.dash-card[href="/trips/"] .travel-stats-row{
   padding:7px 4px 2px!important;
 }
 body .main-grid > a.dash-card[href="/trips/"] .travel-stats-row:before{
-  content:"";
-  position:absolute;
-  inset:-18px -20px auto -20px;
-  height:72px;
-  background:rgba(255,255,255,.055);
-  border-radius:0 0 50% 50%;
-  pointer-events:none;
+  display:none!important;
+  content:none!important;
 }
 body .main-grid > a.dash-card[href="/trips/"] .travel-stats-head{
   position:relative;
