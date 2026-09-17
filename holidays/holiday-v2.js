@@ -106,6 +106,9 @@
   }
 
   function persistSoon() {
+    state.updatedAt = new Date().toISOString();
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+    announce('saving', 'Saving…');
     clearTimeout(saveTimer);
     saveTimer = setTimeout(persistNow, 350);
   }
