@@ -13,6 +13,7 @@
 <title>Jonathan's Holiday Allowance</title>
 <script src="/auth.js?v=3"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
+<script src="/holidays/allowance-data.js?v=1"></script>
 </head>
 <body>
 <nav class="nav">
@@ -32,6 +33,12 @@
   </div>
   <div class="large-subtitle">1st January – 31st December · Select a year</div>
 </div>
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-lbl">Holiday Allowance</div><div class="stat-val">27</div><div class="stat-sub">24 flexible + 3 Christmas reserved</div></div>
+  <div class="stat-card"><div class="stat-lbl">Christmas Reserved</div><div class="stat-val">3</div><div class="stat-sub">ring-fenced within the 27 days</div></div>
+  <div class="stat-card"><div class="stat-lbl">Bank Holidays</div><div class="stat-val">8</div><div class="stat-sub">tracked separately</div></div>
+  <div class="stat-card"><div class="stat-lbl">Total Entitlement</div><div class="stat-val">35</div><div class="stat-sub">27 holiday + 8 bank holidays</div></div>
+</div>
 <div style="padding: 24px 20px; display: flex; flex-direction: column; gap: 12px; max-width: 480px;">
   <a href="/holidays/jonathan/2026.html" class="person-card active">
     <div class="pc-year">2026 <span class="current-badge">Current</span></div>
@@ -45,6 +52,7 @@
   </a>
 </div>
 <style>
+@media screen and (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .person-card { background:#fff;border-radius:16px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);text-decoration:none;color:#444444;display:flex;align-items:center;gap:12px;transition:box-shadow 0.15s; }
 .person-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.1),0 0 0 0.5px rgba(0,0,0,0.06); }
 .person-card.active { box-shadow:0 0 0 2px #0e7a87,0 1px 3px rgba(0,0,0,0.08); }

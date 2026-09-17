@@ -14,12 +14,21 @@
 <script src="/auth.js?v=3"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
 <style>
+  .card-footer { grid-template-columns: 90px 90px 1fr; }
+  @media screen and (max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card-header { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .card-footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card-footer .cell:last-child { grid-column: 1 / -1; }
+  }
+  @media print { .card-footer { grid-template-columns: 90px 90px 1fr !important; } }
   .synced-badge { display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#0e7a87;background:rgba(14,122,135,.08);border-radius:20px;padding:3px 10px;margin-top:6px; }
   .synced-badge svg { opacity:.7; }
   .loading-msg { color:#aaa;font-size:13px;padding:20px 0;text-align:center; }
   .joel-source-label { font-size:9px;color:#bbb;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:4px 14px 2px; }
   .entitlement-note { max-width:1180px;margin:-2px auto 16px;padding:0 20px;font-size:12px;color:#777; }
 </style>
+<script src="/holidays/allowance-data.js?v=1"></script>
 </head>
 <body>
 <nav class="nav">
@@ -35,7 +44,6 @@
 <div class="year-tabs"><a href="/holidays/jonathan/2026.html" class="year-tab">2026</a><a href="/holidays/jonathan/2027.html" class="year-tab active">2027</a></div>
 <div class="stats-row">
   <div class="stat-card"><div class="stat-lbl">Days Off</div><div class="stat-val" id="tot-days">—</div></div>
-  <div class="stat-card"><div class="stat-lbl">Lieu Time</div><div class="stat-val" id="tot-lieu">—</div></div>
   <div class="stat-card hol-stat"><div class="stat-lbl">Holiday Used</div><div class="stat-val orange" id="tot-hol">—</div><div class="stat-sub">of 24 flexible days</div></div>
   <div class="stat-card remain-stat" id="remain-stat"><div class="stat-lbl">Flexible Remaining</div><div class="stat-val green" id="tot-remain">24</div><div class="stat-sub" id="remain-sub">24 flexible days available</div></div>
   <div class="stat-card"><div class="stat-lbl">Christmas Reserved</div><div class="stat-val">3</div><div class="stat-sub">included in 27 day allowance</div></div>
@@ -45,19 +53,30 @@
 <div class="sec-hd">Trips in 2027</div>
 <div class="cards-container" id="cards"><div class="loading-msg" id="loading">Loading trips from Joel's pages…</div></div>
 <script>
-const ALLOWANCE = 24;
+const ALLOWANCE = HolidayAllowance.flexibleDays;
 const CAL_YEAR = '2027';
-function startYear(dateStr){const p=(dateStr||'').split('/');return p.length===3?p[2]:null;}
-function parseTripsFromHTML(html){const m=html.match(/const (?:trips|defaultTrips) = (\[.*?\]);/s);if(!m)return[];try{return JSON.parse(m[1]);}catch(e){return[];}}
 function makeCard(trip,sourceLabel){
   const card=document.createElement('div');card.className='trip-card';
   const lbl=document.createElement('div');lbl.className='joel-source-label';lbl.textContent='↳ '+sourceLabel;
-  function readCell(label,value,cls){const d=document.createElement('div');d.className='cell'+(cls?' '+cls:'');const l=document.createElement('div');l.className='cell-label';l.textContent=label;const v=document.createElement('div');v.style.cssText=cls&&cls.includes('num')?'font-size:18px;font-weight:700;text-align:center;color:'+(cls.includes('hol')?'#ff9500':'#0e7a87'):'font-size:'+(label==='Destination'?'14px;font-weight:700;color:#0e7a87':'13px;color:#444');v.textContent=value||'—';d.appendChild(l);d.appendChild(v);return d;}
+  function readCell(label,value,cls){const d=document.createElement('div');d.className='cell'+(cls?' '+cls:'');const l=document.createElement('div');l.className='cell-label';l.textContent=label;const v=document.createElement('div');v.style.cssText=cls&&cls.includes('num')?'font-size:18px;font-weight:700;text-align:center;color:'+(cls.includes('hol')?'#ff9500':'#0e7a87'):'font-size:'+(label==='Destination'?'14px;font-weight:700;color:#0e7a87':'13px;color:#444');v.textContent=value === '' || value == null ? '—' : value;d.appendChild(l);d.appendChild(v);return d;}
   const header=document.createElement('div');header.className='card-header';header.style.gridTemplateColumns='200px 1fr 1fr 1fr';header.appendChild(readCell('Destination',trip.dest));header.appendChild(readCell('Start date',trip.start));header.appendChild(readCell('End date',trip.end));header.appendChild(readCell('Return date',trip.ret));
-  const footer=document.createElement('div');footer.className='card-footer';footer.appendChild(readCell('Days off',trip.days,'num-cell'));footer.appendChild(readCell('Lieu time',trip.lieu,'num-cell'));footer.appendChild(readCell('Holiday days',trip.hol,'num-cell hol'));footer.appendChild(readCell('Notes',trip.notes));card.appendChild(header);card.appendChild(footer);const wrapper=document.createElement('div');wrapper.appendChild(lbl);wrapper.appendChild(card);return wrapper;
+  const footer=document.createElement('div');footer.className='card-footer';footer.appendChild(readCell('Days off',trip.days,'num-cell'));footer.appendChild(readCell('Holiday days',trip.hol,'num-cell hol'));footer.appendChild(readCell("Joel’s notes",trip.notes));card.appendChild(header);card.appendChild(footer);const wrapper=document.createElement('div');wrapper.appendChild(lbl);wrapper.appendChild(card);return wrapper;
 }
-function recalc(trips){let days=0,lieu=0,hol=0;trips.forEach(t=>{days+=parseInt(t.days)||0;lieu+=parseInt(t.lieu)||0;hol+=parseInt(t.hol)||0;});const remaining=ALLOWANCE-hol;document.getElementById('tot-days').textContent=days;document.getElementById('tot-lieu').textContent=lieu;document.getElementById('tot-hol').textContent=hol;document.getElementById('tot-remain').textContent=remaining;const remainEl=document.getElementById('tot-remain'),remainStat=document.getElementById('remain-stat'),remainSub=document.getElementById('remain-sub');if(remaining<0){remainEl.className='stat-val red';remainStat.classList.add('danger');remainSub.textContent=Math.abs(remaining)+' day'+(Math.abs(remaining)!==1?'s':'')+' over flexible allowance';}else if(remaining<=3){remainEl.className='stat-val orange';remainStat.classList.remove('danger');remainSub.textContent=remaining===0?'Flexible allowance fully used':remaining+' flexible day'+(remaining!==1?'s':'')+' left';}else{remainEl.className='stat-val green';remainStat.classList.remove('danger');remainSub.textContent=remaining+' of '+ALLOWANCE+' flexible days remaining';}}
-async function loadFromJoel(){const sources=[{url:'/holidays/2025-26.html',label:"Joel's 2025/26 allowance"},{url:'/holidays/2026-27.html',label:"Joel's 2026/27 allowance"},{url:'/holidays/2027-28.html',label:"Joel's 2027/28 allowance"}];const container=document.getElementById('cards'),loading=document.getElementById('loading');let allTrips=[];await Promise.all(sources.map(async src=>{try{const res=await fetch(src.url);const html=await res.text();const trips=parseTripsFromHTML(html);trips.forEach(t=>{if(startYear(t.start)===CAL_YEAR)allTrips.push({...t,_source:src.label});});}catch(e){}}));allTrips.sort((a,b)=>{const parse=s=>{const p=s.split('/');return new Date(p[2],p[1]-1,p[0]);};return parse(a.start)-parse(b.start);});loading.remove();if(allTrips.length===0){const empty=document.createElement('div');empty.className='loading-msg';empty.textContent='No trips found in '+CAL_YEAR+' — add trips to Joel\'s allowance pages.';container.appendChild(empty);}else{allTrips.forEach(t=>container.appendChild(makeCard(t,t._source)));}recalc(allTrips);}
+function recalc(trips){let days=0,hol=0;trips.forEach(t=>{days+=parseFloat(t.days)||0;hol+=parseFloat(t.hol)||0;});const remaining=ALLOWANCE-hol;document.getElementById('tot-days').textContent=days;document.getElementById('tot-hol').textContent=hol;document.getElementById('tot-remain').textContent=remaining;const remainEl=document.getElementById('tot-remain'),remainStat=document.getElementById('remain-stat'),remainSub=document.getElementById('remain-sub');if(remaining<0){remainEl.className='stat-val red';remainStat.classList.add('danger');remainSub.textContent=Math.abs(remaining)+' day'+(Math.abs(remaining)!==1?'s':'')+' over flexible allowance';}else if(remaining<=3){remainEl.className='stat-val orange';remainStat.classList.remove('danger');remainSub.textContent=remaining===0?'Flexible allowance fully used':remaining+' flexible day'+(remaining!==1?'s':'')+' left';}else{remainEl.className='stat-val green';remainStat.classList.remove('danger');remainSub.textContent=remaining+' of '+ALLOWANCE+' flexible days remaining';}}
+async function loadFromJoel() {
+  const container = document.getElementById('cards');
+  try {
+    const trips = await HolidayAllowance.loadJonathan(CAL_YEAR);
+    container.replaceChildren();
+    trips.forEach(trip => container.appendChild(makeCard(trip, trip._source)));
+    if (!trips.length) container.textContent = 'No trips found in ' + CAL_YEAR + ' — add trips to Joel’s allowance pages.';
+    recalc(trips);
+  } catch (error) {
+    container.textContent = 'Unable to load trips. Please refresh to try again.';
+    document.getElementById('tot-remain').textContent = '—';
+    document.getElementById('remain-sub').textContent = 'Trip data unavailable';
+  }
+}
 loadFromJoel();
 </script>
 </body>

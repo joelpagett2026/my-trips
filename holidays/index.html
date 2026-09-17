@@ -143,6 +143,7 @@
     margin-top: 1px;
   }
 </style>
+<script src="/holidays/allowance-data.js?v=1"></script>
 </head>
 <body>
 
@@ -239,6 +240,7 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
 
+    <div class="csc-sub">27 holiday days: 24 flexible + 3 reserved for Christmas (included). Plus 8 Bank Holidays = 35 days total entitlement.</div>
     <div class="col-stats">
       <div class="col-stat-card">
         <div class="csc-icon teal">
@@ -246,7 +248,7 @@
         </div>
         <div class="csc-body">
           <div class="csc-label">Trips booked</div>
-          <div class="csc-val" id="jon-trips">0</div>
+          <div class="csc-val" id="jon-trips">—</div>
           <div class="csc-sub">this allowance year</div>
         </div>
       </div>
@@ -256,8 +258,8 @@
         </div>
         <div class="csc-body">
           <div class="csc-label">Days used</div>
-          <div class="csc-val orange" id="jon-used">0</div>
-          <div class="csc-sub">of 28 day allowance</div>
+          <div class="csc-val orange" id="jon-used">—</div>
+          <div class="csc-sub">of 24 flexible days</div>
         </div>
       </div>
       <div class="col-stat-card">
@@ -265,15 +267,29 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
         <div class="csc-body">
-          <div class="csc-label">Days remaining</div>
-          <div class="csc-val green" id="jon-rem">28</div>
-          <div class="csc-sub" id="jon-rem-sub">28 of 28 remaining</div>
+          <div class="csc-label">Flexible remaining</div>
+          <div class="csc-val green" id="jon-rem">—</div>
+          <div class="csc-sub" id="jon-rem-sub">of 24 flexible days</div>
         </div>
       </div>
+      <div class="col-stat-card"><div class="csc-body"><div class="csc-label">Bank Holidays</div><div class="csc-val">8</div><div class="csc-sub">tracked separately from 27 holiday days</div></div></div>
     </div>
   </div>
 
 </div>
 
+<script>
+HolidayAllowance.loadJonathan(new Date().getFullYear()).then(trips => {
+  const summary = HolidayAllowance.summary(trips);
+  document.getElementById('jon-trips').textContent = trips.length;
+  document.getElementById('jon-used').textContent = summary.used;
+  const remaining = document.getElementById('jon-rem');
+  remaining.textContent = summary.remaining;
+  remaining.className = 'csc-val ' + (summary.remaining < 0 ? 'orange' : 'green');
+  document.getElementById('jon-rem-sub').textContent = summary.remaining < 0
+    ? Math.abs(summary.remaining) + ' days over flexible allowance'
+    : summary.remaining + ' of 24 flexible days remaining';
+}).catch(() => { document.getElementById('jon-rem-sub').textContent = 'Trip data unavailable'; });
+</script>
 </body>
 </html>

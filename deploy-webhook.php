@@ -227,6 +227,7 @@ $coreFiles = [
 $subdirFiles = [
     'trips/index.html' => 'trips/index.html',
     'holidays/index.html' => 'holidays/index.html',
+    'holidays/allowance-data.js' => 'holidays/allowance-data.js',
     'holidays/holiday-style.css' => 'holidays/holiday-style.css',
     'holidays/2025-26.html' => 'holidays/2025-26.html',
     'holidays/2026-27.html' => 'holidays/2026-27.html',

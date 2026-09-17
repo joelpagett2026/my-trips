@@ -268,6 +268,7 @@
     .trip-countdown { left: 13px; right: auto; }
   }
 </style>
+<script src="/holidays/allowance-data.js?v=1"></script>
 </head>
 <body>
 
@@ -368,9 +369,10 @@
             <div class="initials gray">JW</div>
             <div><div class="person-name">Jonathan</div><div class="person-period" id="jon-period">Current allowance</div></div>
             <div class="allow-stat used"><strong class="skeleton" id="jon-used">—</strong><span>days used</span></div>
-            <div class="allow-stat remain"><strong class="skeleton" id="jon-rem">—</strong><span>remaining</span></div>
+            <div class="allow-stat remain"><strong class="skeleton" id="jon-rem">—</strong><span>flexible remaining</span></div>
           </div>
           <div class="progress-line"><div class="progress"><span id="jon-progress"></span></div><div class="progress-copy" id="jon-pct">—</div></div>
+          <div class="person-period">27 holiday days: 24 flexible + 3 reserved for Christmas (included). Plus 8 Bank Holidays = 35 days total entitlement.</div>
         </div>
       </div>
     </a>
@@ -493,7 +495,7 @@ function countdownText(n, unit='day') { if (n === null || n === undefined) retur
 function eventName(obj) { return obj?.artist || obj?.name || obj?.park || 'No upcoming event'; }
 function parseTripArray(html) {
   const allowanceMatch = html.match(/const\s+ALLOWANCE\s*=\s*(\d+)/);
-  const tripsMatch = html.match(/const\s+trips\s*=\s*(\[.*?\]);/s);
+  const tripsMatch = html.match(/const\s+(?:trips|defaultTrips)\s*=\s*(\[.*?\]);/s);
   let trips = [];
   if (tripsMatch) { try { trips = JSON.parse(tripsMatch[1]); } catch(e) {} }
   return { allowance: allowanceMatch ? Number(allowanceMatch[1]) : 28, trips };
@@ -501,7 +503,10 @@ function parseTripArray(html) {
 async function fetchHolidayPage(url) {
   const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
   if (!r.ok) throw new Error('Holiday page unavailable');
-  return parseTripArray(await r.text());
+  const parsed = parseTripArray(await r.text());
+  const period = url.match(/(\d{4}-\d{2})\.html$/)?.[1];
+  if (period) parsed.trips = await HolidayAllowance.loadPage(period);
+  return parsed;
 }
 
 async function loadTrips() {
@@ -568,16 +573,8 @@ async function loadHolidayAllowance() {
   }
 
   try {
-    const sourceYears = [calYear - 1, calYear, calYear + 1];
-    const pages = await Promise.all(sourceYears.map(async y => {
-      const endShort = String((y + 1) % 100).padStart(2,'0');
-      try { return await fetchHolidayPage(`/holidays/${y}-${endShort}.html`); } catch(e) { return { allowance: 28, trips: [] }; }
-    }));
-    const all = pages.flatMap(p => p.trips).filter(t => {
-      const p = String(t.start || '').split('/');
-      return p.length === 3 && Number(p[2]) === calYear;
-    });
-    const allowance = 28;
+    const all = await HolidayAllowance.loadJonathan(calYear);
+    const allowance = HolidayAllowance.flexibleDays;
     const used = all.reduce((n,t)=>n+(parseFloat(t.hol)||0),0);
     const rem = allowance - used;
     const pct = Math.max(0, Math.min(100, Math.round((used / allowance) * 100)));
