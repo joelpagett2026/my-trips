@@ -1,43 +1,53 @@
-// Read the same trip lists and storage keys as the editable allowance pages.
+// Lightweight read API used by the Holiday Allowance and home dashboards.
+// V2 keeps Jonathan's reviewed calculations separate from Joel's trip records.
 window.HolidayAllowance = (() => {
   const holidayDays = 27;
   const christmasDays = 3;
   const bankHolidays = 8;
   const flexibleDays = holidayDays - christmasDays;
-  const sources = ['2025-26', '2026-27', '2027-28'];
+  const localKey = 'holiday-allowance-v2';
 
-  function parsePage(html) {
-    const match = html.match(/const\s+(?:trips|defaultTrips)\s*=\s*(\[.*?\]);/s);
-    if (!match) throw new Error('Holiday trip data unavailable');
-    return JSON.parse(match[1]);
+  function localState() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(localKey));
+      return parsed?.version === 2 ? parsed : null;
+    } catch (_) { return null; }
+  }
+
+  async function state() {
+    let remote = null;
+    if (typeof window.dbLoad === 'function') {
+      try { remote = await window.dbLoad('holiday-allowance-v2'); } catch (_) { /* use device cache */ }
+    }
+    const local = localState();
+    const remoteTime = Date.parse(remote?.updatedAt || 0) || 0;
+    const localTime = Date.parse(local?.updatedAt || 0) || 0;
+    return remoteTime > localTime ? remote : local;
   }
 
   async function loadPage(period) {
+    const current = await state();
+    if (Array.isArray(current?.joel?.[period])) return current.joel[period];
     try {
-      const saved = JSON.parse(localStorage.getItem('holiday-allowance-' + period + '-v1'));
-      if (Array.isArray(saved)) return saved;
-    } catch (error) { /* Fall back to the original trips if storage is unavailable. */ }
-    const response = await fetch('/holidays/' + period + '.html', { cache: 'no-store', credentials: 'same-origin' });
-    if (!response.ok) throw new Error('Holiday page unavailable');
-    return parsePage(await response.text());
+      const legacy = JSON.parse(localStorage.getItem('holiday-allowance-' + period + '-v1'));
+      return Array.isArray(legacy) ? legacy : [];
+    } catch (_) { return []; }
   }
 
   async function loadJonathan(year) {
-    const pages = await Promise.all(sources.map(async period => {
-      const trips = await loadPage(period);
-      return trips.map(trip => ({ ...trip, _source: "Joel's " + period.replace('-', '/') + ' allowance' }));
-    }));
-    return pages.flat().filter(trip => String(trip.start || '').split('/')[2] === String(year))
-      .sort((a, b) => {
-        const date = trip => trip.start.split('/').reverse().join('-');
-        return date(a).localeCompare(date(b));
-      });
+    const current = await state();
+    if (!current) return [];
+    return (current.jon?.[String(year)] || [])
+      .filter(trip => trip.status !== 'pending' && trip.status !== 'cancelled')
+      .map(trip => ({ ...trip, _source:trip.sourceTripId ? 'Linked to Joel' : 'Jonathan’s trip' }));
   }
 
   function summary(trips) {
-    const used = trips.reduce((total, trip) => total + (parseFloat(trip.hol) || 0), 0);
-    return { used, remaining: flexibleDays - used, total: holidayDays + bankHolidays };
+    const included = trips.filter(trip => trip.status !== 'pending' && trip.status !== 'cancelled');
+    const used = included.reduce((total, trip) => total + (parseFloat(trip.hol) || 0), 0);
+    return { used, remaining:flexibleDays - used, total:holidayDays + bankHolidays };
   }
 
   return { holidayDays, christmasDays, bankHolidays, flexibleDays, loadPage, loadJonathan, summary };
 })();
+
