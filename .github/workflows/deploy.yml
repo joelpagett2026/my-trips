@@ -32,6 +32,8 @@ jobs:
           node --check settings-backup.js
           node --check datepicker.js
           node --check budget-live-redesign.js
+          node --check holidays/holiday-v2.js
+          node --check holidays/holiday-v2-ui.js
 
       - name: Validate PHP syntax
         run: |
@@ -149,6 +151,9 @@ jobs:
 
       - name: Test fullscreen mobile activity modal
         run: node scripts/test-mobile-fullscreen-modal.js
+
+      - name: Test Holiday Allowance V2 state flows
+        run: node scripts/test-holiday-v2.js
 
       - name: Execute renderer integration contracts
         run: php scripts/validate-renderers.php
