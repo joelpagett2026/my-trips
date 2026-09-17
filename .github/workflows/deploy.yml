@@ -24,6 +24,8 @@ jobs:
         run: |
           node --check auth.js
           node --check db.js
+          node --check holidays/holiday-save.js
+          node scripts/test-holiday-save.js
           node --check itinerary-state-guard.js
           node --check itinerary-ui.js
           node --check trip-dashboard-create.js

@@ -393,3 +393,7 @@ body:has(#top-grid):has(#saving) .tc-score.ten {
   background: var(--parks-green) !important;
   color: #fff !important;
 }
+
+.holiday-save-status { margin: 0 20px 12px; font-size: 13px; color: #666; }
+.holiday-save-status button { margin-left: 10px; }
+@media print { .holiday-save-status { display: none; } }

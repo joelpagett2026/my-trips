@@ -15,6 +15,8 @@
 <meta name="googlebot" content="noindex, nofollow">
 <title>Holiday Allowance · 1st April 2026 – 31st March 2027</title>
 <script src="/auth.js?v=3"></script>
+<script src="/db.js?v=20260917"></script>
+<script src="/holidays/holiday-save.js?v=1"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
 </head>
 <body>
@@ -84,39 +86,6 @@ const defaultTrips = [
   {"dest":"Cyprus","start":"23/12/2026","end":"30/12/2026","ret":"31/12/2026","days":2,"lieu":1,"hol":4,"notes":"One Lieu from additional hours."},
   {"dest":"Hong Kong & Taiwan","start":"27/03/2027","end":"11/04/2027","ret":"12/04/2027","days":0,"lieu":0,"hol":3,"notes":"3 Holiday Days from 2025/26 Allowance - Remainder 2027"}
 ];
-let initializing = true;
-
-function loadTrips() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return defaultTrips;
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : defaultTrips;
-  } catch (e) {
-    console.warn('Could not load saved holiday allowance data', e);
-    return defaultTrips;
-  }
-}
-
-function collectTrips() {
-  return Array.from(document.querySelectorAll('.trip-card')).map(card => {
-    const inputs = card.querySelectorAll('input');
-    return {
-      dest: inputs[0]?.value || '', start: inputs[1]?.value || '', end: inputs[2]?.value || '', ret: inputs[3]?.value || '',
-      days: inputs[4]?.value || '', lieu: inputs[5]?.value || '', hol: inputs[6]?.value || '', notes: inputs[7]?.value || ''
-    };
-  });
-}
-
-function saveTrips() {
-  if (initializing) return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectTrips()));
-  } catch (e) {
-    console.error('Could not save holiday allowance data', e);
-  }
-}
-
 function inp(val, cls, placeholder) {
   const i = document.createElement('input');
   i.type = 'text';
@@ -124,7 +93,6 @@ function inp(val, cls, placeholder) {
   if (placeholder) i.placeholder = placeholder;
   if (cls) i.className = cls;
   i.addEventListener('input', recalc);
-  i.addEventListener('change', saveTrips);
   return i;
 }
 
@@ -162,7 +130,7 @@ function recalc() {
   let days = 0, lieu = 0, hol = 0;
   document.querySelectorAll('.trip-card').forEach(card => {
     const nums = card.querySelectorAll('.num-input');
-    days += parseInt(nums[0]?.value) || 0; lieu += parseInt(nums[1]?.value) || 0; hol += parseInt(nums[2]?.value) || 0;
+    days += parseFloat(nums[0]?.value) || 0; lieu += parseFloat(nums[1]?.value) || 0; hol += parseFloat(nums[2]?.value) || 0;
   });
   const remaining = ALLOWANCE - hol;
   document.getElementById('tot-days').textContent = days;
@@ -182,13 +150,10 @@ function recalc() {
     remainEl.className = 'stat-val green'; remainStat.classList.remove('danger');
     remainSub.textContent = remaining + ' of ' + ALLOWANCE + ' days remaining';
   }
-  saveTrips();
+  HolidayAllowance.changed();
 }
 
-loadTrips().forEach(addTrip);
-initializing = false;
-recalc();
-window.addEventListener('pagehide', saveTrips);
+HolidayAllowance.init({ year: '2026-27', defaults: defaultTrips, legacyKey: STORAGE_KEY, addTrip, recalc });
 </script>
 
 <div class="print-sig-block">Manager signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
