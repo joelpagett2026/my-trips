@@ -15,6 +15,8 @@
 <meta name="googlebot" content="noindex, nofollow">
 <title>Holiday Allowance · 1st April 2027 – 31st March 2028</title>
 <script src="/auth.js?v=3"></script>
+<script src="/db.js?v=20260917"></script>
+<script src="/holidays/holiday-save.js?v=1"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
 </head>
 <body>
@@ -164,12 +166,13 @@ function addTrip(data) {
 }
 
 function recalc() {
+  HolidayAllowance.changed();
   let days = 0, lieu = 0, hol = 0;
   document.querySelectorAll('.trip-card').forEach(card => {
     const nums = card.querySelectorAll('.num-input');
-    days += parseInt(nums[0]?.value) || 0;
-    lieu += parseInt(nums[1]?.value) || 0;
-    hol  += parseInt(nums[2]?.value) || 0;
+    days += parseFloat(nums[0]?.value) || 0;
+    lieu += parseFloat(nums[1]?.value) || 0;
+    hol  += parseFloat(nums[2]?.value) || 0;
   });
   const remaining = ALLOWANCE - hol;
   document.getElementById('tot-days').textContent = days;
@@ -196,7 +199,7 @@ function recalc() {
   }
 }
 
-trips.forEach(addTrip);
+HolidayAllowance.init({ year: '2027-28', defaults: trips, addTrip, recalc });
 </script>
 
   <div class="print-sig-block">Manager signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>

@@ -12,6 +12,8 @@
 <meta name="googlebot" content="noindex, nofollow">
 <title>Jonathan's Holiday Allowance · 2026</title>
 <script src="/auth.js?v=3"></script>
+<script src="/db.js?v=20260917"></script>
+<script src="/holidays/holiday-save.js?v=1"></script>
 <link rel="stylesheet" href="/holidays/holiday-style.css">
 <style>
   .synced-badge {
@@ -114,7 +116,7 @@ function startYear(dateStr) {
 
 // ── Extract trips from a fetched HTML string ──────────────────────────
 function parseTripsFromHTML(html) {
-  const m = html.match(/const trips = (\[.*?\]);/s);
+  const m = html.match(/const (?:defaultTrips|trips) = (\[.*?\]);/s);
   if (!m) return [];
   try { return JSON.parse(m[1]); } catch(e) { return []; }
 }
@@ -173,9 +175,9 @@ function makeCard(trip, sourceLabel) {
 function recalc(trips) {
   let days = 0, lieu = 0, hol = 0;
   trips.forEach(t => {
-    days += parseInt(t.days) || 0;
-    lieu += parseInt(t.lieu) || 0;
-    hol  += parseInt(t.hol)  || 0;
+    days += parseFloat(t.days) || 0;
+    lieu += parseFloat(t.lieu) || 0;
+    hol  += parseFloat(t.hol)  || 0;
   });
   const remaining = ALLOWANCE - hol;
 
@@ -213,18 +215,25 @@ async function loadFromJoel() {
 
   let allTrips = [];
 
+  try {
   await Promise.all(sources.map(async src => {
     try {
       const res  = await fetch(src.url);
       const html = await res.text();
-      const trips = parseTripsFromHTML(html);
+      if (!res.ok) throw new Error('Could not load allowance defaults');
+      const year = src.url.split('/').pop().replace('.html', '');
+      const { trips } = await HolidayAllowance.loadYear(year, parseTripsFromHTML(html));
       trips.forEach(t => {
         if (startYear(t.start) === CAL_YEAR) {
           allTrips.push({ ...t, _source: src.label });
         }
       });
-    } catch(e) { /* silently skip */ }
+    } catch(e) { throw e; }
   }));
+  } catch {
+    loading.textContent = "Could not load saved allowances. Reload to try again.";
+    return;
+  }
 
   // Sort by start date
   allTrips.sort((a, b) => {
@@ -248,7 +257,12 @@ async function loadFromJoel() {
   recalc(allTrips);
 }
 
-loadFromJoel();
+let started = false;
+function startWhenAuthed() {
+  if (!started && window._mytripsAuthed === true) { started = true; void loadFromJoel(); }
+}
+document.addEventListener('mytrips:authed', startWhenAuthed);
+startWhenAuthed();
 </script>
 </body>
 </html>
