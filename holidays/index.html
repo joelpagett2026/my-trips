@@ -143,7 +143,9 @@
     margin-top: 1px;
   }
 </style>
-<script src="/holidays/allowance-data.js?v=1"></script>
+<script src="/db.js?v=7"></script>
+<script src="/holidays/holiday-v2.js?v=2"></script>
+<script src="/holidays/allowance-data.js?v=2"></script>
 </head>
 <body>
 
@@ -279,17 +281,32 @@
 </div>
 
 <script>
-HolidayAllowance.loadJonathan(new Date().getFullYear()).then(trips => {
-  const summary = HolidayAllowance.summary(trips);
-  document.getElementById('jon-trips').textContent = trips.length;
-  document.getElementById('jon-used').textContent = summary.used;
-  const remaining = document.getElementById('jon-rem');
-  remaining.textContent = summary.remaining;
-  remaining.className = 'csc-val ' + (summary.remaining < 0 ? 'orange' : 'green');
-  document.getElementById('jon-rem-sub').textContent = summary.remaining < 0
-    ? Math.abs(summary.remaining) + ' days over flexible allowance'
-    : summary.remaining + ' of 24 flexible days remaining';
-}).catch(() => { document.getElementById('jon-rem-sub').textContent = 'Trip data unavailable'; });
+HolidayV2.load().then(() => Promise.all([
+  HolidayAllowance.loadPage('2026-27'),
+  HolidayAllowance.loadJonathan(new Date().getFullYear())
+])).then(([joelTrips, jonTrips]) => {
+  const joelUsed = joelTrips.reduce((total, trip) => total + (parseFloat(trip.hol) || 0), 0);
+  const joelRemaining = 28 - joelUsed;
+  document.getElementById('joel-trips').textContent = joelTrips.length;
+  document.getElementById('joel-used').textContent = joelUsed;
+  document.getElementById('joel-rem').textContent = joelRemaining;
+  document.getElementById('joel-rem').className = 'csc-val ' + (joelRemaining < 0 ? 'orange' : 'green');
+  document.getElementById('joel-rem-sub').textContent = joelRemaining < 0
+    ? Math.abs(joelRemaining) + ' days over allowance'
+    : joelRemaining + ' of 28 days remaining';
+
+  const jonSummary = HolidayAllowance.summary(jonTrips);
+  document.getElementById('jon-trips').textContent = jonTrips.length;
+  document.getElementById('jon-used').textContent = jonSummary.used;
+  document.getElementById('jon-rem').textContent = jonSummary.remaining;
+  document.getElementById('jon-rem').className = 'csc-val ' + (jonSummary.remaining < 0 ? 'orange' : 'green');
+  document.getElementById('jon-rem-sub').textContent = jonSummary.remaining < 0
+    ? Math.abs(jonSummary.remaining) + ' days over flexible allowance'
+    : jonSummary.remaining + ' of 24 flexible days remaining';
+}).catch(() => {
+  document.getElementById('joel-rem-sub').textContent = 'Trip data unavailable';
+  document.getElementById('jon-rem-sub').textContent = 'Trip data unavailable';
+});
 </script>
 </body>
 </html>
