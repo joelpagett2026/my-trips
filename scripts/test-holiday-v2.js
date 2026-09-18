@@ -90,8 +90,9 @@ function runtime(storage, remote = null) {
   };
   const genuineApp = runtime(genuineRemoteStorage, genuineRemote);
   await genuineApp.load();
-  assert.equal(genuineApp.getState().joel['2027-28'].length, 2, 'genuine multi-trip server data must not be replaced by stale recovery data');
+  assert.equal(genuineApp.getState().joel['2027-28'].length, 3, 'genuine server data must be preserved while missing legacy trips are merged back');
   assert.equal(genuineApp.getState().joel['2027-28'][1].dest, 'Current server trip');
+  assert.equal(genuineApp.getState().joel['2027-28'][2].dest, 'Stale local trip', 'legacy-only trip should be recovered without replacing server trips');
 
   const joel = app.getState().joel['2026-27'][0];
   const sent = app.sendToJon('2026-27', joel.id);
@@ -135,6 +136,6 @@ function runtime(storage, remote = null) {
   assert.equal(nextSent.status, 'pending');
   assert.equal(refreshed.getState().jon['2027'].length, 1);
 
-  console.log('PASS: migration, empty-V2 recovery, 2027/28 rich-device recovery, server-data protection, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
+  console.log('PASS: migration, empty-V2 recovery, 2027/28 merge recovery, server-data preservation, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
 })().catch(error => { console.error(error); process.exit(1); });
 

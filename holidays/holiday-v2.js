@@ -85,23 +85,37 @@
     });
   }
 
-  function richerPeriodRecovery(period, currentTrips, alternate) {
-    if (period !== '2027-28' || !isDefaultPeriod(period, currentTrips)) return null;
+  function tripIdentity(trip) {
+    return ['dest','start','end','ret'].map(key => String(trip?.[key] || '').trim().toLowerCase()).join('|');
+  }
 
-    const candidates = [];
+  function richerPeriodRecovery(period, currentTrips, alternate) {
+    if (period !== '2027-28') return null;
+
+    const sources = [];
     const alternateTrips = alternate?.joel?.[period];
-    if (Array.isArray(alternateTrips) && alternateTrips.length && !isDefaultPeriod(period, alternateTrips)) {
-      candidates.push(alternateTrips);
-    }
+    if (Array.isArray(alternateTrips) && alternateTrips.length) sources.push(alternateTrips);
 
     const legacy = readJson('holiday-allowance-' + period + '-v1');
-    if (Array.isArray(legacy) && legacy.length && !isDefaultPeriod(period, legacy)) {
-      candidates.push(legacy);
+    if (Array.isArray(legacy) && legacy.length) sources.push(legacy);
+
+    if (!sources.length) return null;
+
+    const merged = currentTrips.map(trip => ({ ...trip }));
+    const seen = new Set(merged.map(tripIdentity));
+    let added = false;
+
+    for (const source of sources) {
+      for (const trip of source) {
+        const key = tripIdentity(trip);
+        if (!key || seen.has(key)) continue;
+        merged.push(normaliseJoel(trip, period));
+        seen.add(key);
+        added = true;
+      }
     }
 
-    if (!candidates.length) return null;
-    candidates.sort((a, b) => b.length - a.length);
-    return normaliseRecoveryList(period, candidates[0], currentTrips);
+    return added ? merged : null;
   }
 
   function recoveryTrips(period, alternate) {
