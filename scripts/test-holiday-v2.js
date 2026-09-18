@@ -4,7 +4,7 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync('holidays/holiday-v2.js', 'utf8');
 
-function runtime(storage) {
+function runtime(storage, remote = null) {
   const localStorage = {
     getItem:key => storage.has(key) ? storage.get(key) : null,
     setItem:(key, value) => storage.set(key, String(value))
@@ -12,7 +12,7 @@ function runtime(storage) {
   const document = { querySelectorAll:() => [] };
   const context = { console, document, localStorage, setTimeout, clearTimeout, Date, Math };
   context.window = context;
-  context.dbLoad = async () => null;
+  context.dbLoad = async () => remote;
   context.dbSave = async () => ({ ok:true });
   vm.createContext(context);
   vm.runInContext(source, context);
@@ -33,6 +33,21 @@ function runtime(storage) {
   assert.equal(app.getState().joel['2026-27'][0].dest, 'Migration check');
   assert.equal(app.getState().joel['2027-28'][0].dest, 'Next year');
   assert(storage.has('holiday-allowance-2026-27-v1'), 'legacy records must remain untouched');
+
+  const repairStorage = new Map();
+  repairStorage.set('holiday-allowance-2026-27-v1', JSON.stringify([
+    { dest:'Recovered legacy trip', start:'01/08/2026', end:'03/08/2026', ret:'04/08/2026', days:2, lieu:0, hol:2, notes:'recover this' }
+  ]));
+  const emptyRemote = {
+    version:2,
+    updatedAt:'2099-01-01T00:00:00.000Z',
+    joel:{ '2026-27':[], '2027-28':[] },
+    jon:{ '2026':[], '2027':[] }
+  };
+  const repairedApp = runtime(repairStorage, emptyRemote);
+  await repairedApp.load();
+  assert.equal(repairedApp.getState().joel['2026-27'][0].dest, 'Recovered legacy trip', 'empty V2 must recover legacy Joel trips');
+  assert.equal(repairedApp.getState().joel['2027-28'][0].dest, 'Hong Kong & Taiwan', 'empty V2 must recover known defaults when no legacy copy exists');
 
   const joel = app.getState().joel['2026-27'][0];
   const sent = app.sendToJon('2026-27', joel.id);
@@ -76,6 +91,6 @@ function runtime(storage) {
   assert.equal(nextSent.status, 'pending');
   assert.equal(refreshed.getState().jon['2027'].length, 1);
 
-  console.log('PASS: migration, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
+  console.log('PASS: migration, empty-V2 recovery, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
 })().catch(error => { console.error(error); process.exit(1); });
 

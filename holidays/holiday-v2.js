@@ -21,6 +21,7 @@
 
   let state;
   let saveTimer;
+  let needsRemoteRepair = false;
 
   const uid = prefix => prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
   const number = value => Number.parseFloat(value) || 0;
@@ -64,19 +65,34 @@
     return candidate && candidate.version === 2 && candidate.joel && candidate.jon;
   }
 
-  function normalise(candidate) {
+  function recoveryTrips(period, alternate) {
+    const alternateTrips = alternate?.joel?.[period];
+    if (Array.isArray(alternateTrips) && alternateTrips.length) {
+      return alternateTrips.map(trip => normaliseJoel(trip, period));
+    }
+    const legacy = readJson('holiday-allowance-' + period + '-v1');
+    const source = Array.isArray(legacy) && legacy.length ? legacy : defaults[period];
+    return source.map(trip => normaliseJoel(trip, period));
+  }
+
+  function normalise(candidate, alternate) {
     const next = valid(candidate) ? candidate : migrate();
     next.joel ||= {};
     next.jon ||= {};
     Object.keys(defaults).forEach(period => {
-      if (!Array.isArray(next.joel[period])) next.joel[period] = defaults[period].map(t => normaliseJoel(t, period));
-      next.joel[period] = next.joel[period].map(t => normaliseJoel(t, period));
+      if (!Array.isArray(next.joel[period]) || next.joel[period].length === 0) {
+        next.joel[period] = recoveryTrips(period, alternate);
+        needsRemoteRepair = true;
+      } else {
+        next.joel[period] = next.joel[period].map(t => normaliseJoel(t, period));
+      }
     });
     ['2026','2027'].forEach(year => { if (!Array.isArray(next.jon[year])) next.jon[year] = []; });
     return next;
   }
 
   async function load() {
+    needsRemoteRepair = false;
     const local = readJson(LOCAL_KEY);
     let remote = null;
     if (typeof window.dbLoad === 'function') {
@@ -84,8 +100,16 @@
     }
     const localTime = Date.parse(local?.updatedAt || 0) || 0;
     const remoteTime = Date.parse(remote?.updatedAt || 0) || 0;
-    state = normalise(remoteTime > localTime ? remote : local);
+    const useRemote = remoteTime > localTime;
+    state = normalise(useRemote ? remote : local, useRemote ? local : remote);
     writeLocal(state);
+    if (needsRemoteRepair && typeof window.dbSave === 'function') {
+      try {
+        state.updatedAt = new Date().toISOString();
+        writeLocal(state);
+        await window.dbSave(RECORD_ID, state);
+      } catch (_) { /* repaired device copy remains usable */ }
+    }
     return state;
   }
 
