@@ -55,10 +55,22 @@ function attachMobileCenteredNavTitle(string $source, string $label): string {
     $mobileNavStyle = <<<'HTML'
 <style id="mobile-centered-nav-title">
 @media (max-width: 700px), (display-mode: standalone) and (max-width: 900px) {
+  /*
+   * iOS standalone mode renders into the full screen because the tracker uses
+   * viewport-fit=cover. Keep the status-bar safe area inside the sticky nav
+   * itself so it remains protected after the page has been scrolled.
+   */
+  body {
+    padding-top: 0 !important;
+  }
   .nav {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
     align-items: center !important;
+    height: calc(52px + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
+    padding: env(safe-area-inset-top, 0px) 20px 0 !important;
+    top: 0 !important;
   }
   .nav .nav-back {
     justify-self: start !important;
