@@ -174,6 +174,46 @@ body .main-grid > a.dash-card[href="/parks/"] .stat{border-color:rgba(255,255,25
 }
 
 @media (max-width:800px){
+  /* Final mobile homepage layout: mirror the approved web-app mock-up. */
+  body .dashboard{width:calc(100% - 24px)!important;}
+  body .quick-links-panel{
+    width:100%!important;
+    margin:0 0 16px!important;
+    padding:0!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  body .quick-links-panel .section-head{padding:0 2px 10px!important;}
+  body .quick-links-panel .coming-grid{
+    display:block!important;
+    overflow:hidden!important;
+    width:100%!important;
+    background:#fff!important;
+    border:1px solid #dfe5e6!important;
+    border-radius:18px!important;
+    box-shadow:0 6px 18px rgba(39,54,58,.055)!important;
+  }
+  body .quick-links-panel .coming-item{
+    display:flex!important;
+    width:100%!important;
+    min-height:64px!important;
+    padding:10px 16px!important;
+    gap:14px!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+  }
+  body .quick-links-panel .coming-item + .coming-item{border-top:1px solid #e8ecec!important;}
+  body .quick-links-panel .coming-icon{
+    width:42px!important;height:42px!important;min-width:42px!important;border-radius:12px!important;
+  }
+  body .quick-links-panel .coming-icon svg{width:20px!important;height:20px!important;}
+  body .quick-links-panel .coming-label{font-size:13px!important;font-weight:800!important;color:#263238!important;}
+  body .quick-links-panel .mini-arrow{margin-left:auto!important;width:12px!important;height:12px!important;}
+  body .main-grid{width:100%!important;}
+
   .main-grid > a.dash-card[href="/trips/"],
   .main-grid > a.dash-card[href="/holidays/"],
   .main-grid > a.dash-card[href="/concerts/"],
