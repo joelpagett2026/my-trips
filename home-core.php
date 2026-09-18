@@ -255,8 +255,13 @@ $dashboardPolishStyle = <<<'HTML'
 
   /* Shared Concert-style mobile spacing, without touching each section's colour. */
   @media (max-width:800px), (display-mode:standalone) and (max-width:900px) {
-    .quick-links-panel{padding:0!important;}
-    .quick-links-panel .section-head{padding:0 2px 10px!important;}
+    .quick-links-panel{
+      padding:0!important;
+      width:calc(100% + 18px)!important;
+      margin-left:-9px!important;
+      margin-right:-9px!important;
+    }
+    .quick-links-panel .section-head{padding:0 11px 10px!important;}
     .quick-links-panel .coming-grid{
       display:block!important;overflow:hidden!important;gap:0!important;
       background:#fff!important;border:1px solid #e2e7e8!important;border-radius:16px!important;
