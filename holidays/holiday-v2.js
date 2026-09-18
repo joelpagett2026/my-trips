@@ -86,7 +86,7 @@
   }
 
   function tripIdentity(trip) {
-    return ['dest','start','end','ret'].map(key => String(trip?.[key] || '').trim().toLowerCase()).join('|');
+    return ['dest','start','ret'].map(key => String(trip?.[key] || '').trim().toLowerCase()).join('|');
   }
 
   function richerPeriodRecovery(period, currentTrips, alternate) {
@@ -128,6 +128,76 @@
     return source.map(trip => normaliseJoel(trip, period));
   }
 
+  function parseCalendarDate(value) {
+    const text = String(value || '').trim();
+    let match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+    if (match) return new Date(Date.UTC(Number(match[3]), Number(match[2]) - 1, Number(match[1])));
+    match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+    if (match) return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+    return null;
+  }
+
+  function formatCalendarDate(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    return day + '/' + month + '/' + date.getUTCFullYear();
+  }
+
+  function previousCalendarDay(value) {
+    const date = parseCalendarDate(value);
+    if (!date) return '';
+    date.setUTCDate(date.getUTCDate() - 1);
+    return formatCalendarDate(date);
+  }
+
+  async function recoverTripsFromRegistry() {
+    if (typeof window.dbLoad !== 'function') return 0;
+
+    let registry = null;
+    try { registry = await window.dbLoad('trip-registry'); } catch (_) { return 0; }
+    const registryTrips = registry?.trips;
+    if (!Array.isArray(registryTrips) || !registryTrips.length) return 0;
+
+    const period = '2027-28';
+    const periodStart = Date.UTC(2027, 3, 1);
+    const periodEnd = Date.UTC(2028, 2, 31, 23, 59, 59);
+    state.joel[period] ||= [];
+
+    const seen = new Set(state.joel[period].map(tripIdentity));
+    let added = 0;
+
+    for (const trip of registryTrips) {
+      const dest = String(trip?.dest || trip?.name || '').trim();
+      const start = String(trip?.dep || trip?.startDate || trip?.start || '').trim();
+      const ret = String(trip?.ret || trip?.endDate || trip?.end || start).trim();
+      const startDate = parseCalendarDate(start);
+      const returnDate = parseCalendarDate(ret);
+      if (!dest || !startDate || !returnDate) continue;
+      if (returnDate.getTime() < periodStart || startDate.getTime() > periodEnd) continue;
+
+      const candidate = {
+        dest,
+        start: formatCalendarDate(startDate),
+        end: String(trip?.holidayEnd || '').trim() || previousCalendarDay(ret),
+        ret: formatCalendarDate(returnDate),
+        days:'',
+        lieu:'',
+        hol:'',
+        notes:'Restored from Trip Planner — allowance calculation TBC'
+      };
+      const key = tripIdentity(candidate);
+      if (seen.has(key)) continue;
+
+      state.joel[period].push(normaliseJoel(candidate, period));
+      seen.add(key);
+      added++;
+    }
+
+    if (added) needsRemoteRepair = true;
+    return added;
+  }
+
   function normalise(candidate, alternate) {
     const next = valid(candidate) ? candidate : migrate();
     next.joel ||= {};
@@ -160,6 +230,7 @@
     const remoteTime = Date.parse(remote?.updatedAt || 0) || 0;
     const useRemote = remoteTime > localTime;
     state = normalise(useRemote ? remote : local, useRemote ? local : remote);
+    await recoverTripsFromRegistry();
     writeLocal(state);
     if (needsRemoteRepair && typeof window.dbSave === 'function') {
       try {

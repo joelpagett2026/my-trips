@@ -12,7 +12,10 @@ function runtime(storage, remote = null) {
   const document = { querySelectorAll:() => [] };
   const context = { console, document, localStorage, setTimeout, clearTimeout, Date, Math };
   context.window = context;
-  context.dbLoad = async () => remote;
+  context.dbLoad = async id => {
+    if (remote && remote.__records) return remote.__records[id] ?? null;
+    return remote;
+  };
   context.dbSave = async () => ({ ok:true });
   vm.createContext(context);
   vm.runInContext(source, context);
@@ -94,6 +97,40 @@ function runtime(storage, remote = null) {
   assert.equal(genuineApp.getState().joel['2027-28'][1].dest, 'Current server trip');
   assert.equal(genuineApp.getState().joel['2027-28'][2].dest, 'Stale local trip', 'legacy-only trip should be recovered without replacing server trips');
 
+  const registryRecoveryStorage = new Map();
+  const registryRecoveryRemote = {
+    __records: {
+      'holiday-allowance-v2': {
+        version:2,
+        updatedAt:'2099-01-01T00:00:00.000Z',
+        joel:{
+          '2026-27':[],
+          '2027-28':[
+            { id:'hk-existing', period:'2027-28', dest:'Hong Kong & Taiwan', start:'27/03/2027', end:'11/04/2027', ret:'12/04/2027', days:'', lieu:'', hol:'', notes:'' }
+          ]
+        },
+        jon:{ '2026':[], '2027':[] }
+      },
+      'trip-registry': {
+        trips:[
+          { slug:'hk-taiwan-2027', dest:'Hong Kong & Taiwan', dep:'27/03/2027', ret:'12/04/2027', status:'planning' },
+          { slug:'graz-ljubljana-lake-bled-2027', dest:'Graz, Ljubljana & Lake Bled', dep:'28/05/2027', ret:'02/06/2027', status:'planning' },
+          { slug:'canada-2027', dest:'Canada Road Trip', dep:'25/09/2027', ret:'10/10/2027', status:'upcoming' },
+          { slug:'old-trip', dest:'Old Trip', dep:'01/02/2027', ret:'05/02/2027', status:'past' }
+        ]
+      }
+    }
+  };
+  const registryRecoveryApp = runtime(registryRecoveryStorage, registryRecoveryRemote);
+  await registryRecoveryApp.load();
+  const recovered2027 = registryRecoveryApp.getState().joel['2027-28'];
+  assert.equal(recovered2027.length, 3, '2027/28 should recover missing overlapping trips from trip-registry without duplicating Hong Kong & Taiwan');
+  assert.equal(recovered2027[1].dest, 'Graz, Ljubljana & Lake Bled');
+  assert.equal(recovered2027[1].end, '01/06/2027');
+  assert.equal(recovered2027[2].dest, 'Canada Road Trip');
+  assert.equal(recovered2027[2].end, '09/10/2027');
+  assert.equal(recovered2027[2].hol, '', 'recovery must not invent holiday-day calculations');
+
   const joel = app.getState().joel['2026-27'][0];
   const sent = app.sendToJon('2026-27', joel.id);
   assert.equal(sent.status, 'pending');
@@ -136,6 +173,6 @@ function runtime(storage, remote = null) {
   assert.equal(nextSent.status, 'pending');
   assert.equal(refreshed.getState().jon['2027'].length, 1);
 
-  console.log('PASS: migration, empty-V2 recovery, 2027/28 merge recovery, server-data preservation, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
+  console.log('PASS: migration, empty-V2 recovery, 2027/28 merge recovery, trip-registry recovery, server-data preservation, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
 })().catch(error => { console.error(error); process.exit(1); });
 
