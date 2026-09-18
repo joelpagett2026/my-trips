@@ -49,6 +49,40 @@ function runtime(storage, remote = null) {
   assert.equal(repairedApp.getState().joel['2026-27'][0].dest, 'Recovered legacy trip', 'empty V2 must recover legacy Joel trips');
   assert.equal(repairedApp.getState().joel['2027-28'][0].dest, 'Hong Kong & Taiwan', 'empty V2 must recover known defaults when no legacy copy exists');
 
+  const richLegacyStorage = new Map();
+  richLegacyStorage.set('holiday-allowance-2027-28-v1', JSON.stringify([
+    { dest:'Hong Kong & Taiwan', start:'27/03/2027', end:'11/04/2027', ret:'12/04/2027', days:4, lieu:0, hol:4, notes:'continued' },
+    { dest:'Recovered summer trip', start:'10/07/2027', end:'18/07/2027', ret:'19/07/2027', days:5, lieu:1, hol:4, notes:'device copy' },
+    { dest:'Recovered autumn trip', start:'02/10/2027', end:'06/10/2027', ret:'07/10/2027', days:3, lieu:0, hol:3, notes:'' }
+  ]));
+  const baselineRemote = {
+    version:2,
+    updatedAt:'2099-01-01T00:00:00.000Z',
+    joel:{
+      '2026-27':[],
+      '2027-28':[
+        { id:'baseline-2027', period:'2027-28', dest:'Hong Kong & Taiwan', start:'27/03/2027', end:'11/04/2027', ret:'12/04/2027', days:0, lieu:0, hol:0, notes:'Continued from 2026/27 — holiday days TBC' }
+      ]
+    },
+    jon:{ '2026':[], '2027':[] }
+  };
+  const richRecoveryApp = runtime(richLegacyStorage, baselineRemote);
+  await richRecoveryApp.load();
+  assert.equal(richRecoveryApp.getState().joel['2027-28'].length, 3, 'baseline-only V2 must recover richer 2027/28 device data');
+  assert.equal(richRecoveryApp.getState().joel['2027-28'][1].dest, 'Recovered summer trip');
+  assert.equal(richRecoveryApp.getState().joel['2027-28'][2].dest, 'Recovered autumn trip');
+
+  const genuineRemoteStorage = new Map();
+  genuineRemoteStorage.set('holiday-allowance-2027-28-v1', JSON.stringify([
+    { dest:'Stale local trip', start:'01/05/2027', end:'02/05/2027', ret:'03/05/2027', days:1, lieu:0, hol:1, notes:'' }
+  ]));
+  const genuineRemote = JSON.parse(JSON.stringify(baselineRemote));
+  genuineRemote.joel['2027-28'].push({ id:'real-trip', period:'2027-28', dest:'Current server trip', start:'12/08/2027', end:'16/08/2027', ret:'17/08/2027', days:3, lieu:0, hol:3, notes:'' });
+  const genuineApp = runtime(genuineRemoteStorage, genuineRemote);
+  await genuineApp.load();
+  assert.equal(genuineApp.getState().joel['2027-28'].length, 2, 'genuine multi-trip server data must not be replaced by stale recovery data');
+  assert.equal(genuineApp.getState().joel['2027-28'][1].dest, 'Current server trip');
+
   const joel = app.getState().joel['2026-27'][0];
   const sent = app.sendToJon('2026-27', joel.id);
   assert.equal(sent.status, 'pending');
@@ -91,6 +125,6 @@ function runtime(storage, remote = null) {
   assert.equal(nextSent.status, 'pending');
   assert.equal(refreshed.getState().jon['2027'].length, 1);
 
-  console.log('PASS: migration, empty-V2 recovery, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
+  console.log('PASS: migration, empty-V2 recovery, 2027/28 rich-device recovery, server-data protection, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
 })().catch(error => { console.error(error); process.exit(1); });
 

@@ -65,6 +65,45 @@
     return candidate && candidate.version === 2 && candidate.joel && candidate.jon;
   }
 
+  function sameTripContent(a, b) {
+    return ['dest','start','end','ret','days','lieu','hol','notes'].every(
+      key => String(a?.[key] ?? '') === String(b?.[key] ?? '')
+    );
+  }
+
+  function isDefaultPeriod(period, trips) {
+    const baseline = defaults[period] || [];
+    return Array.isArray(trips)
+      && trips.length === baseline.length
+      && trips.every((trip, index) => sameTripContent(trip, baseline[index]));
+  }
+
+  function normaliseRecoveryList(period, trips, currentTrips = []) {
+    return trips.map(trip => {
+      const existing = currentTrips.find(item => sameShared(item, trip));
+      return normaliseJoel(existing ? { ...trip, id:existing.id } : trip, period);
+    });
+  }
+
+  function richerPeriodRecovery(period, currentTrips, alternate) {
+    if (period !== '2027-28' || !isDefaultPeriod(period, currentTrips)) return null;
+
+    const candidates = [];
+    const alternateTrips = alternate?.joel?.[period];
+    if (Array.isArray(alternateTrips) && alternateTrips.length && !isDefaultPeriod(period, alternateTrips)) {
+      candidates.push(alternateTrips);
+    }
+
+    const legacy = readJson('holiday-allowance-' + period + '-v1');
+    if (Array.isArray(legacy) && legacy.length && !isDefaultPeriod(period, legacy)) {
+      candidates.push(legacy);
+    }
+
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => b.length - a.length);
+    return normaliseRecoveryList(period, candidates[0], currentTrips);
+  }
+
   function recoveryTrips(period, alternate) {
     const alternateTrips = alternate?.joel?.[period];
     if (Array.isArray(alternateTrips) && alternateTrips.length) {
@@ -85,6 +124,11 @@
         needsRemoteRepair = true;
       } else {
         next.joel[period] = next.joel[period].map(t => normaliseJoel(t, period));
+        const recovered = richerPeriodRecovery(period, next.joel[period], alternate);
+        if (recovered) {
+          next.joel[period] = recovered;
+          needsRemoteRepair = true;
+        }
       }
     });
     ['2026','2027'].forEach(year => { if (!Array.isArray(next.jon[year])) next.jon[year] = []; });
