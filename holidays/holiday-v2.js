@@ -32,6 +32,15 @@
     try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; }
   }
 
+  function writeLocal(value) {
+    try {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(value));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   function normaliseJoel(trip, period) {
     return {
       id: trip.id || uid('joel'), period,
@@ -76,7 +85,7 @@
     const localTime = Date.parse(local?.updatedAt || 0) || 0;
     const remoteTime = Date.parse(remote?.updatedAt || 0) || 0;
     state = normalise(remoteTime > localTime ? remote : local);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+    writeLocal(state);
     return state;
   }
 
@@ -90,7 +99,7 @@
   async function persistNow() {
     clearTimeout(saveTimer);
     state.updatedAt = new Date().toISOString();
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+    writeLocal(state);
     announce('saving', 'Saving…');
     if (typeof window.dbSave === 'function') {
       try {
@@ -107,7 +116,7 @@
 
   function persistSoon() {
     state.updatedAt = new Date().toISOString();
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+    writeLocal(state);
     announce('saving', 'Saving…');
     clearTimeout(saveTimer);
     saveTimer = setTimeout(persistNow, 350);
