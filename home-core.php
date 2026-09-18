@@ -119,17 +119,17 @@ $quickLinksPanel = <<<'HTML'
   </div>
   <div class="coming-grid">
     <a class="coming-item" href="/trips/">
-      <span class="coming-icon"><img src="/icons/trips-icon-32.png" alt="" width="24" height="24"></span>
+      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span>
       <span class="coming-copy"><span class="coming-label">Trips</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/holidays/">
-      <span class="coming-icon orange"><img src="/icons/holidays-icon-32.png" alt="" width="24" height="24"></span>
+      <span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>
       <span class="coming-copy"><span class="coming-label">Holiday Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/concerts/">
-      <span class="coming-icon"><img src="/icons/concerts-icon-32.png" alt="" width="24" height="24"></span>
+      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14.7 6.3 3-3 3 3-3 3"/><path d="m8.5 12.5 6.2-6.2 3 3-6.2 6.2"/><path d="M10.2 13.8c2.1 2.1 2.4 5.1.7 6.8-1.7 1.7-4.7 1.4-6.8-.7s-2.4-5.1-.7-6.8c1.7-1.7 4.7-1.4 6.8.7Z"/><path d="m5.5 16.5 3 3"/></svg></span>
       <span class="coming-copy"><span class="coming-label">Concert Log</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
