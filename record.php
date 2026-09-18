@@ -40,6 +40,38 @@ if (!isAuthorizedToken($token, false)) respondFail('Unauthorised', 401);
 
 $action = (string)($_GET['action'] ?? '');
 
+/*
+ * Coaster photos are stored as individual files rather than inside one large
+ * base64 JSON record. This lets the browser cache and lazy-load each image.
+ */
+if ($action === 'coaster_photo_upload') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') respondFail('POST required', 405);
+
+    $slug = preg_replace('/[^a-z0-9-]+/', '-', strtolower((string)($_GET['slug'] ?? '')));
+    $slug = trim((string)$slug, '-');
+    if ($slug === '') respondFail('Missing photo slug');
+
+    $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+    if ($contentLength > 1_500_000) respondFail('Photo too large', 413);
+    $raw = file_get_contents('php://input', false, null, 0, 1_500_001);
+    if ($raw === false || $raw === '') respondFail('Missing photo');
+    if (strlen($raw) > 1_500_000) respondFail('Photo too large', 413);
+
+    $info = @getimagesizefromstring($raw);
+    if (!$info || ($info['mime'] ?? '') !== 'image/jpeg') respondFail('JPEG photo required');
+
+    $dir = __DIR__ . '/uploads/coasters';
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) respondFail('Could not create photo folder', 500);
+
+    $filename = $slug . '.jpg';
+    $path = $dir . '/' . $filename;
+    if (@file_put_contents($path, $raw, LOCK_EX) === false) respondFail('Could not save photo', 500);
+
+    respondOk([
+        'url' => '/uploads/coasters/' . rawurlencode($filename) . '?v=' . time(),
+    ]);
+}
+
 if ($action === 'load') {
     $id = (string)($_GET['id'] ?? '');
     if ($id === '') respondFail('Missing id');
