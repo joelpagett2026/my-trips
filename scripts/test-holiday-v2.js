@@ -76,8 +76,18 @@ function runtime(storage, remote = null) {
   genuineRemoteStorage.set('holiday-allowance-2027-28-v1', JSON.stringify([
     { dest:'Stale local trip', start:'01/05/2027', end:'02/05/2027', ret:'03/05/2027', days:1, lieu:0, hol:1, notes:'' }
   ]));
-  const genuineRemote = JSON.parse(JSON.stringify(baselineRemote));
-  genuineRemote.joel['2027-28'].push({ id:'real-trip', period:'2027-28', dest:'Current server trip', start:'12/08/2027', end:'16/08/2027', ret:'17/08/2027', days:3, lieu:0, hol:3, notes:'' });
+  const genuineRemote = {
+    version:2,
+    updatedAt:'2099-01-01T00:00:00.000Z',
+    joel:{
+      '2026-27':[],
+      '2027-28':[
+        { id:'baseline-2027-fresh', period:'2027-28', dest:'Hong Kong & Taiwan', start:'27/03/2027', end:'11/04/2027', ret:'12/04/2027', days:0, lieu:0, hol:0, notes:'Continued from 2026/27 — holiday days TBC' },
+        { id:'real-trip', period:'2027-28', dest:'Current server trip', start:'12/08/2027', end:'16/08/2027', ret:'17/08/2027', days:3, lieu:0, hol:3, notes:'' }
+      ]
+    },
+    jon:{ '2026':[], '2027':[] }
+  };
   const genuineApp = runtime(genuineRemoteStorage, genuineRemote);
   await genuineApp.load();
   assert.equal(genuineApp.getState().joel['2027-28'].length, 2, 'genuine multi-trip server data must not be replaced by stale recovery data');
