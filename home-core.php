@@ -129,7 +129,7 @@ $quickLinksPanel = <<<'HTML'
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/concerts/">
-      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14.7 6.3 3-3 3 3-3 3"/><path d="m8.5 12.5 6.2-6.2 3 3-6.2 6.2"/><path d="M10.2 13.8c2.1 2.1 2.4 5.1.7 6.8-1.7 1.7-4.7 1.4-6.8-.7s-2.4-5.1-.7-6.8c1.7-1.7 4.7-1.4 6.8.7Z"/><path d="m5.5 16.5 3 3"/></svg></span>
+      <span class="coming-icon tracker-icon" style="-webkit-mask-image:url(/icons/concert-concerts.svg?v=11);mask-image:url(/icons/concert-concerts.svg?v=11);"></span>
       <span class="coming-copy"><span class="coming-label">Concert Log</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
@@ -251,6 +251,7 @@ $dashboardPolishStyle = <<<'HTML'
   }
   .quick-links-panel .coming-icon svg{width:18px!important;height:18px!important;}
   .quick-links-panel .coming-icon img{width:24px!important;height:24px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
+  .quick-links-panel .coming-icon.tracker-icon{background-color:currentColor!important;background-repeat:no-repeat!important;-webkit-mask-repeat:no-repeat!important;mask-repeat:no-repeat!important;-webkit-mask-position:center!important;mask-position:center!important;-webkit-mask-size:22px 22px!important;mask-size:22px 22px!important;}
   .quick-links-panel .coming-label{font-size:11px!important;}
   .quick-links-panel .mini-arrow{width:11px!important;height:11px!important;}
 
@@ -356,7 +357,17 @@ $dashboardPolishScript = <<<'HTML'
       if (next) {
         const start = startOf(next), end = endOf(next), days = daysUntil(start);
         const name = next.dest || next.name || next.destination || 'Next trip';
-        setTripHeroPhoto(next);
+        // Older registry entries may pre-date cover-photo synchronisation. If the
+        // next trip has no registry thumbnail, read its itinerary cover directly.
+        let heroTrip = next;
+        if (!(next.photo || next.thumbnail || next.thumb) && next.slug && typeof window.dbLoad === 'function') {
+          try {
+            const itinerary = await window.dbLoad(next.slug);
+            const cover = itinerary?.meta?.coverPhoto || itinerary?.meta?._coverPhoto || itinerary?.coverPhoto || '';
+            if (cover) heroTrip = Object.assign({}, next, { photo: cover });
+          } catch(e) {}
+        }
+        setTripHeroPhoto(heroTrip);
         setText('trip-name', name);
         setText('trip-date', end && end.getTime() !== start.getTime() ? `${fmtDate(start)} – ${fmtDate(end)}` : fmtDate(start));
         setText('trip-days', days);
