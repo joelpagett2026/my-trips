@@ -119,17 +119,17 @@ $quickLinksPanel = <<<'HTML'
   </div>
   <div class="coming-grid">
     <a class="coming-item" href="/trips/">
-      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span>
+      <span class="coming-icon"><img src="/icons/trips-icon-32.png" alt="" width="24" height="24"></span>
       <span class="coming-copy"><span class="coming-label">Trips</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/holidays/">
-      <span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+      <span class="coming-icon orange"><img src="/icons/holidays-icon-32.png" alt="" width="24" height="24"></span>
       <span class="coming-copy"><span class="coming-label">Holiday Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/concerts/">
-      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+      <span class="coming-icon"><img src="/icons/concerts-icon-32.png" alt="" width="24" height="24"></span>
       <span class="coming-copy"><span class="coming-label">Concert Log</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
@@ -250,6 +250,7 @@ $dashboardPolishStyle = <<<'HTML'
     width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important;
   }
   .quick-links-panel .coming-icon svg{width:18px!important;height:18px!important;}
+  .quick-links-panel .coming-icon img{width:24px!important;height:24px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
   .quick-links-panel .coming-label{font-size:11px!important;}
   .quick-links-panel .mini-arrow{width:11px!important;height:11px!important;}
 
