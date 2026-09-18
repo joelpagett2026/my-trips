@@ -234,8 +234,45 @@ $dashboardPolishStyle = <<<'HTML'
     background:linear-gradient(135deg,#6b91bd,#3d5f86 75%)!important;
   }
 
+  /* Compact quick-link navigation: one clean menu on mobile, one row on desktop. */
+  .quick-links-panel{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;}
+  .quick-links-panel .section-head{padding:0 0 12px!important;}
+  .quick-links-panel .coming-grid{
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .quick-links-panel .coming-item{
+    min-width:0!important;min-height:58px!important;padding:10px 12px!important;gap:9px!important;
+    border-radius:13px!important;background:#fff!important;
+  }
+  .quick-links-panel .coming-icon{
+    width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important;
+  }
+  .quick-links-panel .coming-icon svg{width:18px!important;height:18px!important;}
+  .quick-links-panel .coming-label{font-size:11px!important;}
+  .quick-links-panel .mini-arrow{width:11px!important;height:11px!important;}
+
   /* Shared Concert-style mobile spacing, without touching each section's colour. */
   @media (max-width:800px), (display-mode:standalone) and (max-width:900px) {
+    .quick-links-panel{padding:0!important;}
+    .quick-links-panel .section-head{padding:0 2px 10px!important;}
+    .quick-links-panel .coming-grid{
+      display:block!important;overflow:hidden!important;gap:0!important;
+      background:#fff!important;border:1px solid #e2e7e8!important;border-radius:16px!important;
+      box-shadow:0 2px 8px rgba(28,45,51,.04)!important;
+    }
+    .quick-links-panel .coming-item{
+      min-height:58px!important;padding:9px 14px!important;gap:12px!important;
+      border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;
+    }
+    .quick-links-panel .coming-item + .coming-item{border-top:1px solid #edf0f1!important;}
+    .quick-links-panel .coming-icon{
+      width:38px!important;height:38px!important;min-width:38px!important;border-radius:11px!important;
+    }
+    .quick-links-panel .coming-label{font-size:12.5px!important;}
+    .quick-links-panel .mini-arrow{margin-left:auto!important;}
+
     .coming-panel{padding:18px!important;}
     .coming-grid{gap:14px!important;}
     .coming-item{padding:16px 18px!important;gap:12px!important;}
