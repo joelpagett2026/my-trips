@@ -223,14 +223,22 @@ async function compress(file, maxW, quality) {
 
 // ── DATA ─────────────────────────────────────────────────────────────
 async function loadAll() {
-  const [p, t, ph] = await Promise.all([
+  /*
+   * Render the ranking as soon as the two small records arrive. The photo record
+   * contains base64 image data and can be much larger, so waiting for it made the
+   * whole Top Rated screen look stuck on slower/mobile connections.
+   */
+  const [p, t] = await Promise.all([
     dbLoad('parks').catch(() => null),
     dbLoad('parks-top').catch(() => null),
-    dbLoad('coaster-photos').catch(() => null),
   ]);
   visits   = (p && Array.isArray(p.list)) ? p.list : [];
   topOrder = (t && Array.isArray(t.order)) ? t.order : [];
-  photos   = (ph && ph.map) ? ph.map : {};
+}
+
+async function loadPhotos() {
+  const ph = await dbLoad('coaster-photos').catch(() => null);
+  photos = (ph && ph.map) ? ph.map : {};
 }
 
 // Every coaster rated 9 or 10, ordered by the saved manual list,
@@ -420,6 +428,10 @@ document.getElementById('file-input').addEventListener('change', async e => {
 // ── INIT ─────────────────────────────────────────────────────────────
 (async () => {
   await loadAll();
+  render();
+
+  // Photos enhance the cards after the useful ranking is already visible.
+  await loadPhotos();
   render();
 })();
 </script>
