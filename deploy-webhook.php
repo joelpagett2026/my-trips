@@ -205,6 +205,7 @@ $coreFiles = [
     'itinerary-v2-style.css',
     'new-trip-v2.html',
     'manifest.webmanifest',
+    'manifest.php',
     'robots.txt',
     'favicon.ico',
     'settings.html',
