@@ -191,6 +191,7 @@ $tripBootstrapScript = '<script type="application/json" id="trip-runtime-data">'
 $page = str_replace($sourceBootstrapScript, $tripBootstrapScript, $template, $count);
 if ($count !== 1) { http_response_code(500); echo 'This trip could not be rendered right now. Please try again shortly.'; exit; }
 
+$tripManifestUrl = htmlspecialchars('/manifest.php?slug=' . rawurlencode($slug), ENT_QUOTES, 'UTF-8');
 $tripStandaloneUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-standalone'), ENT_QUOTES, 'UTF-8');
 $tripDrawerSwipeUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-drawer-swipe'), ENT_QUOTES, 'UTF-8');
 $tripMobileModalUrl = htmlspecialchars(tripRuntimeAssetUrl('trip-mobile-modal-layout'), ENT_QUOTES, 'UTF-8');
@@ -199,7 +200,7 @@ $standaloneHead = <<<'HTML'
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trip Planner">
 <meta name="theme-color" content="#0e7a87">
-<link rel="manifest" href="/manifest.webmanifest">
+<link rel="manifest" href="__TRIP_MANIFEST_URL__">
 <script src="__TRIP_STANDALONE_URL__"></script>
 <style>
 @media (max-width: 700px) {
@@ -254,6 +255,7 @@ $standaloneHead = <<<'HTML'
 }
 </style>
 HTML;
+$standaloneHead = str_replace('__TRIP_MANIFEST_URL__', $tripManifestUrl, $standaloneHead);
 $standaloneHead = str_replace('__TRIP_STANDALONE_URL__', $tripStandaloneUrl, $standaloneHead);
 $page = str_replace('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' . "\n" . $standaloneHead, $page);
 
