@@ -182,8 +182,15 @@ jobs:
           if failed:
               raise SystemExit('deploy webhook reported failed file copies')
           copied = payload.get('copied') or []
-          if 'activity-editor.js' not in copied:
-              raise SystemExit('deploy webhook did not copy activity-editor.js')
+          required = [
+              'activity-editor.js',
+              'holidays/holiday-v2.css',
+              'holidays/holiday-v2.js',
+              'holidays/holiday-v2-ui.js',
+          ]
+          missing = [path for path in required if path not in copied]
+          if missing:
+              raise SystemExit(f'deploy webhook missed required live files: {missing}')
           print(f'deployed against verified database with {count} active itineraries')
           PY
 
