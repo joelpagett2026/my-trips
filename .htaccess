@@ -112,18 +112,14 @@ RewriteRule ^parks/map\.html$ parks-map.php [L,QSA]
 RewriteRule ^parks/credits\.html$ parks-map.php?page=credits [L,QSA]
 RewriteRule ^parks/coasters\.html$ parks-map.php?page=coasters [L,QSA]
 
-# Holiday Allowance uses the same render-time theming pattern as Theme Parks.
-# The shared stylesheet and every page-level teal accent are converted to the
-# section's muted purple palette before delivery, including Jonathan's pages.
+# Holiday Allowance now ships its own purple mobile-first styling.
+# Serve its real HTML files directly rather than passing clicks through the
+# generic section renderer. Canonicalise explicit index.html requests only when
+# they came from the browser, so DirectoryIndex subrequests cannot loop.
+RewriteCond %{THE_REQUEST} \s/+holidays/index\.html(?:[?\s]) [NC]
 RewriteRule ^holidays/index\.html$ /holidays/ [R=302,L,QSA]
-RewriteRule ^holidays/?$ parks-map.php?section=holidays&page=index [L,QSA]
-RewriteRule ^holidays/2025-26\.html$ parks-map.php?section=holidays&page=2025-26 [L,QSA]
-RewriteRule ^holidays/2026-27\.html$ parks-map.php?section=holidays&page=2026-27 [L,QSA]
-RewriteRule ^holidays/2027-28\.html$ parks-map.php?section=holidays&page=2027-28 [L,QSA]
+RewriteCond %{THE_REQUEST} \s/+holidays/jonathan/index\.html(?:[?\s]) [NC]
 RewriteRule ^holidays/jonathan/index\.html$ /holidays/jonathan/ [R=302,L,QSA]
-RewriteRule ^holidays/jonathan/?$ parks-map.php?section=holidays&page=jonathan [L,QSA]
-RewriteRule ^holidays/jonathan/2026\.html$ parks-map.php?section=holidays&page=jonathan-2026 [L,QSA]
-RewriteRule ^holidays/jonathan/2027\.html$ parks-map.php?section=holidays&page=jonathan-2027 [L,QSA]
 
 # Concert Log uses the same render-time section theming. Both the main log and
 # artist view are rendered through the orange palette before delivery.
