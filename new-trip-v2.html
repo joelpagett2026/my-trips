@@ -2844,14 +2844,28 @@ async function deleteItineraryItemServer(dayIdx, itemIdx, item, confirmMessage) 
       throw new Error(payload?.error || ('HTTP ' + response.status));
     }
 
-    setStatus('saved', '');
+    // The server has already confirmed the atomic deletion. Mirror that
+    // deletion into the live STATE and redraw in place instead of navigating
+    // the whole itinerary back through PHP. This keeps the installed iPhone
+    // app responsive and preserves the current day/scroll position.
+    const liveItems = STATE.days?.[Number(dayIdx)]?.items;
+    if (Array.isArray(liveItems)) {
+      let liveIdx = -1;
+      if (item._id) liveIdx = liveItems.findIndex(it => it && it._id === item._id);
+      if (liveIdx < 0 && Number.isInteger(Number(itemIdx)) && liveItems[Number(itemIdx)]) {
+        liveIdx = Number(itemIdx);
+      }
+      if (liveIdx >= 0) liveItems.splice(liveIdx, 1);
+    }
 
-    // Always reload the authoritative server copy after deletion. This avoids
-    // stale in-memory state in the installed iPhone app and also refreshes
-    // Bookings/transport/sidebar views in one step.
-    const url = new URL(window.location.href);
-    url.searchParams.set('_itemdelete', Date.now().toString());
-    window.location.replace(url.toString());
+    try { closeDrawer(); } catch (_) {}
+    try { closeModal(); } catch (_) {}
+    try { render(); } catch (e) {
+      console.warn('Post-delete in-place render failed:', e);
+      try { renderTimeline(); renderRightPanel(); } catch (_) {}
+    }
+    try { syncRegistryCities(); } catch (_) {}
+    setStatus('saved', '');
     return true;
   } catch (e) {
     console.error('Atomic item delete failed:', e);
