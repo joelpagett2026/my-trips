@@ -269,6 +269,24 @@
         height:100% !important;
         max-height:100% !important;
       }
+
+      /* While the iOS keyboard is open, keep Save in the normal form flow.
+         A fixed/sticky footer consumes too much of the already-small visual
+         viewport and makes the editor feel cramped. The user can scroll to Save
+         naturally; it can never sit on top of the keyboard. */
+      html.modal-keyboard-open #modal-overlay .modal-foot {
+        position:static !important;
+        flex:0 0 auto !important;
+        width:100% !important;
+        padding:12px 16px 18px !important;
+        box-shadow:none !important;
+        border-top:1px solid rgba(100,120,128,.10) !important;
+      }
+      html.modal-keyboard-open #modal-overlay .modal-body,
+      html.modal-keyboard-open #modal-overlay #modal-body-single,
+      html.modal-keyboard-open #modal-overlay #modal-body-bulk {
+        scroll-padding-bottom:24px !important;
+      }
     }
   `;
   document.head.appendChild(viewportStyle);
