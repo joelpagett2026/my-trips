@@ -129,7 +129,7 @@ $quickLinksPanel = <<<'HTML'
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/concerts/">
-      <span class="coming-icon orange"><span class="tracker-glyph" aria-hidden="true" style="-webkit-mask-image:url(/icons/concert-concerts.svg?v=12);mask-image:url(/icons/concert-concerts.svg?v=12);"></span></span>
+      <span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M18 10v1a6 6 0 0 1-12 0v-1"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span></span>
       <span class="coming-copy"><span class="coming-label">Concert Log</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
