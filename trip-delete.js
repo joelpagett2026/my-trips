@@ -310,6 +310,25 @@
           position:relative !important;
           z-index:31 !important;
         }
+
+        /* Keyboard state: hide the action footer completely. Keeping Save above
+           the iOS keyboard wastes roughly 70px of the reduced visual viewport.
+           The keyboard Done control dismisses the keyboard; Save returns as soon
+           as the keyboard closes. */
+        html.modal-keyboard-open #modal-overlay .modal-foot {
+          display:none !important;
+          min-height:0 !important;
+          height:0 !important;
+          padding:0 !important;
+          border:0 !important;
+          box-shadow:none !important;
+          overflow:hidden !important;
+        }
+        html.modal-keyboard-open #modal-overlay #modal-body-single,
+        html.modal-keyboard-open #modal-overlay #modal-body-bulk {
+          padding-bottom:20px !important;
+          scroll-padding-bottom:20px !important;
+        }
       }
 
       @media (max-width:390px) {
