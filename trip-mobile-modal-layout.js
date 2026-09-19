@@ -205,4 +205,160 @@
     }
   `;
   document.head.appendChild(style);
+
+  // One keyboard/viewport controller for every itinerary popup. iOS Home Screen
+  // apps keep a larger layout viewport while the on-screen keyboard shrinks and
+  // pans the visual viewport. Track that visual viewport once and make every
+  // modal use the same geometry, rather than letting individual modals guess.
+  const viewportStyle = document.createElement('style');
+  viewportStyle.id = 'mobile-modal-visual-viewport';
+  viewportStyle.textContent = `
+    @media (max-width:768px) {
+      .modal-overlay {
+        position:fixed !important;
+        left:0 !important;
+        right:0 !important;
+        top:var(--modal-vv-top, 0px) !important;
+        bottom:auto !important;
+        width:100vw !important;
+        height:var(--modal-vv-height, 100dvh) !important;
+        min-height:0 !important;
+        max-height:none !important;
+        overflow:hidden !important;
+      }
+
+      /* Non-activity popups remain sheets, but are laid out INSIDE the current
+         visual viewport so the keyboard can never cover or shove them away. */
+      .modal-overlay:not(#modal-overlay) {
+        align-items:flex-end !important;
+        justify-content:center !important;
+        padding:0 !important;
+      }
+      .modal-overlay:not(#modal-overlay) > .modal {
+        position:relative !important;
+        left:auto !important;
+        right:auto !important;
+        top:auto !important;
+        bottom:auto !important;
+        width:100% !important;
+        max-width:100% !important;
+        max-height:calc(var(--modal-vv-height, 100dvh) - 8px) !important;
+        margin:0 !important;
+        border-radius:20px 20px 0 0 !important;
+        transform:translateY(100%) !important;
+        overflow:hidden !important;
+      }
+      .modal-overlay:not(#modal-overlay).open > .modal {
+        transform:translateY(0) !important;
+      }
+      .modal-overlay:not(#modal-overlay) .modal-body {
+        min-height:0 !important;
+        overflow-y:auto !important;
+        -webkit-overflow-scrolling:touch !important;
+        scroll-padding-bottom:24px !important;
+      }
+
+      /* The activity editor is intentionally full-screen; "screen" means the
+         visible area ABOVE the keyboard, not 100dvh behind it. */
+      #modal-overlay {
+        align-items:stretch !important;
+        justify-content:stretch !important;
+        background:#fff !important;
+      }
+      #modal-overlay > .modal {
+        height:100% !important;
+        max-height:100% !important;
+      }
+    }
+  `;
+  document.head.appendChild(viewportStyle);
+
+  const root = document.documentElement;
+  let modalViewportRaf = 0;
+
+  function viewportNow() {
+    const vv = window.visualViewport;
+    const height = Math.max(1, Math.round(vv ? vv.height : window.innerHeight));
+    const top = Math.max(0, Math.round(vv ? vv.offsetTop : 0));
+    return { top, height };
+  }
+
+  function activeModalField() {
+    const el = document.activeElement;
+    if (!(el instanceof Element)) return null;
+    if (!el.matches('input, textarea, select, [contenteditable="true"]')) return null;
+    return el.closest('.modal-overlay.open') ? el : null;
+  }
+
+  function keepFocusedFieldVisible() {
+    const field = activeModalField();
+    if (!field) return;
+
+    const overlay = field.closest('.modal-overlay.open');
+    const body = field.closest('.modal-body, #modal-body-single, #modal-body-bulk');
+    if (!overlay || !body) return;
+
+    const overlayRect = overlay.getBoundingClientRect();
+    const head = overlay.querySelector('.modal-head');
+    const foot = overlay.querySelector('.modal-foot');
+    const headBottom = head ? head.getBoundingClientRect().bottom : overlayRect.top;
+    const footTop = foot ? foot.getBoundingClientRect().top : overlayRect.bottom;
+    const topLimit = Math.max(overlayRect.top + 8, headBottom + 10);
+    const bottomLimit = Math.min(overlayRect.bottom - 8, footTop - 10);
+    const rect = field.getBoundingClientRect();
+
+    if (rect.bottom > bottomLimit) {
+      body.scrollTop += rect.bottom - bottomLimit + 14;
+    } else if (rect.top < topLimit) {
+      body.scrollTop -= topLimit - rect.top + 14;
+    }
+  }
+
+  function syncMobileModalViewport() {
+    if (!window.matchMedia('(max-width: 768px)').matches) return;
+    if (modalViewportRaf) cancelAnimationFrame(modalViewportRaf);
+    modalViewportRaf = requestAnimationFrame(() => {
+      modalViewportRaf = 0;
+      const { top, height } = viewportNow();
+      root.style.setProperty('--modal-vv-top', top + 'px');
+      root.style.setProperty('--modal-vv-height', height + 'px');
+      root.classList.toggle('modal-keyboard-open', height < window.innerHeight - 80);
+      requestAnimationFrame(keepFocusedFieldVisible);
+    });
+  }
+
+  window.__syncMobileModalViewport = syncMobileModalViewport;
+
+  document.addEventListener('focusin', event => {
+    if (!event.target.closest?.('.modal-overlay.open')) return;
+    syncMobileModalViewport();
+    window.setTimeout(syncMobileModalViewport, 60);
+    window.setTimeout(syncMobileModalViewport, 220);
+  }, true);
+
+  document.addEventListener('focusout', event => {
+    if (!event.target.closest?.('.modal-overlay')) return;
+    window.setTimeout(syncMobileModalViewport, 80);
+    window.setTimeout(syncMobileModalViewport, 260);
+  }, true);
+
+  const openObserver = new MutationObserver(records => {
+    if (records.some(r => r.target.classList?.contains('modal-overlay'))) {
+      syncMobileModalViewport();
+    }
+  });
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    openObserver.observe(overlay, { attributes:true, attributeFilter:['class'] });
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncMobileModalViewport, { passive:true });
+    window.visualViewport.addEventListener('scroll', syncMobileModalViewport, { passive:true });
+  }
+  window.addEventListener('resize', syncMobileModalViewport, { passive:true });
+  window.addEventListener('orientationchange', () => {
+    window.setTimeout(syncMobileModalViewport, 120);
+  }, { passive:true });
+
+  syncMobileModalViewport();
 })();
