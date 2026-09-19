@@ -152,36 +152,29 @@
 
       @media (max-width:768px) {
         #modal-overlay {
-          align-items:flex-end !important;
+          align-items:stretch !important;
+          justify-content:stretch !important;
           padding:0 !important;
           overflow:hidden !important;
-          background:rgba(20,34,40,.48) !important;
+          background:#fff !important;
         }
         #modal-overlay .modal {
-          position:fixed !important;
-          left:0 !important;
-          right:0 !important;
-          bottom:0 !important;
-          top:auto !important;
+          position:relative !important;
+          inset:auto !important;
           width:100% !important;
           max-width:100% !important;
           min-width:0 !important;
-          height:var(--entry-viewport-height,94dvh) !important;
-          max-height:var(--entry-viewport-height,94dvh) !important;
-          border-radius:24px 24px 0 0 !important;
+          height:100% !important;
+          max-height:100% !important;
+          border-radius:0 !important;
           overflow:hidden !important;
           transform:none !important;
           will-change:auto !important;
           contain:layout paint !important;
         }
         #modal-overlay .modal::before {
-          content:'';
-          width:38px !important;
-          height:4px !important;
-          border-radius:999px !important;
-          background:rgba(91,108,116,.24) !important;
-          margin:8px auto 2px !important;
-          flex:0 0 auto !important;
+          display:none !important;
+          content:none !important;
         }
         #modal-overlay .modal-head {
           position:relative !important;
@@ -577,14 +570,10 @@
   }
 
   function setMobileViewportHeight() {
-    const overlay = document.getElementById('modal-overlay');
-    const modal = overlay?.querySelector('.modal');
-    if (!overlay || !modal || !isMobile()) return;
-    const vv = window.visualViewport;
-    const viewportHeight = vv ? vv.height : window.innerHeight;
-    const topInset = Math.max(8, vv?.offsetTop || 0);
-    const available = Math.max(360, Math.round(viewportHeight - topInset));
-    modal.style.setProperty('--entry-viewport-height',available + 'px');
+    if (!isMobile()) return;
+    if (typeof window.__syncMobileModalViewport === 'function') {
+      window.__syncMobileModalViewport();
+    }
   }
 
   function improveKeyboardBehaviour() {
@@ -613,11 +602,8 @@
       window.setTimeout(setMobileViewportHeight,120);
     });
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize',setMobileViewportHeight,{ passive:true });
-      window.visualViewport.addEventListener('scroll',setMobileViewportHeight,{ passive:true });
-    }
-    window.addEventListener('orientationchange',() => setTimeout(setMobileViewportHeight,120),{ passive:true });
+    // Visual viewport / keyboard movement is owned centrally by
+    // trip-mobile-modal-layout.js for every popup modal.
   }
 
   function installHooks() {
