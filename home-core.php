@@ -119,7 +119,7 @@ $quickLinksPanel = <<<'HTML'
   </div>
   <div class="coming-grid">
     <a class="coming-item" href="/trips/">
-      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 9 15"/><path d="m22 2-7 20-4-9-9-4Z"/></svg></span>
+      <span class="coming-icon"><svg width="21" height="21" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M497.535,14.465c-19.569-19.568-51.395-19.241-70.557,0.726L322.092,124.488L66.131,39.781L12.4,93.513l213.352,131.365L117.796,337.372l-69.231-11.366L0,374.571l101.78,35.649L137.429,512l48.565-48.565l-11.366-69.231l112.494-107.955L418.487,499.6l53.732-53.732l-84.706-255.961L496.808,85.022C516.776,65.86,517.103,34.034,497.535,14.465z"/></svg></span>
       <span class="coming-copy"><span class="coming-label">Trips</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
