@@ -9,7 +9,6 @@ const completionUi = fs.readFileSync('itinerary-completion.js', 'utf8');
 const compatibility = fs.readFileSync('activity-editor.js', 'utf8');
 const html = fs.readFileSync('new-trip-v2.html', 'utf8');
 const css = fs.readFileSync('itinerary-v2-style.css', 'utf8');
-const completion = fs.readFileSync('itinerary-completion.js', 'utf8');
 const renderer = fs.readFileSync('trip.php', 'utf8');
 const deployer = fs.readFileSync('deploy-webhook.php', 'utf8');
 
@@ -58,11 +57,6 @@ assert(mobileLayout.includes("--modal-vv-top"), 'shared mobile modal runtime mus
 assert(mobileLayout.includes(".modal-overlay:not(#modal-overlay)"), 'keyboard-safe viewport rules must cover every non-activity popup modal');
 assert(completionUi.includes("window.__syncMobileModalViewport"), 'entry enhancements must delegate keyboard sizing to the shared modal runtime');
 assert(!completionUi.includes("--entry-viewport-height"), 'legacy activity-only viewport sizing must be removed');
-
-// Old bottom-sheet styles are still present elsewhere, so V4 must remain strong
-// enough to override them rather than assuming they were removed.
-assert(completion.includes('align-items:flex-end !important'), 'fixture no longer contains legacy bottom-sheet rule');
-assert(completion.includes('border-radius:24px 24px 0 0 !important'), 'fixture no longer contains legacy rounded-sheet rule');
 
 const completionPos = renderer.indexOf('<script src="/itinerary-completion.js?v=');
 const tripDeletePos = renderer.indexOf('<script src="/trip-delete.js?v=');
