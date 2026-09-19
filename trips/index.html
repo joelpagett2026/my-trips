@@ -160,9 +160,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
 
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 700px) {
-  /* Nav: compact */
+  /* Nav: compact, matching the other tracker pages */
   .nav { height: 52px; padding: 0 12px; }
-  .nav-title { display: none; }
+  .nav-title {
+    display: block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 15px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
 
   /* Single column — stack trips then dash */
   .page-layout { display: flex; flex-direction: column; }
@@ -288,8 +296,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:0.8;}
   .modal-overlay.open .modal { transform: translateY(0); }
   .modal-row { grid-template-columns: 1fr; }
 
-  /* Hide top nav on mobile — bottom bar replaces it */
-  .nav { display: none !important; }
+  /* Keep the standard header on mobile so the main homepage is always one tap away. */
+  .nav { display: flex !important; }
   .nav-left-btns { display: none !important; }
   .nav-settings-btn { display: none !important; }
 
