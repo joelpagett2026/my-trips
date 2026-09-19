@@ -316,20 +316,29 @@
     const body = field.closest('.modal-body, #modal-body-single, #modal-body-bulk');
     if (!overlay || !body) return;
 
+    // Keep the active control in a predictable typing zone just below the
+    // modal header. This avoids iOS leaving the field hidden behind the
+    // keyboard or jumping the whole sheet to an arbitrary position.
     const overlayRect = overlay.getBoundingClientRect();
     const head = overlay.querySelector('.modal-head');
-    const foot = overlay.querySelector('.modal-foot');
     const headBottom = head ? head.getBoundingClientRect().bottom : overlayRect.top;
-    const footTop = foot ? foot.getBoundingClientRect().top : overlayRect.bottom;
-    const topLimit = Math.max(overlayRect.top + 8, headBottom + 10);
-    const bottomLimit = Math.min(overlayRect.bottom - 8, footTop - 10);
+    const desiredTop = Math.max(overlayRect.top + 12, headBottom + 18);
+    const maxBottom = overlayRect.bottom - 18;
     const rect = field.getBoundingClientRect();
 
-    if (rect.bottom > bottomLimit) {
-      body.scrollTop += rect.bottom - bottomLimit + 14;
-    } else if (rect.top < topLimit) {
-      body.scrollTop -= topLimit - rect.top + 14;
+    if (rect.top > desiredTop + 20) {
+      body.scrollTop += rect.top - desiredTop;
+    } else if (rect.top < desiredTop - 8) {
+      body.scrollTop -= desiredTop - rect.top;
     }
+
+    // If a very tall textarea cannot fit wholly in the typing zone, its top is
+    // still kept visible so the caret/text remains readable.
+    requestAnimationFrame(() => {
+      const updated = field.getBoundingClientRect();
+      if (updated.bottom > maxBottom && updated.top < desiredTop + 8) return;
+      if (updated.bottom > maxBottom) body.scrollTop += updated.bottom - maxBottom + 10;
+    });
   }
 
   function syncMobileModalViewport() {
