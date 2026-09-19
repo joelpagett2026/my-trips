@@ -11,7 +11,7 @@ if (start < 0 || end < 0) throw new Error('Could not locate item deletion functi
 const fnSource = html.slice(start, end);
 
 function makeContext({ responseOk = true } = {}) {
-  const calls = { closeDrawer: 0, alert: 0, fetch: 0, reloaded: false };
+  const calls = { closeDrawer: 0, closeModal: 0, render: 0, alert: 0, fetch: 0, reloaded: false };
   const ctx = {
     STATE: { days: [{ items: [] }] },
     drawerItem: null,
@@ -19,6 +19,11 @@ function makeContext({ responseOk = true } = {}) {
     confirm: () => true,
     alert: () => { calls.alert++; },
     closeDrawer: () => { calls.closeDrawer++; },
+    closeModal: () => { calls.closeModal++; },
+    render: () => { calls.render++; },
+    renderTimeline: () => {},
+    renderRightPanel: () => {},
+    syncRegistryCities: () => {},
     setStatus: () => {},
     getToken: () => 'test-token',
     Date,
@@ -63,8 +68,11 @@ function makeContext({ responseOk = true } = {}) {
     if (calls.body.item_id !== 'a1' || calls.body.item_index !== 0 || calls.body.fingerprint.type !== 'place') {
       throw new Error('activity delete sent the wrong target');
     }
-    if (calls.closeDrawer !== 1 || !calls.reloaded) {
-      throw new Error('activity delete did not close and reload after server success');
+    if (calls.closeDrawer < 1 || calls.render !== 1 || calls.reloaded) {
+      throw new Error('activity delete did not close and redraw in place after server success');
+    }
+    if (ctx.STATE.days[0].items.length !== 0) {
+      throw new Error('activity delete did not remove the item from live state');
     }
   }
 
@@ -85,7 +93,11 @@ function makeContext({ responseOk = true } = {}) {
     if (calls.body.fingerprint.mode !== 'Coach' || calls.body.fingerprint.from !== 'Guimaraes') {
       throw new Error('transport delete fingerprint is incomplete');
     }
-    if (!calls.reloaded) throw new Error('transport delete did not reload after server success');
+    if (calls.reloaded) throw new Error('transport delete must not reload after server success');
+    if (calls.render !== 1) throw new Error('transport delete did not redraw in place');
+    if (ctx.STATE.days[0].items.some(it => it && it._id === 't1')) {
+      throw new Error('transport delete did not remove the item from live state');
+    }
   }
 
   {
