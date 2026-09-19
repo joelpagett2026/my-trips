@@ -129,17 +129,17 @@ $quickLinksPanel = <<<'HTML'
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/concerts/">
-      <span class="coming-icon tracker-icon" style="-webkit-mask-image:url(/icons/concert-concerts.svg?v=11);mask-image:url(/icons/concert-concerts.svg?v=11);"></span>
+      <span class="coming-icon orange"><span class="tracker-glyph" aria-hidden="true" style="-webkit-mask-image:url(/icons/concert-concerts.svg?v=12);mask-image:url(/icons/concert-concerts.svg?v=12);"></span></span>
       <span class="coming-copy"><span class="coming-label">Concert Log</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/shows/">
-      <span class="coming-icon purple"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9.5a2.5 2.5 0 0 1 0 5V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3.5a2.5 2.5 0 0 1 0-5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><line x1="14" y1="4" x2="14" y2="7"/><line x1="14" y1="11" x2="14" y2="13"/><line x1="14" y1="17" x2="14" y2="20"/></svg></span>
+      <span class="coming-icon purple"><span class="tracker-glyph" aria-hidden="true" style="-webkit-mask-image:url(/icons/show-shows.svg?v=12);mask-image:url(/icons/show-shows.svg?v=12);"></span></span>
       <span class="coming-copy"><span class="coming-label">Show Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/parks/">
-      <span class="coming-icon green"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 21h20"/><path d="M4 21V9a3 3 0 0 1 6 0c0 6 2 9 5 9s5-4 5-10"/><path d="M15 21v-3"/><path d="M20 21v-8"/></svg></span>
+      <span class="coming-icon green"><span class="tracker-glyph" aria-hidden="true" style="-webkit-mask-image:url(/icons/park-roller-coaster.svg?v=12);mask-image:url(/icons/park-roller-coaster.svg?v=12);"></span></span>
       <span class="coming-copy"><span class="coming-label">Theme Parks</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
@@ -250,6 +250,7 @@ $dashboardPolishStyle = <<<'HTML'
     width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important;
   }
   .quick-links-panel .coming-icon svg{width:18px!important;height:18px!important;}
+  .quick-links-panel .coming-icon .tracker-glyph{width:22px!important;height:22px!important;}
   .quick-links-panel .coming-icon img{width:24px!important;height:24px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
   .quick-links-panel .coming-icon.tracker-icon{background-color:currentColor!important;background-repeat:no-repeat!important;-webkit-mask-repeat:no-repeat!important;mask-repeat:no-repeat!important;-webkit-mask-position:center!important;mask-position:center!important;-webkit-mask-size:22px 22px!important;mask-size:22px 22px!important;}
   .quick-links-panel .coming-label{font-size:11px!important;}
@@ -279,6 +280,7 @@ $dashboardPolishStyle = <<<'HTML'
       width:42px!important;height:42px!important;min-width:42px!important;border-radius:12px!important;
     }
     .quick-links-panel .coming-icon svg{width:20px!important;height:20px!important;}
+    .quick-links-panel .coming-icon .tracker-glyph{width:24px!important;height:24px!important;}
     .quick-links-panel .coming-label{font-size:13px!important;font-weight:800!important;color:#263238!important;}
     .quick-links-panel .mini-arrow{margin-left:auto!important;width:12px!important;height:12px!important;}
     .quick-links-panel + .main-grid{margin-top:0!important;}
