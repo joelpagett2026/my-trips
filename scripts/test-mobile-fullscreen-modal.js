@@ -4,6 +4,8 @@
 const fs = require('fs');
 
 const runtime = fs.readFileSync('trip-delete.js', 'utf8');
+const mobileLayout = fs.readFileSync('trip-mobile-modal-layout.js', 'utf8');
+const completionUi = fs.readFileSync('itinerary-completion.js', 'utf8');
 const compatibility = fs.readFileSync('activity-editor.js', 'utf8');
 const html = fs.readFileSync('new-trip-v2.html', 'utf8');
 const css = fs.readFileSync('itinerary-v2-style.css', 'utf8');
@@ -44,13 +46,18 @@ assert(runtime.includes('if (matches.length === 1) itemIdx = matches[0];'), 'amb
 
 // Fullscreen modal is now pure dynamic-viewport CSS. This avoids the previous
 // visualViewport render/hit-test split in the iPhone Home Screen app.
-assert(runtime.includes('height:100dvh !important;'), 'mobile editor must use dynamic viewport height');
+assert(runtime.includes('height:var(--modal-vv-height, 100dvh) !important;'), 'mobile editor must use the shared visible viewport height');
+assert(runtime.includes('top:var(--modal-vv-top, 0px) !important;'), 'mobile editor must follow the visible viewport top');
 assert(runtime.includes('border-radius:0 !important;'), 'mobile editor must not regress to a bottom sheet');
 assert(runtime.includes('background:#fff !important;'), 'mobile editor must remain opaque');
 assert(runtime.includes('touch-action:auto !important;'), 'modal shell must not suppress button taps');
 assert(runtime.includes('#modal-overlay .modal-foot .modal-btn.secondary { display:none !important; }'), 'mobile Cancel must remain hidden so X is the manual dismiss control');
-assert(!runtime.includes('visualViewport.offsetTop'), 'mobile editor must never apply visualViewport.offsetTop');
-assert(!runtime.includes('visualViewport.pageTop'), 'mobile editor must never apply visualViewport.pageTop');
+assert(mobileLayout.includes('window.visualViewport'), 'shared mobile modal runtime must track the iOS visual viewport');
+assert(mobileLayout.includes("--modal-vv-height"), 'shared mobile modal runtime must publish visible viewport height');
+assert(mobileLayout.includes("--modal-vv-top"), 'shared mobile modal runtime must publish visible viewport top');
+assert(mobileLayout.includes(".modal-overlay:not(#modal-overlay)"), 'keyboard-safe viewport rules must cover every non-activity popup modal');
+assert(completionUi.includes("window.__syncMobileModalViewport"), 'entry enhancements must delegate keyboard sizing to the shared modal runtime');
+assert(!completionUi.includes("--entry-viewport-height"), 'legacy activity-only viewport sizing must be removed');
 
 // Old bottom-sheet styles are still present elsewhere, so V4 must remain strong
 // enough to override them rather than assuming they were removed.
