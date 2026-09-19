@@ -9,7 +9,7 @@
 <link rel="icon" href="/icons/trips-favicon.ico">
 <link rel="apple-touch-icon" href="/icons/trips-apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/itinerary-v2-style.css?v=345">
+<link rel="stylesheet" href="/itinerary-v2-style.css?v=346">
 <script src="/auth.js?v=1" defer></script>
 <script src="/db.js?v=1" defer></script>
 </head>
@@ -3207,11 +3207,17 @@ document.addEventListener('click', e => {
   }
 });
 
+function shouldAutoFocusModalInput() {
+  return window.matchMedia('(min-width: 769px) and (pointer: fine)').matches;
+}
+
 function openModal() {
   setModalTab('single');
   document.getElementById('modal-tabs').style.display = '';
   document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('f-place-location').focus(), 100);
+  if (shouldAutoFocusModalInput()) {
+    setTimeout(() => document.getElementById('f-place-location').focus(), 100);
+  }
 }
 
 function closeModal() {
@@ -3397,7 +3403,7 @@ function openQuickJourneyModal(editTarget) {
   attachPlacesAutocomplete('f-qj-start');
   attachPlacesAutocomplete('f-qj-end');
   document.getElementById('quick-journey-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('f-qj-start').focus(), 100);
+  if (shouldAutoFocusModalInput()) setTimeout(() => document.getElementById('f-qj-start').focus(), 100);
 }
 
 function closeQuickJourneyModal() {
@@ -4111,7 +4117,7 @@ function openHotelModal(idx) {
   }
 
   document.getElementById('hotel-modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('hf-name').focus(), 80);
+  if (shouldAutoFocusModalInput()) setTimeout(() => document.getElementById('hf-name').focus(), 80);
 }
 
 function closeHotelModal() {
