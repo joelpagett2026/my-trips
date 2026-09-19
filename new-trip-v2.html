@@ -2349,16 +2349,19 @@ function renderSidebarReadiness() {
   let hotelDone = 0;
   for (let i = 0; i < nights; i++) if (hotelForDay(i) || days[i]?.noAccommodation) hotelDone++;
 
-  // MEALS: at least one meal per day across ALL days.
-  // A hotel breakfast counts as the meal for that day if breakfast is included.
+  // MEALS: arrival/departure days that already contain travel are exempt.
+  // A hotel breakfast counts as the meal for any other day if breakfast is included.
   let mealDone = 0;
+  let mealTotal = 0;
   days.forEach((d, i) => {
+    const isTravelDay = (i === 0 && outboundOk) || (i === N - 1 && returnOk);
+    if (isTravelDay) return;
+    mealTotal++;
     const hasMealItem = (d.items||[]).some(it => it && it.type === 'meal');
     const hotel = hotelForDay(i);
     const hotelBreakfast = hasBreakfast(hotel);
     if (hasMealItem || hotelBreakfast) mealDone++;
   });
-  const mealTotal = N;
 
   // ACTIVITIES: at least one per day, excluding arrival (day 0) and departure (last day).
   const middleDays = Math.max(N - 2, 0);
