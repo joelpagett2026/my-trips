@@ -322,7 +322,9 @@
     const overlayRect = overlay.getBoundingClientRect();
     const head = overlay.querySelector('.modal-head');
     const headBottom = head ? head.getBoundingClientRect().bottom : overlayRect.top;
-    const desiredTop = Math.max(overlayRect.top + 12, headBottom + 18);
+    // Leave a little breathing room under the fixed header so the field label
+    // remains visible as well as the input itself.
+    const desiredTop = Math.max(overlayRect.top + 12, headBottom + 58);
     const maxBottom = overlayRect.bottom - 18;
     const rect = field.getBoundingClientRect();
 
