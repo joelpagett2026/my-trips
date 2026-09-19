@@ -78,6 +78,8 @@
     manualClickDepth: 0,
     suppressTrustedClickUntil: 0,
     lastTouchAction: '',
+    modalOpenedAt: 0,
+    lastFormIntentAt: 0,
   };
 
   const MOBILE_QUERY = '(max-width: 768px)';
@@ -362,6 +364,8 @@
       state.modalSession += 1;
       state.saveBusy = false;
       state.removeBusy = false;
+      state.modalOpenedAt = (window.performance && performance.now) ? performance.now() : Date.now();
+      state.lastFormIntentAt = 0;
     }
 
     if (!overlay.classList.contains('open')) {
@@ -659,6 +663,37 @@
     }, true);
   }
 
+  function installMobileInitialFocusGuard() {
+    const overlay = document.getElementById('modal-overlay');
+    if (!overlay || overlay.dataset.mobileFocusGuard === '1') return;
+    overlay.dataset.mobileFocusGuard = '1';
+
+    const now = () => (window.performance && performance.now) ? performance.now() : Date.now();
+    const isFormControl = (el) => !!(el && el.matches && el.matches('input, textarea, select, [contenteditable="true"]'));
+
+    const recordIntent = (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (isFormControl(target)) state.lastFormIntentAt = now();
+    };
+
+    overlay.addEventListener('pointerdown', recordIntent, true);
+    overlay.addEventListener('touchstart', recordIntent, { capture:true, passive:true });
+
+    // A legacy delayed .focus() used to summon the iPhone keyboard as soon as
+    // Add activity opened. Block only that initial programmatic focus window;
+    // a real tap on a field is recorded above and is always allowed through.
+    overlay.addEventListener('focusin', (event) => {
+      if (!isMobile() || !overlay.classList.contains('open')) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (!isFormControl(target)) return;
+
+      const t = now();
+      const justOpened = state.modalOpenedAt && (t - state.modalOpenedAt) < 700;
+      const userIntendedFocus = state.lastFormIntentAt && (t - state.lastFormIntentAt) < 900;
+      if (justOpened && !userIntendedFocus && typeof target.blur === 'function') target.blur();
+    }, true);
+  }
+
   function installDelegates() {
     const overlay = document.getElementById('modal-overlay');
     const drawer = document.getElementById('drawer');
@@ -720,6 +755,7 @@
   }
 
   ensureStyles();
+  installMobileInitialFocusGuard();
   installDelegates();
   installTouchBridge();
   wrapEntrypoints();
