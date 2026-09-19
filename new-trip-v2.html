@@ -3865,7 +3865,7 @@ function setModalTab(tab) {
   document.getElementById('tab-bulk').classList.toggle('active',  isBulk);
   document.getElementById('modal-delete-btn').style.display = 'none';
   document.getElementById('modal-save-btn').textContent = isBulk ? 'Import all' : 'Save';
-  if (isBulk) setTimeout(() => document.getElementById('f-bulk-list').focus(), 80);
+  if (isBulk && shouldAutoFocusModalInput()) setTimeout(() => document.getElementById('f-bulk-list').focus(), 80);
 }
 
 function saveBulkItems() {
