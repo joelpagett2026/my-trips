@@ -584,12 +584,17 @@
         if (getHotelForDay(i) || days[i]?.noAccommodation) hotelDone++;
       }
 
+      // Arrival/departure days that already contain travel do not require a
+      // meal plan to count the trip as fully planned.
       let mealDone = 0;
+      let mealTotal = 0;
       days.forEach((day, index) => {
+        const isTravelDay = (index === 0 && outboundOk) || (index === N - 1 && returnOk);
+        if (isTravelDay) return;
+        mealTotal++;
         const hasMeal = (day.items || []).some(item => item && item.type === 'meal');
         if (hasMeal || hasBreakfast(getHotelForDay(index))) mealDone++;
       });
-      const mealTotal = N;
 
       const middleDays = Math.max(N - 2, 0);
       let activityDone = 0;
