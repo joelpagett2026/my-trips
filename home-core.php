@@ -249,10 +249,10 @@ $dashboardPolishStyle = <<<'HTML'
   .quick-links-panel .coming-icon{
     width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important;
   }
-  .quick-links-panel .coming-icon svg{width:18px!important;height:18px!important;}
-  .quick-links-panel .coming-icon .tracker-glyph{width:22px!important;height:22px!important;}
-  .quick-links-panel .coming-icon img{width:24px!important;height:24px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
-  .quick-links-panel .coming-icon.tracker-icon{background-color:currentColor!important;background-repeat:no-repeat!important;-webkit-mask-repeat:no-repeat!important;mask-repeat:no-repeat!important;-webkit-mask-position:center!important;mask-position:center!important;-webkit-mask-size:22px 22px!important;mask-size:22px 22px!important;}
+  .quick-links-panel .coming-icon svg{width:22px!important;height:22px!important;}
+  .quick-links-panel .coming-icon .tracker-glyph{width:26px!important;height:26px!important;}
+  .quick-links-panel .coming-icon img{width:28px!important;height:28px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
+  .quick-links-panel .coming-icon.tracker-icon{background-color:currentColor!important;background-repeat:no-repeat!important;-webkit-mask-repeat:no-repeat!important;mask-repeat:no-repeat!important;-webkit-mask-position:center!important;mask-position:center!important;-webkit-mask-size:26px 26px!important;mask-size:26px 26px!important;}
   .quick-links-panel .coming-label{font-size:11px!important;}
   .quick-links-panel .mini-arrow{width:11px!important;height:11px!important;}
 
@@ -279,8 +279,8 @@ $dashboardPolishStyle = <<<'HTML'
     .quick-links-panel .coming-icon{
       width:42px!important;height:42px!important;min-width:42px!important;border-radius:12px!important;
     }
-    .quick-links-panel .coming-icon svg{width:20px!important;height:20px!important;}
-    .quick-links-panel .coming-icon .tracker-glyph{width:24px!important;height:24px!important;}
+    .quick-links-panel .coming-icon svg{width:24px!important;height:24px!important;}
+    .quick-links-panel .coming-icon .tracker-glyph{width:28px!important;height:28px!important;}
     .quick-links-panel .coming-label{font-size:13px!important;font-weight:800!important;color:#263238!important;}
     .quick-links-panel .mini-arrow{margin-left:auto!important;width:12px!important;height:12px!important;}
     .quick-links-panel + .main-grid{margin-top:0!important;}
