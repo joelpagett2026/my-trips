@@ -134,7 +134,7 @@ $quickLinksPanel = <<<'HTML'
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/shows/">
-      <span class="coming-icon purple"><span class="tracker-glyph" aria-hidden="true" style="-webkit-mask-image:url(/icons/show-shows.svg?v=12);mask-image:url(/icons/show-shows.svg?v=12);"></span></span>
+      <span class="coming-icon purple"><span class="tracker-glyph" aria-hidden="true" style="-webkit-mask-image:url(/icons/show-shows.svg?v=13);mask-image:url(/icons/show-shows.svg?v=13);"></span></span>
       <span class="coming-copy"><span class="coming-label">Show Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
