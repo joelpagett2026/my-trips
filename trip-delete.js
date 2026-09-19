@@ -412,8 +412,31 @@
   function closeEditor() {
     state.saveBusy = false;
     state.removeBusy = false;
+    state.touch = null;
+    state.suppressTrustedClickUntil = 0;
+    state.lastTouchAction = '';
+    state.modalOpenedAt = 0;
+    state.lastFormIntentAt = 0;
+
+    // Dismiss the iOS keyboard before releasing the modal. Leaving a focused
+    // input inside a hidden overlay can keep Safari's hit-testing/visual
+    // viewport attached to the old modal and make the next + tap appear dead.
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active.closest?.('#modal-overlay')) {
+      try { active.blur(); } catch (_) {}
+    }
+
     if (legacy.closeModal) legacy.closeModal.call(window);
-    window.setTimeout(releaseClosedOverlay, 0);
+    document.documentElement.classList.remove('modal-keyboard-open');
+    document.documentElement.style.removeProperty('--modal-vv-top');
+    document.documentElement.style.removeProperty('--modal-vv-height');
+
+    window.setTimeout(() => {
+      releaseClosedOverlay();
+      if (typeof window.__syncMobileModalViewport === 'function') {
+        window.__syncMobileModalViewport();
+      }
+    }, 0);
   }
 
   function saveActivity() {
@@ -731,8 +754,17 @@
   function wrapEntrypoints() {
     if (legacy.openAddItem) {
       window.openAddItem = function (...args) {
+        // Every + press is a completely fresh editor session, including after
+        // the X was used while the iOS keyboard was open.
+        state.touch = null;
+        state.suppressTrustedClickUntil = 0;
+        state.lastTouchAction = '';
+        document.documentElement.classList.remove('modal-keyboard-open');
         const result = legacy.openAddItem.apply(this, args);
         syncModalOpen({ newSession:true });
+        if (typeof window.__syncMobileModalViewport === 'function') {
+          window.setTimeout(window.__syncMobileModalViewport, 0);
+        }
         return result;
       };
     }
