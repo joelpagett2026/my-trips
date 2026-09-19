@@ -188,10 +188,12 @@
         }
         #modal-overlay {
           position:fixed !important;
-          inset:0 !important;
+          left:0 !important;
+          right:0 !important;
+          top:var(--modal-vv-top, 0px) !important;
+          bottom:auto !important;
           width:100vw !important;
-          height:100vh !important;
-          height:100dvh !important;
+          height:var(--modal-vv-height, 100dvh) !important;
           min-height:0 !important;
           padding:0 !important;
           margin:0 !important;
