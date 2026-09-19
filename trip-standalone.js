@@ -98,15 +98,41 @@
   const standalone = window.navigator.standalone === true;
   if (standalone) document.documentElement.classList.add('ios-standalone');
 
-  // iOS Home Screen apps can restore a previously suspended document without
-  // requesting it from the server again. If that happens, force one real
-  // navigation so newly deployed itinerary code is actually loaded.
+  // iOS Home Screen apps can keep the same document alive for a long time.
+  // Refresh once per app foreground session, not only on BFCache restoration,
+  // so newly deployed itinerary/modal code is actually picked up.
   if (standalone) {
-    window.addEventListener('pageshow', function (event) {
-      if (!event.persisted) return;
+    const freshKey = 'mytrips-app-fresh-url';
+    const currentUrl = new URL(window.location.href);
+    const currentFresh = currentUrl.searchParams.get('_appfresh') || '';
+    let sessionFresh = '';
+    try { sessionFresh = sessionStorage.getItem(freshKey) || ''; } catch (_) {}
+
+    function forceFreshNavigation() {
       const url = new URL(window.location.href);
-      url.searchParams.set('_appfresh', Date.now().toString());
+      const token = Date.now().toString();
+      try { sessionStorage.setItem(freshKey, token); } catch (_) {}
+      url.searchParams.set('_appfresh', token);
       window.location.replace(url.toString());
+    }
+
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
+        forceFreshNavigation();
+        return;
+      }
+      if (!currentFresh || currentFresh !== sessionFresh) forceFreshNavigation();
+    });
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible') return;
+      // A suspended Home Screen app may resume without pageshow. A fresh
+      // navigation here is deliberately limited to once per foreground session.
+      const url = new URL(window.location.href);
+      const token = url.searchParams.get('_appfresh') || '';
+      let remembered = '';
+      try { remembered = sessionStorage.getItem(freshKey) || ''; } catch (_) {}
+      if (!token || token !== remembered) forceFreshNavigation();
     });
   }
 })();
