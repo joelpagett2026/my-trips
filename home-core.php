@@ -123,8 +123,7 @@ $quickLinksPanel = <<<'HTML'
       <span class="coming-copy"><span class="coming-label">Trips</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
-    <a class="coming-item" href="/holidays/">
-      <span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.2"/><line x1="3" y1="9" x2="21" y2="9"/><rect x="5.6" y="2.2" width="2" height="4.2" rx="1"/><rect x="9.2" y="2.2" width="2" height="4.2" rx="1"/><rect x="12.8" y="2.2" width="2" height="4.2" rx="1"/><rect x="16.4" y="2.2" width="2" height="4.2" rx="1"/><rect x="6" y="11.5" width="2" height="2" rx=".25"/><rect x="10" y="11.5" width="2" height="2" rx=".25"/><rect x="14" y="11.5" width="2" height="2" rx=".25"/><rect x="18" y="11.5" width="2" height="2" rx=".25"/><rect x="6" y="15.3" width="2" height="2" rx=".25"/><rect x="10" y="15.3" width="2" height="2" rx=".25"/><rect x="14" y="15.3" width="2" height="2" rx=".25"/><rect x="18" y="15.3" width="2" height="2" rx=".25"/></svg></span>
+    $1<span class="coming-icon orange"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h15v3.2c0 5.2-1.35 8.75-4.25 11.3H2.2C4.05 17.2 5 13.75 5 8.2V5Z"/><path d="M5 8.1h15"/><path d="M5 19.5V22h15V8.2"/><path d="M8 2v4M12.5 2v4M17 2v4"/></svg></span>
       <span class="coming-copy"><span class="coming-label">Holiday Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
