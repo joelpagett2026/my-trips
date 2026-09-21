@@ -1423,6 +1423,7 @@ async function loadData() {
       STATE = result.data;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
       applyShareViewBanner();
+      jumpToToday();
       render();
       return;
     }
@@ -1459,6 +1460,11 @@ async function loadData() {
     }
     return;
   }
+  // Resolve the active day before the first render. Rendering Day 1 and then
+  // changing activeDay afterwards leaves timeline rows bound to the wrong day's
+  // item indices until the user changes day/view, which can make completion
+  // controls briefly appear beside ineligible rows such as flights.
+  jumpToToday();
   render();
 }
 
@@ -3852,7 +3858,6 @@ async function revokeShareLink(token) {
 async function init() {
   await loadSnapshots();
   await loadData();
-  jumpToToday();
 }
 
 function jumpToToday() {
