@@ -5,6 +5,7 @@
   const RECORD_ID = 'holiday-allowance-v2';
   const JOEL_ALLOWANCE = 28;
   const JON_FLEXIBLE_ALLOWANCE = 24;
+  const JON_BANK_HOLIDAYS = 8;
   const defaults = {
     '2026-27': [
       { dest:'China', start:'31/03/2026', end:'15/04/2026', ret:'17/04/2026', days:5, lieu:2, hol:10, notes:'One Lieu from March 6th, One from additional hours. Working 25/04' },
@@ -317,7 +318,7 @@
       id:uid('jon'), sourceTripId:id, sourcePeriod:period, sourceStatus:'active', status:'pending',
       sourceSnapshot:sharedFields(trip), latestSource:null, suggestedYear:null,
       dest:trip.dest, start:trip.start, end:trip.end, ret:trip.ret,
-      days:'', hol:'', workPattern:'', notes:'',
+      days:'', hol:'', bankHolidays:'', workPattern:'', notes:'',
       sentAt:new Date().toISOString(), reviewedAt:null, sourceUpdatedAt:trip.updatedAt
     };
     state.jon[year].push(record);
@@ -385,7 +386,7 @@
   }
 
   function addJon(year) {
-    const record = { id:uid('jon'), sourceTripId:null, sourcePeriod:null, sourceStatus:'personal', status:'accepted', dest:'', start:'', end:'', ret:'', days:'', hol:'', workPattern:'', notes:'', reviewedAt:new Date().toISOString() };
+    const record = { id:uid('jon'), sourceTripId:null, sourcePeriod:null, sourceStatus:'personal', status:'accepted', dest:'', start:'', end:'', ret:'', days:'', hol:'', bankHolidays:'', workPattern:'', notes:'', reviewedAt:new Date().toISOString() };
     state.jon[year].push(record);
     persistNow();
     return record;
@@ -395,14 +396,15 @@
     const included = trips.filter(item => item.status !== 'pending' && item.status !== 'cancelled');
     const days = included.reduce((sum, item) => sum + number(item.days), 0);
     const hol = included.reduce((sum, item) => sum + number(item.hol), 0);
+    const bankHolidays = included.reduce((sum, item) => sum + number(item.bankHolidays), 0);
     const lieu = included.reduce((sum, item) => sum + number(item.lieu), 0);
-    return { days, hol, lieu, remaining:allowance - hol };
+    return { days, hol, lieu, remaining:allowance - hol, bankHolidays, bankRemaining:JON_BANK_HOLIDAYS - bankHolidays };
   }
 
   window.HolidayV2 = {
     load, getState:() => state, persistNow, findJonBySource, updateJoelTrip, sendToJon, deleteJoelTrip, addJoelTrip,
     updateJon, applySourceUpdate, keepJonVersion, deleteJon, addJon, totals,
-    JOEL_ALLOWANCE, JON_FLEXIBLE_ALLOWANCE
+    JOEL_ALLOWANCE, JON_FLEXIBLE_ALLOWANCE, JON_BANK_HOLIDAYS
   };
 })();
 

@@ -138,14 +138,18 @@ function runtime(storage, remote = null) {
   assert.equal(app.sendToJon('2026-27', joel.id).id, sent.id, 'duplicate sends must return the existing link');
   assert.equal(app.getState().jon['2026'].length, 1);
   assert.equal(app.totals(app.getState().jon['2026'], 24).hol, 0, 'pending trips must not affect totals');
+  app.updateJon('2026', sent.id, { bankHolidays:2 }, false);
+  assert.equal(app.totals(app.getState().jon['2026'], 24).bankRemaining, 8, 'pending bank holidays must not affect totals');
 
   app.updateJon('2026', sent.id, { days:4, hol:2, workPattern:'My own calculation' }, true);
   assert.equal(sent.status, 'accepted');
   assert.equal(app.totals(app.getState().jon['2026'], 24).remaining, 22);
+  assert.equal(app.totals(app.getState().jon['2026'], 24).bankRemaining, 6, 'bank holidays have an independent balance');
 
   app.updateJoelTrip('2026-27', joel.id, { end:'20/06/2026' });
   assert.equal(sent.status, 'update_available');
   assert.equal(sent.hol, 2, 'Joel edits must not overwrite Jonathan allowance fields');
+  assert.equal(sent.bankHolidays, 2, 'Joel edits must not overwrite bank holiday calculations');
   app.applySourceUpdate('2026', sent.id);
   assert.equal(sent.end, '20/06/2026');
   assert.equal(sent.hol, 2);
@@ -167,11 +171,13 @@ function runtime(storage, remote = null) {
   await refreshed.load();
   assert.equal(refreshed.getState().jon['2026'][0].sourceStatus, 'cancelled');
   assert.equal(refreshed.getState().jon['2026'][0].hol, 2);
+  assert.equal(refreshed.getState().jon['2026'][0].bankHolidays, 2, 'bank holiday values must survive reload');
 
   const next = refreshed.getState().joel['2027-28'][0];
   const nextSent = refreshed.sendToJon('2027-28', next.id);
   assert.equal(nextSent.status, 'pending');
   assert.equal(refreshed.getState().jon['2027'].length, 1);
+  assert.equal(refreshed.totals(refreshed.getState().jon['2027'], 24).bankRemaining, 8, 'new calendar year gets its own eight days');
 
   console.log('PASS: migration, empty-V2 recovery, 2027/28 merge recovery, trip-registry recovery, server-data preservation, add/edit/delete, share, duplicate prevention, independent review, update, cancellation, refresh, both years');
 })().catch(error => { console.error(error); process.exit(1); });

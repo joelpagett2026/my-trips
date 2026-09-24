@@ -156,6 +156,7 @@
       const calculation = el('div', 'v2-grid jon-calc-grid');
       calculation.appendChild(field('Your days off', record.days, { type:'number', inputMode:'decimal', onInput:value => { HolidayV2.updateJon(year, record.id, {days:value}, false); updateJonTotals(); } }));
       calculation.appendChild(field('Your holiday days', record.hol, { type:'number', inputMode:'decimal', onInput:value => { HolidayV2.updateJon(year, record.id, {hol:value}, false); updateJonTotals(); } }));
+      calculation.appendChild(field('Bank holiday days', record.bankHolidays, { type:'number', inputMode:'decimal', onInput:value => { HolidayV2.updateJon(year, record.id, {bankHolidays:value}, false); updateJonTotals(); } }));
       calculation.appendChild(field('Working pattern / calculation', record.workPattern, { wide:true, placeholder:'How these dates affect your working days', onInput:value => HolidayV2.updateJon(year, record.id, {workPattern:value}, false) }));
       calculation.appendChild(field('Your notes', record.notes, { wide:true, placeholder:'Optional notes', onInput:value => HolidayV2.updateJon(year, record.id, {notes:value}, false) }));
       card.appendChild(calculation);
@@ -179,7 +180,16 @@
 
   function updateJonTotals() {
     const records = HolidayV2.getState().jon[year] || [];
-    setTotals(HolidayV2.totals(records, HolidayV2.JON_FLEXIBLE_ALLOWANCE), HolidayV2.JON_FLEXIBLE_ALLOWANCE, false);
+    const totals = HolidayV2.totals(records, HolidayV2.JON_FLEXIBLE_ALLOWANCE);
+    setTotals(totals, HolidayV2.JON_FLEXIBLE_ALLOWANCE, false);
+    $('#holiday-used').textContent = totals.hol;
+    $('#holiday-remaining').textContent = totals.remaining;
+    $('#holiday-remaining').className = 'allowance-number ' + (totals.remaining < 0 ? 'red' : 'green');
+    $('#bank-used').textContent = totals.bankHolidays;
+    $('#bank-remaining').textContent = totals.bankRemaining;
+    $('#bank-remaining').className = 'allowance-number ' + (totals.bankRemaining < 0 ? 'red' : 'green');
+    $('#bank-progress').value = totals.bankHolidays;
+    $('#holiday-progress').value = totals.hol;
     const pending = records.filter(item => item.status === 'pending' || item.status === 'update_available').length;
     $('#pending-count').textContent = pending;
     $('#pending-card').classList.toggle('attention', pending > 0);
