@@ -36,6 +36,11 @@ function runtime(storage, remote = null) {
   assert.equal(app.getState().joel['2026-27'][0].dest, 'Migration check');
   assert.equal(app.getState().joel['2027-28'][0].dest, 'Next year');
   assert(storage.has('holiday-allowance-2026-27-v1'), 'legacy records must remain untouched');
+  const unsorted = [{start:''}, {start:'09/10/2027'}, {start:'18/09/2026'}, {start:'31/02/2026'}, {start:'27/03/2027'}];
+  assert.deepEqual(Array.from(app.sortedByStartDate(unsorted), item => item.start),
+    ['18/09/2026', '27/03/2027', '09/10/2027', '', '31/02/2026'],
+    'dated trips sort chronologically and incomplete dates stay at the end');
+  assert.equal(unsorted[0].start, '', 'sorting must not change stored record order');
 
   const repairStorage = new Map();
   repairStorage.set('holiday-allowance-2026-27-v1', JSON.stringify([

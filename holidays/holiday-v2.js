@@ -132,10 +132,23 @@
   function parseCalendarDate(value) {
     const text = String(value || '').trim();
     let match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
-    if (match) return new Date(Date.UTC(Number(match[3]), Number(match[2]) - 1, Number(match[1])));
+    if (match) return checkedDate(Number(match[3]), Number(match[2]), Number(match[1]));
     match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
-    if (match) return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+    if (match) return checkedDate(Number(match[1]), Number(match[2]), Number(match[3]));
     return null;
+  }
+
+  function checkedDate(year, month, day) {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day ? date : null;
+  }
+
+  function sortedByStartDate(trips) {
+    return [...trips].sort((a, b) => {
+      const first = parseCalendarDate(a.start)?.getTime() ?? Infinity;
+      const second = parseCalendarDate(b.start)?.getTime() ?? Infinity;
+      return first === second ? 0 : first - second;
+    });
   }
 
   function formatCalendarDate(date) {
@@ -403,7 +416,7 @@
 
   window.HolidayV2 = {
     load, getState:() => state, persistNow, findJonBySource, updateJoelTrip, sendToJon, deleteJoelTrip, addJoelTrip,
-    updateJon, applySourceUpdate, keepJonVersion, deleteJon, addJon, totals,
+    updateJon, applySourceUpdate, keepJonVersion, deleteJon, addJon, totals, sortedByStartDate,
     JOEL_ALLOWANCE, JON_FLEXIBLE_ALLOWANCE, JON_BANK_HOLIDAYS
   };
 })();

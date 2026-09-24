@@ -21,6 +21,7 @@
     input.placeholder = options.placeholder || '';
     if (options.inputMode) input.inputMode = options.inputMode;
     input.addEventListener('input', () => options.onInput?.(input.value));
+    if (options.onBlur) input.addEventListener('blur', options.onBlur);
     wrap.appendChild(input);
     return wrap;
   }
@@ -30,6 +31,14 @@
     node.type = 'button';
     node.addEventListener('click', onClick);
     return node;
+  }
+
+  function reorderCards(records) {
+    const cards = new Map([...$('#cards').children].map(card => [card.dataset.tripId, card]));
+    HolidayV2.sortedByStartDate(records).forEach(record => {
+      const card = cards.get(record.id);
+      if (card) $('#cards').appendChild(card);
+    });
   }
 
   function setTotals(values, allowance, includeLieu) {
@@ -58,7 +67,7 @@
     const trips = HolidayV2.getState().joel[period];
     const container = $('#cards');
     container.replaceChildren();
-    trips.forEach(trip => {
+    HolidayV2.sortedByStartDate(trips).forEach(trip => {
       const card = el('article', 'v2-trip-card');
       card.dataset.tripId = trip.id;
       const top = el('div', 'v2-card-top');
@@ -71,7 +80,7 @@
 
       const dates = el('div', 'v2-grid dates-grid');
       [['Start date','start'],['End date','end'],['Return date','ret']].forEach(([label,key]) => {
-        dates.appendChild(field(label, trip[key], { placeholder:'dd/mm/yyyy', inputMode:'numeric', onInput:value => { HolidayV2.updateJoelTrip(period, trip.id, {[key]:value}); refreshJoelStatus(card, trip); } }));
+        dates.appendChild(field(label, trip[key], { placeholder:'dd/mm/yyyy', inputMode:'numeric', onBlur:key === 'start' ? () => reorderCards(trips) : null, onInput:value => { HolidayV2.updateJoelTrip(period, trip.id, {[key]:value}); refreshJoelStatus(card, trip); } }));
       });
       card.appendChild(dates);
 
@@ -130,8 +139,9 @@
     const records = HolidayV2.getState().jon[year] || [];
     const container = $('#cards');
     container.replaceChildren();
-    records.forEach(record => {
+    HolidayV2.sortedByStartDate(records).forEach(record => {
       const card = el('article', 'v2-trip-card jon-card');
+      card.dataset.tripId = record.id;
       const state = jonStatus(record);
       const notice = el('div', 'review-banner ' + state.cls, state.text);
       card.appendChild(notice);
@@ -149,7 +159,7 @@
 
       const details = el('div', 'v2-grid jon-details-grid');
       [['Destination','dest'],['Start date','start'],['End date','end'],['Return date','ret']].forEach(([label,key], index) => {
-        details.appendChild(field(label, record[key], { wide:index === 0, placeholder:key === 'dest' ? 'Destination' : 'dd/mm/yyyy', onInput:value => HolidayV2.updateJon(year, record.id, {[key]:value}, false) }));
+        details.appendChild(field(label, record[key], { wide:index === 0, placeholder:key === 'dest' ? 'Destination' : 'dd/mm/yyyy', onBlur:key === 'start' ? () => reorderCards(records) : null, onInput:value => HolidayV2.updateJon(year, record.id, {[key]:value}, false) }));
       });
       card.appendChild(details);
 

@@ -221,7 +221,7 @@ jobs:
           curl --fail --show-error --silent --retry 2 --retry-delay 2 \
             "https://joelpagett.co.uk/holidays/2026-27.html" --output /tmp/holiday-2026.html
           grep -q 'Joel.*2026 / 27' /tmp/holiday-2026.html
-          grep -q '/holidays/holiday-v2.js?v=7' /tmp/holiday-2026.html
+          grep -q '/holidays/holiday-v2.js?v=9' /tmp/holiday-2026.html
 
           curl --fail --show-error --silent --retry 2 --retry-delay 2 \
             "https://joelpagett.co.uk/holidays/2027-28.html" --output /tmp/holiday-2027.html

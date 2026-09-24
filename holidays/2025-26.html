@@ -185,15 +185,38 @@ function cell(label, content, cls) {
   return d;
 }
 
+function startTime(value) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim());
+  if (!match) return Infinity;
+  const day = Number(match[1]), month = Number(match[2]), year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day
+    ? date.getTime() : Infinity;
+}
+
+function orderTrips() {
+  const container = document.getElementById('cards');
+  const addButton = container.querySelector('.add-card');
+  [...container.querySelectorAll('.trip-card')]
+    .sort((a, b) => {
+      const first = startTime(a.startInput.value), second = startTime(b.startInput.value);
+      return first === second ? 0 : first - second;
+    })
+    .forEach(card => container.insertBefore(card, addButton));
+}
+
 function addTrip(data) {
   const d = data || { dest: '', start: '', end: '', ret: '', days: '', lieu: '', hol: '', notes: '' };
   const card = document.createElement('div');
   card.className = 'trip-card';
+  const startInput = inp(d.start, '', 'dd/mm/yyyy');
+  card.startInput = startInput;
+  startInput.addEventListener('blur', orderTrips);
 
   const header = document.createElement('div');
   header.className = 'card-header';
   header.appendChild(cell('Destination', inp(d.dest, 'dest-input', 'e.g. Paris')));
-  header.appendChild(cell('Start date',  inp(d.start, '', 'dd/mm/yyyy')));
+  header.appendChild(cell('Start date',  startInput));
   header.appendChild(cell('End date',    inp(d.end,   '', 'dd/mm/yyyy')));
   header.appendChild(cell('Return date', inp(d.ret,   '', 'dd/mm/yyyy')));
 
@@ -256,7 +279,7 @@ function recalc() {
   }
 }
 
-trips.forEach(addTrip);
+trips.sort((a, b) => startTime(a.start) - startTime(b.start)).forEach(addTrip);
 </script>
 
   <div class="print-sig-block">Manager signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
