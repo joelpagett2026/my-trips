@@ -396,10 +396,17 @@ $dashboardPolishScript = <<<'HTML'
       const rec = await window.dbLoad('shows');
       const list = rec && Array.isArray(rec.list) ? rec.list : [];
       const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const upcoming = list.filter(c => { const d = parseMY(c.date); return d && d >= monthStart; })
+      const hasExactShowDay = c => /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(c.date || '').trim());
+      const isUpcomingShow = c => {
+        const d = parseMY(c.date);
+        if (!d) return false;
+        return hasExactShowDay(c) ? d >= today : d >= monthStart;
+      };
+      const upcoming = list.filter(isUpcomingShow)
                            .sort((a,b) => parseMY(a.date) - parseMY(b.date));
-      const seen = list.filter(c => { const d = parseMY(c.date); return !d || d < monthStart; });
+      const seen = list.filter(c => { const d = parseMY(c.date); return !d || !isUpcomingShow(c); });
       setText('sh-shows', seen.length);
       setText('sh-theatres', new Set(seen.map(c => (c.theatre || '').trim().toLowerCase()).filter(Boolean)).size);
       setText('sh-year', seen.filter(c => (c.date || '').includes(String(now.getFullYear()))).length);
