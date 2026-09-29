@@ -1040,8 +1040,6 @@ function buildDynamicCard(t) {
 
   const cardClass = t.status==='upcoming' ? 'trip-card card-upcoming' : t.status==='planning' ? 'trip-card card-planning' : 'trip-card card-past';
   const a = document.createElement('a'); a.className = cardClass; a.href = url;
-  const mapId = 'dyn-map-' + t.slug;
-
   // Flags HTML from stored flags array
   const flagsId = 'dyn-flags-' + t.slug;
   const flagsHtml = (t.flags || []).map(cc =>
@@ -1050,7 +1048,7 @@ function buildDynamicCard(t) {
 
   const imageAreaHtml = t.photo
     ? `<img src="${t.photo}" alt="${t.dest}" style="width:100%;height:100%;object-fit:cover;">`
-    : `<div id="${mapId}" class="card-map"></div>`;
+    : `<div style="width:100%;height:100%;background:#e0eef0;"></div>`;
 
   a.innerHTML = `<div class="card-image-area" style="background:#e0eef0;position:relative;">
     ${imageAreaHtml}
@@ -1083,60 +1081,7 @@ function buildDynamicCard(t) {
     }, 150);
   }
 
-  // Render map — use stored points if available, else geocode destination
-  // Skipped entirely when a cover photo is set for this trip.
-  if (!t.photo) setTimeout(async () => {
-    try {
-      const mapEl = document.getElementById(mapId);
-      if (!mapEl) return;
-
-      let points = t.points || [];
-
-      // Fallback: geocode from itinerary day data or destination name
-      if (!points.length) {
-        const data = await window.dbLoad(t.slug).catch(() => null);
-        const days = (data && data.days) ? data.days : [];
-        const cityNames = [];
-        days.forEach(d => {
-          if (d.from && d.from.trim()) cityNames.push(d.from.trim());
-          if (d.to && d.to.trim()) cityNames.push(d.to.trim());
-          if (d.loc && d.loc.trim()) cityNames.push(d.loc.trim());
-        });
-        const seen = new Set();
-        const unique = [t.dest, ...cityNames].filter(c => { if(seen.has(c)) return false; seen.add(c); return true; });
-        const coords = (await Promise.all(unique.map(c => geocode(c)))).filter(Boolean);
-        points = coords.map(c => [c.lat, c.lon]);
-      }
-
-      if (!points.length) return;
-
-      const mapColor = t.status === 'planning' ? '#ff9500' : t.status === 'past' ? '#b8b8b8' : '#0e7a87';
-      await loadGoogleMapsAssets();
-      await new Promise(r => setTimeout(r, 30));
-      const bounds = new google.maps.LatLngBounds();
-      points.forEach(p => bounds.extend({ lat: p[0], lng: p[1] }));
-      const map = new google.maps.Map(mapEl, {
-        center: bounds.getCenter(), zoom: 5,
-        disableDefaultUI: true, gestureHandling: 'none', keyboardShortcuts: false,
-        styles: GOOGLE_MAPS_STYLE, clickableIcons: false,
-      });
-      if (points.length > 1) {
-        map.fitBounds(bounds, 32);
-        google.maps.event.addListenerOnce(map, 'bounds_changed', () => { if (map.getZoom() > 7) map.setZoom(7); });
-        dashedLine(points.map(p => ({ lat: p[0], lng: p[1] })), mapColor, map);
-      } else {
-        map.setCenter({ lat: points[0][0], lng: points[0][1] });
-        map.setZoom(6);
-      }
-      points.forEach((p, i) => {
-        new google.maps.Marker({
-          position: { lat: p[0], lng: p[1] }, map,
-          icon: { path: google.maps.SymbolPath.CIRCLE, scale: (i===0||i===points.length-1)?6:4, fillColor: mapColor, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
-        });
-      });
-      setTimeout(() => google.maps.event.trigger(map, 'resize'), 200);
-    } catch(e) { console.warn('Card map error:', e); }
-  }, 100);
+  // Trip cards deliberately never render maps. Cover photos are the only card imagery.
 
   return a;
 }
