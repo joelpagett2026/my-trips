@@ -163,6 +163,13 @@ let kindFilter = (() => {
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function placeOf(c) { return [c.theatre, c.location].filter(Boolean).join(', '); }
 function yearOf(c) { const m = (c.date || '').match(/(\d{4})/); return m ? +m[1] : null; }
+function fmtListDate(str) {
+  const p = parseParts(str);
+  if (!p) return str || '';
+  return p.prec === 'day'
+    ? p.d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : p.d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+}
 
 function parseParts(str) {
   str = (str || '').trim();
@@ -199,6 +206,63 @@ function render() {
       (c.name || '').toLowerCase().includes(q) ||
       (c.theatre || '').toLowerCase().includes(q) ||
       (c.comedian || '').toLowerCase().includes(q));
+  }
+
+  // Comedy view: group by individual comedian, then list their shows underneath.
+  // Multi-act nights are intentionally repeated under each comedian who appeared.
+  if (kindFilter === 'comedy') {
+    const comedianMap = new Map();
+    list.forEach(show => {
+      const names = (show.comedian || '').split(',').map(n => n.trim()).filter(Boolean);
+      (names.length ? names : ['Unknown comedian']).forEach(name => {
+        const key = name.toLocaleLowerCase('en-GB');
+        if (!comedianMap.has(key)) comedianMap.set(key, { name, shows: [] });
+        comedianMap.get(key).shows.push(show);
+      });
+    });
+
+    const comedians = [...comedianMap.values()].sort((a, b) =>
+      a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
+    );
+    comedians.forEach(group => group.shows.sort((a, b) =>
+      (parseParts(b.date)?.d || 0) - (parseParts(a.date)?.d || 0)
+      || (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' })
+    ));
+
+    document.getElementById('count-line').textContent =
+      comedians.length + ' comedian' + (comedians.length === 1 ? '' : 's')
+      + ' · ' + list.length + ' show' + (list.length === 1 ? '' : 's');
+
+    const wrap = document.getElementById('list');
+    wrap.innerHTML = '';
+    if (!comedians.length) {
+      wrap.innerHTML = '<div class="empty-state">' + (totalAll ? 'Nothing matches' : 'No comedy shows logged yet') + '</div>';
+      return;
+    }
+
+    comedians.forEach(group => {
+      const g = document.createElement('div');
+      g.className = 'group';
+      g.innerHTML = '<div class="group-head">' + esc(group.name)
+        + '<span class="gh-count">' + group.shows.length + ' show' + (group.shows.length === 1 ? '' : 's') + '</span></div>';
+      const body = document.createElement('div');
+      body.className = 'group-body';
+      group.shows.forEach(show => {
+        const row = document.createElement('div');
+        row.className = 's-row';
+        const sub = [placeOf(show), fmtListDate(show.date)].filter(Boolean).join(' · ');
+        row.innerHTML =
+          '<div class="s-text">'
+          + '<div class="s-name">' + esc(show.name || '') + '</div>'
+          + (sub ? '<div class="s-sub">' + esc(sub) + '</div>' : '')
+          + '</div>'
+          + (show.rating ? starsRow(show.rating, 14) : '<span class="s-noscore">Unrated</span>');
+        body.appendChild(row);
+      });
+      g.appendChild(body);
+      wrap.appendChild(g);
+    });
+    return;
   }
 
   const byName = (a, b) => (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' });
@@ -292,6 +356,8 @@ document.querySelectorAll('.chip').forEach(btn => {
     kindFilter = btn.dataset.kind;
     const TITLE = { musical: 'Musicals', show: 'Shows', comedy: 'Comedy' };
     document.querySelector('.nav-title').textContent = TITLE[kindFilter] || 'Theatre Shows';
+    const segmented = document.querySelector('.segmented');
+    if (segmented) segmented.style.display = kindFilter === 'comedy' ? 'none' : '';
     render();
   };
 });
@@ -303,6 +369,8 @@ document.getElementById('search').addEventListener('input', render);
     b.classList.toggle('on', b.dataset.kind === kindFilter));
   const TITLE = { musical: 'Musicals', show: 'Shows', comedy: 'Comedy' };
   if (TITLE[kindFilter]) document.querySelector('.nav-title').textContent = TITLE[kindFilter];
+  const segmented = document.querySelector('.segmented');
+  if (segmented) segmented.style.display = kindFilter === 'comedy' ? 'none' : '';
 
   try {
     const rec = await dbLoad('shows');
