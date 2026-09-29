@@ -433,7 +433,7 @@ $dashboardPolishScript = <<<'HTML'
         $('show-countdown').textContent = isNext ? showCountdown + ' ·' : '';
         $('show-date').textContent = fmtMY(lead.date);
         if (lead.thumb) setImg('show-img', lead.thumb);
-        if (lead.hasPhoto && lead.id) {
+        if (!coasterImageFound && lead.hasPhoto && lead.id) {
           try {
             const photoRec = await window.dbLoad('show-photo-' + lead.id);
             if (photoRec && photoRec.photo) setImg('show-img', photoRec.photo);
@@ -496,7 +496,26 @@ $dashboardPolishScript = <<<'HTML'
         ? latestCredit.addedAt.getFullYear()
         : 2026;
       $('park-date').textContent = String(addedYear);
-      if (lead.thumb) setImg('park-img', lead.thumb);
+      // Prefer a real image of the latest coaster from Wikipedia/Wikimedia.
+      // If no suitable coaster image is found, the existing park photo remains the fallback.
+      let coasterImageFound = false;
+      try {
+        const q = [latestCredit.name, lead.park, 'roller coaster'].filter(Boolean).join(' ');
+        const api = 'https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrnamespace=0&gsrlimit=5'
+          + '&prop=pageimages&piprop=thumbnail&pithumbsize=1200&format=json&origin=*&gsrsearch='
+          + encodeURIComponent(q);
+        const res = await fetch(api);
+        if (res.ok) {
+          const json = await res.json();
+          const pages = Object.values(json?.query?.pages || {});
+          const hit = pages.find(p => p?.thumbnail?.source);
+          if (hit) {
+            setImg('park-img', hit.thumbnail.source);
+            coasterImageFound = true;
+          }
+        }
+      } catch (e) {}
+      if (!coasterImageFound && lead.thumb) setImg('park-img', lead.thumb);
       if (lead.hasPhoto && lead.id) {
         try {
           const photoRec = await window.dbLoad('park-photo-' + lead.id);
@@ -505,7 +524,7 @@ $dashboardPolishScript = <<<'HTML'
       }
       // If this particular visit has no thumbnail, reuse another saved image
       // from the same theme park.
-      if (!lead.thumb) {
+      if (!coasterImageFound && !lead.thumb) {
         const samePark = seen.find(v =>
           v.id !== lead.id
           && (v.park || '').trim().toLowerCase() === (lead.park || '').trim().toLowerCase()
