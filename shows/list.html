@@ -255,8 +255,7 @@ function render() {
           '<div class="s-text">'
           + '<div class="s-name">' + esc(show.name || '') + '</div>'
           + (sub ? '<div class="s-sub">' + esc(sub) + '</div>' : '')
-          + '</div>'
-          + (show.rating ? starsRow(show.rating, 14) : '<span class="s-noscore">Unrated</span>');
+          + '</div>';
         body.appendChild(row);
       });
       g.appendChild(body);
