@@ -496,10 +496,19 @@ $dashboardPolishScript = <<<'HTML'
         ? latestCredit.addedAt.getFullYear()
         : 2026;
       $('park-date').textContent = String(addedYear);
+      // A manually selected homepage coaster image always wins.
+      let manualCoasterImage = null;
+      try {
+        const manualRec = await window.dbLoad('homepage-coaster-image');
+        manualCoasterImage = manualRec && manualRec.photo ? manualRec.photo : null;
+      } catch (e) {}
+      enableCoasterImageOverride();
+      if (manualCoasterImage) setImg('park-img', manualCoasterImage);
+
       // Pull the exact coaster's Wikipedia lead image only.
       // Do not use a broad park search: that can return entrances or unrelated rides.
-      let coasterImageFound = false;
-      try {
+      let coasterImageFound = !!manualCoasterImage;
+      if (!manualCoasterImage) try {
         const title = String(latestCredit.name || '').trim();
         const api = 'https://en.wikipedia.org/w/api.php?action=query&redirects=1'
           + '&prop=pageimages&piprop=thumbnail&pithumbsize=1200&format=json&origin=*&titles='
