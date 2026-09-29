@@ -433,7 +433,7 @@ $dashboardPolishScript = <<<'HTML'
         $('show-countdown').textContent = isNext ? showCountdown + ' ·' : '';
         $('show-date').textContent = fmtMY(lead.date);
         if (lead.thumb) setImg('show-img', lead.thumb);
-        if (!coasterImageFound && lead.hasPhoto && lead.id) {
+        if (lead.hasPhoto && lead.id) {
           try {
             const photoRec = await window.dbLoad('show-photo-' + lead.id);
             if (photoRec && photoRec.photo) setImg('show-img', photoRec.photo);
@@ -454,7 +454,21 @@ $dashboardPolishScript = <<<'HTML'
     }
   };
 
-  loadParks = async function() {
+  async function chooseCoasterHomepageImage() {
+  const input=document.createElement('input'); input.type='file'; input.accept='image/*';
+  input.onchange=()=>{const file=input.files&&input.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{await window.dbSave('homepage-coaster-image',{photo:reader.result});setImg('park-img',reader.result);}catch(e){}};reader.readAsDataURL(file);}; input.click();
+}
+function enableCoasterImageOverride() {
+  const img=$('park-img'); if(!img||img.dataset.overrideReady)return; img.dataset.overrideReady='1';
+  const media=img.parentElement;if(!media)return;media.style.position='relative';
+  const edit=document.createElement('button');edit.type='button';edit.title='Change coaster image';edit.setAttribute('aria-label','Change coaster image');
+  edit.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  Object.assign(edit.style,{position:'absolute',right:'8px',top:'8px',width:'30px',height:'30px',border:'0',borderRadius:'50%',background:'rgba(255,255,255,.94)',color:'#315b43',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',opacity:'0',transform:'scale(.88)',pointerEvents:'none',transition:'opacity .18s ease, transform .18s ease',zIndex:'4',boxShadow:'0 2px 8px rgba(0,0,0,.18)'});
+  media.appendChild(edit);let timer=null;const hide=()=>{clearTimeout(timer);edit.style.opacity='0';edit.style.transform='scale(.88)';edit.style.pointerEvents='none';};
+  media.addEventListener('mouseenter',()=>{clearTimeout(timer);timer=setTimeout(()=>{edit.style.opacity='1';edit.style.transform='scale(1)';edit.style.pointerEvents='auto';},2000);});media.addEventListener('mouseleave',hide);
+  edit.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();chooseCoasterHomepageImage();});
+}
+loadParks = async function() {
   try {
     const rec = await window.dbLoad('parks');
     const list = rec && Array.isArray(rec.list) ? rec.list : [];
