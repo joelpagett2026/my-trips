@@ -1067,14 +1067,21 @@ function buildDynamicCard(t) {
   if (!(t.flags && t.flags.length) && t.dest) {
     setTimeout(async () => {
       try {
-        const geo = await geocode(t.dest);
-        if (!geo || !geo.cc) return;
+        // Multi-stop trips often cannot be geocoded from the combined card title.
+        // Try the destination first, then each saved city until we have all countries.
+        const names = [t.dest, ...(t.cities || [])].filter(Boolean);
+        const found = [];
+        for (const name of names) {
+          const geo = await geocode(name);
+          if (geo && geo.cc && !found.includes(geo.cc)) found.push(geo.cc);
+        }
+        if (!found.length) return;
         const flagsEl = document.getElementById(flagsId);
-        if (flagsEl) flagsEl.innerHTML = `<img src="https://flagcdn.com/w80/${geo.cc}.png" alt="${geo.cc}">`;
+        if (flagsEl) flagsEl.innerHTML = found.map(cc => `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}">`).join('');
         const registry = await loadRegistry();
         const entry = registry.find(r => r.slug === t.slug);
         if (entry && !(entry.flags && entry.flags.length)) {
-          entry.flags = [geo.cc];
+          entry.flags = found;
           await saveRegistry(registry);
         }
       } catch (e) { /* best-effort only */ }
