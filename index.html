@@ -735,8 +735,12 @@ async function loadParks() {
       setText('park-name', latestCredit.name);
       setText('park-place', lead.park || 'Theme park');
       $('park-countdown').textContent = '';
-      const riddenDate = parseDMY(lead.date);
-      $('park-date').textContent = riddenDate ? String(riddenDate.getFullYear()) : '';
+      // The homepage card tracks the year the latest credit was added,
+      // independently of the historical park-visit date.
+      const addedYear = latestCredit.addedAt && !Number.isNaN(latestCredit.addedAt.getTime())
+        ? latestCredit.addedAt.getFullYear()
+        : 2026;
+      $('park-date').textContent = String(addedYear);
       if (lead.thumb) setImg('park-img', lead.thumb);
       if (lead.hasPhoto && lead.id) {
         try {
