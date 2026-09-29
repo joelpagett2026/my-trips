@@ -29,7 +29,7 @@ if (($diag['maps_key_rewritten'] ?? 0) !== 1
 // another estimated journey mileage. It still contributes to trip/country stats.
 $page = str_replace(
     'const PS_MILES = 205021;',
-    'const PS_MILES = 206825;',
+    'const PS_MILES = 207957;',
     $page,
     $milesBaselineCount
 );
