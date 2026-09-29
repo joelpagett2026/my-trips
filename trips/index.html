@@ -1006,7 +1006,7 @@ async function geocode(place) {
   if (!place) return null;
   if (geocodeCache[place]) return geocodeCache[place];
   try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&accept-language=en`, {headers:{'Accept-Language':'en'}});
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&addressdetails=1&limit=1&accept-language=en`, {headers:{'Accept-Language':'en'}});
     const j = await r.json();
     if (j && j[0]) {
       const result = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), cc: (j[0].address?.country_code || '').toLowerCase() };
