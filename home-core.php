@@ -516,7 +516,7 @@ $dashboardPolishScript = <<<'HTML'
         }
       } catch (e) {}
       if (!coasterImageFound && lead.thumb) setImg('park-img', lead.thumb);
-      if (lead.hasPhoto && lead.id) {
+      if (!coasterImageFound && lead.hasPhoto && lead.id) {
         try {
           const photoRec = await window.dbLoad('park-photo-' + lead.id);
           if (photoRec && photoRec.photo) setImg('park-img', photoRec.photo);
