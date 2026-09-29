@@ -248,7 +248,7 @@ function applyHomepageTrackerLayout() {
           <div class="travel-stat">
             <span class="travel-stat-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg></span>
             <span class="travel-stat-label">Miles travelled</span>
-            <strong class="travel-stat-value" id="hp-stat-miles">206,825</strong>
+            <strong class="travel-stat-value" id="hp-stat-miles">207,957</strong>
           </div>
           <div class="travel-stats-cta">Open trip planner <span aria-hidden="true">→</span></div>`;
 
