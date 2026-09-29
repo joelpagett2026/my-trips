@@ -476,12 +476,14 @@ $dashboardPolishScript = <<<'HTML'
     setText('pk-credits', credits.size);
     setText('pk-year', seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length);
 
-    creditRows.sort((a, b) =>
-      (b.addedAt?.getTime() || 0) - (a.addedAt?.getTime() || 0)
-      || b.visitIndex - a.visitIndex
-      || b.coasterIndex - a.coasterIndex
-    );
-    const latestCredit = creditRows[0];
+    const timestamped = creditRows.filter(c => c.addedAt && !Number.isNaN(c.addedAt.getTime()));
+    let latestCredit = timestamped.sort((a, b) => b.addedAt - a.addedAt)[0];
+    // Legacy credits pre-date addedAt tracking. Toxic Garden is the known latest
+    // legacy credit, so use it as the baseline until a newer timestamped credit exists.
+    if (!latestCredit) {
+      latestCredit = creditRows.find(c => c.name.trim().toLowerCase() === 'toxic garden')
+        || creditRows.sort((a, b) => b.visitIndex - a.visitIndex || b.coasterIndex - a.coasterIndex)[0];
+    }
     if (latestCredit) {
       const lead = latestCredit.visit;
       $('park-pill').textContent = 'Latest credit';
@@ -490,6 +492,30 @@ $dashboardPolishScript = <<<'HTML'
       $('park-countdown').textContent = '';
       $('park-date').textContent = lead.date || '';
       if (lead.thumb) setImg('park-img', lead.thumb);
+      if (lead.hasPhoto && lead.id) {
+        try {
+          const photoRec = await window.dbLoad('park-photo-' + lead.id);
+          if (photoRec && photoRec.photo) setImg('park-img', photoRec.photo);
+        } catch (e) {}
+      }
+      // If this particular visit has no thumbnail, reuse another saved image
+      // from the same theme park.
+      if (!lead.thumb) {
+        const samePark = seen.find(v =>
+          v.id !== lead.id
+          && (v.park || '').trim().toLowerCase() === (lead.park || '').trim().toLowerCase()
+          && (v.thumb || v.hasPhoto)
+        );
+        if (samePark) {
+          if (samePark.thumb) setImg('park-img', samePark.thumb);
+          if (samePark.hasPhoto && samePark.id) {
+            try {
+              const photoRec = await window.dbLoad('park-photo-' + samePark.id);
+              if (photoRec && photoRec.photo) setImg('park-img', photoRec.photo);
+            } catch (e) {}
+          }
+        }
+      }
       setText('cu-park-value', latestCredit.name);
       setText('cu-park-meta', lead.park || 'Theme park');
     } else {
