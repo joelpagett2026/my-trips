@@ -433,6 +433,12 @@ $dashboardPolishScript = <<<'HTML'
         $('show-countdown').textContent = isNext ? showCountdown + ' ·' : '';
         $('show-date').textContent = fmtMY(lead.date);
         if (lead.thumb) setImg('show-img', lead.thumb);
+        if (lead.hasPhoto && lead.id) {
+          try {
+            const photoRec = await window.dbLoad('show-photo-' + lead.id);
+            if (photoRec && photoRec.photo) setImg('show-img', photoRec.photo);
+          } catch (e) {}
+        }
         setText('cu-show-value', isNext ? showCountdown : 'No upcoming');
         setText('cu-show-meta', isNext ? (lead.name || 'Next show') : (latest ? `Latest: ${latest.name || 'Show'}` : 'No shows logged'));
       } else {
