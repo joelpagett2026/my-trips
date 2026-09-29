@@ -741,19 +741,19 @@ async function loadParks() {
         ? latestCredit.addedAt.getFullYear()
         : 2026;
       $('park-date').textContent = String(addedYear);
-      // Prefer a real image of the latest coaster from Wikipedia/Wikimedia.
-      // If no suitable coaster image is found, the existing park photo remains the fallback.
+      // Pull the exact coaster's Wikipedia lead image only.
+      // Do not use a broad park search: that can return entrances or unrelated rides.
       let coasterImageFound = false;
       try {
-        const q = [latestCredit.name, lead.park, 'roller coaster'].filter(Boolean).join(' ');
-        const api = 'https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrnamespace=0&gsrlimit=5'
-          + '&prop=pageimages&piprop=thumbnail&pithumbsize=1200&format=json&origin=*&gsrsearch='
-          + encodeURIComponent(q);
+        const title = String(latestCredit.name || '').trim();
+        const api = 'https://en.wikipedia.org/w/api.php?action=query&redirects=1'
+          + '&prop=pageimages&piprop=thumbnail&pithumbsize=1200&format=json&origin=*&titles='
+          + encodeURIComponent(title);
         const res = await fetch(api);
         if (res.ok) {
           const json = await res.json();
           const pages = Object.values(json?.query?.pages || {});
-          const hit = pages.find(p => p?.thumbnail?.source);
+          const hit = pages.find(p => p && !p.missing && p.thumbnail?.source);
           if (hit) {
             setImg('park-img', hit.thumbnail.source);
             coasterImageFound = true;
@@ -767,6 +767,7 @@ async function loadParks() {
           if (photoRec && photoRec.photo) setImg('park-img', photoRec.photo);
         } catch (e) {}
       }
+
       // If this particular visit has no thumbnail, reuse another saved image
       // from the same theme park.
       if (!coasterImageFound && !lead.thumb) {
