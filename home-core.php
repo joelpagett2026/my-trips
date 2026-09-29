@@ -490,7 +490,8 @@ $dashboardPolishScript = <<<'HTML'
       setText('park-name', latestCredit.name);
       setText('park-place', lead.park || 'Theme park');
       $('park-countdown').textContent = '';
-      $('park-date').textContent = lead.date || '';
+      const riddenDate = parseDMY(lead.date);
+      $('park-date').textContent = riddenDate ? String(riddenDate.getFullYear()) : '';
       if (lead.thumb) setImg('park-img', lead.thumb);
       if (lead.hasPhoto && lead.id) {
         try {
