@@ -1017,7 +1017,16 @@ async function geocode(place) {
   return null;
 }
 
-// Build a dynamic card — with live map + flag from itinerary data
+function inferredTripFlags(t) {
+  const map = {
+    'basel & rust':['ch','de'], 'cyprus':['cy'], 'krakow':['pl'],
+    'san diego & los angeles':['us'], 'hong kong & taiwan':['hk','tw'],
+    'zagreb, rijeka & ljubljana':['hr','si'], 'graz, ljubljana & lake bled':['at','si']
+  };
+  return map[String(t.dest || '').trim().toLowerCase()] || [];
+}
+
+// Build a dynamic card — with saved or inferred country flags
 function buildDynamicCard(t) {
   // Auto-complete the day AFTER the trip's return date — but never override
   // a status the user has manually set in Trip Settings.
@@ -1042,7 +1051,8 @@ function buildDynamicCard(t) {
   const a = document.createElement('a'); a.className = cardClass; a.href = url;
   // Flags HTML from stored flags array
   const flagsId = 'dyn-flags-' + t.slug;
-  const flagsHtml = (t.flags || []).map(cc =>
+  const displayFlags = (t.flags && t.flags.length) ? t.flags : inferredTripFlags(t);
+  const flagsHtml = displayFlags.map(cc =>
     `<img src="https://flagcdn.com/w80/${cc}.png" alt="${cc}">`
   ).join('');
 
