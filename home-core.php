@@ -469,14 +469,15 @@ $dashboardPolishScript = <<<'HTML'
       const name = coasterName(c);
       if (!name) return;
       credits.add((v.park || '').trim().toLowerCase() + '|' + name.toLowerCase());
-      creditRows.push({ name, visit: v, date: parseDMY(v.date), visitIndex, coasterIndex });
+      const addedAt = typeof c === 'object' && c?.addedAt ? new Date(c.addedAt) : null;
+      creditRows.push({ name, visit: v, date: parseDMY(v.date), addedAt, visitIndex, coasterIndex });
     }));
     setText('pk-parks', new Set(seen.map(v => (v.park || '').trim().toLowerCase()).filter(Boolean)).size);
     setText('pk-credits', credits.size);
     setText('pk-year', seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length);
 
     creditRows.sort((a, b) =>
-      (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
+      (b.addedAt?.getTime() || 0) - (a.addedAt?.getTime() || 0)
       || b.visitIndex - a.visitIndex
       || b.coasterIndex - a.coasterIndex
     );
