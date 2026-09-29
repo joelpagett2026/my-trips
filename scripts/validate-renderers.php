@@ -108,15 +108,11 @@ requireContract(strpos($dashboard, '<link rel="preconnect" href="https://fonts.g
 requireContract(strpos($dashboard, '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>') !== false,
     'Trips dashboard must preconnect to fonts.gstatic.com');
 requireContract(($dashboardDiag['dashboard_map_render_deferred'] ?? 0) === 1,
-    'Trips dashboard map deferral rewrite did not run');
-requireContract(strpos($dashboard, 'function observeDashboardMap(id, render)') !== false,
-    'Trips dashboard is missing its viewport map observer');
-requireContract(strpos($dashboard, "rootMargin:'320px 0px'") !== false,
-    'Trips dashboard map observer must keep the near-viewport preload margin');
-requireContract(strpos($dashboard, "setTimeout(() => observeDashboardMap(mapId, async () => {") !== false,
-    'dynamic trip-card maps must defer until their card approaches the viewport');
-requireContract(strpos($dashboard, "\nmakeMap('map-canada'") === false,
-    'legacy Canada map must not start unconditionally at page load');
+    'Trips dashboard no-map contract did not run');
+requireContract(strpos($dashboard, 'function observeDashboardMap(id, render)') === false,
+    'Trips dashboard must not re-inject the removed trip-card map observer');
+requireContract(strpos($dashboard, "setTimeout(() => observeDashboardMap(mapId, async () => {") === false,
+    'dynamic trip cards must not render maps');
 requireContract(($dashboardDiag['maps_key_rewritten'] ?? 0) === 1,
     'Trips dashboard Maps key rewrite count changed');
 requireContract(($dashboardDiag['travel_day_filter_rewritten'] ?? 0) === 1,
