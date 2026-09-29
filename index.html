@@ -699,6 +699,41 @@ async function loadShows() {
   }
 }
 
+async function chooseCoasterHomepageImage() {
+  const img = $('park-img');
+  if (!img) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const photo = reader.result;
+      try {
+        await window.dbSave('homepage-coaster-image', { photo });
+        setImg('park-img', photo);
+      } catch (e) {}
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function enableCoasterImageOverride() {
+  const img = $('park-img');
+  if (!img || img.dataset.overrideReady) return;
+  img.dataset.overrideReady = '1';
+  img.title = 'Double-click to choose the coaster image';
+  img.style.cursor = 'pointer';
+  img.addEventListener('dblclick', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    chooseCoasterHomepageImage();
+  });
+}
+
 async function loadParks() {
   try {
     const rec = await window.dbLoad('parks');
@@ -741,10 +776,19 @@ async function loadParks() {
         ? latestCredit.addedAt.getFullYear()
         : 2026;
       $('park-date').textContent = String(addedYear);
+      // A manually selected homepage coaster image always wins.
+      let manualCoasterImage = null;
+      try {
+        const manualRec = await window.dbLoad('homepage-coaster-image');
+        manualCoasterImage = manualRec && manualRec.photo ? manualRec.photo : null;
+      } catch (e) {}
+      enableCoasterImageOverride();
+      if (manualCoasterImage) setImg('park-img', manualCoasterImage);
+
       // Pull the exact coaster's Wikipedia lead image only.
       // Do not use a broad park search: that can return entrances or unrelated rides.
-      let coasterImageFound = false;
-      try {
+      let coasterImageFound = !!manualCoasterImage;
+      if (!manualCoasterImage) try {
         const title = String(latestCredit.name || '').trim();
         const api = 'https://en.wikipedia.org/w/api.php?action=query&redirects=1'
           + '&prop=pageimages&piprop=thumbnail&pithumbsize=1200&format=json&origin=*&titles='
