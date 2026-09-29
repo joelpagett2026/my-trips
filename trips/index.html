@@ -1071,7 +1071,22 @@ function buildDynamicCard(t) {
         // Try the destination first, then each saved city until we have all countries.
         const names = [t.dest, ...(t.cities || [])].filter(Boolean);
         const found = [];
+        const knownCountries = {
+          'basel & rust':['ch','de'],
+          'basel':['ch'], 'rust':['de'],
+          'cyprus':['cy'],
+          'krakow':['pl'],
+          'san diego & los angeles':['us'], 'san diego':['us'], 'los angeles':['us'],
+          'hong kong & taiwan':['hk','tw'], 'hong kong':['hk'], 'taiwan':['tw'],
+          'zagreb, rijeka & ljubljana':['hr','si'], 'graz, ljubljana & lake bled':['at','si'],
+          'zagreb':['hr'], 'plitvice lakes':['hr'], 'rijeka':['hr'], 'trieste':['it'],
+          'ljubljana':['si'], 'graz':['at'], 'lake bled':['si']
+        };
         for (const name of names) {
+          const key = String(name).trim().toLowerCase();
+          const known = knownCountries[key] || [];
+          known.forEach(cc => { if (!found.includes(cc)) found.push(cc); });
+          if (known.length) continue;
           const geo = await geocode(name);
           if (geo && geo.cc && !found.includes(geo.cc)) found.push(geo.cc);
         }
