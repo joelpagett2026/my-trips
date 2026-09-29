@@ -923,12 +923,21 @@ function addCoasterRow(data) {
   if (!data) name.focus();
 }
 
-function readCoasterRows() {
-  return [...document.querySelectorAll('#coaster-list .coaster-row')].map(row => ({
-    name:    row.querySelector('.c-name').value.trim(),
-    rating:  parseInt(row.querySelector('.c-rate').value, 10) || 0,
-    defunct: !!row.querySelector('.dead-toggle').dataset.defunct,
-  })).filter(c => c.name);
+function readCoasterRows(existingCoasters = []) {
+  const existingByName = new Map((Array.isArray(existingCoasters) ? existingCoasters : []).map(c => {
+    const obj = typeof c === 'string' ? { name: c.replace(/\\s*\\*\\s*$/, '').trim() } : c;
+    return [String(obj?.name || '').trim().toLowerCase(), obj || {}];
+  }));
+  return [...document.querySelectorAll('#coaster-list .coaster-row')].map(row => {
+    const name = row.querySelector('.c-name').value.trim();
+    const previous = existingByName.get(name.toLowerCase());
+    return {
+      name,
+      rating:  parseInt(row.querySelector('.c-rate').value, 10) || 0,
+      defunct: !!row.querySelector('.dead-toggle').dataset.defunct,
+      addedAt: previous?.addedAt || new Date().toISOString(),
+    };
+  }).filter(c => c.name);
 }
 
 function buildStarPicker() {
@@ -1189,7 +1198,7 @@ async function saveVisit() {
     date,
     location: document.getElementById('f-location').value.trim(),
     country:  document.getElementById('f-country').value.trim(),
-    coasters: readCoasterRows(),
+    coasters: readCoasterRows(existing && Array.isArray(existing.coasters) ? existing.coasters : []),
     rating:   modalRating,
     thumb:    existing ? existing.thumb : null,
     hasPhoto: existing ? !!existing.hasPhoto : false,
