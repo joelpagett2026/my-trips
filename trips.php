@@ -24,12 +24,12 @@ if (($diag['maps_key_rewritten'] ?? 0) !== 1
     exit;
 }
 
-// Keep the historical mileage baseline aligned with the latest travelled total.
+// Keep the historical mileage baseline aligned so the rendered travelled total is 207,957.
 // Porto is already included in this figure, so its registry entry must not add
 // another estimated journey mileage. It still contributes to trip/country stats.
 $page = str_replace(
     'const PS_MILES = 205021;',
-    'const PS_MILES = 207957;',
+    'const PS_MILES = 206626;',
     $page,
     $milesBaselineCount
 );
