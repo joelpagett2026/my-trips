@@ -704,37 +704,49 @@ async function loadParks() {
     const rec = await window.dbLoad('parks');
     const list = rec && Array.isArray(rec.list) ? rec.list : [];
     const today = new Date(); today.setHours(0,0,0,0);
-    const upcoming = list.filter(v=>{const d=parseDMY(v.date); return d&&d>today;}).sort((a,b)=>parseDMY(a.date)-parseDMY(b.date));
-    const seen = list.filter(v=>{const d=parseDMY(v.date); return !d||d<=today;});
+    const seen = list.filter(v => { const d = parseDMY(v.date); return !d || d <= today; });
     const credits = new Set();
-    const coasterName = c => typeof c === 'string' ? c.replace(/\s*\*\s*$/, '').trim() : String(c?.name || '').trim();
-    seen.forEach(v => (Array.isArray(v.coasters) ? v.coasters : []).forEach(c => {
+    const coasterName = c => typeof c === 'string'
+      ? c.replace(/\s*\*\s*$/, '').trim()
+      : String(c?.name || '').trim();
+    const creditRows = [];
+    seen.forEach((v, visitIndex) => (Array.isArray(v.coasters) ? v.coasters : []).forEach((c, coasterIndex) => {
       const name = coasterName(c);
-      if (name) credits.add((v.park || '').trim().toLowerCase() + '|' + name.toLowerCase());
+      if (!name) return;
+      credits.add((v.park || '').trim().toLowerCase() + '|' + name.toLowerCase());
+      creditRows.push({ name, visit: v, date: parseDMY(v.date), visitIndex, coasterIndex });
     }));
-    setText('pk-parks',new Set(seen.map(v=>(v.park||'').trim().toLowerCase()).filter(Boolean)).size);
-    setText('pk-credits',credits.size);
-    setText('pk-year',seen.filter(v=>{const d=parseDMY(v.date); return d&&d.getFullYear()===new Date().getFullYear();}).length);
-    const latest=seen.filter(v=>parseDMY(v.date)).sort((a,b)=>parseDMY(b.date)-parseDMY(a.date))[0];
-    const next=upcoming[0];
-    const lead=next||latest;
-    if(lead){
-      const isNext=!!next,d=parseDMY(lead.date),days=isNext?daysUntil(d):null;
-      $('park-pill').textContent=isNext?'Upcoming':'Latest';
-      setText('park-name',lead.park||'Theme park');
-      setText('park-place',[lead.location,lead.country].map(s=>(s||'').trim()).filter(Boolean).join(', '));
-      $('park-countdown').textContent=isNext?countdownText(days)+' ·':'';
-      $('park-date').textContent=lead.date||'';
-      if(lead.thumb) setImg('park-img',lead.thumb);
-      setText('cu-park-value',isNext?countdownText(days):'No upcoming');
-      setText('cu-park-meta',isNext?(lead.park||'Next park visit'):(latest?`Latest: ${latest.park||'Park'}`:'No parks logged'));
+    setText('pk-parks', new Set(seen.map(v => (v.park || '').trim().toLowerCase()).filter(Boolean)).size);
+    setText('pk-credits', credits.size);
+    setText('pk-year', seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length);
+
+    creditRows.sort((a, b) =>
+      (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
+      || b.visitIndex - a.visitIndex
+      || b.coasterIndex - a.coasterIndex
+    );
+    const latestCredit = creditRows[0];
+    if (latestCredit) {
+      const lead = latestCredit.visit;
+      $('park-pill').textContent = 'Latest credit';
+      setText('park-name', latestCredit.name);
+      setText('park-place', lead.park || 'Theme park');
+      $('park-countdown').textContent = '';
+      $('park-date').textContent = lead.date || '';
+      if (lead.thumb) setImg('park-img', lead.thumb);
+      setText('cu-park-value', latestCredit.name);
+      setText('cu-park-meta', lead.park || 'Theme park');
     } else {
-      setText('park-name','No park visits logged'); setText('park-place','Add your next park');
-      setText('cu-park-value','Nothing booked'); setText('cu-park-meta','Add your next park');
-      $('park-countdown').textContent=''; $('park-date').textContent='';
+      $('park-pill').textContent = 'No credits';
+      setText('park-name', 'No coaster credits logged');
+      setText('park-place', 'Add your first coaster');
+      setText('cu-park-value', 'Nothing logged');
+      setText('cu-park-meta', 'Add your first coaster');
+      $('park-countdown').textContent = '';
+      $('park-date').textContent = '';
     }
   } catch(e) {
-    ['pk-parks','pk-credits','pk-year','park-name','park-place','cu-park-value','cu-park-meta'].forEach(id=>setText(id,'—'));
+    ['pk-parks','pk-credits','pk-year','park-name','park-place','cu-park-value','cu-park-meta'].forEach(id => setText(id,'—'));
   }
 }
 
