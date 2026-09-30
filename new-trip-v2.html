@@ -2689,8 +2689,8 @@ function openDrawerItem(dayIdx, itemIdx) {
       if (m) { dep = m[1]; arr = m[2]; }
     }
     if (!dep && item.time) dep = item.time;
-    const dur = (mode === 'Flight' ? flightDuration(dep, arr, fromLoc, toLoc, STATE.days?.[dayIdx]?.date, tr) : flightDuration(dep, arr)) || tr.duration || '';
     const mode = tr.mode || item.kicker || 'Flight';
+    const dur = (mode === 'Flight' ? flightDuration(dep, arr, fromLoc, toLoc, STATE.days?.[dayIdx]?.date, tr) : flightDuration(dep, arr)) || tr.duration || '';
     const modeIcon = (TRANSPORT_ICONS[mode] || ICO.plane).replace('<svg', '<svg width="22" height="22"');
     const isFlight = mode === 'Flight';
     if (mode === 'Car Hire / Road Trip') {
