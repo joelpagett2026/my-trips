@@ -1925,12 +1925,117 @@ function isHotelBreakfastItem(item) {
   return false;
 }
 
-function flightDuration(depart, arrive) {
+// Common airport/city timezone aliases used by flight entries. Explicit
+// transport.fromTz/toTz values (saved on new flights) always win; this map
+// also upgrades older saved flights which only contain free-text From/To.
+const FLIGHT_TZ_ALIASES = {
+  LHR:'Europe/London', LGW:'Europe/London', LCY:'Europe/London', STN:'Europe/London', LTN:'Europe/London',
+  MAN:'Europe/London', BHX:'Europe/London', BRS:'Europe/London', EDI:'Europe/London', GLA:'Europe/London',
+  SAN:'America/Los_Angeles', LAX:'America/Los_Angeles', SFO:'America/Los_Angeles', SJC:'America/Los_Angeles',
+  SEA:'America/Los_Angeles', PDX:'America/Los_Angeles', LAS:'America/Los_Angeles',
+  JFK:'America/New_York', EWR:'America/New_York', LGA:'America/New_York', BOS:'America/New_York',
+  MIA:'America/New_York', MCO:'America/New_York', IAD:'America/New_York', DCA:'America/New_York',
+  ORD:'America/Chicago', DFW:'America/Chicago', IAH:'America/Chicago', AUS:'America/Chicago',
+  DEN:'America/Denver', PHX:'America/Phoenix',
+  YYZ:'America/Toronto', YVR:'America/Vancouver', YUL:'America/Toronto',
+  CDG:'Europe/Paris', ORY:'Europe/Paris', AMS:'Europe/Amsterdam', BRU:'Europe/Brussels',
+  MAD:'Europe/Madrid', BCN:'Europe/Madrid', VLC:'Europe/Madrid', AGP:'Europe/Madrid',
+  LIS:'Europe/Lisbon', OPO:'Europe/Lisbon', FCO:'Europe/Rome', MXP:'Europe/Rome', VCE:'Europe/Rome',
+  BER:'Europe/Berlin', FRA:'Europe/Berlin', MUC:'Europe/Berlin', ZRH:'Europe/Zurich', VIE:'Europe/Vienna',
+  CPH:'Europe/Copenhagen', OSL:'Europe/Oslo', ARN:'Europe/Stockholm', HEL:'Europe/Helsinki',
+  DUB:'Europe/Dublin', ATH:'Europe/Athens', ZAG:'Europe/Zagreb', LJU:'Europe/Ljubljana',
+  DXB:'Asia/Dubai', DOH:'Asia/Qatar', SIN:'Asia/Singapore', HKG:'Asia/Hong_Kong',
+  HND:'Asia/Tokyo', NRT:'Asia/Tokyo', ICN:'Asia/Seoul', SYD:'Australia/Sydney', MEL:'Australia/Melbourne',
+  AKL:'Pacific/Auckland'
+};
+const FLIGHT_TZ_NAMES = [
+  [/heathrow|gatwick|london city|stansted|luton|\blondon\b/i,'Europe/London'],
+  [/manchester/i,'Europe/London'], [/edinburgh/i,'Europe/London'], [/glasgow/i,'Europe/London'],
+  [/san diego/i,'America/Los_Angeles'], [/los angeles/i,'America/Los_Angeles'],
+  [/san francisco/i,'America/Los_Angeles'], [/seattle/i,'America/Los_Angeles'],
+  [/new york|newark/i,'America/New_York'], [/boston/i,'America/New_York'], [/miami|orlando/i,'America/New_York'],
+  [/chicago/i,'America/Chicago'], [/dallas|houston|austin/i,'America/Chicago'],
+  [/denver/i,'America/Denver'], [/phoenix/i,'America/Phoenix'],
+  [/paris/i,'Europe/Paris'], [/amsterdam/i,'Europe/Amsterdam'], [/madrid|barcelona|valencia|malaga/i,'Europe/Madrid'],
+  [/lisbon|porto/i,'Europe/Lisbon'], [/rome|milan|venice/i,'Europe/Rome'],
+  [/berlin|frankfurt|munich/i,'Europe/Berlin'], [/zurich/i,'Europe/Zurich'], [/vienna/i,'Europe/Vienna'],
+  [/copenhagen/i,'Europe/Copenhagen'], [/oslo/i,'Europe/Oslo'], [/stockholm/i,'Europe/Stockholm'],
+  [/helsinki/i,'Europe/Helsinki'], [/dublin/i,'Europe/Dublin'], [/athens/i,'Europe/Athens'],
+  [/zagreb/i,'Europe/Zagreb'], [/ljubljana/i,'Europe/Ljubljana'],
+  [/dubai/i,'Asia/Dubai'], [/doha/i,'Asia/Qatar'], [/singapore/i,'Asia/Singapore'],
+  [/hong kong/i,'Asia/Hong_Kong'], [/tokyo/i,'Asia/Tokyo'], [/seoul/i,'Asia/Seoul'],
+  [/sydney/i,'Australia/Sydney'], [/melbourne/i,'Australia/Melbourne'], [/auckland/i,'Pacific/Auckland']
+];
+
+function flightTimezoneForLocation(loc) {
+  const s = String(loc || '').trim();
+  if (!s) return '';
+  const upper = s.toUpperCase();
+  // Prefer an explicit 3-letter airport code anywhere in the entered text.
+  const codes = upper.match(/\b[A-Z]{3}\b/g) || [];
+  for (const code of codes) if (FLIGHT_TZ_ALIASES[code]) return FLIGHT_TZ_ALIASES[code];
+  for (const [re, tz] of FLIGHT_TZ_NAMES) if (re.test(s)) return tz;
+  return '';
+}
+
+function parseFlightDate(dateStr) {
+  const m = String(dateStr || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return { y:+m[3], mo:+m[2], d:+m[1] };
+  const iso = String(dateStr || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) return { y:+iso[1], mo:+iso[2], d:+iso[3] };
+  return null;
+}
+
+// Convert a wall-clock time in an IANA timezone to a UTC timestamp. Intl
+// supplies the real historical/future DST offset for the itinerary date.
+function flightLocalToUtc(parts, time, tz, addDays) {
+  const [hh, mm] = String(time).split(':').map(Number);
+  const base = new Date(Date.UTC(parts.y, parts.mo - 1, parts.d + (addDays || 0), hh, mm));
+  let guess = base.getTime();
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hourCycle:'h23'
+  });
+  // Two passes are enough to settle across normal DST offsets.
+  for (let n=0; n<2; n++) {
+    const vals = {};
+    fmt.formatToParts(new Date(guess)).forEach(p => { if (p.type !== 'literal') vals[p.type] = p.value; });
+    const shownAsUtc = Date.UTC(+vals.year, +vals.month-1, +vals.day, +vals.hour, +vals.minute);
+    guess += base.getTime() - shownAsUtc;
+  }
+  return guess;
+}
+
+function flightDuration(depart, arrive, fromLoc, toLoc, dateStr, transport) {
   if (!depart || !arrive) return '';
+  const tr = transport || {};
+  const fromTz = tr.fromTz || flightTimezoneForLocation(fromLoc);
+  const toTz = tr.toTz || flightTimezoneForLocation(toLoc);
+  const date = parseFlightDate(dateStr);
+
+  if (fromTz && toTz && date) {
+    try {
+      const depUtc = flightLocalToUtc(date, depart, fromTz, 0);
+      // Arrival can be same local calendar day or one/two days later. Pick
+      // the first plausible positive elapsed flight time (<= 30h).
+      for (let dayOffset=0; dayOffset<=2; dayOffset++) {
+        const arrUtc = flightLocalToUtc(date, arrive, toTz, dayOffset);
+        const mins = Math.round((arrUtc - depUtc) / 60000);
+        if (mins > 0 && mins <= 1800) {
+          const h = Math.floor(mins / 60), m = mins % 60;
+          return h + 'h' + (m ? ' ' + m + 'm' : '');
+        }
+      }
+    } catch (e) {
+      console.warn('Timezone-aware flight duration failed; using clock-time fallback.', e);
+    }
+  }
+
+  // Safe fallback for non-flight transport and legacy/unrecognised locations.
   const [dh, dm] = depart.split(':').map(Number);
   const [ah, am] = arrive.split(':').map(Number);
   let mins = (ah * 60 + am) - (dh * 60 + dm);
-  if (mins < 0) mins += 1440; // overnight
+  if (mins < 0) mins += 1440;
   const h = Math.floor(mins / 60), m = mins % 60;
   return h + 'h' + (m ? ' ' + m + 'm' : '');
 }
@@ -1979,7 +2084,7 @@ function makeItemNode(item, idx) {
       if (m) { dep = m[1]; arr = m[2]; }
     }
     if (!dep && item.time) dep = item.time;
-    const dur = flightDuration(dep, arr);
+    const dur = mode === 'Flight' ? flightDuration(dep, arr, fromLoc, toLoc, STATE.days?.[activeDay]?.date, tr) : flightDuration(dep, arr);
     const ARR = ' <span class="tl-flight-arrow">→</span> ';
     let lines = [];
     if (fromLoc || dep) lines.push('<div class="tl-flight-line"><span class="tl-transport-label">Departure:</span> ' + (fromLoc || '') + (dep ? ARR + dep : '') + '</div>');
@@ -2584,7 +2689,7 @@ function openDrawerItem(dayIdx, itemIdx) {
       if (m) { dep = m[1]; arr = m[2]; }
     }
     if (!dep && item.time) dep = item.time;
-    const dur = flightDuration(dep, arr) || tr.duration || '';
+    const dur = (mode === 'Flight' ? flightDuration(dep, arr, fromLoc, toLoc, STATE.days?.[dayIdx]?.date, tr) : flightDuration(dep, arr)) || tr.duration || '';
     const mode = tr.mode || item.kicker || 'Flight';
     const modeIcon = (TRANSPORT_ICONS[mode] || ICO.plane).replace('<svg', '<svg width="22" height="22"');
     const isFlight = mode === 'Flight';
@@ -3673,7 +3778,7 @@ function saveItem() {
     title = [from, to].filter(Boolean).join(' → ');
     const sub = [operator || tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
     item = { time, type, period, title, sub, status: statusV,
-             transport: { mode: tType, from, to, depart, arrive, operator, route: routeNum },
+             transport: { mode: tType, from, to, depart, arrive, operator, route: routeNum,\n               fromTz: isFlight ? flightTimezoneForLocation(from) : '',\n               toTz: isFlight ? flightTimezoneForLocation(to) : '' },
              icoType: icoMap[tType] || 'move', kicker: tType };
     if (isFlight) {
       const ref   = document.getElementById('f-ref').value.trim();
