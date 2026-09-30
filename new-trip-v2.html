@@ -3778,7 +3778,9 @@ function saveItem() {
     title = [from, to].filter(Boolean).join(' → ');
     const sub = [operator || tType, depart && arrive ? depart + ' – ' + arrive : (depart||arrive)].filter(Boolean).join(' · ');
     item = { time, type, period, title, sub, status: statusV,
-             transport: { mode: tType, from, to, depart, arrive, operator, route: routeNum,\n               fromTz: isFlight ? flightTimezoneForLocation(from) : '',\n               toTz: isFlight ? flightTimezoneForLocation(to) : '' },
+             transport: { mode: tType, from, to, depart, arrive, operator, route: routeNum,
+               fromTz: isFlight ? flightTimezoneForLocation(from) : '',
+               toTz: isFlight ? flightTimezoneForLocation(to) : '' },
              icoType: icoMap[tType] || 'move', kicker: tType };
     if (isFlight) {
       const ref   = document.getElementById('f-ref').value.trim();
