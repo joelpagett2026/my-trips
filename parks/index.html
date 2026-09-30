@@ -931,12 +931,17 @@ function readCoasterRows(existingCoasters = []) {
   return [...document.querySelectorAll('#coaster-list .coaster-row')].map(row => {
     const name = row.querySelector('.c-name').value.trim();
     const previous = existingByName.get(name.toLowerCase());
-    return {
+    const coaster = {
       name,
       rating:  parseInt(row.querySelector('.c-rate').value, 10) || 0,
       defunct: !!row.querySelector('.dead-toggle').dataset.defunct,
-      addedAt: previous?.addedAt || new Date().toISOString(),
     };
+    // Preserve a timestamp only if this coaster already genuinely has one.
+    // Editing a historical park visit must never make an old coaster look new.
+    if (previous?.addedAt) coaster.addedAt = previous.addedAt;
+    // Only a coaster name that did not previously exist on this visit is new.
+    if (!previous && name) coaster.addedAt = new Date().toISOString();
+    return coaster;
   }).filter(c => c.name);
 }
 
