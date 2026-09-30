@@ -790,23 +790,19 @@ async function loadParks() {
     setText('pk-credits', credits.size);
     setText('pk-year', seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length);
 
-    // Historical credits existed before reliable addedAt tracking. Toxic Garden
-    // is the explicit legacy cutoff/current baseline. Ignore timestamps on every
-    // credit up to and including it; only genuinely new timestamped credits can
-    // supersede it from now on.
+    // Toxic Garden is the final historical credit. Old addedAt values are not
+    // trustworthy because legacy records were timestamped retrospectively.
+    // New credits created after this cleanup receive a timestamp later than this
+    // cutoff and are the only records allowed to replace Toxic Garden.
+    const LEGACY_CREDIT_CUTOFF = new Date('2026-09-30T20:03:42Z');
     const toxicGarden = creditRows.find(c => c.name.trim().toLowerCase() === 'toxic garden');
-    let latestCredit = toxicGarden || null;
-    if (toxicGarden) {
-      const newerTimestamped = creditRows.filter(c => {
-        if (!c.addedAt || Number.isNaN(c.addedAt.getTime())) return false;
-        return c.visitIndex > toxicGarden.visitIndex ||
-          (c.visitIndex === toxicGarden.visitIndex && c.coasterIndex > toxicGarden.coasterIndex);
-      }).sort((a, b) => b.addedAt - a.addedAt);
-      if (newerTimestamped.length) latestCredit = newerTimestamped[0];
-    } else {
-      const timestamped = creditRows.filter(c => c.addedAt && !Number.isNaN(c.addedAt.getTime()));
-      latestCredit = timestamped.sort((a, b) => b.addedAt - a.addedAt)[0]
-        || creditRows.slice().sort((a, b) => b.visitIndex - a.visitIndex || b.coasterIndex - a.coasterIndex)[0];
+    const genuinelyNew = creditRows
+      .filter(c => c.addedAt && !Number.isNaN(c.addedAt.getTime()) && c.addedAt > LEGACY_CREDIT_CUTOFF)
+      .sort((a, b) => b.addedAt - a.addedAt);
+    let latestCredit = genuinelyNew[0] || toxicGarden || null;
+    if (!latestCredit) {
+      latestCredit = creditRows.slice()
+        .sort((a, b) => b.visitIndex - a.visitIndex || b.coasterIndex - a.coasterIndex)[0];
     }
     if (latestCredit) {
       const lead = latestCredit.visit;
