@@ -1427,7 +1427,44 @@ async function loadData() {
       render();
       return;
     }
-    const saved = await dbLoad(RECORD_ID);
+    let saved = await dbLoad(RECORD_ID);
+
+    // One-time China legacy migration. The live record predates stable item IDs,
+    // which the current edit/delete API relies on. Back up the untouched record
+    // first, then add only the structural fields the current template needs.
+    if (RECORD_ID === 'china-2026' && saved && Array.isArray(saved.days) && !saved.meta?._currentTemplateMigrated) {
+      try {
+        const backupId = RECORD_ID + '-legacy-backup';
+        const existingBackup = await dbLoad(backupId);
+        if (!existingBackup) {
+          await dbSave(backupId, JSON.parse(JSON.stringify(saved)));
+        }
+
+        const migrated = JSON.parse(JSON.stringify(saved));
+        migrated.meta = migrated.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
+        migrated.days = migrated.days.map((day, dayIdx) => {
+          const nextDay = (day && typeof day === 'object') ? day : {};
+          nextDay.items = Array.isArray(nextDay.items) ? nextDay.items : [];
+          nextDay.items = nextDay.items.map((item, itemIdx) => {
+            if (!item || typeof item !== 'object') return item;
+            if (!String(item._id || '').trim()) {
+              item._id = 'china-legacy-' + dayIdx + '-' + itemIdx;
+            }
+            return item;
+          });
+          return nextDay;
+        });
+        migrated.meta._currentTemplateMigrated = true;
+        migrated.meta._currentTemplateMigratedAt = new Date().toISOString();
+
+        await dbSave(RECORD_ID, migrated);
+        saved = migrated;
+        console.info('China itinerary migrated to current stable-item format; legacy backup retained.');
+      } catch (migrationError) {
+        console.error('China itinerary migration failed safely; original record left in place.', migrationError);
+      }
+    }
+
     if (saved && saved.days) {
       STATE = saved;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
