@@ -2187,7 +2187,7 @@ function makeItemNode(item, idx) {
   row.querySelector('.tl-delete-btn')?.addEventListener('click', async e => {
     e.stopPropagation();
     if (dragMoved) return;
-    await deleteItineraryItemServer(activeDay, idx, it, 'Remove this item from the itinerary?');
+    await removeItineraryItem(activeDay, idx, { confirmMessage: 'Remove this item from the itinerary?' });
   });
   return row;
 }
@@ -3099,7 +3099,7 @@ async function deleteCurrentItem() {
 
   const item = items[itemIdx];
   try { closeDrawer(); } catch (_) {}
-  await deleteItineraryItemServer(dayIdx, itemIdx, item, 'Remove this item from the itinerary?');
+  await removeItineraryItem(dayIdx, itemIdx, { confirmMessage: 'Remove this item from the itinerary?' });
 }
 
 // ── ADD / EDIT MODAL ──────────────────────────────────────────────────
@@ -3582,7 +3582,7 @@ async function deleteQuickJourney() {
   const item = STATE.days?.[dayIdx]?.items?.[itemIdx];
   if (!item) return;
   try { closeQuickJourneyModal(); } catch (_) {}
-  await deleteItineraryItemServer(dayIdx, itemIdx, item, 'Delete this journey?');
+  await removeItineraryItem(dayIdx, itemIdx, { confirmMessage: 'Delete this journey?', label: 'journey', closeQuickJourney: true });
 }
 
 async function saveQuickJourney() {
