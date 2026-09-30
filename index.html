@@ -791,12 +791,23 @@ async function loadParks() {
     setText('pk-year', seen.filter(v => { const d = parseDMY(v.date); return d && d.getFullYear() === new Date().getFullYear(); }).length);
 
     const timestamped = creditRows.filter(c => c.addedAt && !Number.isNaN(c.addedAt.getTime()));
-    let latestCredit = timestamped.sort((a, b) => b.addedAt - a.addedAt)[0];
-    // Legacy credits pre-date addedAt tracking. Toxic Garden is the known latest
-    // legacy credit, so use it as the baseline until a newer timestamped credit exists.
-    if (!latestCredit) {
-      latestCredit = creditRows.find(c => c.name.trim().toLowerCase() === 'toxic garden')
-        || creditRows.sort((a, b) => b.visitIndex - a.visitIndex || b.coasterIndex - a.coasterIndex)[0];
+    const toxicGarden = creditRows.find(c => c.name.trim().toLowerCase() === 'toxic garden');
+    // Toxic Garden is the latest legacy credit. Older credits may have received
+    // addedAt timestamps during later edits/migrations, so those timestamps must
+    // not incorrectly push them ahead of Toxic Garden on the homepage.
+    // Once a coaster is genuinely added after Toxic Garden, its array position
+    // will be later and it can become the new latest credit automatically.
+    const ordered = creditRows.slice().sort((a, b) =>
+      b.visitIndex - a.visitIndex || b.coasterIndex - a.coasterIndex
+    );
+    const positionLatest = ordered[0];
+    let latestCredit = toxicGarden || positionLatest;
+    if (toxicGarden && positionLatest &&
+        (positionLatest.visitIndex > toxicGarden.visitIndex ||
+         (positionLatest.visitIndex === toxicGarden.visitIndex && positionLatest.coasterIndex > toxicGarden.coasterIndex))) {
+      latestCredit = positionLatest;
+    } else if (!toxicGarden && timestamped.length) {
+      latestCredit = timestamped.sort((a, b) => b.addedAt - a.addedAt)[0] || positionLatest;
     }
     if (latestCredit) {
       const lead = latestCredit.visit;
