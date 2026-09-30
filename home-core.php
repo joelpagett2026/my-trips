@@ -492,6 +492,7 @@ loadParks = async function() {
 
     // Historical credits existed before reliable addedAt tracking. Toxic Garden
     // is the explicit legacy cutoff/current baseline. Ignore timestamps on every
+    // Historical timestamp cleanup boundary: Toxic Garden.
     // credit up to and including it; only genuinely new timestamped credits can
     // supersede it from now on.
     const toxicGarden = creditRows.find(c => c.name.trim().toLowerCase() === 'toxic garden');
