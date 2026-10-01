@@ -315,6 +315,7 @@
           <label class="field-label">Ticket link</label>
           <input class="field-input" id="f-att-link" type="url">
         </div>
+        <div class="field-row">
         <div class="field-group">
           <label class="field-label">Booking status</label>
           <div class="transport-type-row" id="f-att-booked-row">
@@ -323,6 +324,15 @@
             <button type="button" class="tt-btn" data-val="prebookable" onclick="setAttBooked('prebookable')">Not Pre-Bookable</button>
           </div>
           <input type="hidden" id="f-att-booked" value="notbooked">
+        </div>
+        <fieldset class="field-group" style="border:0;padding:0;margin:0;min-width:0;">
+          <legend class="field-label">Approximate Visit Duration</legend>
+          <div id="f-att-periods" style="display:flex;flex-wrap:wrap;gap:10px;">
+            <label><input type="checkbox" value="morning"> Morning</label>
+            <label><input type="checkbox" value="afternoon"> Afternoon</label>
+            <label><input type="checkbox" value="evening"> Evening</label>
+          </div>
+        </fieldset>
         </div>
         <div class="field-group">
           <label class="field-label">Notes</label>
@@ -1827,6 +1837,25 @@ const PERIODS = [
   { key:'evening',   label:'Evening'   },
 ];
 
+// One canonical record per visit: appearances share identity, details and totals.
+function visitPeriods(item) {
+  const keys = ['morning', 'afternoon', 'evening'];
+  const selected = ['attraction', 'ticket'].includes(item.type) && Array.isArray(item.visitPeriods)
+    ? keys.filter(key => item.visitPeriods.includes(key)) : [];
+  return selected.length ? selected : [item.period || inferPeriod(item) || 'morning'];
+}
+
+function visitLabel(item, period) {
+  const periods = visitPeriods(item);
+  if (periods.length < 2) return '';
+  if (period !== periods[0]) return 'CONTINUED';
+  return periods.length === 3 ? 'ALL-DAY VISIT' : periods.join(' & ').toUpperCase() + ' VISIT';
+}
+
+function setVisitPeriods(periods) {
+  document.querySelectorAll('#f-att-periods input').forEach(input => { input.checked = periods.includes(input.value); });
+}
+
 function renderTimeline() {
   const d = STATE.days[activeDay];
   const col = document.getElementById('tl-col');
@@ -1862,8 +1891,7 @@ function renderTimeline() {
     if (!item) return;
     const isHireBooking = item.type==='move' && (item.transport && item.transport.mode)==='Car Hire / Road Trip' && item.transport.hire;
     if (isHireBooking) return;
-    const p = item.period || inferPeriod(item);
-    buckets[p].push({ item, globalIdx });
+    visitPeriods(item).forEach(p => buckets[p]?.push({ item, globalIdx }));
   });
 
   // Read-only shared links see every period regardless of the owner's
@@ -1900,7 +1928,7 @@ function renderTimeline() {
     tl.dataset.period = key;
 
     buckets[key].forEach(({ item, globalIdx }) => {
-      tl.appendChild(makeItemNode(item, globalIdx));
+      tl.appendChild(makeItemNode(item, globalIdx, key));
     });
 
     section.appendChild(tl);
@@ -2077,7 +2105,7 @@ function flightDuration(depart, arrive, fromLoc, toLoc, dateStr, transport) {
   return h + 'h' + (m ? ' ' + m + 'm' : '');
 }
 
-function makeItemNode(item, idx) {
+function makeItemNode(item, idx, appearancePeriod = visitPeriods(item)[0]) {
   const ico   = icoForType(item.type, item.title, item);
   const price = item.booking ? '<span class="tl-price">' + (item.booking.price||'') + '</span>' : '';
   const noteText = (item.booking && item.booking.note) ? item.booking.note : '';
@@ -2150,8 +2178,9 @@ function makeItemNode(item, idx) {
   const row = document.createElement('div');
   row.className = 'tl-item';
   row.dataset.idx = idx;
+  row.dataset.visitContinued = appearancePeriod !== visitPeriods(item)[0] ? '1' : '0';
   row.innerHTML =
-    '<div class="tl-grip" title="Drag to reorder">' +
+    '<div class="tl-grip"' + (visitPeriods(item).length > 1 ? ' style="visibility:hidden"' : '') + ' title="Drag to reorder">' +
       '<svg width="10" height="14" viewBox="0 0 10 14" fill="none">' +
         '<circle cx="2.5" cy="2.5" r="1.5" fill="currentColor"/>' +
         '<circle cx="7.5" cy="2.5" r="1.5" fill="currentColor"/>' +
@@ -2160,11 +2189,12 @@ function makeItemNode(item, idx) {
         '<circle cx="2.5" cy="11.5" r="1.5" fill="currentColor"/>' +
         '<circle cx="7.5" cy="11.5" r="1.5" fill="currentColor"/>' +
       '</svg></div>' +
-    '<div class="tl-time">' + (item.time||'') + '</div>' +
+    '<div class="tl-time">' + (row.dataset.visitContinued === '1' ? '' : (item.time||'')) + '</div>' +
     '<div class="tl-body-wrap">' +
       '<div class="tl-dot ' + dotCls + '"></div>' +
       '<div class="tl-ico ' + ico.cls + '">' + ico.html + '</div>' +
       '<div class="tl-text">' +
+        (visitLabel(item, appearancePeriod) ? '<div class="tl-visit-duration" style="font-size:10px;font-weight:700;color:#5A8968;">' + visitLabel(item, appearancePeriod) + '</div>' : '') +
         '<div class="tl-title">' + (item._hotelBreakfast ? item._hotelBreakfast : (isPureJourney ? 'Driving' : (item.title||''))) + '</div>' +
         (!isHBF && !isTransportItem && item.sub && item.sub !== item.title ? '<div class="tl-sub">' + item.sub + '</div>' : '') +
         (!isHBF && !isTransportItem && noteText ? '<div class="tl-note">' + noteText + '</div>' : '') +
@@ -2207,6 +2237,7 @@ function onDragStart(e) {
   if (!grip) return;
   const item = e.target.closest('.tl-item');
   if (!item) return;
+  if (visitPeriods(STATE.days[activeDay].items[Number(item.dataset.idx)]).length > 1) return;
   dragEl = item;
   dragStartX = e.clientX;
   dragStartY = e.clientY;
@@ -2291,14 +2322,23 @@ function onDragEnd() {
   // Rebuild items array from new DOM order across all period sections
   const allItems = STATE.days[activeDay].items;
   const newItems = [];
+  const seen = new Set();
   document.querySelectorAll('.tl-section').forEach(section => {
     const periodKey = section.dataset.period;
     section.querySelectorAll('.tl-item').forEach(el => {
       const i = parseInt(el.dataset.idx);
       const it = allItems[i];
-      if (it) { it.period = periodKey; newItems.push(it); }
+      if (it && !seen.has(it)) {
+        if (visitPeriods(it).length === 1) {
+          it.period = periodKey;
+          if (it.visitPeriods) it.visitPeriods = [periodKey];
+        }
+        seen.add(it);
+        newItems.push(it);
+      }
     });
   });
+  allItems.forEach(it => { if (!seen.has(it)) newItems.push(it); });
   if (newItems.length) STATE.days[activeDay].items = newItems;
 
   dragCleanup();
@@ -3039,7 +3079,9 @@ async function removeItineraryItem(dayIdx, itemIdx, options = {}) {
     return false;
   }
 
-  if (options.confirmMessage && !confirm(options.confirmMessage)) return false;
+  if (options.confirmMessage && !confirm(items[itemIdx].visitPeriods?.length > 1
+    ? 'Remove this entire visit and all its period appearances?'
+    : options.confirmMessage)) return false;
 
   const removedItem = items[itemIdx];
 
@@ -3087,7 +3129,7 @@ async function deleteCurrentItem() {
   if (itemIdx < 0 && selected?._id) {
     itemIdx = items.findIndex(it => it && it._id === selected._id);
   }
-  if (itemIdx < 0) {
+  if (itemIdx < 0 && !selected?._id) {
     const fallback = Number(drawerItem.itemIdx);
     if (Number.isInteger(fallback) && fallback >= 0 && fallback < items.length) itemIdx = fallback;
   }
@@ -3111,6 +3153,7 @@ function openAddItem(period) {
   document.getElementById('modal-delete-btn').style.display = 'none';
   clearForm();
   if (period) document.getElementById('f-period').value = period;
+  setVisitPeriods([period || 'morning']);
   openModal();
 }
 
@@ -3154,7 +3197,9 @@ function openEditItem(dayIdx, itemIdx) {
 
   // Determine which category bubble this legacy/current item belongs to
   let cat = item.type;
-  if (item.type === 'act' || item.type === 'ticket') {
+  if (item.type === 'ticket') {
+    cat = 'attraction';
+  } else if (item.type === 'act') {
     const hasBookingInfo = item.booking && (item.booking.price || item.booking.tickets || item.booking.url || item.booking.ref);
     cat = hasBookingInfo ? 'attraction' : 'place';
   } else if (!['place','attraction','meal','move'].includes(item.type)) {
@@ -3189,6 +3234,7 @@ function openEditItem(dayIdx, itemIdx) {
       document.getElementById('f-route').value     = (tr.route) || '';
     }
   } else if (cat === 'attraction') {
+    setVisitPeriods(visitPeriods(item));
     document.getElementById('f-att-name').value  = item.title || '';
     document.getElementById('f-att-time').value  = item.time || '';
     document.getElementById('f-att-link').value  = (item.booking && item.booking.url) || '';
@@ -3233,6 +3279,7 @@ function clearForm() {
   _editingCarHireRoadTrip = null;
   _editingCarHireNotes = '';
   setAttBooked('notbooked');
+  setVisitPeriods(['morning']);
   document.getElementById('f-period').value = 'morning';
   setCategory('place');
   setTransportType('Flight');
@@ -3841,7 +3888,13 @@ function saveItem() {
     const bookedVal = document.getElementById('f-att-booked').value;
     const statusMap = { booked:'booked', notbooked:null, prebookable:'prebookable' };
     item = { time, type, period, title, sub:'', status: statusMap[bookedVal] };
-    if (link || cost || notes) item.booking = { ref:'', price: cost, tickets:'', url: link, note: notes };
+    const selectedPeriods = [...document.querySelectorAll('#f-att-periods input:checked')].map(input => input.value);
+    if (!selectedPeriods.length) { alert('Choose at least one visit period.'); return; }
+    item.visitPeriods = visitPeriods({ type, visitPeriods: selectedPeriods });
+    item.period = item.visitPeriods[0];
+    item.visitGroupId = orig?.visitGroupId || orig?._id || crypto.randomUUID();
+    item._id = orig?._id || item.visitGroupId;
+    if (orig?.booking || link || cost || notes) item.booking = { ...orig?.booking, price: cost, url: link, note: notes };
   } else if (type === 'meal') {
     title = document.getElementById('f-meal-name').value.trim();
     if (!title) { document.getElementById('f-meal-name').focus(); return; }
@@ -3864,6 +3917,8 @@ function saveItem() {
 
   // Preserve data with no editable field in this modal when editing an existing item
   if (orig) {
+    if (orig._id) item._id = orig._id;
+    if (orig.completed !== undefined) item.completed = orig.completed;
     if (orig._geo)                    item._geo      = orig._geo;
     if (orig._about)                  item._about    = orig._about;
     if (orig.conn !== undefined)      item.conn      = orig.conn;
@@ -3885,8 +3940,8 @@ function saveItem() {
 
   // Unhide the period if it was hidden
   const day = STATE.days[activeDay];
-  if (day._hiddenPeriods && day._hiddenPeriods.includes(period)) {
-    day._hiddenPeriods = day._hiddenPeriods.filter(p => p !== period);
+  if (day._hiddenPeriods) {
+    day._hiddenPeriods = day._hiddenPeriods.filter(p => !visitPeriods(item).includes(p));
   }
 
   closeModal();
@@ -4065,12 +4120,12 @@ function clearPeriod(periodKey) {
   // renderTimeline), so they must never be swept up by "clear this
   // period" either — the user has no way to see it's about to be deleted.
   const isHireBooking = it => it && it.type==='move' && (it.transport && it.transport.mode)==='Car Hire / Road Trip' && it.transport.hire;
-  const count = items.filter(it => it && !isHireBooking(it) && (it.period || inferPeriod(it)) === periodKey).length;
+  const count = items.filter(it => it && !isHireBooking(it) && visitPeriods(it).includes(periodKey)).length;
 
   if (count > 0) {
-    if (!confirm('Remove all ' + count + ' ' + periodKey + ' item' + (count !== 1 ? 's' : '') + ' from this day?')) return;
+    if (!confirm('Remove all ' + count + ' ' + periodKey + ' item' + (count !== 1 ? 's' : '') + ' from this day? Multi-period visits will be removed from every period.')) return;
     takeSnapshot();
-    day.items = items.filter(it => !it || isHireBooking(it) || (it.period || inferPeriod(it)) !== periodKey);
+    day.items = items.filter(it => !it || isHireBooking(it) || !visitPeriods(it).includes(periodKey));
   }
 
   // Hide the section

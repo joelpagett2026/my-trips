@@ -104,6 +104,9 @@ jobs:
       - name: Validate runtime contracts
         run: python scripts/validate-runtime.py
 
+      - name: Validate multi-period attraction visits
+        run: node scripts/test-linked-visits.js
+
       - name: Validate share privacy contracts
         run: python scripts/validate-share.py
 
@@ -339,6 +342,18 @@ jobs:
           grep -q 'dayDate >= ci && dayDate < co' /tmp/itinerary-core.js
           grep -Eiq '^cache-control:.*max-age=31536000.*immutable' /tmp/itinerary-core.headers
           node --check /tmp/itinerary-core.js
+
+      - name: Verify live multi-period attraction feature
+        run: |
+          grep -q 'Approximate Visit Duration' /tmp/trip.html
+          grep -q 'id="f-att-periods"' /tmp/trip.html
+          grep -q 'ALL-DAY VISIT' /tmp/itinerary-core.js
+          grep -q 'CONTINUED' /tmp/itinerary-core.js
+          grep -q 'visitGroupId' /tmp/itinerary-core.js
+          curl --fail --show-error --silent \
+            "https://joelpagett.co.uk/itinerary-ui.js?verify-linked-visits=1" \
+            --output /tmp/itinerary-ui.js
+          grep -q 'row.dataset.visitContinued' /tmp/itinerary-ui.js
 
       - name: Verify live activity editor controller
         run: |

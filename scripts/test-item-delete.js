@@ -42,6 +42,24 @@ function makeContext({ saveOk = true } = {}) {
 (async () => {
   {
     const { ctx, calls } = makeContext();
+    const visit = { _id:'visit1', type:'attraction', title:'Palace', visitPeriods:['morning','afternoon','evening'] };
+    const keep = { _id:'keep', type:'place', title:'Keep' };
+    ctx.STATE.days[0].items = [keep,visit];
+    ctx.drawerItem = { dayIdx:0, itemIdx:0, item:visit };
+    let message;
+    ctx.confirm = text => { message = text; return false; };
+    await ctx.deleteCurrentItem();
+    if (calls.saves || ctx.STATE.days[0].items.length !== 2) throw new Error('cancelled linked delete mutated data');
+    if (!message.includes('all its period appearances')) throw new Error('linked delete must explain its scope');
+    ctx.confirm = () => true;
+    await ctx.deleteCurrentItem();
+    if (ctx.STATE.days[0].items.length !== 1 || ctx.STATE.days[0].items[0]._id !== 'keep') throw new Error('linked delete removed wrong visit');
+    ctx.drawerItem = { dayIdx:0, itemIdx:0, item:visit };
+    await ctx.deleteCurrentItem();
+    if (ctx.STATE.days[0].items.length !== 1) throw new Error('stale stable ID must not fall back to unrelated index');
+  }
+  {
+    const { ctx, calls } = makeContext();
     const item = { _id:'a1', type:'place', title:'Cathedral', time:'10:00', period:'morning' };
     ctx.STATE.days[0].items = [item];
     ctx.drawerItem = { dayIdx:0, itemIdx:0, item };

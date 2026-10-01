@@ -185,8 +185,8 @@
 
       root.querySelectorAll('.tl-item').forEach(row => {
         const item = itemForRow(row);
-        if (!isEligible(item)) {
-          row.classList.remove('tl-completed');
+        if (!isEligible(item) || row.dataset.visitContinued === '1') {
+          row.classList.toggle('tl-completed', isEligible(item) && item.completed === true);
           row.querySelector('.tl-complete-btn')?.remove();
           return;
         }
@@ -205,6 +205,7 @@
             if (typeof takeSnapshot === 'function') takeSnapshot();
             latest.completed = latest.completed !== true;
             syncState(row, button, latest);
+            if (typeof renderTimeline === 'function') renderTimeline();
             updateResetControl();
             if (typeof scheduleSave === 'function') scheduleSave();
           });

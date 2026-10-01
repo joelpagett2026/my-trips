@@ -190,10 +190,13 @@ if ($action === 'upsert_item') {
         }
 
         $period = trim((string)($item['period'] ?? ''));
+        $visitPeriods = in_array($item['type'] ?? '', ['attraction', 'ticket'], true) && is_array($item['visitPeriods'] ?? null)
+            ? array_values(array_intersect(['morning', 'afternoon', 'evening'], $item['visitPeriods'])) : [];
+        if (!$visitPeriods) $visitPeriods = [$period];
         if ($period !== '' && isset($data['days'][$dayIndex]['_hiddenPeriods']) && is_array($data['days'][$dayIndex]['_hiddenPeriods'])) {
             $data['days'][$dayIndex]['_hiddenPeriods'] = array_values(array_filter(
                 $data['days'][$dayIndex]['_hiddenPeriods'],
-                static fn($value) => (string)$value !== $period
+                static fn($value) => !in_array((string)$value, $visitPeriods, true)
             ));
         }
 

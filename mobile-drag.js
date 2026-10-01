@@ -202,7 +202,7 @@
     const candidate = target.closest('.tl-item');
     if (!candidate) return null;
     const item = currentItem(candidate);
-    return item && ELIGIBLE_TYPES.has(item.type) ? candidate : null;
+    return item && ELIGIBLE_TYPES.has(item.type) && !(item.visitPeriods?.length > 1) ? candidate : null;
   }
 
   function decorateRows() {
@@ -210,7 +210,7 @@
     if (!root) return;
     root.querySelectorAll('.tl-item').forEach(candidate => {
       const item = currentItem(candidate);
-      candidate.classList.toggle('mobile-drag-eligible', !!item && ELIGIBLE_TYPES.has(item.type));
+      candidate.classList.toggle('mobile-drag-eligible', !!item && ELIGIBLE_TYPES.has(item.type) && !(item.visitPeriods?.length > 1));
     });
   }
 
