@@ -585,6 +585,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 #fields-attraction .field-textarea:focus { border-color: var(--activity); }
 #fields-attraction .tt-btn:hover { border-color: var(--activity); color: var(--activity); }
 #fields-attraction .tt-btn.active { background: var(--activity); border-color: var(--activity); color: #fff; }
+/* Native multi-select checkboxes presented as the same pills as booking status. */
+#f-att-periods .tt-btn { position:relative; display:inline-flex; align-items:center; }
+#f-att-periods input {
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0;
+}
+#f-att-periods .tt-btn:has(input:checked) { background:var(--activity); border-color:var(--activity); color:#fff; }
+#f-att-periods .tt-btn:has(input:focus-visible) { outline:2px solid var(--activity); outline-offset:3px; }
 #fields-standard, #fields-transport { display: flex; flex-direction: column; gap: 13px; }
 
 /* ── HIDDEN PERIOD RESTORE ── */

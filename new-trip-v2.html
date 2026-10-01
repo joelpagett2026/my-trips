@@ -325,14 +325,14 @@
           </div>
           <input type="hidden" id="f-att-booked" value="notbooked">
         </div>
-        <fieldset class="field-group" style="border:0;padding:0;margin:0;min-width:0;">
-          <legend class="field-label">Approximate Visit Duration</legend>
-          <div id="f-att-periods" style="display:flex;flex-wrap:wrap;gap:10px;">
-            <label><input type="checkbox" value="morning"> Morning</label>
-            <label><input type="checkbox" value="afternoon"> Afternoon</label>
-            <label><input type="checkbox" value="evening"> Evening</label>
+        <div class="field-group" role="group" aria-labelledby="f-att-duration-label">
+          <span class="field-label" id="f-att-duration-label">Approximate Visit Duration</span>
+          <div id="f-att-periods" class="transport-type-row">
+            <label class="tt-btn"><input type="checkbox" value="morning">Morning</label>
+            <label class="tt-btn"><input type="checkbox" value="afternoon">Afternoon</label>
+            <label class="tt-btn"><input type="checkbox" value="evening">Evening</label>
           </div>
-        </fieldset>
+        </div>
         </div>
         <div class="field-group">
           <label class="field-label">Notes</label>
