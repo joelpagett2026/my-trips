@@ -348,8 +348,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .field-textarea{resize:vertical;min-height:70px;line-height:1.5;}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .modal-btn{padding:9px 20px;border-radius:8px;font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer;border:none;transition:all 0.13s;}
-.modal-btn.primary{background:var(--teal);color:#fff;}
-.modal-btn.primary:hover{background:#0a6570;}
+.modal-btn.primary{background:var(--modal-accent,var(--teal));color:#fff;}
+.modal-btn.primary:hover{background:color-mix(in srgb,var(--modal-accent,var(--teal)) 85%,#000);}
+/* Follow the selected section, independent of the Save controller's button ID. */
+#modal-overlay:has(#f-category-row .tt-btn.active[data-cat="place"]){--modal-accent:var(--teal);}
+#modal-overlay:has(#f-category-row .tt-btn.active[data-cat="attraction"]){--modal-accent:var(--activity);}
+#modal-overlay:has(#f-category-row .tt-btn.active[data-cat="meal"]){--modal-accent:var(--amber);}
+#modal-overlay:has(#f-category-row .tt-btn.active[data-cat="move"]){--modal-accent:var(--transport);}
+#modal-overlay:has(#f-category-row .tt-btn.active[data-cat="carhire"]),
+#hotel-modal-overlay,#quick-journey-overlay{--modal-accent:var(--carhire);}
 .modal-btn.secondary{background:none;border:1.5px solid var(--line);color:var(--text2);}
 .modal-btn.secondary:hover{border-color:var(--teal);color:var(--teal);}
 .modal-btn.danger{background:none;border:1.5px solid #e53e3e;color:#e53e3e;margin-right:auto;}

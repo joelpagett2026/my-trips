@@ -644,7 +644,7 @@
     <div class="modal-foot">
       <button class="modal-btn danger" id="qj-delete-btn" style="display:none" onclick="deleteQuickJourney()">Delete</button>
       <button class="modal-btn secondary" onclick="closeQuickJourneyModal()">Cancel</button>
-      <button class="modal-btn primary" id="qj-save-btn" onclick="saveQuickJourney()" style="background:var(--carhire);">Save</button>
+      <button class="modal-btn primary" id="qj-save-btn" onclick="saveQuickJourney()">Save</button>
     </div>
   </div>
 </div>
@@ -3318,14 +3318,7 @@ function onCategoryChange() {
   const modalTabs = document.getElementById('modal-tabs');
   if (modalTabs) modalTabs.style.display = type === 'place' ? '' : 'none';
   if (type !== 'place' && document.getElementById('tab-bulk').classList.contains('active')) setModalTab('single');
-  // Save button colour follows category
-  const saveBtn = document.getElementById('modal-save-btn');
-  if (saveBtn) {
-    const activeCatBtn = document.querySelector('#f-category-row .tt-btn.active');
-    const activeCat = activeCatBtn ? activeCatBtn.dataset.cat : type;
-    const colMap = { place: 'var(--teal)', attraction: 'var(--activity)', meal: 'var(--amber)', move: 'var(--transport)', carhire: 'var(--carhire)' };
-    saveBtn.style.background = colMap[activeCat] || 'var(--teal)';
-  }
+  // Save colour follows the selected category in CSS, including renamed controller buttons.
   // Hide transport-specific booking panels when not on transport
   if (type !== 'move') { document.getElementById('booking-toggle-btn').style.display = 'none'; document.getElementById('booking-fields').style.display = 'none'; document.getElementById('flight-booking-fields').style.display = 'none'; }
 }
