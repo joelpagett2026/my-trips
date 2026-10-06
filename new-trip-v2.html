@@ -1653,6 +1653,22 @@ async function loadData() {
     }
 
     if (saved && saved.days) {
+      try {
+        const evidence = (snapshotList || []).map(s => s && s.data).filter(Boolean);
+        if (RECORD_ID === 'china-2026') {
+          const legacyBackup = await dbLoad(RECORD_ID + '-legacy-backup');
+          if (legacyBackup) evidence.push(legacyBackup);
+        }
+        const repaired = JSON.parse(JSON.stringify(saved));
+        if (enforceAttractionSemantics(repaired, evidence)) {
+          await dbSave(RECORD_ID, repaired);
+          saved = repaired;
+          console.info('Attraction semantic integrity repair applied.');
+        }
+      } catch (semanticRepairError) {
+        console.error('Attraction semantic integrity repair failed safely.', semanticRepairError);
+      }
+
       STATE = saved;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
     } else {
@@ -1739,6 +1755,10 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', flushPendingSave);
 
 async function saveData() {
+  // Attraction identity is immutable once established. Enforce it before
+  // snapshotting or persistence so no UI/controller regression can demote
+  // an attraction into a Point of Interest.
+  enforceAttractionSemantics(STATE);
   // Take a snapshot before every save
   takeSnapshot();
   try {
@@ -3350,6 +3370,75 @@ function openAddDay() {
   render();
 }
 
+function attractionSemanticKey(dayIdx, item) {
+  if (!item || typeof item !== 'object') return '';
+  const id = String(item._id || '').trim();
+  if (id) return 'id:' + id;
+  const norm = value => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return ['sig', dayIdx, norm(item.title), String(item.time || ''), String(item.period || '')].join(':');
+}
+
+function buildAttractionSemanticRegistry(state, evidenceStates = []) {
+  const registry = new Set(Array.isArray(state?.meta?._attractionSemanticKeys) ? state.meta._attractionSemanticKeys : []);
+  const addEvidence = candidateState => {
+    (candidateState?.days || []).forEach((day, dayIdx) => {
+      (day?.items || []).forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        const semanticAttraction =
+          item._semanticType === 'attraction' ||
+          item.type === 'attraction' ||
+          item.type === 'ticket' ||
+          (item.type === 'act' && isLegacyTicketedAttraction(item));
+        if (semanticAttraction) registry.add(attractionSemanticKey(dayIdx, item));
+      });
+    });
+  };
+  addEvidence(state);
+  evidenceStates.forEach(addEvidence);
+  return registry;
+}
+
+function enforceAttractionSemantics(state, evidenceStates = []) {
+  if (!state || !Array.isArray(state.days)) return false;
+  state.meta = state.meta || {};
+  const registry = buildAttractionSemanticRegistry(state, evidenceStates);
+  let changed = false;
+
+  state.days.forEach((day, dayIdx) => {
+    (day?.items || []).forEach(item => {
+      if (!item || typeof item !== 'object') return;
+      const key = attractionSemanticKey(dayIdx, item);
+      const mustBeAttraction =
+        item._semanticType === 'attraction' ||
+        item.type === 'attraction' ||
+        item.type === 'ticket' ||
+        registry.has(key);
+
+      if (mustBeAttraction) {
+        if (item.type !== 'attraction') {
+          item.type = 'attraction';
+          changed = true;
+        }
+        if (item._semanticType !== 'attraction') {
+          item._semanticType = 'attraction';
+          changed = true;
+        }
+        registry.add(key);
+      }
+    });
+  });
+
+  const nextKeys = [...registry].sort();
+  const previousKeys = Array.isArray(state.meta._attractionSemanticKeys)
+    ? [...state.meta._attractionSemanticKeys].sort()
+    : [];
+  if (JSON.stringify(nextKeys) !== JSON.stringify(previousKeys)) {
+    state.meta._attractionSemanticKeys = nextKeys;
+    changed = true;
+  }
+  return changed;
+}
+
 function isLegacyTicketedAttraction(item) {
   if (!item || typeof item !== 'object') return false;
   if (item._semanticType === 'attraction') return true;
@@ -3385,7 +3474,9 @@ function openEditItem(dayIdx, itemIdx) {
   document.getElementById('f-period').value = item.period || inferPeriod(item) || 'morning';
 
   // Determine which category bubble this legacy/current item belongs to
-  let cat = item.type;
+  let cat = (item._semanticType === 'attraction' || STATE.meta?._attractionSemanticKeys?.includes(attractionSemanticKey(dayIdx, item)))
+    ? 'attraction'
+    : item.type;
   if (item.type === 'ticket') {
     cat = 'attraction';
   } else if (item.type === 'act') {
@@ -3993,7 +4084,11 @@ function saveItem() {
   // Legacy ticketed attractions must never silently degrade into POIs.
   // This only protects old ticket/act records; it does not stop a normal
   // modern POI from being saved as a POI.
-  if (type === 'place' && orig && isLegacyTicketedAttraction(orig)) type = 'attraction';
+  if (type === 'place' && orig && (
+    isLegacyTicketedAttraction(orig) ||
+    orig._semanticType === 'attraction' ||
+    STATE.meta?._attractionSemanticKeys?.includes(attractionSemanticKey(editItem?.dayIdx ?? activeDay, orig))
+  )) type = 'attraction';
   let time, title, item;
 
   if (type === 'move' && document.getElementById('f-transport-type').value === 'Car Hire / Road Trip') {
