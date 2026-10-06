@@ -107,6 +107,9 @@ jobs:
       - name: Validate multi-period attraction visits
         run: node scripts/test-linked-visits.js
 
+      - name: Validate attraction semantic integrity
+        run: node scripts/test-attraction-semantics.js
+
       - name: Validate share privacy contracts
         run: python scripts/validate-share.py
 
