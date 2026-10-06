@@ -5104,8 +5104,10 @@ function extractBookings(state) {
       // been booked yet. Also recognise older "place" records as attractions
       // when they carry booking-specific data; some long-standing itineraries
       // (including China) pre-date the current attraction type.
-      const legacyBookedPlace = it.type==='place' &&
-        (st==='booked' || st==='confirmed' || st==='prebookable' || hasRef || hasPrice || hasTix);
+      const legacyBookedPlace = it.type==='place' && (
+        RECORD_ID === 'china-2026' ||
+        st==='booked' || st==='confirmed' || st==='prebookable' || hasRef || hasPrice || hasTix
+      );
       if (it.type==='act'||it.type==='ticket'||it.type==='attraction'||legacyBookedPlace) {
         attractions.push({
           ...base,
@@ -5117,21 +5119,19 @@ function extractBookings(state) {
         continue;
       }
 
-      // Older meal records did not always persist a booked/confirmed status.
-      // A time or booking details were only stored for booked meals, so use
-      // those as a safe legacy fallback rather than dropping the meal.
+      // Show every itinerary meal on the Bookings overview, not just rows
+      // carrying a modern booked/confirmed flag. Older China data includes
+      // planned meals saved as walk-in/legacy entries, which were otherwise
+      // invisible here. The row badge below makes the booking state explicit.
       if (it.type==='meal' && !isHotelBreakfastItem(it)) {
-        const mealIsBooked = st==='booked' || st==='confirmed' || hasRef || hasUrl || hasPrice || hasTix || !!it.time || !!b.note;
-        if (mealIsBooked) {
-          dining.push({
-            ...base,
-            status: st==='confirmed' ? 'confirmed' : 'booked',
-            cat:'dining',
-            sub:it.sub,
-            kicker:it.kicker||'',
-            time:it.time||''
-          });
-        }
+        dining.push({
+          ...base,
+          status: st==='confirmed' ? 'confirmed' : (st==='booked' ? 'booked' : 'walkin'),
+          cat:'dining',
+          sub:it.sub,
+          kicker:it.kicker||'',
+          time:it.time||''
+        });
         continue;
       }
 
@@ -5349,13 +5349,16 @@ function renderBookingsView() {
     const dateStr = fmtDdMmmYyyy(m.date) || m.date || '';
     const when = [dateStr, m.time].filter(Boolean).join(' · ');
     const isConfirmed = m.status === 'confirmed';
+    const isBooked = m.status === 'booked';
+    const badgeClass = isConfirmed ? 'bk-meal-badge--confirmed' : (isBooked ? 'bk-meal-badge--booked' : 'bk-meal-badge--walkin');
+    const badgeLabel = isConfirmed ? 'CONFIRMED' : (isBooked ? 'BOOKED' : 'WALK IN');
     return `
     <div class="bk-meal-row" onclick="openDrawerItem(${m.dayIdx||0},${m.itemIdx});">
       <div>
         <div class="bk-meal-name">${m.name}</div>
         ${when ? `<div class="bk-meal-meta">${bkCalIco}<span>${when}</span></div>` : ''}
       </div>
-      <span class="bk-meal-badge ${isConfirmed ? 'bk-meal-badge--confirmed' : 'bk-meal-badge--booked'}">${isConfirmed ? 'CONFIRMED' : 'BOOKED'}</span>
+      <span class="bk-meal-badge ${badgeClass}">${badgeLabel}</span>
       <span class="bk-meal-chev">›</span>
     </div>`;
   }).join('');
@@ -5395,12 +5398,12 @@ function renderBookingsView() {
       <div class="bk-col bk-col--meal">
         <div class="bk-col-head">
           <div class="bk-col-head-ico">${catIcons.dining}</div>
-          <span>Confirmed Meals Booked</span>
+          <span>Meals</span>
         </div>
         ${mealRows ? `
           <div class="bk-attraction-list">${mealRows}</div>
           ${mealsTotal ? `<div class="bk-attraction-total-row">Total <span>${fmt(mealsTotal)}</span></div>` : ''}
-        ` : '<div class="bk-col-empty">No meals booked yet.</div>'}
+        ` : '<div class="bk-col-empty">No meals added yet.</div>'}
       </div>
     </div>`;
 }
