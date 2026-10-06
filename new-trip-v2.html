@@ -5258,6 +5258,9 @@ function extractBookings(state) {
       if (!h || typeof h !== 'object') return false;
       const name = String(h.name || '').trim();
       if (!name) return false; // discard empty/ghost accommodation records
+      const ci = parseDate(h.checkin);
+      const co = parseDate(h.checkout);
+      if (ci && co && co <= ci) return false;
       const signature = [
         name.toLowerCase(),
         String(h.checkin || '').trim(),
