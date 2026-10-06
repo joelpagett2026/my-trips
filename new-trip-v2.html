@@ -1582,6 +1582,76 @@ async function loadData() {
       }
     }
 
+    if (RECORD_ID === 'china-2026' && saved && Array.isArray(saved.days) && !saved.meta?._snapshotAttractionRepairV2) {
+      try {
+        const history = Array.isArray(snapshotList) ? snapshotList : [];
+        const repaired = JSON.parse(JSON.stringify(saved));
+        repaired.meta = repaired.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
+        let repairedCount = 0;
+
+        const norm = value => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const historicAttraction = candidate =>
+          candidate && (candidate.type === 'attraction' || candidate.type === 'ticket' ||
+            candidate._semanticType === 'attraction' ||
+            (candidate.type === 'act' && isLegacyTicketedAttraction(candidate)));
+
+        repaired.days.forEach((day, dayIdx) => {
+          if (!Array.isArray(day?.items)) return;
+          day.items.forEach(item => {
+            if (!item || item.type !== 'place') return;
+
+            let match = null;
+            for (const snap of history) {
+              const oldItems = snap?.data?.days?.[dayIdx]?.items;
+              if (!Array.isArray(oldItems)) continue;
+
+              if (item._id) {
+                match = oldItems.find(old => old && old._id === item._id && historicAttraction(old));
+              }
+              if (!match) {
+                match = oldItems.find(old =>
+                  historicAttraction(old) &&
+                  norm(old.title) === norm(item.title) &&
+                  String(old.time || '') === String(item.time || '')
+                );
+              }
+              if (match) break;
+            }
+
+            if (!match) return;
+            item.type = 'attraction';
+            item._semanticType = 'attraction';
+            if (!item.status && match.status) item.status = match.status;
+
+            const oldBooking = match.booking || {};
+            const currentBooking = item.booking || {};
+            if (Object.keys(oldBooking).length || Object.keys(currentBooking).length) {
+              item.booking = {
+                ...oldBooking,
+                ...currentBooking,
+                ref: currentBooking.ref || oldBooking.ref || '',
+                price: currentBooking.price || oldBooking.price || '',
+                tickets: currentBooking.tickets || oldBooking.tickets || '',
+                url: currentBooking.url || oldBooking.url || '',
+                note: currentBooking.note || oldBooking.note || ''
+              };
+            }
+            if (!item.visitPeriods && Array.isArray(match.visitPeriods)) item.visitPeriods = [...match.visitPeriods];
+            if (!item.visitGroupId && match.visitGroupId) item.visitGroupId = match.visitGroupId;
+            repairedCount++;
+          });
+        });
+
+        repaired.meta._snapshotAttractionRepairV2 = true;
+        repaired.meta._snapshotAttractionRepairV2At = new Date().toISOString();
+        await dbSave(RECORD_ID, repaired);
+        saved = repaired;
+        console.info('China attraction snapshot repair restored ' + repairedCount + ' item(s).');
+      } catch (snapshotRepairError) {
+        console.error('China attraction snapshot repair failed safely; current record left unchanged.', snapshotRepairError);
+      }
+    }
+
     if (saved && saved.days) {
       STATE = saved;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
@@ -3282,6 +3352,7 @@ function openAddDay() {
 
 function isLegacyTicketedAttraction(item) {
   if (!item || typeof item !== 'object') return false;
+  if (item._semanticType === 'attraction') return true;
   if (item.type === 'ticket' || item.type === 'attraction') return true;
   if (item.type !== 'act') return false;
   const booking = item.booking || {};
@@ -4001,7 +4072,7 @@ function saveItem() {
     const notes  = document.getElementById('f-att-notes').value.trim();
     const bookedVal = document.getElementById('f-att-booked').value;
     const statusMap = { booked:'booked', notbooked:null, prebookable:'prebookable' };
-    item = { time, type, period, title, sub:'', status: statusMap[bookedVal] };
+    item = { time, type, period, title, sub:'', status: statusMap[bookedVal], _semanticType:'attraction' };
     const selectedPeriods = [...document.querySelectorAll('#f-att-periods input:checked')].map(input => input.value);
     if (!selectedPeriods.length) { alert('Choose at least one visit period.'); return; }
     item.visitPeriods = visitPeriods({ type, visitPeriods: selectedPeriods });
@@ -4033,6 +4104,7 @@ function saveItem() {
   if (orig) {
     if (orig._id) item._id = orig._id;
     if (orig.completed !== undefined) item.completed = orig.completed;
+    if (orig._semanticType) item._semanticType = orig._semanticType;
     if (orig._geo)                    item._geo      = orig._geo;
     if (orig._about)                  item._about    = orig._about;
     if (orig.conn !== undefined)      item.conn      = orig.conn;
