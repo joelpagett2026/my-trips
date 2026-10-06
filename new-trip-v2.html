@@ -1547,6 +1547,41 @@ async function loadData() {
       }
     }
 
+    if (RECORD_ID === 'china-2026' && saved && saved.meta && Array.isArray(saved.meta.hotels) && !saved.meta._hotelGhostsCleaned) {
+      try {
+        const cleaned = JSON.parse(JSON.stringify(saved));
+        const seen = new Set();
+        const before = cleaned.meta.hotels.length;
+        cleaned.meta.hotels = cleaned.meta.hotels.filter(h => {
+          if (!h || typeof h !== 'object') return false;
+          const name = String(h.name || '').trim();
+          if (!name) return false;
+          const signature = [
+            name.toLowerCase(),
+            String(h.checkin || '').trim(),
+            String(h.checkout || '').trim(),
+            String(h.ref || '').trim().toLowerCase()
+          ].join('|');
+          if (seen.has(signature)) return false;
+          seen.add(signature);
+          return true;
+        });
+        cleaned.meta._hotelGhostsCleaned = true;
+        cleaned.meta._hotelGhostsCleanedAt = new Date().toISOString();
+        if (cleaned.meta.hotels.length !== before) {
+          await dbSave(RECORD_ID, cleaned);
+          saved = cleaned;
+          console.info('Removed empty/duplicate China hotel records from the live itinerary.');
+        } else {
+          // Persist the guard so the cleanup is not re-run on every load.
+          await dbSave(RECORD_ID, cleaned);
+          saved = cleaned;
+        }
+      } catch (hotelCleanupError) {
+        console.error('China hotel cleanup failed safely; current record left unchanged.', hotelCleanupError);
+      }
+    }
+
     if (saved && saved.days) {
       STATE = saved;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
@@ -5144,12 +5179,29 @@ function extractBookings(state) {
     return m ? parseFloat(m[0]) * (pp ? numTrav : 1) : null;
   };
 
-  const hotels     = (state.meta?.hotels || []).map((h, i) => ({
-    cat:'hotel', name:h.name, checkin:h.checkin, checkout:h.checkout,
-    nights:h.nights, price:parsePr(h.nightly) && h.nights ? parsePr(h.nightly)*h.nights : null,
-    ref:h.ref, breakfast:h.breakfast, photo:h.photo, status:'confirmed',
-    date:h.checkin, hotelIdx:i,
-  }));
+  const seenHotels = new Set();
+  const hotels = (state.meta?.hotels || [])
+    .map((h, i) => ({ h, i }))
+    .filter(({ h }) => {
+      if (!h || typeof h !== 'object') return false;
+      const name = String(h.name || '').trim();
+      if (!name) return false; // discard empty/ghost accommodation records
+      const signature = [
+        name.toLowerCase(),
+        String(h.checkin || '').trim(),
+        String(h.checkout || '').trim(),
+        String(h.ref || '').trim().toLowerCase()
+      ].join('|');
+      if (seenHotels.has(signature)) return false; // don't render accidental duplicates
+      seenHotels.add(signature);
+      return true;
+    })
+    .map(({ h, i }) => ({
+      cat:'hotel', name:h.name, checkin:h.checkin, checkout:h.checkout,
+      nights:h.nights, price:parsePr(h.nightly) && h.nights ? parsePr(h.nightly)*h.nights : null,
+      ref:h.ref, breakfast:h.breakfast, photo:h.photo, status:'confirmed',
+      date:h.checkin, hotelIdx:i,
+    }));
 
   const flights=[], transport=[], attractions=[], dining=[], carhire=[];
 
