@@ -5180,6 +5180,9 @@ function renderBookingsView() {
   const bookedTransport = transport.filter(isBookedTransport);
   const bookedCarhire = carhire.filter(isBookedTransport);
 
+  // Shared calendar icon used by transport, hotel, attraction and meal rows.
+  const bkCalIco = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+
   // One row renderer shared by Flights and every Other Transport item —
   // Car Hire uses its own pickup/dropoff field names (not from/to), so
   // it's normalised to the same title/meta shape here.
@@ -5257,7 +5260,6 @@ function renderBookingsView() {
   // (openHotelModal) rather than the drawer — hotels aren't an
   // itinerary item, they live in their own STATE.meta.hotels array, so
   // that's the correct "relevant" thing to open here.
-  const bkCalIco = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   // Ref/Nights/Breakfast/Confirmed icons below match the exact SVGs
   // already used in the real Hotel panel (renderHotelPanel's
   // icoHash/icoNight/icoCup) and the globally-shared ICO.check, rather
