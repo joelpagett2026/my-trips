@@ -1475,6 +1475,78 @@ async function loadData() {
       }
     }
 
+    // One-time repair for China: an older editor path could reopen legacy
+    // ticketed "act"/"ticket" records as Points of Interest and then save them
+    // back as type "place". Compare only against the untouched pre-migration
+    // backup and restore the semantic type + missing booking fields. This is
+    // intentionally narrow: plain legacy POIs remain POIs.
+    if (RECORD_ID === 'china-2026' && saved && Array.isArray(saved.days) && !saved.meta?._ticketedAttractionsRepaired) {
+      try {
+        const legacy = await dbLoad(RECORD_ID + '-legacy-backup');
+        if (legacy && Array.isArray(legacy.days)) {
+          const repaired = JSON.parse(JSON.stringify(saved));
+          repaired.meta = repaired.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
+          let changed = false;
+
+          const norm = value => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+          const legacyIsTicketed = item => {
+            if (!item || typeof item !== 'object') return false;
+            if (item.type === 'ticket' || item.type === 'attraction') return true;
+            if (item.type !== 'act') return false;
+            const b = item.booking || {};
+            return item.status === 'booked' || item.status === 'confirmed' || item.status === 'prebookable' ||
+              !!b.ref || !!b.price || !!b.tickets || !!b.url;
+          };
+
+          repaired.days.forEach((day, dayIdx) => {
+            const oldItems = legacy.days?.[dayIdx]?.items;
+            if (!Array.isArray(day?.items) || !Array.isArray(oldItems)) return;
+
+            day.items.forEach(item => {
+              if (!item || item.type !== 'place') return;
+              const candidates = oldItems.filter(old =>
+                legacyIsTicketed(old) && norm(old.title) === norm(item.title)
+              );
+              if (!candidates.length) return;
+
+              const legacyItem = candidates.find(old =>
+                String(old.time || '') === String(item.time || '') &&
+                String(old.period || '') === String(item.period || '')
+              ) || candidates.find(old => String(old.time || '') === String(item.time || '')) || candidates[0];
+
+              item.type = 'attraction';
+              if (!item.status && legacyItem.status) item.status = legacyItem.status;
+
+              const oldBooking = legacyItem.booking || {};
+              if (Object.keys(oldBooking).length) {
+                const currentBooking = item.booking || {};
+                item.booking = {
+                  ...oldBooking,
+                  ...currentBooking,
+                  ref: currentBooking.ref || oldBooking.ref || '',
+                  price: currentBooking.price || oldBooking.price || '',
+                  tickets: currentBooking.tickets || oldBooking.tickets || '',
+                  url: currentBooking.url || oldBooking.url || '',
+                  note: currentBooking.note || oldBooking.note || ''
+                };
+              }
+              changed = true;
+            });
+          });
+
+          repaired.meta._ticketedAttractionsRepaired = true;
+          repaired.meta._ticketedAttractionsRepairedAt = new Date().toISOString();
+          await dbSave(RECORD_ID, repaired);
+          saved = repaired;
+          console.info(changed
+            ? 'China ticketed attractions restored from legacy backup.'
+            : 'China ticketed-attraction repair checked; no type restoration was needed.');
+        }
+      } catch (repairError) {
+        console.error('China ticketed-attraction repair failed safely; current record left in place.', repairError);
+      }
+    }
+
     if (saved && saved.days) {
       STATE = saved;
       STATE.meta = STATE.meta || { dest, dep, ret, trav, status, hotel:null, budget:null };
@@ -3173,6 +3245,17 @@ function openAddDay() {
   render();
 }
 
+function isLegacyTicketedAttraction(item) {
+  if (!item || typeof item !== 'object') return false;
+  if (item.type === 'ticket' || item.type === 'attraction') return true;
+  if (item.type !== 'act') return false;
+  const booking = item.booking || {};
+  return item.status === 'booked' ||
+    item.status === 'confirmed' ||
+    item.status === 'prebookable' ||
+    !!booking.ref || !!booking.price || !!booking.tickets || !!booking.url;
+}
+
 function openEditItem(dayIdx, itemIdx) {
   const refItem = STATE.days[dayIdx]?.items?.[itemIdx];
   editItem   = { dayIdx, itemIdx, item: refItem };
@@ -3200,8 +3283,7 @@ function openEditItem(dayIdx, itemIdx) {
   if (item.type === 'ticket') {
     cat = 'attraction';
   } else if (item.type === 'act') {
-    const hasBookingInfo = item.booking && (item.booking.price || item.booking.tickets || item.booking.url || item.booking.ref);
-    cat = hasBookingInfo ? 'attraction' : 'place';
+    cat = isLegacyTicketedAttraction(item) ? 'attraction' : 'place';
   } else if (!['place','attraction','meal','move'].includes(item.type)) {
     cat = 'place'; // fallback for any legacy/unrecognised type
   }
@@ -3799,9 +3881,13 @@ function saveItem() {
   if (document.getElementById('tab-bulk').classList.contains('active')) {
     saveBulkItems(); return;
   }
-  const type   = document.getElementById('f-type').value;
+  let type   = document.getElementById('f-type').value;
   const period = document.getElementById('f-period').value || 'morning';
   const orig   = (editItem && editItem.item) || null;
+  // Legacy ticketed attractions must never silently degrade into POIs.
+  // This only protects old ticket/act records; it does not stop a normal
+  // modern POI from being saved as a POI.
+  if (type === 'place' && orig && isLegacyTicketedAttraction(orig)) type = 'attraction';
   let time, title, item;
 
   if (type === 'move' && document.getElementById('f-transport-type').value === 'Car Hire / Road Trip') {
