@@ -5104,11 +5104,7 @@ function extractBookings(state) {
       // been booked yet. Also recognise older "place" records as attractions
       // when they carry booking-specific data; some long-standing itineraries
       // (including China) pre-date the current attraction type.
-      const legacyBookedPlace = it.type==='place' && (
-        RECORD_ID === 'china-2026' ||
-        st==='booked' || st==='confirmed' || st==='prebookable' || hasRef || hasPrice || hasTix
-      );
-      if (it.type==='act'||it.type==='ticket'||it.type==='attraction'||legacyBookedPlace) {
+      if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
         attractions.push({
           ...base,
           status: it.status === 'prebookable' ? 'prebookable' : ((st==='booked'||st==='confirmed'||hasRef||hasTix) ? 'booked' : 'notbooked'),
