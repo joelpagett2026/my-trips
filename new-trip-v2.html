@@ -5096,12 +5096,27 @@ function extractBookings(state) {
       const hasUrl = !!(b.url);
       const hasTix = !!(b.tickets);
       const hasPrice = !!(b.price);
-      const isConfirmed = st==='confirmed'||st==='booked'||hasRef||hasUrl||(hasTix&&hasPrice);
-      if (!isConfirmed) continue;
-
       const price = parsePr(b.price);
       const base = { name:it.title, date:d.date, status:st||'confirmed', ref:b.ref||'',
                      price, rawPrice:b.price, url:b.url, dayIdx:state.days.indexOf(d), itemIdx:d.items.indexOf(it) };
+
+      // Attractions belong on the Bookings page even when they have not
+      // been booked yet. The page uses their status badge to distinguish
+      // BOOKED / NOT BOOKED / NOT PRE-BOOKABLE, so filtering them out here
+      // made large parts of itineraries (especially China) disappear.
+      if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
+        attractions.push({
+          ...base,
+          status: it.status === 'prebookable' ? 'prebookable' : (it.status || 'notbooked'),
+          cat:'attraction',
+          tickets:b.tickets,
+          sub:it.sub
+        });
+        continue;
+      }
+
+      const isConfirmed = st==='confirmed'||st==='booked'||hasRef||hasUrl||(hasTix&&hasPrice);
+      if (!isConfirmed) continue;
 
       if (it.type==='move') {
         const k = it.kicker||(it.transport?.mode)||'';
@@ -5110,18 +5125,6 @@ function extractBookings(state) {
         k==='Flight' ? flights.push(obj) : transport.push(obj);
       } else if (it.type==='meal' && (st==='booked'||st==='confirmed') && !isHotelBreakfastItem(it)) {
         dining.push({...base, cat:'dining', sub:it.sub, kicker:it.kicker||'', time:it.time||''});
-      } else if (it.type==='act'||it.type==='ticket'||it.type==='attraction') {
-        // Attractions have a real "Not Booked" state (it.status === null,
-        // set via the Booking status picker) that's distinct from
-        // "Confirmed" — unlike flights/transport/dining, whose status is
-        // always a truthy string. base.status's `st||'confirmed'` default
-        // (written for those other types, where it's never actually
-        // triggered) was silently turning every not-booked attraction
-        // into 'confirmed' here too, which then made attrPill() below
-        // show a green "BOOKED" pill instead of "NOT BOOKED". Override
-        // with the item's real status, mapping null to the string
-        // 'notbooked' that attrPill actually checks for.
-        attractions.push({...base, status: it.status || 'notbooked', cat:'attraction', tickets:b.tickets, sub:it.sub});
       }
     }
   }
@@ -5175,7 +5178,7 @@ function renderBookingsView() {
   // booked), and "pay on use" items (a bus/taxi you pay for on the day,
   // logged just as a placeholder) aren't real bookings either. Applied
   // uniformly across Flights, Other Transport, and Car Hire.
-  const isBookedTransport = t => t.price && (t.status === 'booked' || t.status === 'confirmed');
+  const isBookedTransport = t => t.status === 'booked' || t.status === 'confirmed';
   const bookedFlights = flights.filter(isBookedTransport);
   const bookedTransport = transport.filter(isBookedTransport);
   const bookedCarhire = carhire.filter(isBookedTransport);
