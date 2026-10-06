@@ -784,7 +784,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
        visible, with the rest clipped and its scrollbar hidden by the
        existing ::-webkit-scrollbar{display:none} rule — looked like
        empty space rather than a second scrollbar). */
-    height: auto !important; overflow-y: visible !important;
+    height: auto !important; max-height: none !important;
+    overflow-y: visible !important; flex: 0 0 auto !important;
   }
 
   /* ── MOBILE HEADER ── */
