@@ -24,27 +24,6 @@ if (($diag['maps_key_rewritten'] ?? 0) !== 1
     exit;
 }
 
-// Keep the historical mileage baseline aligned so the rendered travelled total is 207,957.
-// Porto is already included in this figure, so its registry entry must not add
-// another estimated journey mileage. It still contributes to trip/country stats.
-$page = str_replace(
-    'const PS_MILES = 205021;',
-    'const PS_MILES = 206626;',
-    $page,
-    $milesBaselineCount
-);
-$page = str_replace(
-    'if (flags.length) liveMiles += estimateMilesForCountries(flags);',
-    "if (flags.length && !['porto-2026','porto-2026-v2'].includes(t.slug)) liveMiles += estimateMilesForCountries(flags);",
-    $page,
-    $portoMileageCount
-);
-if ($milesBaselineCount !== 1 || $portoMileageCount !== 1) {
-    http_response_code(500);
-    echo 'Trips dashboard mileage stats could not be attached safely.';
-    exit;
-}
-
 // Keep the completed-trip/country history explicit as well as registry-driven.
 // Porto is the first 2026 entry after China and belongs to Portugal (pt). The
 // registry de-duplication below prevents this from appearing twice when live data

@@ -248,7 +248,7 @@ function applyHomepageTrackerLayout() {
           <div class="travel-stat">
             <span class="travel-stat-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 12l4.5-4.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M2 12h2M12 2v2M20.5 5.5l-1.4 1.4"/></svg></span>
             <span class="travel-stat-label">Miles travelled</span>
-            <strong class="travel-stat-value" id="hp-stat-miles">207,957</strong>
+            <strong class="travel-stat-value" id="hp-stat-miles">209,368</strong>
           </div>
           <div class="travel-stats-cta">Open trip planner <span aria-hidden="true">→</span></div>`;
 
@@ -476,13 +476,13 @@ async function updateHomepageTravelStats() {
     };
 
     const countries = new Set(['ae','at','be','ca','ch','cn','cr','cy','cz','de','dk','es','fi','fr','gb','gr','hr','hu','id','ie','it','je','jp','kr','lu','mc','my','nl','se','sg','tr','us','za']);
-    let miles = 206825;
+    // Confirmed lifetime total; registry estimates must not alter this figure.
+    const miles = 209368;
     let tripCount = 58;
 
     Object.values(planned).forEach(trip => {
         if (!trip.addToStats || new Date(trip.endDate) > today) return;
         trip.countries.forEach(cc => countries.add(cc));
-        miles += trip.estimatedMiles;
         tripCount++;
     });
 
@@ -550,9 +550,6 @@ async function updateHomepageTravelStats() {
               .map(cc => String(cc || '').trim().toLowerCase())
               .filter(cc => /^[a-z]{2}$/.test(cc))));
             flags.forEach(cc => countries.add(cc));
-            if (flags.length && !['porto-2026', 'porto-2026-v2'].includes(t.slug)) {
-                miles += estimateMiles(flags);
-            }
             tripCount++;
         });
     } catch {
