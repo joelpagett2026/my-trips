@@ -2368,3 +2368,25 @@ body.share-view .tb-title { cursor: default; }
  #bookings-main .bk-hotel-name { font-size:12px; }
  #bookings-main .bk-attr-badge,#bookings-main .bk-meal-badge { font-size:7px;padding:5px 6px; }
 }
+
+
+/* Booking category filter pills – consistent itinerary icons and colours */
+#bookings-main .bk-dash-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:19px}
+#bookings-main .bk-dash-tab{
+  --pill-color:var(--teal);--pill-tint:rgba(14,122,135,.11);
+  display:inline-flex;align-items:center;gap:8px;padding:8px 16px 8px 10px;
+  border:1px solid var(--pill-color);border-radius:999px;
+  background:#fff;color:var(--pill-color);font-family:var(--font);
+  font-size:11.5px;font-weight:700;line-height:1.2;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s
+}
+#bookings-main .bk-dash-tab--transport{--pill-color:var(--transport);--pill-tint:var(--transport-bg)}
+#bookings-main .bk-dash-tab--attraction{--pill-color:var(--activity);--pill-tint:var(--activity-bg)}
+#bookings-main .bk-dash-tab--dining{--pill-color:var(--amber);--pill-tint:var(--amber-bg)}
+#bookings-main .bk-dash-tab:hover:not(.active){background:var(--pill-tint);border-color:var(--pill-color);color:var(--pill-color)}
+#bookings-main .bk-dash-tab.active{background:var(--pill-color);border-color:var(--pill-color);color:#fff}
+#bookings-main .bk-dash-tab-ico{display:flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:50%;background:var(--pill-tint);color:var(--pill-color);flex-shrink:0}
+#bookings-main .bk-dash-tab-ico svg{width:16px;height:16px;fill:currentColor}
+#bookings-main .bk-dash-tab.active .bk-dash-tab-ico{background:rgba(255,255,255,.2);color:#fff}
+#bookings-main .bk-tab-all-icon{display:inline-block;width:16px;height:16px;background:currentColor;-webkit-mask-image:url('/icons/nav-bookings.png?v=2');mask-image:url('/icons/nav-bookings.png?v=2');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+@media(max-width:540px){#bookings-main .bk-dash-toolbar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:7px}#bookings-main .bk-dash-tab{flex-shrink:0;white-space:nowrap}}
