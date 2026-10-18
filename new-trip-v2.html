@@ -5460,6 +5460,16 @@ function renderBookingsView() {
   if (!STATE?.days) { el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">No data</div>'; return; }
 
   const { hotels, flights, transport, attractions, dining, carhire } = extractBookings(STATE);
+  // Present hotels chronologically by check-in, without reordering stored hotel data.
+  // parseDate handles the itinerary's DD/MM/YYYY format; ISO dates are supported too.
+  const hotelDateValue = value => {
+    if (!value) return Number.POSITIVE_INFINITY;
+    const parsed = parseDate(value);
+    if (parsed && !Number.isNaN(parsed.getTime())) return parsed.getTime();
+    const iso = /^\\d{4}-\\d{2}-\\d{2}$/.test(String(value)) ? Date.parse(value) : NaN;
+    return Number.isNaN(iso) ? Number.POSITIVE_INFINITY : iso;
+  };
+  const sortedHotels = [...hotels].sort((a, b) => hotelDateValue(a.checkin) - hotelDateValue(b.checkin));
   const all = [
     ...hotels.map(b=>({...b,cat:'hotel'})),
     ...flights.map(b=>({...b,cat:'flight'})),
@@ -5695,7 +5705,7 @@ function renderBookingsView() {
           <div class="bk-col-head-ico">${catIcons.hotel}</div>
           <span>Hotels</span>
         </div>
-        <div class="bk-hotel-list">${hotels.map(h => hotelCard(h)).join('') || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
+        <div class="bk-hotel-list">${sortedHotels.map(h => hotelCard(h)).join('')} || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
       </div>
       <div class="bk-col bk-col--transport">
         <div class="bk-col-head">
