@@ -5689,21 +5689,18 @@ function renderBookingsView() {
   }).join('');
   const mealsTotal = dining.reduce((s,m) => s + (m.price||0), 0);
 
-  const categoryCounts = [
-    { key:'hotel', label:'Hotels', count:hotels.length, icon:catIcons.hotel },
-    { key:'transport', label:'Transport', count:bookedFlights.length + bookedTransport.length + bookedCarhire.length, icon:catIcons.transport },
-    { key:'attraction', label:'Attractions', count:attractions.length, icon:catIcons.attraction },
-    { key:'dining', label:'Meals', count:dining.length, icon:catIcons.dining }
-  ];
-  const outstanding = attractions.filter(a => a.status === 'notbooked').length;
   const selectedBookingsFilter = ['all','hotel','transport','attraction','dining'].includes(bookingsFilter) ? bookingsFilter : 'all';
-  const bookingTabs = [{key:'all', label:'All bookings'}, ...categoryCounts.map(c => ({key:c.key,label:c.label}))];
-  const bookingTabHtml = bookingTabs.map(t => `<button type="button" class="bk-dash-tab ${selectedBookingsFilter===t.key?'active':''}" aria-pressed="${selectedBookingsFilter===t.key}" onclick="setBookingsFilter('${t.key}')">${t.label}</button>`).join('');
-  const summaryHtml = categoryCounts.map(c => `<button type="button" class="bk-dash-stat bk-dash-stat--${c.key}" onclick="setBookingsFilter('${c.key}')" aria-label="Show ${c.label.toLowerCase()}"><span class="bk-dash-stat-ico">${c.icon}</span><span class="bk-dash-stat-num">${c.count}</span><span class="bk-dash-stat-label">${c.label}</span></button>`).join('');
+  const bookingTabs = [
+    {key:'all',label:'All bookings',icon:'<span class="bk-tab-all-icon" aria-hidden="true"></span>'},
+    {key:'hotel',label:'Hotels',icon:catIcons.hotel},
+    {key:'transport',label:'Transport',icon:catIcons.transport},
+    {key:'attraction',label:'Attractions',icon:catIcons.attraction},
+    {key:'dining',label:'Meals',icon:catIcons.dining}
+  ];
+  const bookingTabHtml = bookingTabs.map(t => `<button type="button" class="bk-dash-tab bk-dash-tab--${t.key} ${selectedBookingsFilter===t.key?'active':''}" aria-pressed="${selectedBookingsFilter===t.key}" onclick="setBookingsFilter('${t.key}')"><span class="bk-dash-tab-ico">${t.icon}</span><span>${t.label}</span></button>`).join('');
 
   el.innerHTML = `
     <div class="bk-dashboard">
-      <div class="bk-dash-stats">${summaryHtml}</div>
       <div class="bk-dash-toolbar" role="group" aria-label="Filter bookings">${bookingTabHtml}</div>
     <div class="bk-columns" data-bk-filter="${selectedBookingsFilter}">
       <div class="bk-col bk-col--hotel">
