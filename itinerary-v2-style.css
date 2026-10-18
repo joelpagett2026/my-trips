@@ -2300,3 +2300,71 @@ body.share-view .tb-title { cursor: default; }
   .rt-hire-row { flex-direction: column; }
   .rt-hire-trip, .rt-hire-provider { flex-basis: auto; }
 }
+
+
+/* Bookings hybrid dashboard — scoped to the shared bookings view. */
+#bookings-main .bk-dashboard { max-width:1500px; margin:0 auto; }
+#bookings-main .bk-dash-intro { display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px; }
+#bookings-main .bk-dash-intro h2 { font-size:21px;line-height:1.25;font-weight:800;color:var(--text); }
+#bookings-main .bk-dash-intro p { font-size:12px;color:var(--text2);margin-top:4px; }
+#bookings-main .bk-dash-outstanding { background:#fff5e8;color:#985400;font-size:11px;font-weight:700;padding:9px 12px;border-radius:9px;white-space:nowrap; }
+#bookings-main .bk-dash-stats { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px; }
+#bookings-main .bk-dash-stat { display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px 16px;font-family:var(--font);color:var(--text);cursor:pointer;min-width:0; }
+#bookings-main .bk-dash-stat:hover { border-color:var(--teal); }
+#bookings-main .bk-dash-stat-ico { display:grid;place-items:center;flex-shrink:0;width:34px;height:34px;border-radius:9px;background:var(--teal-xdim);color:var(--teal); }
+#bookings-main .bk-dash-stat--transport .bk-dash-stat-ico { background:var(--transport-bg);color:var(--transport); }
+#bookings-main .bk-dash-stat--attraction .bk-dash-stat-ico { background:var(--activity-bg);color:var(--activity); }
+#bookings-main .bk-dash-stat--dining .bk-dash-stat-ico { background:var(--amber-bg);color:var(--amber); }
+#bookings-main .bk-dash-stat-ico svg { width:18px;height:18px; }
+#bookings-main .bk-dash-stat-num { font-size:20px;font-weight:800; }
+#bookings-main .bk-dash-stat-label { font-size:11px;color:var(--text2);font-weight:700; }
+#bookings-main .bk-dash-toolbar { display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:18px; }
+#bookings-main .bk-dash-tab { border:1px solid #dce3e5;background:#fff;padding:9px 14px;border-radius:10px;font-size:11px;font-weight:700;font-family:var(--font);color:var(--text2);cursor:pointer; }
+#bookings-main .bk-dash-tab:hover { border-color:var(--teal);color:var(--teal); }
+#bookings-main .bk-dash-tab.active { background:var(--teal);border-color:var(--teal);color:white; }
+#bookings-main .bk-columns { grid-template-columns:repeat(2,minmax(0,1fr));gap:18px; }
+#bookings-main .bk-col { background:transparent;padding:0;gap:9px; }
+#bookings-main .bk-col-head { color:var(--text);padding:0 1px 2px;font-size:15px; }
+#bookings-main .bk-col-head-ico { background:var(--bk-badge);color:var(--bk-c); }
+#bookings-main .bk-col-subhead { margin-top:6px; }
+#bookings-main .bk-hotel-list { gap:10px; }
+#bookings-main .bk-hotel-card { flex-direction:row;align-items:stretch;padding:10px;gap:14px;border:1px solid var(--line);box-shadow:none;border-radius:13px; }
+#bookings-main .bk-hotel-photo { width:154px;height:auto;min-height:125px;flex-shrink:0;border-radius:9px; }
+#bookings-main .bk-hotel-main { flex:1;min-width:0;padding:5px 3px 3px 0; }
+#bookings-main .bk-hotel-name { font-size:13px;line-height:1.4; }
+#bookings-main .bk-hotel-meta { gap:4px; }
+#bookings-main .bk-hotel-meta-row { align-items:flex-start; }
+#bookings-main .bk-hotel-price-pill { font-size:12px;padding:6px 9px; }
+#bookings-main .bk-hotel-divider { margin:9px 0; }
+#bookings-main .bk-hotel-pill { padding:5px 8px; }
+#bookings-main .bk-attraction-list { border:1px solid var(--line);box-shadow:none;border-radius:13px; }
+#bookings-main .bk-flight-row { background:#fff;border:1px solid var(--line);border-radius:12px; }
+#bookings-main .bk-flight-details { gap:3px; }
+#bookings-main .bk-attr-row,#bookings-main .bk-meal-row { min-height:62px;padding:11px 13px; }
+#bookings-main .bk-columns[data-bk-filter="hotel"] .bk-col:not(.bk-col--hotel),
+#bookings-main .bk-columns[data-bk-filter="transport"] .bk-col:not(.bk-col--transport),
+#bookings-main .bk-columns[data-bk-filter="attraction"] .bk-col:not(.bk-col--attraction),
+#bookings-main .bk-columns[data-bk-filter="dining"] .bk-col:not(.bk-col--meal) { display:none; }
+#bookings-main .bk-columns:not([data-bk-filter="all"]) { grid-template-columns:minmax(0,1fr);max-width:850px; }
+@media(max-width:1050px) {
+ #bookings-main .bk-dash-stats { gap:8px; }
+ #bookings-main .bk-dash-stat { padding:12px 9px;gap:6px; }
+ #bookings-main .bk-dash-stat-label { font-size:10px; }
+ #bookings-main .bk-hotel-photo { width:115px; }
+}
+@media(max-width:850px) {
+ #bookings-main .bk-columns { grid-template-columns:1fr; }
+ #bookings-main .bk-dashboard { max-width:680px; }
+}
+@media(max-width:540px) {
+ #bookings-main .bk-dash-intro { align-items:flex-start;flex-direction:column;gap:9px; }
+ #bookings-main .bk-dash-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #bookings-main .bk-dash-stat { padding:11px; }
+ #bookings-main .bk-dash-toolbar { flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin; }
+ #bookings-main .bk-dash-tab { white-space:nowrap;flex-shrink:0; }
+ #bookings-main .bk-hotel-photo { width:100px;min-height:120px; }
+ #bookings-main .bk-hotel-card { gap:9px; }
+ #bookings-main .bk-hotel-meta-row { flex-wrap:wrap; }
+ #bookings-main .bk-hotel-name { font-size:12px; }
+ #bookings-main .bk-attr-badge,#bookings-main .bk-meal-badge { font-size:7px;padding:5px 6px; }
+}
