@@ -2206,6 +2206,13 @@ const FLIGHT_TZ_ALIASES = {
   BER:'Europe/Berlin', FRA:'Europe/Berlin', MUC:'Europe/Berlin', ZRH:'Europe/Zurich', VIE:'Europe/Vienna',
   CPH:'Europe/Copenhagen', OSL:'Europe/Oslo', ARN:'Europe/Stockholm', HEL:'Europe/Helsinki',
   DUB:'Europe/Dublin', ATH:'Europe/Athens', ZAG:'Europe/Zagreb', LJU:'Europe/Ljubljana',
+  // Mainland China observes UTC+8 year-round (no daylight saving time).
+  PVG:'Asia/Shanghai', SHA:'Asia/Shanghai', PEK:'Asia/Shanghai', PKX:'Asia/Shanghai',
+  CTU:'Asia/Shanghai', TFU:'Asia/Shanghai', XIY:'Asia/Shanghai', CAN:'Asia/Shanghai',
+  SZX:'Asia/Shanghai', HGH:'Asia/Shanghai', CKG:'Asia/Shanghai', KMG:'Asia/Shanghai',
+  WUH:'Asia/Shanghai', NKG:'Asia/Shanghai', TSN:'Asia/Shanghai', TAO:'Asia/Shanghai',
+  XMN:'Asia/Shanghai', FOC:'Asia/Shanghai', DLC:'Asia/Shanghai', CSX:'Asia/Shanghai',
+  URC:'Asia/Shanghai', LXA:'Asia/Shanghai', KWE:'Asia/Shanghai', LHW:'Asia/Shanghai',
   DXB:'Asia/Dubai', DOH:'Asia/Qatar', SIN:'Asia/Singapore', HKG:'Asia/Hong_Kong',
   HND:'Asia/Tokyo', NRT:'Asia/Tokyo', ICN:'Asia/Seoul', SYD:'Australia/Sydney', MEL:'Australia/Melbourne',
   AKL:'Pacific/Auckland'
@@ -2224,6 +2231,7 @@ const FLIGHT_TZ_NAMES = [
   [/copenhagen/i,'Europe/Copenhagen'], [/oslo/i,'Europe/Oslo'], [/stockholm/i,'Europe/Stockholm'],
   [/helsinki/i,'Europe/Helsinki'], [/dublin/i,'Europe/Dublin'], [/athens/i,'Europe/Athens'],
   [/zagreb/i,'Europe/Zagreb'], [/ljubljana/i,'Europe/Ljubljana'],
+  [/shanghai|pudong|hongqiao|beijing|peking|daxing|chengdu|tianfu|shuangliu|xi['’]?an|xian|guangzhou|shenzhen|hangzhou|chongqing|kunming|wuhan|nanjing|qingdao|xiamen|fuzhou|dalian|changsha|urumqi|lhasa|guiyang|lanzhou|suzhou/i,'Asia/Shanghai'],
   [/dubai/i,'Asia/Dubai'], [/doha/i,'Asia/Qatar'], [/singapore/i,'Asia/Singapore'],
   [/hong kong/i,'Asia/Hong_Kong'], [/tokyo/i,'Asia/Tokyo'], [/seoul/i,'Asia/Seoul'],
   [/sydney/i,'Australia/Sydney'], [/melbourne/i,'Australia/Melbourne'], [/auckland/i,'Pacific/Auckland']
@@ -2293,7 +2301,9 @@ function flightDuration(depart, arrive, fromLoc, toLoc, dateStr, transport) {
     }
   }
 
-  // Safe fallback for non-flight transport and legacy/unrecognised locations.
+  // Never show a misleading clock-time subtraction for an unknown flight
+  // time zone. Other transport still uses the simple elapsed clock time.
+  if ((fromLoc || toLoc) && (!fromTz || !toTz)) return '';
   const [dh, dm] = depart.split(':').map(Number);
   const [ah, am] = arrive.split(':').map(Number);
   let mins = (ah * 60 + am) - (dh * 60 + dm);
