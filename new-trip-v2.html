@@ -5703,10 +5703,6 @@ function renderBookingsView() {
 
   el.innerHTML = `
     <div class="bk-dashboard">
-      <div class="bk-dash-intro">
-        <div><h2>Bookings overview</h2><p>Everything organised in one place, from hotels to meals.</p></div>
-        ${outstanding ? `<span class="bk-dash-outstanding">${outstanding} attraction${outstanding===1?'':'s'} not booked</span>` : ''}
-      </div>
       <div class="bk-dash-stats">${summaryHtml}</div>
       <div class="bk-dash-toolbar" role="group" aria-label="Filter bookings">${bookingTabHtml}</div>
     <div class="bk-columns" data-bk-filter="${selectedBookingsFilter}">
