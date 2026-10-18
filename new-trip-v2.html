@@ -5708,7 +5708,7 @@ function renderBookingsView() {
           <div class="bk-col-head-ico">${catIcons.hotel}</div>
           <span>Hotels</span>
         </div>
-        <div class="bk-hotel-list">${sortedHotels.map(h => hotelCard(h)).join('')} || '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
+        <div class="bk-hotel-list">${sortedHotels.length ? sortedHotels.map(h => hotelCard(h)).join('') : '<div class="bk-col-empty">No hotels booked yet.</div>'}</div>
       </div>
       <div class="bk-col bk-col--transport">
         <div class="bk-col-head">
