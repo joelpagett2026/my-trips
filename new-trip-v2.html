@@ -1849,6 +1849,10 @@ function showSnapshotBar(show) {
 // ── RENDER ────────────────────────────────────────────────────────────
 function render() {
   const fns = [renderSidebar, renderDaySelector, renderMobNav, renderDaySummary, renderTimeline, renderRightPanel];
+  // Edits can originate in Bookings while a different itinerary day is active.
+  // Refresh the visible view as well as the timeline after every state change.
+  if (currentView === 'bookings') fns.push(renderBookingsView);
+  if (currentView === 'budget') fns.push(renderBudgetView);
   for (const fn of fns) {
     try { fn(); }
     catch(e) {
@@ -4377,7 +4381,9 @@ function setModalTab(tab) {
   document.getElementById('tab-single').classList.toggle('active', !isBulk);
   document.getElementById('tab-bulk').classList.toggle('active',  isBulk);
   document.getElementById('modal-delete-btn').style.display = 'none';
-  document.getElementById('modal-save-btn').textContent = isBulk ? 'Import all' : 'Save';
+  const saveButton = document.getElementById('activity-save-btn-v4')
+    || document.getElementById('modal-save-btn');
+  if (saveButton) saveButton.textContent = isBulk ? 'Import all' : 'Save';
   if (isBulk && shouldAutoFocusModalInput()) setTimeout(() => document.getElementById('f-bulk-list').focus(), 80);
 }
 
