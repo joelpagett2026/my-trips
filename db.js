@@ -225,8 +225,18 @@ function itemExistsInRecord(data, dayIndex, item) {
     const items = data?.days?.[Number(dayIndex)]?.items;
     if (!Array.isArray(items) || !item) return false;
     const id = String(item._id || '').trim();
-    if (id) return items.some(candidate => candidate && String(candidate._id || '') === id);
-    return items.some(candidate => JSON.stringify(candidate) === JSON.stringify(item));
+    // Identity alone does not prove an edit was saved: the server may still
+    // contain the previous details after a lost response or failed write.
+    const equal = (a, b) => {
+        if (a === b) return true;
+        if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+        if (Array.isArray(a) !== Array.isArray(b)) return false;
+        const keys = Object.keys(a);
+        return keys.length === Object.keys(b).length
+            && keys.every(key => Object.prototype.hasOwnProperty.call(b, key) && equal(a[key], b[key]));
+    };
+    return items.some(candidate => candidate
+        && (!id || String(candidate._id || '') === id) && equal(candidate, item));
 }
 
 function isTransientRecordError(err) {

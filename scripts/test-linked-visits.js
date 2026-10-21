@@ -68,6 +68,24 @@ assert.equal(JSON.stringify(china.days[1]), untouched, 'unrelated China data pre
 assert.deepEqual(json(ctx.visitPeriods({ type: 'ticket', period: 'afternoon' })), ['afternoon']);
 assert.deepEqual(json(ctx.visitPeriods({ type: 'meal', period: 'evening', visitPeriods: ['morning'] })), ['evening']);
 
+// Editing an attraction from a different selected day must update its own day.
+const originalVisit = { _id: 'other-day', type: 'attraction', title: 'Old attraction', period: 'morning' };
+ctx.STATE.days[1].items.push(originalVisit);
+const selectedDayBefore = JSON.stringify(ctx.STATE.days[0]);
+ctx.editItem = { dayIdx: 1, itemIdx: 1, item: originalVisit };
+fields['f-att-name'].value = 'Updated attraction';
+fields['f-att-cost'].value = '£40';
+fields['f-att-notes'].value = 'Updated notes';
+selected = ['afternoon', 'evening'];
+ctx.saveItem();
+const reloaded = JSON.parse(JSON.stringify(ctx.STATE));
+assert.equal(reloaded.days[1].items[1].title, 'Updated attraction');
+assert.equal(reloaded.days[1].items[1].booking.price, '£40');
+assert.equal(reloaded.days[1].items[1].booking.note, 'Updated notes');
+assert.deepEqual(reloaded.days[1].items[1].visitPeriods, ['afternoon', 'evening']);
+assert.equal(reloaded.days[1].items.length, 2, 'edit replaces the original');
+assert.equal(JSON.stringify(ctx.STATE.days[0]), selectedDayBefore, 'selected day remains untouched');
+
 // Render each appearance against one canonical index; edit/delete use that index.
 ctx.document.createElement = () => ({ dataset: {}, querySelector: () => ({ addEventListener() {} }) });
 ctx.icoForType = () => ({ cls: 'ticket', html: '' }); ctx.badgeHtml = () => '';

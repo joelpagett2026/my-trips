@@ -139,7 +139,9 @@
         return originalSaveItem.apply(this, args);
       }
 
-      const dayIdx = typeof activeDay === 'number' ? activeDay : 0;
+      const dayIdx = (typeof editItem !== 'undefined' && editItem)
+        ? editItem.dayIdx
+        : (typeof activeDay === 'number' ? activeDay : 0);
       const beforeState = clone(STATE);
       const beforeItems = Array.isArray(STATE.days?.[dayIdx]?.items) ? STATE.days[dayIdx].items.slice() : [];
       const beforeRefs = new Set(beforeItems);

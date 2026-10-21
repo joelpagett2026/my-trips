@@ -231,3 +231,15 @@ async function testServerConfirmationMustContainItem() {
   console.error('item save transaction behavior failed:', err.stack || err.message);
   process.exit(1);
 });
+
+// A matching ID with stale details cannot confirm an edit or a retry.
+{
+  const assert = require('node:assert/strict');
+  const ctx = makeContext(async () => { throw new Error('Unexpected fetch'); });
+  const desired = { _id: 'visit', type: 'attraction', title: 'New title', booking: { note: 'Updated', price: '£40' }, visitPeriods: ['afternoon', 'evening'] };
+  ctx.expected = desired;
+  ctx.record = { days: [{ items: [{ ...desired, title: 'Old title' }] }] };
+  assert.equal(vm.runInContext('itemExistsInRecord(record, 0, expected)', ctx), false);
+  ctx.record.days[0].items[0] = { visitPeriods: desired.visitPeriods, booking: { price: '£40', note: 'Updated' }, title: 'New title', type: 'attraction', _id: 'visit' };
+  assert.equal(vm.runInContext('itemExistsInRecord(record, 0, expected)', ctx), true, 'object key order is irrelevant');
+}
