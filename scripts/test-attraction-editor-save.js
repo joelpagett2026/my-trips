@@ -38,6 +38,7 @@ const document={
 let server={meta:{},days:[{items:[{_id:'disney',type:'attraction',title:'Shanghai Disney',period:'morning',status:null,visitPeriods:['morning','afternoon']}]}]};
 const clone=v=>JSON.parse(JSON.stringify(v));
 const statuses=[];
+let releaseWrite=null;
 const ctx={document,Element,HTMLElement:Element,MutationObserver:class {observe(){} disconnect(){}},
   STATE:clone(server),activeDay:0,editItem:null,drawerItem:null,RECORD_ID:'china-2026',snapshotList:[],
   crypto:{randomUUID:()=> 'new-id'},inferPeriod:()=> 'morning',
@@ -52,6 +53,7 @@ const ctx={document,Element,HTMLElement:Element,MutationObserver:class {observe(
   alert:message=>{throw new Error(message);},
   __mytripsLoadedRecords:new Map(),
   async dbUpsertItineraryItem(id,day,index,item,original){
+    await new Promise(resolve=>{releaseWrite=resolve;});
     assert.deepEqual(clone(original),server.days[day].items[index],'edit must compare against persisted item');
     server.days[day].items[index]=clone(item);
     return {data:clone(server)};
@@ -73,6 +75,10 @@ function pressSave(){
   ctx.setAttBooked('booked');
   document.getElementById('f-att-cost').value='£150';
   pressSave();await drain();
+  assert.equal(document.getElementById('modal-overlay').classList.contains('open'),true,'editor stays open until server confirmation');
+  assert.equal(document.getElementById('modal-save-btn').disabled,true,'Save stays busy during request');
+  releaseWrite();await drain();
+  assert.equal(document.getElementById('modal-overlay').classList.contains('open'),false,'close only after confirmed save');
   assert.equal(server.days[0].items[0].status,'booked');
   assert.equal(server.days[0].items[0].booking.price,'£150');
   assert.equal(ctx.renderedBooking?.status,'booked','visible Bookings must refresh after save');
@@ -84,7 +90,7 @@ function pressSave(){
   ctx.closeModal(); // cancelling leaves the controller's renamed Save button
   ctx.openEditItem(0,0);
   document.getElementById('f-att-notes').value='Keep booking on second edit';
-  pressSave();await drain();
+  pressSave();await drain();releaseWrite();await drain();
   assert.equal(server.days[0].items[0].status,'booked');
   assert.equal(server.days[0].items[0].booking.price,'£150');
   assert.equal(server.days[0].items[0].booking.note,'Keep booking on second edit');

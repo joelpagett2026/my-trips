@@ -155,15 +155,22 @@
 
       suppressAutosave = true;
       let result;
+      let closeRequested = false;
+      const originalCloseModal = window.closeModal;
+      // The serializer closes synchronously. Defer that close until the server
+      // confirms persistence so navigation cannot look like a completed save.
+      window.closeModal = function () { closeRequested = true; };
       try {
         result = originalSaveItem.apply(this, args);
       } catch (error) {
         suppressAutosave = false;
         throw error;
+      } finally {
+        window.closeModal = originalCloseModal;
       }
 
       const overlay = document.getElementById('modal-overlay');
-      if (overlay?.classList.contains('open')) {
+      if (!closeRequested && overlay?.classList.contains('open')) {
         suppressAutosave = false;
         return result;
       }
@@ -193,7 +200,7 @@
       explicitSaveBusy = true;
       if (typeof setStatus === 'function') setStatus('saving', '●  Saving…');
 
-      Promise.resolve().then(async () => {
+      return Promise.resolve().then(async () => {
         const currentItems = STATE.days?.[dayIdx]?.items || [];
         let currentIndex = savedIndex;
         const stableId = items[savedIndex]?._id || '';
@@ -218,10 +225,12 @@
         STATE = clone(response.data);
         lastPersistedState = clone(response.data);
         initialized = true;
+        originalCloseModal.call(window);
         if (stateKey(beforeState) !== stateKey(response.data)) pushSnapshot(beforeState);
         if (typeof render === 'function') render();
         if (typeof setStatus === 'function') setStatus('saved', '');
         if (typeof syncRegistryCities === 'function') syncRegistryCities();
+        return true;
       }).catch(error => {
         suppressAutosave = false;
         console.error('Atomic itinerary item save failed', error);
@@ -241,12 +250,12 @@
             ? 'This item changed in another tab. Reload the itinerary and try again.'
             : 'This item was not saved. Your form is still open so you can try again.');
         }, 0);
+        return false;
       }).finally(() => {
         suppressAutosave = false;
         explicitSaveBusy = false;
       });
 
-      return result;
     };
 
     wrapped.__atomicItemSave = true;

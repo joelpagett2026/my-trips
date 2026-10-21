@@ -439,7 +439,7 @@
     }, 0);
   }
 
-  function saveActivity() {
+  async function saveActivity() {
     const overlay = document.getElementById('modal-overlay');
     const save = normalizeSaveButton();
     if (!overlay?.classList.contains('open') || !save || state.saveBusy) return false;
@@ -456,7 +456,7 @@
     let result;
     try {
       if (!legacy.saveItem) throw new Error('Save action is unavailable');
-      result = legacy.saveItem.call(window);
+      result = await legacy.saveItem.call(window);
     } catch (error) {
       console.error('Activity Save failed before persistence', error);
       save.id = 'activity-save-btn-v4';
