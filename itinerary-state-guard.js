@@ -169,6 +169,22 @@
         window.closeModal = originalCloseModal;
       }
 
+      // Modern saveItem already performs its own awaited, verified item-level
+      // transaction. Do not run the legacy controller's second upsert, and do
+      // not interpret the pending Promise as a failed synchronous serializer.
+      if (result && typeof result.then === 'function') {
+        suppressAutosave = false;
+        explicitSaveBusy = true;
+        return Promise.resolve(result).then(saved => {
+          if (saved && saved.data) {
+            lastPersistedState = clone(STATE);
+            initialized = true;
+            if (stateKey(beforeState) !== stateKey(STATE)) pushSnapshot(beforeState);
+          }
+          return saved;
+        }).finally(() => { explicitSaveBusy = false; });
+      }
+
       const overlay = document.getElementById('modal-overlay');
       if (!closeRequested && overlay?.classList.contains('open')) {
         suppressAutosave = false;
