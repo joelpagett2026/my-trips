@@ -4244,14 +4244,24 @@ function saveItem() {
         await saveData();
       }
       const result = await dbUpsertItineraryItem(RECORD_ID, targetDay, requestedIndex, item, orig);
-      const persistedItems = result?.data?.days?.[targetDay]?.items;
-      if (!Array.isArray(persistedItems)) throw new Error('The server did not return the saved itinerary day.');
+      // Read the record afresh from the database. A successful POST alone
+      // cannot prove that the next page load will show the changed fields.
+      const verifiedRecord = await dbLoad(RECORD_ID);
+      const persistedItems = verifiedRecord?.days?.[targetDay]?.items;
+      if (!Array.isArray(persistedItems)) throw new Error('The saved itinerary could not be reloaded.');
       const saved = persistedItems.find(it => it && item._id && it._id === item._id)
         || persistedItems.find(it => it && it.type === item.type && it.title === item.title && it.time === item.time);
-      if (!saved) throw new Error('The attraction was missing from the server confirmation.');
+      if (!saved) throw new Error('The attraction was missing after database reload.');
+      const fieldsMatch = saved.type === item.type
+        && saved.title === item.title
+        && saved.status === item.status
+        && String(saved.booking?.price || '') === String(item.booking?.price || '')
+        && String(saved.booking?.note || '') === String(item.booking?.note || '')
+        && JSON.stringify(visitPeriods(saved)) === JSON.stringify(visitPeriods(item));
+      if (!fieldsMatch) throw new Error('Booking status, price or visit details did not survive a database reload.');
 
-      // Adopt exactly what the server confirmed, including stable IDs,
-      // booking status, price, notes and linked visit periods.
+      // Use the freshly reloaded record, including any concurrent unrelated
+      // changes. Keep the editor open if verification fails.
       STATE.days[targetDay].items = persistedItems;
       if (STATE.days[targetDay]._hiddenPeriods) {
         STATE.days[targetDay]._hiddenPeriods = STATE.days[targetDay]._hiddenPeriods.filter(
