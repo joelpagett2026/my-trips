@@ -28,6 +28,7 @@ const ctx = vm.createContext({ STATE: china, activeDay: 0, editItem: null,
   closeModal() {}, scheduleSave() {}, render() {}, renderTimeline() {}, renderRightPanel() {},
   takeSnapshot() {}, showSnapshotBar() {}, setTimeout() {}, confirm: () => true,
   saveTimer: null, RECORD_ID: 'test-china', setStatus() {}, console,
+  dbLoad: async () => JSON.parse(JSON.stringify(china)),
   dbUpsertItineraryItem: async (_id, dayIndex, index, item, original) => {
     const items = china.days[dayIndex].items;
     if (original) {
