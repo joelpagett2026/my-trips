@@ -40,7 +40,7 @@ const clone=v=>JSON.parse(JSON.stringify(v));
 const statuses=[];
 let releaseWrite=null;
 const ctx={document,Element,HTMLElement:Element,MutationObserver:class {observe(){} disconnect(){}},
-  STATE:clone(server),activeDay:0,editItem:null,drawerItem:null,RECORD_ID:'china-2026',snapshotList:[],
+  STATE:clone(server),activeDay:0,editItem:null,drawerItem:null,RECORD_ID:'china-2026',snapshotList:[],saveTimer:null,
   crypto:{randomUUID:()=> 'new-id'},inferPeriod:()=> 'morning',
   console,Promise,Map,Set,Date,Math,JSON,performance:{now:()=>1000},
   setTimeout(){},clearTimeout(){},setInterval(){},clearInterval(){},
