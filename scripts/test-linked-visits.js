@@ -26,11 +26,24 @@ const ctx = vm.createContext({ STATE: china, activeDay: 0, editItem: null,
   document: { getElementById: id => fields[id], querySelectorAll: () => selected.map(value => ({ value })) },
   inferPeriod: item => item.period || 'morning', alert: () => {},
   closeModal() {}, scheduleSave() {}, render() {}, renderTimeline() {}, renderRightPanel() {},
-  takeSnapshot() {}, showSnapshotBar() {}, setTimeout() {}, confirm: () => true
+  takeSnapshot() {}, showSnapshotBar() {}, setTimeout() {}, confirm: () => true,
+  saveTimer: null, RECORD_ID: 'test-china', setStatus() {}, console,
+  dbUpsertItineraryItem: async (_id, dayIndex, index, item, original) => {
+    const items = china.days[dayIndex].items;
+    if (original) {
+      const position = items.findIndex(candidate => candidate === original || (candidate._id && candidate._id === original._id));
+      assert.ok(position >= 0, 'existing attraction found');
+      items[position] = JSON.parse(JSON.stringify(item));
+    } else {
+      items.splice(index, 0, JSON.parse(JSON.stringify(item)));
+    }
+    return { data: JSON.parse(JSON.stringify(china)) };
+  }
 });
 vm.runInContext(['visitPeriods','visitLabel','saveItem','clearPeriod'].map(fn).join('\n'), ctx);
 const json = value => JSON.parse(JSON.stringify(value));
-ctx.saveItem();
+(async () => {
+await ctx.saveItem();
 let visit = china.days[0].items.find(it => it.type === 'attraction');
 assert.deepEqual(json(visit.visitPeriods), ['morning','afternoon','evening']);
 assert.equal(china.days[0].items.length, 2, 'one saved visit, not three billable/completable records');
@@ -42,23 +55,23 @@ visit.completed = true;
 visit.booking.ref = 'KEEP-REFERENCE'; visit.booking.tickets = '2 adults';
 ctx.editItem = { dayIdx: 0, itemIdx: china.days[0].items.indexOf(visit), item: visit };
 selected = ['evening','afternoon']; fields['f-att-notes'].value = 'Updated from continuation';
-ctx.saveItem();
+await ctx.saveItem();
 visit = china.days[0].items.find(it => it.type === 'attraction');
 assert.equal(visit._id, 'stable-visit-id'); assert.equal(visit.visitGroupId, 'stable-visit-id');
 assert.equal(visit.completed, true); assert.equal(visit.booking.ref, 'KEEP-REFERENCE');
 assert.equal(visit.booking.tickets, '2 adults'); assert.equal(visit.booking.note, 'Updated from continuation');
 assert.equal(visit.period, 'afternoon');
 assert.equal(ctx.visitLabel(visit, 'afternoon'), 'AFTERNOON & EVENING VISIT');
-selected = ['morning','evening']; ctx.editItem.item = visit; ctx.saveItem();
+selected = ['morning','evening']; ctx.editItem.item = visit; await ctx.saveItem();
 visit = china.days[0].items.find(it => it.type === 'attraction');
 assert.equal(ctx.visitLabel(visit, 'morning'), 'MORNING & EVENING VISIT');
 assert.equal(ctx.visitLabel(visit, 'evening'), 'CONTINUED');
-selected = []; ctx.editItem.item = visit; ctx.saveItem();
+selected = []; ctx.editItem.item = visit; await ctx.saveItem();
 assert.equal(china.days[0].items.find(it => it.type === 'attraction'), visit, 'empty selection must not save');
-selected = ['evening']; ctx.saveItem();
+selected = ['evening']; await ctx.saveItem();
 visit = china.days[0].items.find(it => it.type === 'attraction');
 assert.equal(ctx.visitLabel(visit, 'evening'), ''); assert.equal(visit.visitGroupId, 'stable-visit-id');
-ctx.editItem.item = visit; selected = ['morning','afternoon','evening']; ctx.saveItem();
+ctx.editItem.item = visit; selected = ['morning','afternoon','evening']; await ctx.saveItem();
 ctx.confirm = () => false; ctx.clearPeriod('evening');
 assert.equal(china.days[0].items.length, 2, 'cancel deletion leaves whole visit');
 ctx.confirm = () => true; ctx.clearPeriod('evening');
@@ -77,7 +90,7 @@ fields['f-att-name'].value = 'Updated attraction';
 fields['f-att-cost'].value = '£40';
 fields['f-att-notes'].value = 'Updated notes';
 selected = ['afternoon', 'evening'];
-ctx.saveItem();
+await ctx.saveItem();
 const reloaded = JSON.parse(JSON.stringify(ctx.STATE));
 assert.equal(reloaded.days[1].items[1].title, 'Updated attraction');
 assert.equal(reloaded.days[1].items[1].booking.price, '£40');
@@ -114,3 +127,5 @@ assert.equal(ctx.STATE.days[0].items.filter(x=>x===fixture).length,1);
 assert.ok(ctx.STATE.days[0].items.includes(hidden));
 assert.deepEqual(fixture.visitPeriods,['morning','afternoon','evening']);
 console.log('linked visits: creation, edits, labels, identity, single totals, cancellation, deletion, reorder and China preservation: ok');
+
+})().catch(error => { console.error(error); process.exitCode = 1; });
