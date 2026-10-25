@@ -4262,7 +4262,7 @@ function saveItem() {
 
       // Use the freshly reloaded record, including any concurrent unrelated
       // changes. Keep the editor open if verification fails.
-      STATE = verifiedRecord;
+      STATE.days[targetDay].items = persistedItems;
       if (STATE.days[targetDay]._hiddenPeriods) {
         STATE.days[targetDay]._hiddenPeriods = STATE.days[targetDay]._hiddenPeriods.filter(
           p => !visitPeriods(saved).includes(p)
