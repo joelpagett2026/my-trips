@@ -52,6 +52,7 @@ const ctx={document,Element,HTMLElement:Element,MutationObserver:class {observe(
   setTransportType(){},setMoveStatus(){},setMealStatus(){},setMealKind(){},updateCarHireMapsLinks(){},
   alert:message=>{throw new Error(message);},
   __mytripsLoadedRecords:new Map(),
+  async dbLoad(){ return clone(server); },
   async dbUpsertItineraryItem(id,day,index,item,original){
     await new Promise(resolve=>{releaseWrite=resolve;});
     assert.deepEqual(clone(original),server.days[day].items[index],'edit must compare against persisted item');
