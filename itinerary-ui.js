@@ -183,10 +183,19 @@
       const root = document.getElementById('tl-col');
       if (!root) return;
 
+      const date = typeof STATE !== 'undefined' && typeof activeDay !== 'undefined'
+        ? parseDMY(STATE.days?.[activeDay]?.date || '') : null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dayHasPassed = date && date < today;
+
       root.querySelectorAll('.tl-item').forEach(row => {
         const item = itemForRow(row);
         if (!isEligible(item) || row.dataset.visitContinued === '1') {
-          row.classList.toggle('tl-completed', isEligible(item) && item.completed === true);
+          // Past meals and journeys share the completed appearance without
+          // changing completion flags, bookings or any stored itinerary data.
+          const pastMealOrTravel = dayHasPassed && (item?.type === 'meal' || item?.type === 'move');
+          row.classList.toggle('tl-completed', (isEligible(item) && item.completed === true) || !!pastMealOrTravel);
           row.querySelector('.tl-complete-btn')?.remove();
           return;
         }
@@ -235,6 +244,19 @@
     });
     observer.observe(root, { childList:true, subtree:true });
     decorateTimeline();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') decorateTimeline();
+    });
+    // Keep an itinerary left open overnight correct, including iPhone apps.
+    function refreshAtMidnight() {
+      const now = new Date();
+      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      setTimeout(() => {
+        decorateTimeline();
+        refreshAtMidnight();
+      }, midnight - now + 100);
+    }
+    refreshAtMidnight();
   }
 
   function installSharePrivacyControls() {
