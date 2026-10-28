@@ -110,6 +110,9 @@ jobs:
       - name: Test attraction editor booking persistence
         run: node scripts/test-attraction-editor-save.js
 
+      - name: Verify homepage rendering cannot rewrite itinerary records
+        run: php scripts/test-home-readonly.php
+
       - name: Validate attraction semantic integrity
         run: node scripts/test-attraction-semantics.js
 
