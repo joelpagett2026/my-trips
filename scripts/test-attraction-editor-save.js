@@ -57,6 +57,7 @@ const ctx={document,Element,HTMLElement:Element,MutationObserver:class {observe(
     await new Promise(resolve=>{releaseWrite=resolve;});
     assert.deepEqual(clone(original),server.days[day].items[index],'edit must compare against persisted item');
     server.days[day].items[index]=clone(item);
+    server.meta.concurrentNote='Unrelated server change';
     return {data:clone(server)};
   },
 };
@@ -82,6 +83,7 @@ function pressSave(){
   assert.equal(document.getElementById('modal-overlay').classList.contains('open'),false,'close only after confirmed save');
   assert.equal(server.days[0].items[0].status,'booked');
   assert.equal(server.days[0].items[0].booking.price,'£150');
+  assert.equal(ctx.STATE.meta.concurrentNote,'Unrelated server change','adopt the entire verified record before any later autosave');
   assert.equal(ctx.renderedBooking?.status,'booked','visible Bookings must refresh after save');
   assert.equal(ctx.renderedBooking?.booking.price,'£150','visible Bookings must use latest price');
   ctx.STATE=clone(server); // full reload of persisted data

@@ -223,6 +223,7 @@ async function testServerConfirmationMustContainItem() {
 }
 
 (async () => {
+  await testQueuedSnapshotCannotUndoItemSave();
   await testAutosaveAndItemSaveAreSerialized();
   await testEditRetainsStableIdentity();
   await testServerConfirmationMustContainItem();
@@ -231,6 +232,52 @@ async function testServerConfirmationMustContainItem() {
   console.error('item save transaction behavior failed:', err.stack || err.message);
   process.exit(1);
 });
+
+async function testQueuedSnapshotCannotUndoItemSave() {
+  const assert = require('node:assert/strict');
+  const original = { _id: 'disney', type: 'attraction', title: 'Disney', status: null, booking: { price: '' } };
+  let server = { days: [{ items: [original] }] };
+  let release;
+  let wholeWrites = 0;
+  const ctx = makeContext(async (url, options) => {
+    const action = new URL(url).searchParams.get('action');
+    if (action === 'load') return makeResponse(200, { ok: true, data: { data: server, version: 'v0' } });
+    const body = JSON.parse(options.body);
+    if (action === 'upsert_item') {
+      await new Promise(resolve => { release = resolve; });
+      server = { days: [{ items: [body.item] }] };
+      return makeResponse(200, { ok: true, data: { data: server, version: 'v1' } });
+    }
+    if (action === 'save') {
+      wholeWrites++;
+      server = body.data;
+      return makeResponse(200, { ok: true, data: { version: 'v2' } });
+    }
+    throw new Error(action);
+  });
+  await ctx.window.dbLoad('test-trip');
+  const edit = ctx.window.dbUpsertItineraryItem('test-trip', 0, 0,
+    { ...original, status: 'booked', booking: { price: '£125.00' } }, original);
+  while (!release) await tick();
+  // A background metadata callback captures the still-visible old STATE while
+  // the explicit item transaction is waiting for its server response.
+  const stale = ctx.window.dbSave('test-trip', server).then(() => null, error => error);
+  release();
+  await edit;
+  const error = await stale;
+  assert.equal(wholeWrites, 0, 'a queued stale snapshot must never reach the server');
+  assert.equal(error?.status, 409);
+  assert.equal(server.days[0].items[0].status, 'booked');
+  assert.equal(server.days[0].items[0].booking.price, '£125.00');
+  const refreshed = JSON.parse(JSON.stringify(server));
+  await Promise.all([
+    ctx.window.dbSave('test-trip', { ...refreshed, meta: { note: 'first ordinary change' } }),
+    ctx.window.dbSave('test-trip', { ...refreshed, meta: { note: 'second ordinary change' } }),
+  ]);
+  assert.equal(wholeWrites, 2, 'ordinary queued autosaves from the adopted state still work');
+  assert.equal(server.days[0].items[0].booking.price, '£125.00');
+  assert.equal(server.meta.note, 'second ordinary change');
+}
 
 // A matching ID with stale details cannot confirm an edit or a retry.
 {

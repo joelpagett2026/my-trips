@@ -108,6 +108,9 @@ async function recordCall(action, params = {}, body = null, fetchOptions = {}) {
 }
 
 const _recordVersions = new Map();
+// Whole-record snapshots belong to the authoritative state visible when they
+// were captured. An item transaction or reload invalidates older queued copies.
+const _recordEpochs = new Map();
 const _dbSaveQueues = new Map();
 const _recordConflicts = new Set();
 
@@ -134,6 +137,7 @@ function staleRecordError(id) {
 
 async function dbLoad(id) {
     const result = await recordCall('load', { id });
+    _recordEpochs.set(id, (_recordEpochs.get(id) || 0) + 1);
     if (!result) {
         _recordVersions.set(id, null);
         _recordConflicts.delete(id);
@@ -147,6 +151,7 @@ async function dbLoad(id) {
 }
 
 function dbAdoptRecord(id, data, version) {
+    _recordEpochs.set(id, (_recordEpochs.get(id) || 0) + 1);
     _recordVersions.set(id, version || null);
     _recordConflicts.delete(id);
     noteRecordLoaded(id, data);
@@ -168,10 +173,15 @@ function queueRecordWrite(id, operation) {
 
 function dbSave(id, data, options = {}) {
     const snapshot = JSON.parse(JSON.stringify(data));
+    const capturedEpoch = _recordEpochs.get(id) || 0;
     const saveOptions = { ...options };
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') saveOptions.keepalive = true;
 
     return queueRecordWrite(id, async () => {
+        // Do not borrow an item save's new version for a snapshot made before
+        // that save completed. Serializing requests alone does not prevent this
+        // stale snapshot from reverting booking status and price afterwards.
+        if (capturedEpoch !== (_recordEpochs.get(id) || 0)) throw staleRecordError(id);
         if (!_recordVersions.has(id)) await dbLoad(id);
 
         // Once the server has rejected a stale write, do not keep sending queued
