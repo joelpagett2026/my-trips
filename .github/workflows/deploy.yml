@@ -104,6 +104,9 @@ jobs:
       - name: Validate runtime contracts
         run: python scripts/validate-runtime.py
 
+      - name: Validate shared and per-person budget costs
+        run: node scripts/test-budget-costs.cjs
+
       - name: Validate multi-period attraction visits
         run: node scripts/test-linked-visits.js
 

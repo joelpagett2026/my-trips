@@ -7,7 +7,7 @@
     if (document.querySelector('script[data-budget-live-redesign]')) return;
 
     const script = document.createElement('script');
-    script.src = '/budget-live-redesign.js?v=4';
+    script.src = '/budget-live-redesign.js?v=7';
     script.dataset.budgetLiveRedesign = '1';
     script.onload = () => { document.documentElement.dataset.budgetRedesign = 'loaded'; };
     script.onerror = () => { console.error('Budget redesign asset failed to load'); };
