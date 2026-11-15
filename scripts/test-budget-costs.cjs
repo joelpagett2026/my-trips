@@ -12,3 +12,27 @@ state.meta.budget={carHireCost:150,fuelCost:40,displayMode:'person'};const n=ctx
 assert.equal(ctx.window.BudgetCosts.model(JSON.parse(JSON.stringify(state))).total,n.total);
 for(const travellers of [1,2,3,7]){state.meta.trav=travellers;const r=ctx.window.BudgetCosts.model(state);let sum=0,prev=0;const rows=r.rows.map(x=>{sum+=x.party;const next=Math.round(sum/travellers),v=next-prev;prev=next;return v});assert.equal(rows.reduce((a,b)=>a+b,0),Math.round(r.total/travellers));}
 console.log('Budget regression checks passed: stay totals, per-person costs, linked duplicates, car override, travellers, data immutability, reload and penny reconciliation.');
+// Render the actual dashboard with synthetic state, including empty and shared views.
+const root={children:[],innerHTML:'',querySelectorAll:()=>[],querySelector:()=>({})};
+const renderCtx={STATE:JSON.parse(JSON.stringify(state)),SHARE_VIEW_ACTIVE:true,window:{renderBudgetView(){}},document:{createElement:()=>({}),head:{appendChild(){}},getElementById:()=>root},setTimeout(){}};
+vm.createContext(renderCtx);vm.runInContext(source,renderCtx);
+for(const mode of ['party','person']){
+ renderCtx.STATE.meta.budget.displayMode=mode;
+ const untouched=JSON.stringify(renderCtx.STATE);
+ renderCtx.window.renderBudgetView();
+ assert.ok(root.innerHTML.includes('class="bd-donut"'));
+ assert.ok(!root.innerHTML.includes('class="bv-hero"'));
+ assert.ok(root.innerHTML.includes('Flights & transport'));
+ assert.ok(!/NaN|Infinity|undefined/.test(root.innerHTML));
+ assert.equal(JSON.stringify(renderCtx.STATE),untouched);
+ const itemAmounts=[...root.innerHTML.matchAll(/class="bv-row-cost">£([\d,.]+)/g)].map(m=>Math.round(Number(m[1].replace(/,/g,''))*100));
+ const total=renderCtx.window.BudgetCosts.model(renderCtx.STATE).total;
+ assert.equal(itemAmounts.reduce((a,b)=>a+b,0),Math.round(total/(mode==='person'?Number(renderCtx.STATE.meta.trav):1)));
+}
+const grouped=renderCtx.window.BudgetCosts.chartData([100,200,300,400,500]);
+assert.equal(grouped.reduce((s,g)=>s+g.value,0),1500);
+assert.equal(grouped[1].value,500);
+renderCtx.STATE={meta:{},days:[]};renderCtx.window.renderBudgetView();
+assert.ok(root.innerHTML.includes('No costs entered yet'));
+assert.ok(!/NaN|Infinity|undefined/.test(root.innerHTML));
+console.log('Compact budget rendering: chart, empty state, per-person/party item sums and read-only state preservation passed.');
