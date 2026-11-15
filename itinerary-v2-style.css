@@ -2338,7 +2338,9 @@ body.share-view .tb-title { cursor: default; }
 #bookings-main .bk-hotel-divider { margin:9px 0; }
 #bookings-main .bk-hotel-pill { padding:5px 8px; }
 #bookings-main .bk-attraction-list { border:1px solid var(--line);box-shadow:none;border-radius:13px; }
-#bookings-main .bk-flight-row { background:#fff;border:1px solid var(--line);border-radius:12px; }
+/* The list owns the outer corners; flights meet at straight dividers. */
+#bookings-main .bk-flight-row { background:#fff;border:0;border-radius:0; }
+#bookings-main .bk-flight-row + .bk-flight-row { border-top:1px solid var(--line); }
 #bookings-main .bk-flight-details { gap:3px; }
 #bookings-main .bk-attr-row,#bookings-main .bk-meal-row { min-height:62px;padding:11px 13px; }
 #bookings-main .bk-columns[data-bk-filter="hotel"] .bk-col:not(.bk-col--hotel),
