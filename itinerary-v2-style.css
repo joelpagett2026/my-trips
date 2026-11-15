@@ -2393,3 +2393,19 @@ body.share-view .tb-title { cursor: default; }
 #bookings-main .bk-dash-tab.active .bk-dash-tab-ico{background:rgba(255,255,255,.2);color:#fff}
 #bookings-main .bk-tab-all-icon{display:inline-block;width:16px;height:16px;background:currentColor;-webkit-mask-image:url('/icons/nav-bookings.png?v=2');mask-image:url('/icons/nav-bookings.png?v=2');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 @media(max-width:540px){#bookings-main .bk-dash-toolbar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:7px}#bookings-main .bk-dash-tab{flex-shrink:0;white-space:nowrap}}
+
+/* Compact non-flight transport overview. Flights retain their detailed cards. */
+#bookings-main .bk-other-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 13px;cursor:pointer}
+#bookings-main .bk-other-row+.bk-other-row{border-top:1px solid var(--line)}
+#bookings-main .bk-other-row:hover{background:var(--transport-bg)}
+#bookings-main .bk-other-row:focus-visible{outline:2px solid var(--transport);outline-offset:-2px}
+#bookings-main .bk-other-icon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex-shrink:0;color:var(--transport)}
+#bookings-main .bk-other-icon svg{width:18px;height:18px}
+#bookings-main .bk-other-route{font-size:12px;font-weight:700;min-width:0;overflow-wrap:anywhere}
+#bookings-main .bk-other-when{margin-left:auto;font-size:10.5px;color:var(--text3);white-space:nowrap}
+#bookings-main .bk-other-row .bk-attr-chev{flex-shrink:0}
+@media(max-width:540px){
+ #bookings-main .bk-other-row{gap:7px;padding:9px 10px}
+ #bookings-main .bk-other-route{font-size:11px;flex:1}
+ #bookings-main .bk-other-when{font-size:9px;white-space:normal;max-width:110px;text-align:right}
+}
