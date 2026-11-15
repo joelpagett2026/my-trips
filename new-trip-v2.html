@@ -5593,15 +5593,8 @@ function renderBookingsView() {
     </div>`;
   };
 
-  // Flights get their own roomier two-line card (matching the approved
-  // bookings-transport-ui preview's dedicated .flight-row) — a labelled
-  // Date/Time/Route grid instead of a single meta line, since there's
-  // more worth surfacing on a flight than a bus/coach journey. Route
-  // shows the same From/To text as the title rather than IATA airport
-  // codes (matching the preview's 'LGW → OPO' style) — there's no
-  // dedicated airport-code field in the flight form (f-from/f-to are
-  // free text), and guessing codes from a city name risks showing a
-  // wrong one, which is worse than not showing one at all.
+  // Flight cards display the route once, in the title. Keep just the
+  // date and time in the details grid to avoid repeating airport names.
   const flightRow = (f) => {
     const title = [f.from, f.to].filter(Boolean).join(' → ') || f.name;
     const dateStr = fmtDdMmmYyyy(f.date) || f.date || '';
@@ -5609,7 +5602,6 @@ function renderBookingsView() {
     const details = [
       dateStr ? { label: 'Date', value: dateStr } : null,
       timeStr ? { label: 'Time', value: timeStr } : null,
-      (f.from || f.to) ? { label: 'Route', value: title } : null,
     ].filter(Boolean);
     return `
     <div class="bk-flight-row" onclick="openDrawerItem(${f.dayIdx||0},${f.itemIdx});">
