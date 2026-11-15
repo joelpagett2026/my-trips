@@ -2382,6 +2382,7 @@ body.share-view .tb-title { cursor: default; }
   font-size:11.5px;font-weight:700;line-height:1.2;cursor:pointer;
   transition:background .15s,color .15s,border-color .15s
 }
+#bookings-main .bk-dash-tab--all{--pill-color:#555;--pill-tint:rgba(85,85,85,.1)}
 #bookings-main .bk-dash-tab--transport{--pill-color:var(--transport);--pill-tint:var(--transport-bg)}
 #bookings-main .bk-dash-tab--attraction{--pill-color:var(--activity);--pill-tint:var(--activity-bg)}
 #bookings-main .bk-dash-tab--dining{--pill-color:var(--amber);--pill-tint:var(--amber-bg)}
