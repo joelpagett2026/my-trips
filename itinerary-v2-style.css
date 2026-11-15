@@ -1430,7 +1430,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   background:var(--bk-bg); border-radius:16px; padding:16px;
 }
 .bk-col--hotel      { --bk-c:#0e7a87; --bk-bg:rgba(14,122,135,0.07);  --bk-badge:rgba(14,122,135,0.15); }
-.bk-col--transport  { --bk-c:#1E5C94; --bk-bg:rgba(30,92,148,0.07);   --bk-badge:rgba(30,92,148,0.15); }
+.bk-col--transport  { --bk-c:var(--transport); --bk-bg:var(--transport-bg); --bk-badge:var(--transport-bg); }
 .bk-col--attraction { --bk-c:#5A8968; --bk-bg:rgba(90,137,104,0.09);  --bk-badge:rgba(90,137,104,0.18); }
 .bk-col--meal        { --bk-c:#d97b0a; --bk-bg:rgba(217,123,10,0.08); --bk-badge:rgba(217,123,10,0.16); }
 .bk-col-head { font-size:15px; font-weight:800; display:flex; align-items:center; gap:10px; color:var(--bk-c); }
