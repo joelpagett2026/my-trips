@@ -5325,9 +5325,12 @@ function setView(view) {
   document.getElementById('sb-btn-bookings').classList.toggle('active', isBookings);
   document.getElementById('sb-btn-map').classList.toggle('active', isMap);
 
-  // Hide/show day selector and itinerary-specific topbar controls
+  // Day navigation is only relevant to the itinerary. Hide it on mobile
+  // for Bookings, Map and Budget, just as we already do on desktop.
   const hideChrome = isBudget || view === 'bookings' || view === 'map';
   document.getElementById('day-selector').style.display = hideChrome ? 'none' : '';
+  const mobileDayNav = document.getElementById('mob-nav');
+  if (mobileDayNav) mobileDayNav.style.display = hideChrome ? 'none' : '';
   ['tb-share','tb-status'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = hideChrome ? 'none' : '';
