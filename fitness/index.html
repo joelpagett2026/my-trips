@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#f2c400">
+  <meta name="theme-color" content="#292b30">
   <title>Fitness Tracker · Joel Pagett</title>
   <script src="/auth.js?v=4"></script>
   <style>
-    *{box-sizing:border-box}body{margin:0;background:#f4f4f6;color:#25262b;font-family:Montserrat,system-ui,sans-serif}main{max-width:620px;margin:12vh auto;padding:28px}a{color:inherit;text-underline-offset:4px}.panel{margin-top:28px;padding:36px;background:#fff;border-radius:24px;box-shadow:0 12px 32px #25262b0d}.icon{display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:#f2c400;color:white}h1{font-size:30px;letter-spacing:-1px;margin:24px 0 12px}p{line-height:1.6;color:#62636b}.tag{display:inline-block;margin-top:12px;background:#fff6cf;color:#615000;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:650}@media(max-width:500px){main{margin:5vh auto;padding:20px}.panel{padding:26px}}
+    :root{--fitness-background:#f4f4f6;--fitness-surface:#fff;--fitness-ink:#292b30;--fitness-muted:#62636b;--fitness-accent:#ecb800;--fitness-soft:#e9eaed}
+    *{box-sizing:border-box}body{margin:0;background:var(--fitness-background);color:var(--fitness-ink);font-family:Montserrat,system-ui,sans-serif}main{max-width:620px;margin:12vh auto;padding:28px}a{color:inherit;text-underline-offset:4px}.panel{margin-top:28px;padding:36px;background:var(--fitness-surface);border-radius:24px;box-shadow:0 12px 32px #292b300d}.icon{display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:var(--fitness-ink);color:#fff}h1{font-size:30px;letter-spacing:-1px;margin:24px 0 12px}p{line-height:1.6;color:var(--fitness-muted)}.tag{display:inline-block;margin-top:12px;background:var(--fitness-soft);color:var(--fitness-ink);padding:7px 12px;border-radius:8px;font-size:13px;font-weight:650}.back-button{display:inline-flex;align-items:center;min-height:44px;margin-top:28px;padding:12px 18px;border-radius:10px;background:var(--fitness-accent);color:var(--fitness-ink);font-size:14px;font-weight:700;text-decoration:none}.back-button:hover{filter:brightness(.96)}a:focus-visible{outline:3px solid var(--fitness-ink);outline-offset:4px}@media(max-width:500px){main{margin:5vh auto;padding:20px}.panel{padding:26px}}
   </style>
 </head>
 <body>
@@ -19,6 +20,7 @@
       <h1>Fitness Tracker</h1>
       <p>Your space to log workouts, track your weights and build your next session.</p>
       <span class="tag">Coming soon</span>
+      <div><a class="back-button" href="/">Back to your homepage →</a></div>
     </section>
   </main>
 </body>
