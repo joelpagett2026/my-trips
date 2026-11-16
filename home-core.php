@@ -181,7 +181,7 @@ $dashboardPolishStyle = <<<'HTML'
   .quick-links-panel .coming-icon{
     width:32px!important;height:32px!important;min-width:32px!important;border-radius:10px!important;
   }
-  .quick-links-panel .coming-icon.fitness{background:#f2c400!important;color:#fff!important;}
+  .quick-links-panel .coming-icon.fitness{background:#fff8d6!important;color:#b38b00!important;}
   .quick-links-panel .coming-icon svg{width:22px!important;height:22px!important;}
   .quick-links-panel .coming-icon .tracker-glyph{width:26px!important;height:26px!important;}
   .quick-links-panel .coming-icon img{width:28px!important;height:28px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
