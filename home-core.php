@@ -70,6 +70,11 @@ $quickLinksPanel = <<<'HTML'
       <span class="coming-copy"><span class="coming-label">Theme Parks</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+    <a class="coming-item" href="/fitness/">
+      <span class="coming-icon fitness"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11M4 9l5-5M15 20l5-5M2.5 6.5l4-4M17.5 21.5l4-4"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Fitness Tracker</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
   </div>
 </section>
 HTML;
@@ -166,16 +171,17 @@ $dashboardPolishStyle = <<<'HTML'
   .quick-links-panel .section-head{padding:0 0 12px!important;}
   .quick-links-panel .coming-grid{
     display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr))!important;
-    gap:10px!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:8px!important;
   }
   .quick-links-panel .coming-item{
-    min-width:0!important;min-height:58px!important;padding:10px 12px!important;gap:9px!important;
+    min-width:0!important;min-height:54px!important;padding:9px 10px!important;gap:7px!important;
     border-radius:13px!important;background:#fff!important;
   }
   .quick-links-panel .coming-icon{
-    width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important;
+    width:32px!important;height:32px!important;min-width:32px!important;border-radius:10px!important;
   }
+  .quick-links-panel .coming-icon.fitness{background:#f2c400!important;color:#fff!important;}
   .quick-links-panel .coming-icon svg{width:22px!important;height:22px!important;}
   .quick-links-panel .coming-icon .tracker-glyph{width:26px!important;height:26px!important;}
   .quick-links-panel .coming-icon img{width:28px!important;height:28px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}

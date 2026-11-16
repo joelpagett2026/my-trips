@@ -226,6 +226,7 @@ $coreFiles = [
 ];
 
 $subdirFiles = [
+    'fitness/index.html' => 'fitness/index.html',
     'trips/index.html' => 'trips/index.html',
     'holidays/index.html' => 'holidays/index.html',
     'holidays/allowance-data.js' => 'holidays/allowance-data.js',
