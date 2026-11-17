@@ -1,27 +1,13 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#292b30">
-  <title>Fitness Tracker · Joel Pagett</title>
-  <script src="/auth.js?v=4"></script>
-  <style>
-    :root{--fitness-background:#f4f4f6;--fitness-surface:#fff;--fitness-ink:#292b30;--fitness-muted:#62636b;--fitness-accent:#ecb800;--fitness-soft:#e9eaed}
-    *{box-sizing:border-box}body{margin:0;background:var(--fitness-background);color:var(--fitness-ink);font-family:Montserrat,system-ui,sans-serif}main{max-width:620px;margin:12vh auto;padding:28px}a{color:inherit;text-underline-offset:4px}.panel{margin-top:28px;padding:36px;background:var(--fitness-surface);border-radius:24px;box-shadow:0 12px 32px #292b300d}.icon{display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:var(--fitness-ink);color:#fff}h1{font-size:30px;letter-spacing:-1px;margin:24px 0 12px}p{line-height:1.6;color:var(--fitness-muted)}.tag{display:inline-block;margin-top:12px;background:var(--fitness-soft);color:var(--fitness-ink);padding:7px 12px;border-radius:8px;font-size:13px;font-weight:650}.back-button{display:inline-flex;align-items:center;min-height:44px;margin-top:28px;padding:12px 18px;border-radius:10px;background:var(--fitness-accent);color:var(--fitness-ink);font-size:14px;font-weight:700;text-decoration:none}.back-button:hover{filter:brightness(.96)}a:focus-visible{outline:3px solid var(--fitness-ink);outline-offset:4px}@media(max-width:500px){main{margin:5vh auto;padding:20px}.panel{padding:26px}}
-  </style>
-</head>
-<body>
-  <main>
-    <a href="/">← Back to your homepage</a>
-    <section class="panel">
-      <div class="icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11M4 9l5-5M15 20l5-5M2.5 6.5l4-4M17.5 21.5l4-4"/></svg></div>
-      <h1>Fitness Tracker</h1>
-      <p>Your space to log workouts, track your weights and build your next session.</p>
-      <span class="tag">Coming soon</span>
-      <div><a class="back-button" href="/">Back to your homepage →</a></div>
-    </section>
-  </main>
-</body>
-</html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#292b30">
+<title>Fitness Tracker · Joel Pagett</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"><link rel="stylesheet" href="/fitness/style.css?v=1">
+<script src="/auth.js?v=4"></script><script src="/db.js?v=fitness1"></script><script defer src="/fitness/engine.js?v=1"></script><script defer src="/fitness/app.js?v=1"></script>
+</head><body>
+<header class="topbar"><a href="/" class="home">← Your homepage</a><span id="save-status" role="status">Connecting…</span></header>
+<main><header class="brand"><div class="brand-icon" aria-hidden="true"></div><div><span class="eyebrow">YOUR PERSONAL TRAINING SPACE</span><h1>Fitness Tracker</h1></div></header>
+<nav aria-label="Fitness sections"><button data-tab="today" aria-current="page">Work out</button><button data-tab="history">History</button><button data-tab="library">Exercise library</button></nav>
+<div id="error" role="alert" hidden></div><div id="content"><section class="panel"><h2>Getting your workouts ready…</h2></section></div></main>
+<dialog id="exercise-dialog" aria-labelledby="exercise-title"><form method="dialog"><button class="close" aria-label="Close exercise details">✕</button></form><div id="exercise-detail"></div></dialog><div id="toast" role="status" hidden></div>
+</body></html>

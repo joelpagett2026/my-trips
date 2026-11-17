@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict');
+const E=require('../fitness/engine.js');
+assert.equal(E.library.length,73);assert.equal(new Set(E.library.map(e=>e.id)).size,73);
+const opts={type:'Upper Body',minutes:45,equipment:['Machines','Cables','Dumbbells','Kettlebells','Bodyweight','Functional']};
+const session=E.generate(opts,[],()=>0);assert.deepEqual(session.map(e=>e.group),['chest','row','pull','shoulder','arms']);assert(session.every(e=>e.sets.every(s=>s.weight===null||s.weight===0)));
+const excluded=E.generate({...opts,exclude:[session[0].id]},[],()=>0);assert.notEqual(excluded[0].id,session[0].id);
+const cable=E.generate({...opts,equipment:['Cables']},[],()=>0);assert(cable.every(e=>e.equipment==='Cables'));assert(cable.length<5);
+const original=JSON.parse(JSON.stringify(session[0]));original.feedback='up';original.sets.forEach(s=>{s.weight=20;s.reps=12;s.done=true;});
+assert.deepEqual(E.progression(original,2.5),[22.5,22.5,22.5]);
+for(const feedback of ['down','pain',null])assert.equal(E.progression({...original,feedback},2.5),null);
+const partial=structuredClone(original);partial.sets[1].done=false;assert.equal(E.progression(partial,2.5),null);
+const missed=structuredClone(original);missed.sets[1].reps=8;assert.equal(E.progression(missed,2.5),null);
+assert.equal(E.progression({...original,review:true},2.5),null);assert.equal(E.progression(original,0),null);
+const past=[{finishedAt:'2026-11-16T12:00:00Z',exercises:[original]}];
+const next=E.generate(opts,past,()=>0);assert.equal(next[0].sets[0].weight,20);assert.equal(next[0].sets[0].done,false);
+const pain=structuredClone(original);pain.feedback='pain';pain.sets.forEach(s=>s.done=false);const painHistory=[...past,{finishedAt:'2026-11-17T12:00:00Z',exercises:[pain]}];
+assert(!E.generate(opts,painHistory,()=>0).some(e=>e.id===pain.id));
+assert.equal(E.weekCount([{finishedAt:'2026-11-15T12:00:00Z'},{finishedAt:'2026-11-16T12:00:00Z'},{finishedAt:'2026-11-17T12:00:00Z'}],new Date('2026-11-17T12:00:00Z')),2);
+const run=E.generate({type:'Running',minutes:30},[]);assert.equal(run[0].sets[0].minutes,30);assert.equal(run[0].kind,'cardio');
+for(let i=0;i<100;i++){const cardio=E.generate({type:'Cardio',minutes:60},[]);const skiing=cardio.filter(e=>/Ski/.test(e.name));assert(skiing.length<=1);assert(!E.generate({type:'Lower Body',minutes:75},[]).some(e=>e.review));}
+console.log('Fitness tests passed: library, balanced generation, exclusions, equipment, confirmed baselines, progression gates, pain flags, running and weekly counts.');

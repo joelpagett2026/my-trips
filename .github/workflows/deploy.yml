@@ -22,6 +22,8 @@ jobs:
 
       - name: Validate JavaScript syntax
         run: |
+          node --check fitness/app.js
+          node --check fitness/engine.js
           node --check auth.js
           node --check db.js
           node --check itinerary-state-guard.js
@@ -169,6 +171,11 @@ jobs:
 
       - name: Test Holiday Allowance V2 state flows
         run: node scripts/test-holiday-v2.js
+
+      - name: Test Fitness workout generation and progression
+        run: |
+          node scripts/test-fitness.cjs
+          node scripts/test-fitness-save.cjs
 
       - name: Execute renderer integration contracts
         run: php scripts/validate-renderers.php
