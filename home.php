@@ -210,6 +210,7 @@ body .main-grid > a.dash-card[href="/parks/"] .stat{border-color:rgba(255,255,25
     width:42px!important;height:42px!important;min-width:42px!important;border-radius:12px!important;
   }
   body .quick-links-panel .coming-icon svg{width:20px!important;height:20px!important;}
+  body .quick-links-panel .fitness-glyph{width:20px;height:20px;}
   body .quick-links-panel .coming-label{font-size:13px!important;font-weight:800!important;color:#263238!important;}
   body .quick-links-panel .mini-arrow{margin-left:auto!important;width:12px!important;height:12px!important;}
   body .main-grid{width:100%!important;}

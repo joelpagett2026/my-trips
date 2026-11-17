@@ -226,6 +226,7 @@ $coreFiles = [
 ];
 
 $subdirFiles = [
+    'icons/fitness-barbell.png' => 'icons/fitness-barbell.png',
     'fitness/index.html' => 'fitness/index.html',
     'trips/index.html' => 'trips/index.html',
     'holidays/index.html' => 'holidays/index.html',

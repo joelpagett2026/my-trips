@@ -71,7 +71,7 @@ $quickLinksPanel = <<<'HTML'
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
     <a class="coming-item" href="/fitness/">
-      <span class="coming-icon fitness"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11M4 9l5-5M15 20l5-5M2.5 6.5l4-4M17.5 21.5l4-4"/></svg></span>
+      <span class="coming-icon fitness"><span class="fitness-glyph" aria-hidden="true"></span></span>
       <span class="coming-copy"><span class="coming-label">Fitness Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
@@ -182,6 +182,7 @@ $dashboardPolishStyle = <<<'HTML'
     width:32px!important;height:32px!important;min-width:32px!important;border-radius:10px!important;
   }
   .quick-links-panel .coming-icon.fitness{background:#e9eaed!important;color:#292b30!important;}
+  .quick-links-panel .fitness-glyph{display:block;width:22px;height:22px;background:currentColor;-webkit-mask:url(/icons/fitness-barbell.png) center/contain no-repeat;mask:url(/icons/fitness-barbell.png) center/contain no-repeat;}
   .quick-links-panel .coming-icon svg{width:22px!important;height:22px!important;}
   .quick-links-panel .coming-icon .tracker-glyph{width:26px!important;height:26px!important;}
   .quick-links-panel .coming-icon img{width:28px!important;height:28px!important;object-fit:contain!important;display:block!important;border-radius:6px!important;}
