@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#292b30">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#292b30">
 <title>Fitness Tracker · Joel Pagett</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"><link rel="stylesheet" href="/fitness/style.css?v=1">
-<script src="/auth.js?v=4"></script><script src="/db.js?v=fitness1"></script><script defer src="/fitness/engine.js?v=1"></script><script defer src="/fitness/app.js?v=1"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"><link rel="stylesheet" href="/fitness/style.css?v=2">
+<script src="/auth.js?v=4"></script><script src="/db.js?v=fitness1"></script><script defer src="/fitness/engine.js?v=1"></script><script defer src="/fitness/app.js?v=2"></script>
 </head><body>
 <header class="topbar"><a href="/" class="home">← Your homepage</a><span id="save-status" role="status">Connecting…</span></header>
 <main><header class="brand"><div class="brand-icon" aria-hidden="true"></div><div><span class="eyebrow">YOUR PERSONAL TRAINING SPACE</span><h1>Fitness Tracker</h1></div></header>
-<nav aria-label="Fitness sections"><button data-tab="today" aria-current="page">Work out</button><button data-tab="history">History</button><button data-tab="library">Exercise library</button></nav>
+<nav class="section-nav" aria-label="Fitness sections"><button data-tab="today" aria-current="page"><span aria-hidden="true">＋</span>Work out</button><button data-tab="history"><span aria-hidden="true">↺</span>History</button><button data-tab="library"><span aria-hidden="true">▦</span>Exercises</button></nav>
 <div id="error" role="alert" hidden></div><div id="content"><section class="panel"><h2>Getting your workouts ready…</h2></section></div></main>
 <dialog id="exercise-dialog" aria-labelledby="exercise-title"><form method="dialog"><button class="close" aria-label="Close exercise details">✕</button></form><div id="exercise-detail"></div></dialog><div id="toast" role="status" hidden></div>
 </body></html>
