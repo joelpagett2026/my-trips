@@ -75,6 +75,11 @@ $quickLinksPanel = <<<'HTML'
       <span class="coming-copy"><span class="coming-label">Fitness Tracker</span></span>
       <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
     </a>
+    <a class="coming-item" href="/christmas/">
+      <span class="coming-icon christmas"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8H8.5a2.5 2.5 0 1 1 2.5-2.5L12 8Zm0 0h3.5A2.5 2.5 0 1 0 13 5.5L12 8Z"/></svg></span>
+      <span class="coming-copy"><span class="coming-label">Christmas List</span></span>
+      <svg class="mini-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
   </div>
 </section>
 HTML;
@@ -182,6 +187,7 @@ $dashboardPolishStyle = <<<'HTML'
     width:32px!important;height:32px!important;min-width:32px!important;border-radius:10px!important;
   }
   .quick-links-panel .coming-icon.fitness{background:#e9eaed!important;color:#292b30!important;}
+  .quick-links-panel .coming-icon.christmas{background:#F8E8EB!important;color:#A72336!important;}
   .quick-links-panel .fitness-glyph{display:block;width:22px;height:22px;background:currentColor;-webkit-mask:url(/icons/fitness-barbell.png) center/contain no-repeat;mask:url(/icons/fitness-barbell.png) center/contain no-repeat;}
   .quick-links-panel .coming-icon svg{width:22px!important;height:22px!important;}
   .quick-links-panel .coming-icon .tracker-glyph{width:26px!important;height:26px!important;}
