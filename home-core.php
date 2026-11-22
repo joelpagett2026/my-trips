@@ -176,7 +176,7 @@ $dashboardPolishStyle = <<<'HTML'
   .quick-links-panel .section-head{padding:0 0 12px!important;}
   .quick-links-panel .coming-grid{
     display:grid!important;
-    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
     gap:8px!important;
   }
   .quick-links-panel .coming-item{
@@ -195,6 +195,11 @@ $dashboardPolishStyle = <<<'HTML'
   .quick-links-panel .coming-icon.tracker-icon{background-color:currentColor!important;background-repeat:no-repeat!important;-webkit-mask-repeat:no-repeat!important;mask-repeat:no-repeat!important;-webkit-mask-position:center!important;mask-position:center!important;-webkit-mask-size:26px 26px!important;mask-size:26px 26px!important;}
   .quick-links-panel .coming-label{font-size:11px!important;}
   .quick-links-panel .mini-arrow{width:11px!important;height:11px!important;}
+
+  /* Keep the expanded seven-link row legible on smaller desktop windows. */
+  @media (min-width:801px) and (max-width:1120px) {
+    .quick-links-panel .coming-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+  }
 
   /* Shared Concert-style mobile spacing, without touching each section's colour. */
   @media (max-width:800px), (display-mode:standalone) and (max-width:900px) {
