@@ -23,6 +23,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check fitness/app.js
+          node --check christmas/app.js
           node --check fitness/engine.js
           node --check auth.js
           node --check db.js
@@ -177,6 +178,9 @@ jobs:
           node scripts/test-fitness.cjs
           node scripts/test-fitness-save.cjs
 
+      - name: Test Christmas gift planning and account saving
+        run: node scripts/test-christmas-list.cjs
+
       - name: Execute renderer integration contracts
         run: php scripts/validate-renderers.php
 
@@ -206,6 +210,9 @@ jobs:
           copied = payload.get('copied') or []
           required = [
               'activity-editor.js',
+              'christmas/index.html',
+              'christmas/style.css',
+              'christmas/app.js',
               'holidays/holiday-v2.css',
               'holidays/holiday-v2.js',
               'holidays/holiday-v2-ui.js',
@@ -222,6 +229,14 @@ jobs:
             --dump-header /tmp/home.headers \
             "https://joelpagett.co.uk/" \
             --output /tmp/home.html
+
+      - name: Verify Christmas List homepage link and page
+        run: |
+          grep -q 'href="/christmas/"' /tmp/home.html
+          curl --fail --show-error --silent "https://joelpagett.co.uk/christmas/" --output /tmp/christmas.html
+          grep -q 'The Christmas List' /tmp/christmas.html
+          grep -q '/christmas/app.js?v=1' /tmp/christmas.html
+          grep -q 'family=Montserrat' /tmp/christmas.html
 
       - name: Verify raw homepage source canonicalizes
         run: |
