@@ -4,17 +4,19 @@ const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'christmas-' + Date.now() + '-' + Math.random().toString(36).slice(2);
 const copy = x => JSON.parse(JSON.stringify(x));
-const bought = status => ['ordered','received','wrapped'].includes(status);
+// Older records may use 'idea' or 'wrapped'; display them within the three simple statuses.
+const delivered = status => status === 'received' || status === 'wrapped';
+const ordered = status => status === 'ordered';
+const giftStage = status => delivered(status) ? 'delivered' : ordered(status) ? 'ordered' : 'not-bought';
 const GROUPS = [
  {id:'personal',name:'Personal Presents',people:['Joel','Jon']},
  {id:'jon',name:"Jon's Family",people:['Kevin','Valerie','Mark']},
  {id:'mums',name:"Joel's Mums",people:['Joanna','Neil','Blossom','Cohman']},
- {id:'dads',name:"Joel's Dads",people:['Malcolm','Tina','Harry','Emma','Jess','Stanley','Emmy','Sandy','Dave']},
- {id:'other',name:'Other',people:['Lucy','Secret Santa']}
+ {id:'dads',name:"Joel's Dads",people:['Malcolm','Tina','Harry','Emma','Jess','Stanley','Emmy','Sandy','Dave']}
 ];
 const lookupGroup = name => {
  const text=String(name||'').trim().toLowerCase();
- return GROUPS.find(g => g.people.some(n => n.toLowerCase()===text))?.id || 'other';
+ return GROUPS.find(g => g.people.some(n => n.toLowerCase()===text))?.id || (text === 'mum' ? 'mums' : 'personal');
 };
 const starterPeople = () => GROUPS.flatMap(g => g.people.map(name => ({id:uid(),name,group:g.id,budget:0})));
 const blankYear = (copyMembers=false,existing=[]) => ({people:copyMembers?existing.map(p=>({...p,id:uid(),group:p.group||lookupGroup(p.name)})):starterPeople(),gifts:[]});
@@ -35,29 +37,33 @@ function normalise(remote){
 function groupFor(person) {return GROUPS.some(g=>g.id===person.group)?person.group:lookupGroup(person.name);}
 function totals(){
  const gifts=yearData().gifts;
- const done=gifts.filter(g=>bought(g.status)).length;
- return {total:gifts.length,done,left:gifts.length-done,percent:gifts.length?Math.round(100*done/gifts.length):0};
+ const done=gifts.filter(g=>delivered(g.status)).length;
+ const waiting=gifts.filter(g=>ordered(g.status)).length;
+ const remaining=gifts.length-done-waiting;
+ return {total:gifts.length,done,waiting,remaining,percent:gifts.length?Math.round(100*done/gifts.length):0,orderedPercent:gifts.length?Math.round(100*waiting/gifts.length):0};
 }
 function yearOptions(){return Object.keys(state.years).sort((a,b)=>Number(b)-Number(a)).map(y=>'<option value="'+esc(y)+'"'+(Number(y)===state.activeYear?' selected':'')+'>'+esc(y)+'</option>').join('');}
 function renderHeader(){
  const t=totals();
  $('#year-select').innerHTML=yearOptions();
- $('#total-progress').textContent=t.done+' of '+t.total+' bought';
- $('#total-left').textContent=t.total===0?'Add your first present':t.left===0?'All presents bought!':t.left+' still to buy';
+ $('#total-progress').textContent=t.done+' of '+t.total+' completed';
+ $('#total-left').textContent=t.total===0?'Add your first present':t.remaining===0&&t.waiting===0?'All presents delivered!':t.waiting+' ordered · '+t.remaining+' not bought';
  $('#total-bar').style.width=t.percent+'%';
+ $('#total-ordered-bar').style.width=t.orderedPercent+'%';
  $('#total-track').setAttribute('aria-valuenow',String(t.percent));
 }
 function renderGift(g){
- const isDone=bought(g.status);
- const name=esc(g.name);
- return '<span class="present '+(isDone?'bought':'')+'">' +
- '<button class="present-toggle" type="button" data-action="toggle-gift" data-id="'+esc(g.id)+'" aria-label="'+(isDone?'Mark ':'Mark ')+name+(isDone?' as to buy':' as bought')+'" title="'+(isDone?'Bought — tap to undo':'To buy — tap when purchased')+'"><span class="tick '+(isDone?'':'pending')+'" aria-hidden="true">'+(isDone?'✓':'○')+'</span><span>'+name+'</span></button>'+
+ const stage=giftStage(g.status),name=esc(g.name);
+ const label=stage==='delivered'?'Bought / delivered':stage==='ordered'?'Ordered':'Not bought';
+ return '<span class="present '+stage+'">' +
+ '<button class="present-toggle" type="button" data-action="toggle-gift" data-id="'+esc(g.id)+'" aria-label="'+name+': '+label+'. Single click to change order status, double click for delivered." title="'+name+' — '+label+' · click: ordered / not bought · double click: delivered"><span class="tick" aria-hidden="true">'+(stage==='delivered'?'✓':stage==='ordered'?'◉':'○')+'</span><span>'+name+'</span></button>'+
  '<button class="present-edit" type="button" data-action="edit-gift" data-id="'+esc(g.id)+'" title="Edit '+name+'" aria-label="Edit '+name+'">···</button></span>';
 }
 function renderPerson(p){
  const gifts=yearData().gifts.filter(g=>g.personId===p.id);
- const done=gifts.length>0&&gifts.every(g=>bought(g.status));
- return '<div class="family-row"><div class="person-name '+(done?'complete':'')+'"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'" title="Edit '+esc(p.name)+'">'+esc(p.name)+'</button></div>'+
+ const allDelivered=gifts.length>0&&gifts.every(g=>delivered(g.status));
+ const allOnOrder=gifts.length>0&&!allDelivered&&gifts.every(g=>delivered(g.status)||ordered(g.status));
+ return '<div class="family-row"><div class="person-name '+(allDelivered?'complete':allOnOrder?'on-order':'')+'"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'" title="Edit '+esc(p.name)+'">'+esc(p.name)+'</button></div>'+
  '<div class="presents">'+(gifts.length?gifts.map(renderGift).join(''):'<span class="empty-person">No presents yet</span>')+
  '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a present for '+esc(p.name)+'" title="Add a present for '+esc(p.name)+'">＋</button></div></div>';
 }
@@ -65,10 +71,11 @@ function renderGroup(g){
  const d=yearData(),members=d.people.filter(p=>groupFor(p)===g.id);
  const ids=new Set(members.map(p=>p.id));
  const gifts=d.gifts.filter(gift=>ids.has(gift.personId));
- const done=gifts.filter(gift=>bought(gift.status)).length;
- const color=gifts.length===0?'':done===gifts.length?'complete':'partial';
+ const done=gifts.filter(gift=>delivered(gift.status)).length;
+ const waiting=gifts.filter(gift=>ordered(gift.status)).length;
+ const color=gifts.length===0?'':done===gifts.length?'complete':(waiting||done)?'partial':'';
  return '<article class="group-card" data-group="'+esc(g.id)+'" aria-label="'+esc(g.name)+'">'+
- '<header class="group-head"><h2 class="group-heading">'+esc(g.name)+'</h2><div class="group-meta"><span class="count '+color+'">'+done+' / '+gifts.length+' bought</span>'+
+ '<header class="group-head"><h2 class="group-heading">'+esc(g.name)+'</h2><div class="group-meta"><span class="count '+color+'">'+done+' / '+gifts.length+' delivered'+(waiting?' · '+waiting+' ordered':'')+'</span>'+
  '<button type="button" class="add-small" data-action="add-person" data-group="'+esc(g.id)+'" title="Add someone to '+esc(g.name)+'" aria-label="Add someone to '+esc(g.name)+'">＋</button></div></header>'+
  (members.length?members.map(renderPerson).join(''):'<div class="no-people">Nobody in this group yet. Use + to add someone.</div>')+
  '</article>';
@@ -160,7 +167,7 @@ function openPerson(id,groupHint){
  $('#editor-title').textContent=p?'Edit person':'Add a family member';
  $('#editor-form').innerHTML='<div class="form-fields">'+
  '<label class="field">Name<input name="name" maxlength="80" required value="'+esc(p?.name||'')+'" placeholder="Name"></label>'+
- '<label class="field">Family group<select name="group">'+GROUPS.map(g=>'<option value="'+g.id+'"'+((p?groupFor(p):groupHint||'other')===g.id?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select></label></div>'+
+ '<label class="field">Family group<select name="group">'+GROUPS.map(g=>'<option value="'+g.id+'"'+((p?groupFor(p):groupHint||'personal')===g.id?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select></label></div>'+
  '<div class="modal-actions">'+(p?'<button type="button" class="danger" id="delete-person">Remove</button>':'')+
  '<button type="button" class="quiet" id="cancel-editor">Cancel</button><button class="primary" type="submit">'+(p?'Save':'Add person')+'</button></div>';
  $('#cancel-editor').onclick=()=>$('#editor').close();
@@ -170,7 +177,7 @@ function openPerson(id,groupHint){
 }
 function savePerson(ev){
  ev.preventDefault();if(blocked)return;
- const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim(),group=String(fd.get('group')||'other');
+ const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim(),group=String(fd.get('group')||'personal');
  if(!name||!GROUPS.some(g=>g.id===group)){toast('Please enter a name and family group.');return;}
  const d=yearData();
  if(editId){const p=d.people.find(x=>x.id===editId);if(!p)return;p.name=name;p.group=group;}
@@ -188,14 +195,14 @@ function deletePerson(id){
 function openGift(id,personHint){
  if(blocked)return;
  const d=yearData();
- if(!d.people.length){openPerson(null,'other');return;}
+ if(!d.people.length){openPerson(null,'personal');return;}
  const g=id?d.gifts.find(x=>x.id===id):null;
  editMode='gift';editId=g?.id||null;
  $('#editor-title').textContent=g?'Edit present':'Add present';
  $('#editor-form').innerHTML='<div class="form-fields">'+
  '<label class="field">Present<input name="name" maxlength="140" required value="'+esc(g?.name||'')+'" placeholder="e.g. Scarf, concert tickets…"></label>'+
- '<label class="field">Who is it for?<select name="personId">'+d.people.map(p=>'<option value="'+esc(p.id)+'"'+((g?.personId||personHint||d.people[0].id)===p.id?' selected':'')+'>'+esc(p.name)+' · '+esc(GROUPS.find(gr=>gr.id===groupFor(p))?.name||'Other')+'</option>').join('')+'</select></label>'+
- '<label class="check-label"><input type="checkbox" name="bought" '+(g&&bought(g.status)?'checked':'')+'> Already bought</label></div>'+
+ '<label class="field">Who is it for?<select name="personId">'+d.people.map(p=>'<option value="'+esc(p.id)+'"'+((g?.personId||personHint||d.people[0].id)===p.id?' selected':'')+'>'+esc(p.name)+' · '+esc(GROUPS.find(gr=>gr.id===groupFor(p))?.name||'Personal Presents')+'</option>').join('')+'</select></label>'+
+ '<label class="field">Status<select name="status">'+[['to_buy','Not bought'],['ordered','Ordered'],['received','Bought / delivered']].map(([value,label])=>'<option value="'+value+'"'+((g?giftStage(g.status):'not-bought')===(value==='received'?'delivered':value==='ordered'?'ordered':'not-bought')?' selected':'')+'>'+label+'</option>').join('')+'</select></label></div>'+
  '<div class="modal-actions">'+(g?'<button class="danger" id="delete-gift" type="button">Delete</button>':'')+
  '<button type="button" class="quiet" id="cancel-editor">Cancel</button><button type="submit" class="primary">'+(g?'Save changes':'Add present')+'</button></div>';
  $('#cancel-editor').onclick=()=>$('#editor').close();
@@ -207,12 +214,13 @@ function saveGift(ev){
  ev.preventDefault();if(blocked)return;
  const form=ev.currentTarget,fd=new FormData(form);
  const name=String(fd.get('name')||'').trim(),personId=String(fd.get('personId')||'');
- const isDone=!!fd.get('bought');
- if(!name||!yearData().people.some(p=>p.id===personId)){toast('Enter a present and recipient.');return;}
+ const selection=String(fd.get('status')||'to_buy');
+ if(!name||!yearData().people.some(p=>p.id===personId)||!['to_buy','ordered','received'].includes(selection)){toast('Enter a present and recipient.');return;}
  const d=yearData(),index=d.gifts.findIndex(g=>g.id===editId);
  const old=index>=0?d.gifts[index]:null;
  // Preserve prices, notes and retailer links saved in the previous detailed layout.
- const gift={...(old||{}),id:old?.id||uid(),name,personId,status:isDone?(old&&bought(old.status)?old.status:'received'):'to_buy',price:old?.price||0,quantity:old?.quantity||1};
+ const newStatus=selection==='received'&&old?.status==='wrapped'?'wrapped':selection;
+ const gift={...(old||{}),id:old?.id||uid(),name,personId,status:newStatus,price:old?.price||0,quantity:old?.quantity||1};
  if(index>=0)d.gifts[index]=gift;else d.gifts.push(gift);
  $('#editor').close();changed();toast('Present saved');
 }
@@ -222,11 +230,35 @@ function deleteGift(id){
  yearData().gifts=yearData().gifts.filter(g=>g.id!==id);
  $('#editor').close();changed();toast('Present deleted');
 }
+// Delay a single click briefly so a double click never saves an unintended Ordered state.
+let pendingGiftTap=null;
+const TAP_WINDOW_MS=360;
+function setGiftStatus(id,nextStatus){
+ if(blocked)return;
+ const gift=yearData().gifts.find(g=>g.id===id);
+ if(!gift||gift.status===nextStatus)return;
+ gift.status=nextStatus;changed();
+ toast(nextStatus==='received'?'Marked bought / delivered':nextStatus==='ordered'?'Marked ordered':'Marked not bought');
+}
+function singleGiftTap(id){
+ const gift=yearData().gifts.find(g=>g.id===id);if(!gift)return;
+ setGiftStatus(id,ordered(gift.status)?'to_buy':'ordered');
+}
+function flushGiftTap(){
+ if(!pendingGiftTap)return;
+ const tap=pendingGiftTap;pendingGiftTap=null;clearTimeout(tap.timer);singleGiftTap(tap.id);
+}
 function toggleGift(id){
  if(blocked)return;
- const gift=yearData().gifts.find(g=>g.id===id);if(!gift)return;
- gift.status=bought(gift.status)?'to_buy':'received';
- changed();toast(bought(gift.status)?'Marked as bought':'Back on your shopping list');
+ const now=Date.now();
+ if(pendingGiftTap&&pendingGiftTap.id===id&&now-pendingGiftTap.at<=TAP_WINDOW_MS){
+  clearTimeout(pendingGiftTap.timer);pendingGiftTap=null;
+  setGiftStatus(id,'received');return;
+ }
+ flushGiftTap();
+ const tap={id,at:now,timer:null};
+ tap.timer=setTimeout(()=>{if(pendingGiftTap!==tap)return;pendingGiftTap=null;singleGiftTap(id);},TAP_WINDOW_MS);
+ pendingGiftTap=tap;
 }
 function newYear(){
  if(blocked)return;
@@ -241,6 +273,7 @@ $('#app').addEventListener('click',event=>{
  const button=event.target.closest('[data-action]');
  if(!button||!ready)return;
  const action=button.dataset.action;
+ if(action!=='toggle-gift')flushGiftTap();
  if(action==='add-gift')openGift(null,button.dataset.personId);
  else if(action==='edit-gift')openGift(button.dataset.id);
  else if(action==='toggle-gift')toggleGift(button.dataset.id);
@@ -250,6 +283,7 @@ $('#app').addEventListener('click',event=>{
 });
 $('#year-select').addEventListener('change',event=>{
  if(!ready||blocked)return;
+ flushGiftTap();
  const year=Number(event.target.value);
  if(!state.years[String(year)])return;
  state.activeYear=year;changed();
