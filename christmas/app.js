@@ -20,7 +20,7 @@ const starterPeople = () => GROUPS.flatMap(g => g.people.map(name => ({id:uid(),
 const blankYear = (copyMembers=false,existing=[]) => ({people:copyMembers?existing.map(p=>({...p,id:uid(),group:p.group||lookupGroup(p.name)})):starterPeople(),gifts:[]});
 const initialState = () => {const y=new Date().getFullYear();return {schema:1,activeYear:y,years:{[String(y)]:blankYear()}};};
 const RECORD='christmas-list-v1',PENDING='christmas-list-pending-v1';
-let state=initialState(),ready=false,blocked=false,dirty=false,saving=false,revision=0,base='null',timer=null,toastTimer=null;
+let state=null,ready=false,blocked=false,dirty=false,saving=false,revision=0,base='null',timer=null,toastTimer=null;
 let editMode='',editId=null;
 
 function yearData(){return state.years[String(state.activeYear)];}
