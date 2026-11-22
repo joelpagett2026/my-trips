@@ -141,6 +141,9 @@ RewriteRule ^private/?$ parks-map.php?section=private&page=index [L,QSA]
 # Fitness is a section, not a dynamic trip slug.
 RewriteRule ^fitness/?$ fitness/index.html [L,QSA]
 
+# Christmas List is a standalone, authenticated tracker.
+RewriteRule ^christmas/?$ christmas/index.html [L,QSA]
+
 RewriteRule ^(?:trips/)?hong-kong-taiwan\.html$ /hk-taiwan-2027 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-2026\.html$ /porto-2026 [R=302,L,QSA]
 RewriteRule ^(?:trips/)?porto-v2\.html$ /porto-2026 [R=302,L,QSA]
