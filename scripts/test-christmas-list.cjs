@@ -1,67 +1,93 @@
 'use strict';
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const year=new Date().getFullYear();
 
-async function main() {
- const script=fs.readFileSync('christmas/app.js','utf8');
- const elements=new Map(),handlers={},saved=[],storage=new Map();
- const nav=['overview','people','shopping','budget'].map(tab=>({dataset:{tab},setAttribute(){},removeAttribute(){}}));
- function el(selector) {
-  if(!elements.has(selector))elements.set(selector,{
-   innerHTML:'',textContent:'',hidden:false,value:'',style:{},open:false,dataset:{},
-   focus(){},close(){this.open=false;},showModal(){this.open=true;},
-   addEventListener(type,fn){handlers[selector+':'+type]=fn;},
+async function fixture(remote=null) {
+ const source=fs.readFileSync('christmas/app.js','utf8');
+ const els=new Map(),events={},saved=[],store=new Map();
+ const element=key=>{
+  if(!els.has(key))els.set(key,{
+   innerHTML:'',textContent:'',value:'',style:{},hidden:false,open:false,dataset:{},attributes:{},
+   focus(){},close(){this.open=false;},showModal(){this.open=true;},setAttribute(k,v){this.attributes[k]=v;},
+   addEventListener(type,fn){events[key+':'+type]=fn;}
   });
-  return elements.get(selector);
- }
- const document={
-  querySelector:el,querySelectorAll:()=>nav,
-  addEventListener(name,fn){handlers['document:'+name]=fn;},
-  body:{appendChild(){}},
+  return els.get(key);
  };
- const window={_mytripsAuthed:true,scrollTo(){},addEventListener(name,fn){handlers['window:'+name]=fn;}};
- let nextId=0;
- const context={
-  document,window,console,Intl,Date,URL,JSON,Number,String,Object,Array,Math,Promise,
-  crypto:{randomUUID:()=>String(++nextId)},
-  localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)},
-  dbLoad:async()=>null,
-  dbSave:async(id,data)=>{assert.equal(id,'christmas-list-v1');saved.push(JSON.parse(JSON.stringify(data)));return {version:String(saved.length)};},
-  FormData:class{constructor(form){this.values=form.values;}get(key){return this.values[key];}},
-  setTimeout:(fn,ms)=>{if(ms===550)queueMicrotask(fn);return 1;},clearTimeout(){},
-  confirm:()=>true,
+ let next=0;
+ const document={querySelector:element,addEventListener:(k,fn)=>events['doc:'+k]=fn,body:{appendChild(){}}};
+ const window={_mytripsAuthed:true,addEventListener:(k,fn)=>events['win:'+k]=fn};
+ vm.runInNewContext(source,{
+  document,window,console,Date,Intl,JSON,Math,Number,Object,String,Set,Array,Promise,
+  localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},
+  crypto:{randomUUID:()=> 'test-'+(++next)},
+  dbLoad:async id=>{assert.equal(id,'christmas-list-v1');return remote;},
+  dbSave:async (id,data)=>{assert.equal(id,'christmas-list-v1');saved.push(JSON.parse(JSON.stringify(data)));return {version:String(saved.length)};},
+  FormData:class{constructor(form){this.data=form.values;}get(k){return this.data[k];}},
+  setTimeout:(fn,ms)=>{if(ms===550)queueMicrotask(fn);return 1;},clearTimeout(){},confirm:()=>true
+ });
+ const settle=()=>new Promise(r=>setImmediate(r));
+ await settle();
+ return {
+  element,events,saved,store,settle,
+  click(action,id,extra={}){events['#app:click']({target:{closest:()=>({dataset:{action,id,...extra}})}});},
+  submit(values){element('#editor-form').onsubmit({preventDefault(){},currentTarget:{values}});}
  };
- vm.runInNewContext(script,context);
- const settle=()=>new Promise(resolve=>setImmediate(resolve));
- await settle();
- assert.match(el('#content').innerHTML,/People to buy for/,'Overview should render after authentication');
- const click=(action,id)=>handlers['#app:click']({target:{closest:()=>({dataset:{action,id}})}});
- const submit=values=>el('#editor-form').onsubmit({preventDefault(){},currentTarget:{values}});
- click('add-person');
- submit({name:'Mum',budget:'100'});
- await settle();
- assert.equal(saved.at(-1).years['2026'].people[0].name,'Mum');
- click('add-gift');
- submit({name:'Cashmere scarf',personId:'1',status:'to_buy',price:'45',quantity:'1',actualPrice:'',shop:'',url:'',notes:''});
- await settle();
- let data=saved.at(-1);
- assert.equal(data.years['2026'].gifts.length,1,'Adding a present should save to the account');
- assert.equal(data.years['2026'].gifts[0].price,45);
- assert.match(el('#content').innerHTML,/Still to buy/,'New gift should appear in overview');
- handlers['#app:change']({target:{dataset:{statusGift:'2'},value:'ordered',matches:query=>query==='[data-status-gift]'}});
- await settle();
- data=saved.at(-1);
- assert.equal(data.years['2026'].gifts[0].status,'ordered','Status change should save');
- assert.match(el('#content').innerHTML,/£45.00/,'Ordered purchase must be counted as spending');
- click('new-year');
- await settle();
- data=saved.at(-1);
- assert.equal(data.activeYear,2027,'New year should become active');
- assert.equal(data.years['2027'].people.length,1,'Recipients should carry over');
- assert.equal(data.years['2027'].gifts.length,0,'Presents should not carry over');
- assert.equal(data.years['2026'].gifts.length,1,'Old presents should remain archived');
- assert.equal(storage.has('christmas-list-pending-v1'),false,'Successful account saves should clear pending copy');
- console.log('Christmas List: create, status, budget, archive and account save passed');
 }
-main().catch(err=>{console.error(err);process.exitCode=1;});
+async function main(){
+ const html=fs.readFileSync('christmas/index.html','utf8');
+ assert.match(html,/Montserrat/);
+ assert.doesNotMatch(html,/data-tab="budget"|data-tab="shopping"/,'One page, no separate tabs');
+ const t=await fixture();
+ const view=t.element('#group-grid').innerHTML;
+ for(const group of ['Personal Presents',"Jon's Family","Joel's Mums","Joel's Dads",'Other'])
+  assert.ok(view.includes(group.replace(/'/g,'&#39;'))||view.includes(group),'Missing family group '+group);
+ assert.equal((view.match(/class="family-row"/g)||[]).length,20);
+ assert.match(view,/No presents yet/);
+
+ t.click('add-gift',null,{personId:'test-1'});
+ t.submit({name:'Christmas scarf',personId:'test-1',bought:null});
+ await t.settle();
+ let data=t.saved.at(-1),gift=data.years[String(year)].gifts[0];
+ assert.equal(gift.status,'to_buy');
+ assert.match(t.element('#group-grid').innerHTML,/class="present "/);
+ assert.match(t.element('#total-left').textContent,/1 still to buy/);
+
+ t.click('toggle-gift',gift.id);
+ await t.settle();
+ assert.equal(t.saved.at(-1).years[String(year)].gifts[0].status,'received');
+ assert.match(t.element('#group-grid').innerHTML,/class="present bought"/);
+ assert.match(t.element('#group-grid').innerHTML,/class="person-name complete"/);
+ assert.match(t.element('#total-left').textContent,/All presents bought/);
+ t.click('toggle-gift',gift.id);
+ await t.settle();
+ assert.equal(t.saved.at(-1).years[String(year)].gifts[0].status,'to_buy');
+
+ t.click('new-year');
+ await t.settle();
+ data=t.saved.at(-1);
+ assert.equal(data.activeYear,year+1);
+ assert.equal(data.years[String(year+1)].people.length,20);
+ assert.equal(data.years[String(year+1)].gifts.length,0);
+ assert.equal(data.years[String(year)].gifts.length,1);
+ assert.equal(t.store.has('christmas-list-pending-v1'),false);
+
+ const legacy={schema:1,activeYear:year,years:{[String(year)]:{
+  people:[{id:'existing-person',name:'Jon',budget:90}],
+  gifts:[{id:'existing-gift',name:'Record collection',personId:'existing-person',status:'ordered',price:55,quantity:2,url:'https://example.com',notes:'Keep this'}]
+ }}};
+ const old=await fixture(legacy);
+ assert.match(old.element('#group-grid').innerHTML,/Record collection/);
+ old.click('edit-gift','existing-gift');
+ old.submit({name:'Record collection updated',personId:'existing-person',bought:'on'});
+ await old.settle();
+ const saved=old.saved.at(-1).years[String(year)].gifts[0];
+ assert.equal(saved.status,'ordered');
+ assert.equal(saved.price,55);
+ assert.equal(saved.url,'https://example.com');
+ assert.equal(saved.notes,'Keep this');
+ assert.equal(old.saved.at(-1).years[String(year)].people.length,1);
+ console.log('Christmas family sheet: groups, 20 names, colours, buying, archives and existing data passed');
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});

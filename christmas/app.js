@@ -1,175 +1,136 @@
 (() => {
 'use strict';
 const $ = s => document.querySelector(s);
-const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = value => new Intl.NumberFormat('en-GB', {style:'currency', currency:'GBP', minimumFractionDigits:2}).format(Number(value) || 0);
-const currency = n => Math.round((Number(n) || 0) * 100) / 100;
-const uuid = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'gift-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-const isBought = status => ['ordered','received','wrapped'].includes(status);
-const statuses = [['idea','Idea'],['to_buy','To buy'],['ordered','Ordered'],['received','Received'],['wrapped','Wrapped']];
-const statusName = status => (statuses.find(x => x[0] === status) || statuses[0])[1];
-const safeLink = link => {try {const u=new URL(String(link || '').trim());return ['https:','http:'].includes(u.protocol) ? u.href : '';} catch {return '';}};
-const blankYear = () => ({people:[],gifts:[]});
-const initialState = () => ({schema:1,activeYear:new Date().getFullYear(),years:{[String(new Date().getFullYear())]:blankYear()}});
-const RECORD='christmas-list-v1', PENDING='christmas-list-pending-v1';
-let state=initialState(),tab='overview',ready=false,blocked=false,dirty=false,saving=false,revision=0,base='null',timer=null,toastTimer=null;
-let shoppingStatus='to_buy',shoppingPerson='all',shoppingSearch='',editMode='',editId=null;
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'christmas-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+const copy = x => JSON.parse(JSON.stringify(x));
+const bought = status => ['ordered','received','wrapped'].includes(status);
+const GROUPS = [
+ {id:'personal',name:'Personal Presents',people:['Joel','Jon']},
+ {id:'jon',name:"Jon's Family",people:['Kevin','Valerie','Mark']},
+ {id:'mums',name:"Joel's Mums",people:['Joanna','Neil','Blossom','Cohman']},
+ {id:'dads',name:"Joel's Dads",people:['Malcolm','Tina','Harry','Emma','Jess','Stanley','Emmy','Sandy','Dave']},
+ {id:'other',name:'Other',people:['Lucy','Secret Santa']}
+];
+const lookupGroup = name => {
+ const text=String(name||'').trim().toLowerCase();
+ return GROUPS.find(g => g.people.some(n => n.toLowerCase()===text))?.id || 'other';
+};
+const starterPeople = () => GROUPS.flatMap(g => g.people.map(name => ({id:uid(),name,group:g.id,budget:0})));
+const blankYear = (copyMembers=false,existing=[]) => ({people:copyMembers?existing.map(p=>({...p,id:uid(),group:p.group||lookupGroup(p.name)})):starterPeople(),gifts:[]});
+const initialState = () => {const y=new Date().getFullYear();return {schema:1,activeYear:y,years:{[String(y)]:blankYear()}};};
+const RECORD='christmas-list-v1',PENDING='christmas-list-pending-v1';
+let state=null,ready=false,blocked=false,dirty=false,saving=false,revision=0,base='null',timer=null,toastTimer=null;
+let editMode='',editId=null;
 
-function yearData() {return state.years[String(state.activeYear)];}
-function paidAmount(g) {return currency((g.actualPrice === '' || g.actualPrice === null || g.actualPrice === undefined ? g.price : g.actualPrice) * (g.quantity || 1));}
-function plannedAmount(g) {return currency(g.price * (g.quantity || 1));}
-function totals() {
- const data=yearData(), selected=data.gifts.filter(g=>g.status!=='idea'), purchased=selected.filter(g=>isBought(g.status));
- const spent=currency(purchased.reduce((a,g)=>a+paidAmount(g),0));
- const planned=currency(data.gifts.filter(g=>g.status==='to_buy').reduce((a,g)=>a+plannedAmount(g),0));
- const budget=currency(data.people.reduce((a,p)=>a+p.budget,0));
- return {people:data.people.length, gifts:data.gifts.length, toBuy:data.gifts.filter(g=>g.status==='to_buy').length,
-  ordered:data.gifts.filter(g=>g.status==='ordered').length, received:data.gifts.filter(g=>g.status==='received').length,
-  wrapped:data.gifts.filter(g=>g.status==='wrapped').length, selected:selected.length,
-  bought:purchased.length, spent, planned, budget, remaining:currency(budget-spent),
-  projection:currency(budget-spent-planned),percent:selected.length?Math.round(purchased.length/selected.length*100):0};
+function yearData(){return state.years[String(state.activeYear)];}
+function normalise(remote){
+ if(!remote)return initialState();
+ if(remote.schema!==1 || !remote.years || typeof remote.years!=='object' || !Object.keys(remote.years).length)throw Error('Unsupported Christmas List data');
+ const data=copy(remote);
+ Object.values(data.years).forEach(y=>{if(!Array.isArray(y.people)||!Array.isArray(y.gifts))throw Error('Invalid Christmas List year');});
+ if(!data.years[String(data.activeYear)])data.activeYear=Number(Object.keys(data.years)[0]);
+ return data;
 }
-function nameFor(id) {return yearData().people.find(p=>p.id===id)?.name || 'Unknown person';}
-function noData(title,subtitle,buttonText,action) {
- return '<div class="empty"><div class="symbol">✧</div><h3>'+esc(title)+'</h3><p>'+esc(subtitle)+'</p>'+(buttonText?'<button class="button" data-action="'+action+'">'+esc(buttonText)+'</button>':'')+'</div>';
+function groupFor(person) {return GROUPS.some(g=>g.id===person.group)?person.group:lookupGroup(person.name);}
+function totals(){
+ const gifts=yearData().gifts;
+ const done=gifts.filter(g=>bought(g.status)).length;
+ return {total:gifts.length,done,left:gifts.length-done,percent:gifts.length?Math.round(100*done/gifts.length):0};
 }
-function giftRow(g, interactive=false) {
- const url=safeLink(g.url), person=esc(nameFor(g.personId));
- return '<div class="gift"><div style="min-width:0"><div class="gift-name">'+esc(g.name)+'</div><div class="gift-sub">For '+person+
- (g.quantity>1?' · Qty '+g.quantity:'') + (g.shop?' · '+esc(g.shop):'') +
- (url?' · <a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Shop link ↗</a>':'')+
- '</div></div><div class="gift-end"><span class="price">'+fmt(isBought(g.status)?paidAmount(g):plannedAmount(g))+'</span>'+
- (interactive?'<select class="inline-select" data-status-gift="'+esc(g.id)+'" aria-label="Status for '+esc(g.name)+'">'+
- statuses.map(s=>'<option value="'+s[0]+'"'+(s[0]===g.status?' selected':'')+'>'+s[1]+'</option>').join('')+'</select>'+
- '<button class="outline small" data-action="edit-gift" data-id="'+esc(g.id)+'">Edit</button>':
- '<span class="pill '+esc(g.status)+'">'+esc(statusName(g.status))+'</span>')+'</div></div>';
-}
-function yearOptions() {return Object.keys(state.years).sort((a,b)=>Number(b)-Number(a)).map(y=>'<option value="'+esc(y)+'"'+(Number(y)===state.activeYear?' selected':'')+'>'+esc(y)+'</option>').join('');}
-function renderHeader() {
- const t=totals();$('#year-select').innerHTML=yearOptions();$('#hero-percent').textContent=t.percent+'% complete';
- $('#hero-count').textContent=t.bought+' of '+t.selected+' selected gifts purchased';
- $('#hero-bar').style.width=t.percent+'%';
- document.querySelectorAll('[data-tab]').forEach(b=>b.dataset.tab===tab?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
-}
-function budgetCard() {
+function yearOptions(){return Object.keys(state.years).sort((a,b)=>Number(b)-Number(a)).map(y=>'<option value="'+esc(y)+'"'+(Number(y)===state.activeYear?' selected':'')+'>'+esc(y)+'</option>').join('');}
+function renderHeader(){
  const t=totals();
- return '<section class="panel"><div class="row"><span class="label">YOUR CHRISTMAS BUDGET</span><span style="color:var(--red);font-size:21px;font-weight:800">£</span></div>'+
- '<div class="figure">'+fmt(t.spent)+' <span class="muted">/ '+fmt(t.budget)+'</span></div>'+
- '<div class="thin-track"><span style="width:'+Math.min(100,t.budget?t.spent/t.budget*100:0)+'%"></span></div>'+
- '<div class="row"><span class="muted">Spent or ordered</span><strong class="'+(t.remaining<0?'over':'')+'" style="font-size:12px">'+fmt(t.remaining)+' remaining</strong></div>'+
- (t.budget===0?'<p class="tiny">Add a budget for each person to start tracking your spending.</p>':'')+'</section>';
+ $('#year-select').innerHTML=yearOptions();
+ $('#total-progress').textContent=t.done+' of '+t.total+' bought';
+ $('#total-left').textContent=t.total===0?'Add your first present':t.left===0?'All presents bought!':t.left+' still to buy';
+ $('#total-bar').style.width=t.percent+'%';
+ $('#total-track').setAttribute('aria-valuenow',String(t.percent));
 }
-function overview() {
- const t=totals(),todo=yearData().gifts.filter(g=>g.status==='to_buy').slice(0,5);
- return '<div class="stat-grid">'+[
- [t.people,'People to buy for'],[t.toBuy,'Still to buy'],[t.bought,'Gifts purchased'],[t.wrapped,'Wrapped']
- ].map(s=>'<div class="stat"><strong>'+s[0]+'</strong><span>'+s[1]+'</span></div>').join('')+'</div>'+
- '<div class="two-col"><div><section class="panel"><div class="section-heading"><div><h2>Still to buy</h2><p>All the presents left on your shopping list.</p></div><button class="text-link" data-action="show-shopping">View all →</button></div>'+
- (todo.length?todo.map(g=>giftRow(g)).join(''):noData('Nothing on your shopping list','Add a family member and their first present.','Add a present','add-gift'))+
- '</section></div><div>'+budgetCard()+
- '<section class="panel"><div class="section-heading"><div><h2>Arriving & wrapping</h2><p>Keep the final bits organised.</p></div></div>'+
- '<div class="budget-row row"><span class="muted">Orders awaiting delivery</span><strong>'+t.ordered+'</strong></div>'+
- '<div class="budget-row row"><span class="muted">Received, awaiting wrapping</span><strong>'+t.received+'</strong></div>'+
- '<div class="budget-row row"><span class="muted">Ready for Christmas</span><strong>'+t.wrapped+'</strong></div></section></div></div>';
+function renderGift(g){
+ const isDone=bought(g.status);
+ const name=esc(g.name);
+ return '<span class="present '+(isDone?'bought':'')+'">' +
+ '<button class="present-toggle" type="button" data-action="toggle-gift" data-id="'+esc(g.id)+'" aria-label="'+(isDone?'Mark ':'Mark ')+name+(isDone?' as to buy':' as bought')+'" title="'+(isDone?'Bought — tap to undo':'To buy — tap when purchased')+'"><span class="tick '+(isDone?'':'pending')+'" aria-hidden="true">'+(isDone?'✓':'○')+'</span><span>'+name+'</span></button>'+
+ '<button class="present-edit" type="button" data-action="edit-gift" data-id="'+esc(g.id)+'" title="Edit '+name+'" aria-label="Edit '+name+'">···</button></span>';
 }
-function personCard(p) {
+function renderPerson(p){
  const gifts=yearData().gifts.filter(g=>g.personId===p.id);
- const spent=currency(gifts.filter(g=>isBought(g.status)).reduce((a,g)=>a+paidAmount(g),0)),left=currency(p.budget-spent);
- return '<section class="panel"><div class="row"><div class="person-name"><span class="avatar">'+esc(p.name.trim().slice(0,1).toUpperCase())+'</span><div><h3>'+esc(p.name)+'</h3><span class="muted">'+gifts.length+' '+(gifts.length===1?'present':'presents')+'</span></div></div>'+
- '<button class="outline small" data-action="edit-person" data-id="'+esc(p.id)+'">Edit</button></div>'+
- '<div class="row" style="margin-top:15px"><span class="muted">Budget '+fmt(p.budget)+'</span><strong class="'+(left<0?'over':'')+'" style="font-size:12px">'+fmt(spent)+' spent</strong></div>'+
- '<div class="thin-track"><span style="width:'+Math.min(100,p.budget?spent/p.budget*100:0)+'%"></span></div>'+
- '<div class="tiny">'+fmt(left)+' remaining</div>'+
- '<div class="person-gifts">'+(gifts.length?gifts.slice(0,4).map(g=>giftRow(g)).join(''):'<p class="muted">No presents added yet.</p>')+'</div>'+
- '<div class="action-row" style="margin-top:8px"><button class="outline small" data-action="add-gift" data-person-id="'+esc(p.id)+'">＋ Add present</button></div></section>';
+ const done=gifts.length>0&&gifts.every(g=>bought(g.status));
+ return '<div class="family-row"><div class="person-name '+(done?'complete':'')+'"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'" title="Edit '+esc(p.name)+'">'+esc(p.name)+'</button></div>'+
+ '<div class="presents">'+(gifts.length?gifts.map(renderGift).join(''):'<span class="empty-person">No presents yet</span>')+
+ '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a present for '+esc(p.name)+'" title="Add a present for '+esc(p.name)+'">＋</button></div></div>';
 }
-function peopleView() {
- const people=yearData().people;
- return '<div class="section-heading"><div><h2>Family & friends</h2><p>Set a budget for each person and organise their gifts.</p></div><button class="button" data-action="add-person">＋ Add person</button></div>'+
- (people.length?'<div class="person-grid">'+people.map(personCard).join('')+'</div>':
- '<section class="panel">'+noData('Who are you buying for?','Add your first family member or friend to get started.','Add someone','add-person')+'</section>');
-}
-function shoppingView() {
- const d=yearData(),results=d.gifts.filter(g=>(shoppingStatus==='all'||g.status===shoppingStatus)&&
- (shoppingPerson==='all'||g.personId===shoppingPerson)&&
- (g.name+' '+g.shop+' '+nameFor(g.personId)).toLowerCase().includes(shoppingSearch.toLowerCase()))
- .sort((a,b)=>nameFor(a.personId).localeCompare(nameFor(b.personId))||a.name.localeCompare(b.name));
- return '<div class="section-heading"><div><h2>Your shopping list</h2><p>Filter, edit and tick off presents while you shop.</p></div><button class="button" data-action="add-gift">＋ Add gift</button></div>'+
- '<div class="toolbar"><select id="status-filter" aria-label="Filter by status"><option value="all">All statuses</option>'+statuses.map(x=>'<option value="'+x[0]+'"'+(x[0]===shoppingStatus?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>'+
- '<select id="person-filter" aria-label="Filter by person"><option value="all">All people</option>'+d.people.map(p=>'<option value="'+esc(p.id)+'"'+(shoppingPerson===p.id?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select>'+
- '<input id="gift-search" type="search" autocomplete="off" placeholder="Search presents or shops…" value="'+esc(shoppingSearch)+'" aria-label="Search presents"></div>'+
- '<section class="panel"><div class="row"><strong style="font-size:12px">'+results.length+' '+(results.length===1?'present':'presents')+'</strong><span class="muted">'+fmt(results.reduce((a,g)=>a+(isBought(g.status)?paidAmount(g):plannedAmount(g)),0))+' shown</span></div><hr class="divider">'+
- (results.length?results.map(g=>giftRow(g,true)).join(''):noData('Nothing to show','Try another filter or add a new present.','Add a present','add-gift'))+'</section>';
-}
-function budgetView(){
- const t=totals();
- return '<div class="section-heading"><div><h2>Christmas budget</h2><p>Only ordered, received and wrapped gifts count as spent.</p></div><button class="outline" data-action="export">Export backup</button></div>'+
- '<div class="stat-grid">'+[[fmt(t.budget),'Total allocated'],[fmt(t.spent),'Spent / ordered'],[fmt(t.planned),'Still to purchase'],[fmt(t.projection),'After planned purchases']].map(s=>'<div class="stat"><strong style="font-size:21px">'+s[0]+'</strong><span>'+s[1]+'</span></div>').join('')+'</div>'+
- '<section class="panel"><div class="section-heading"><div><h2>Budget by person</h2><p>Change each person’s budget using Edit on the People tab.</p></div></div>'+
- (yearData().people.length?yearData().people.map(p=>{
- const spent=currency(yearData().gifts.filter(g=>g.personId===p.id&&isBought(g.status)).reduce((a,g)=>a+paidAmount(g),0));
- return '<div class="budget-row"><div class="row"><strong style="font-size:13px">'+esc(p.name)+'</strong><span class="muted">'+fmt(spent)+' / '+fmt(p.budget)+'</span></div>'+
- '<div class="thin-track"><span style="width:'+Math.min(100,p.budget?spent/p.budget*100:0)+'%"></span></div>'+
- (spent>p.budget?'<span class="warning">'+fmt(spent-p.budget)+' over budget</span>':'')+'</div>';
- }).join(''):noData('No budgets yet','Add people to set individual spending limits.','Add a person','add-person'))+'</section>'+
- '<section class="panel"><div class="section-heading"><div><h2>Christmas archives</h2><p>Create a new year with the same family members and budgets, but an empty gift list.</p></div></div><div class="action-row"><button class="outline" data-action="new-year">＋ Start next Christmas</button><span class="muted">Previous Christmas years remain available in the selector at the top.</span></div></section>';
+function renderGroup(g){
+ const d=yearData(),members=d.people.filter(p=>groupFor(p)===g.id);
+ const ids=new Set(members.map(p=>p.id));
+ const gifts=d.gifts.filter(gift=>ids.has(gift.personId));
+ const done=gifts.filter(gift=>bought(gift.status)).length;
+ const color=gifts.length===0?'':done===gifts.length?'complete':'partial';
+ return '<article class="group-card" data-group="'+esc(g.id)+'" aria-label="'+esc(g.name)+'">'+
+ '<header class="group-head"><h2 class="group-heading">'+esc(g.name)+'</h2><div class="group-meta"><span class="count '+color+'">'+done+' / '+gifts.length+' bought</span>'+
+ '<button type="button" class="add-small" data-action="add-person" data-group="'+esc(g.id)+'" title="Add someone to '+esc(g.name)+'" aria-label="Add someone to '+esc(g.name)+'">＋</button></div></header>'+
+ (members.length?members.map(renderPerson).join(''):'<div class="no-people">Nobody in this group yet. Use + to add someone.</div>')+
+ '</article>';
 }
 function render(){
  if(!ready)return;
  renderHeader();
- $('#content').innerHTML=tab==='people'?peopleView():tab==='shopping'?shoppingView():tab==='budget'?budgetView():overview();
+ $('#group-grid').innerHTML=GROUPS.map(renderGroup).join('');
 }
-function showTab(next) {tab=next;render();window.scrollTo({top:0,behavior:'instant'});}
-function toast(message){const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,3500);}
-function setStatus(message){$('#save-status').textContent=message;}
+function toast(message){
+ const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,3000);
+}
+function status(message){$('#save-status').textContent=message;}
 function error(message){$('#error').textContent=message;$('#error').hidden=false;}
-function hideError(){$('#error').hidden=true;}
-function snapshot(){return JSON.parse(JSON.stringify(state));}
-function writePending(){try{localStorage.setItem(PENDING,JSON.stringify({base,data:snapshot(),at:Date.now()}));return true;}catch{return false;}}
+function snapshot(){return copy(state);}
+function readPending(){try{return JSON.parse(localStorage.getItem(PENDING)||'null');}catch{return null;}}
+function pendingCopy(){try{localStorage.setItem(PENDING,JSON.stringify({base,data:snapshot(),at:Date.now()}));return true;}catch{return false;}}
 function changed(){
  if(!ready||blocked)return;
  revision++;dirty=true;
- if(!writePending()){error('Your device cannot keep a recovery copy. Export your data before leaving the page.');setStatus('Device backup unavailable');}
- else setStatus('Saved on this device · syncing');
- render();clearTimeout(timer);timer=setTimeout(sync,550);
+ if(!pendingCopy()){error('Could not save a recovery copy on this device. Keep the page open until your account has synced.');status('Device backup unavailable');}
+ else status('Saved on this device · syncing');
+ render();
+ clearTimeout(timer);timer=setTimeout(sync,550);
 }
 async function sync(){
  if(!ready||blocked||!dirty||saving)return;
  saving=true;clearTimeout(timer);
- try {
+ try{
   while(dirty&&!blocked){
-   const data=snapshot(),version=revision;
-   setStatus('Syncing…');
-   try {
+   const data=snapshot(),rev=revision;
+   status('Syncing…');
+   try{
     await dbSave(RECORD,data);
     base=JSON.stringify(data);
-    if(version===revision){dirty=false;try{localStorage.removeItem(PENDING);}catch{}setStatus('Synced to your account');}
-    else{writePending();}
-   } catch(e) {
-    if(e.status===409){blocked=true;setStatus('Save conflict — action needed');showRecovery('Your account has newer changes from another device. This device copy is protected. Export it before reloading to compare.');}
-    else{setStatus('Saved on this device · sync pending');timer=setTimeout(sync,14000);}
+    if(rev===revision){dirty=false;try{localStorage.removeItem(PENDING);}catch{}status('Saved to your account');}
+    else pendingCopy();
+   }catch(e){
+    if(e.status===409){
+     blocked=true;status('Save conflict — review needed');
+     showRecovery('Changes saved on another device conflict with this copy. Export your device copy before reloading.');
+    }else{status('Saved on this device · sync pending');timer=setTimeout(sync,14000);}
     break;
    }
   }
  }finally{saving=false;}
 }
-function download(data){
- const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='christmas-list-'+state.activeYear+'-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+function exportData(data){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='christmas-list-'+state.activeYear+'-backup.json';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
 function showRecovery(message){
- const box=$('#recovery');box.hidden=false;box.innerHTML='<strong>Saved data needs attention</strong><p>'+esc(message)+'</p><div class="action-row"><button class="outline" id="recovery-export">Export device copy</button><button class="outline" id="recovery-reload">Reload account copy</button></div>';
- $('#recovery-export').onclick=()=>{const p=readPending();download(p?.data||state);};
- $('#recovery-reload').onclick=()=>{if(confirm('Reload your account copy? Export any unsynced changes first.')){try{localStorage.removeItem(PENDING);}catch{}location.reload();}};
-}
-function readPending(){try{return JSON.parse(localStorage.getItem(PENDING)||'null');}catch{return null;}}
-function normalise(raw) {
- if(!raw)return initialState();
- if(raw.schema!==1||!raw.years||typeof raw.years!=='object'||!Object.keys(raw.years).length)throw Error('Unsupported Christmas List data format');
- const data=JSON.parse(JSON.stringify(raw));
- Object.values(data.years).forEach(y=>{if(!Array.isArray(y.people)||!Array.isArray(y.gifts))throw Error('Invalid Christmas List data');});
- if(!data.years[String(data.activeYear)])data.activeYear=Number(Object.keys(data.years)[0]);
- return data;
+ const box=$('#recovery');box.hidden=false;
+ box.innerHTML='<strong>Saved changes need attention</strong><p>'+esc(message)+'</p><button class="quiet" type="button" id="export-recovery">Export device copy</button> <button class="quiet" type="button" id="reload-recovery">Reload account version</button>';
+ $('#export-recovery').onclick=()=>exportData(readPending()?.data||state);
+ $('#reload-recovery').onclick=()=>{
+  if(!confirm('Reload the account version? Export any unsynced changes first.'))return;
+  try{localStorage.removeItem(PENDING);}catch{}
+  location.reload();
+ };
 }
 async function init(){
  if(ready)return;
@@ -178,126 +139,125 @@ async function init(){
   base=JSON.stringify(remote);
   state=normalise(remote);
   const pending=readPending();
-  if(pending&&pending.data){
+  if(pending?.data){
    if(JSON.stringify(pending.data)===base){try{localStorage.removeItem(PENDING);}catch{}}
-   else if(pending.base===base){state=normalise(pending.data);dirty=true;revision++;setStatus('Restoring your saved device changes');}
-   else {blocked=true;state=normalise(pending.data);showRecovery('Your device has unsynced changes that differ from the current account version. No data has been overwritten.');}
+   else if(pending.base===base){state=normalise(pending.data);dirty=true;revision++;status('Restoring saved device changes');}
+   else{blocked=true;state=normalise(pending.data);showRecovery('Your device has unsynced changes that differ from the account version. Neither copy has been overwritten.');}
   }
   ready=true;render();
   if(dirty&&!blocked)sync();
-  else if(!blocked)setStatus('Connected to your account');
- }catch(e){error('Could not load your Christmas List. Please reconnect and reload. No existing data has been overwritten.');setStatus('Connection needed');}
+  else if(!blocked)status('Saved to your account');
+ }catch(e){
+  error('Could not load your Christmas List. Please reconnect and reload. Your saved data has not been replaced.');
+  status('Connection needed');
+ }
 }
-function options(selected) {return statuses.map(s=>'<option value="'+s[0]+'"'+(selected===s[0]?' selected':'')+'>'+s[1]+'</option>').join('');}
-function showDialog(){const dlg=$('#editor');if(!dlg.open)dlg.showModal();}
-function openPerson(id) {
+function showDialog(){if(!$('#editor').open)$('#editor').showModal();}
+function openPerson(id,groupHint){
  if(blocked)return;
- const p=id?yearData().people.find(x=>x.id===id):null;editMode='person';editId=p?.id||null;
- $('#editor-title').textContent=p?'Edit person':'Add someone';
- $('#editor-form').innerHTML='<div class="dialog-fields">'+
- '<label class="field span-2">Name<input name="name" maxlength="80" required value="'+esc(p?.name||'')+'" placeholder="e.g. Mum"></label>'+
- '<label class="field span-2">Christmas budget (£)<input name="budget" type="number" step="0.01" min="0" inputmode="decimal" value="'+esc(p?.budget??'100')+'" required></label></div>'+
- '<div class="form-actions">'+(p?'<button type="button" class="danger-btn" id="delete-person">Delete</button>':'')+
- '<button type="button" class="outline" id="cancel-editor">Cancel</button><button class="button" type="submit">'+(p?'Save changes':'Add person')+'</button></div>';
+ const data=yearData(),p=id?data.people.find(x=>x.id===id):null;
+ editMode='person';editId=p?.id||null;
+ $('#editor-title').textContent=p?'Edit person':'Add a family member';
+ $('#editor-form').innerHTML='<div class="form-fields">'+
+ '<label class="field">Name<input name="name" maxlength="80" required value="'+esc(p?.name||'')+'" placeholder="Name"></label>'+
+ '<label class="field">Family group<select name="group">'+GROUPS.map(g=>'<option value="'+g.id+'"'+((p?groupFor(p):groupHint||'other')===g.id?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select></label></div>'+
+ '<div class="modal-actions">'+(p?'<button type="button" class="danger" id="delete-person">Remove</button>':'')+
+ '<button type="button" class="quiet" id="cancel-editor">Cancel</button><button class="primary" type="submit">'+(p?'Save':'Add person')+'</button></div>';
  $('#cancel-editor').onclick=()=>$('#editor').close();
- $('#delete-person')?.addEventListener('click',()=>deletePerson(editId));
- $('#editor-form').onsubmit=savePerson;showDialog();$('#editor-form [name=name]').focus();
+ $('#delete-person')?.addEventListener('click',()=>deletePerson(p.id));
+ $('#editor-form').onsubmit=savePerson;
+ showDialog();$('#editor-form [name=name]').focus();
 }
 function savePerson(ev){
  ev.preventDefault();if(blocked)return;
- const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim(),budget=currency(fd.get('budget'));
- if(!name||!Number.isFinite(budget)||budget<0)return;
+ const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim(),group=String(fd.get('group')||'other');
+ if(!name||!GROUPS.some(g=>g.id===group)){toast('Please enter a name and family group.');return;}
  const d=yearData();
- if(editId){const p=d.people.find(x=>x.id===editId);if(!p)return;p.name=name;p.budget=budget;}
- else d.people.push({id:uuid(),name,budget});
- $('#editor').close();changed();toast('Person saved');
+ if(editId){const p=d.people.find(x=>x.id===editId);if(!p)return;p.name=name;p.group=group;}
+ else d.people.push({id:uid(),name,group,budget:0});
+ $('#editor').close();changed();toast('Family member saved');
 }
 function deletePerson(id){
  if(blocked)return;
  const d=yearData(),p=d.people.find(x=>x.id===id);if(!p)return;
- if(d.gifts.some(g=>g.personId===id)){toast('Remove or reassign this person’s gifts before deleting them.');return;}
- if(!confirm('Remove '+p.name+' from this Christmas list?'))return;
- d.people=d.people.filter(x=>x.id!==id);$('#editor').close();changed();
+ if(d.gifts.some(g=>g.personId===id)){toast('Delete or move their presents first.');return;}
+ if(!confirm('Remove '+p.name+' from this year?'))return;
+ d.people=d.people.filter(x=>x.id!==id);
+ $('#editor').close();changed();toast('Family member removed');
 }
 function openGift(id,personHint){
  if(blocked)return;
  const d=yearData();
- if(!d.people.length){toast('Add someone first so each present has a recipient.');openPerson(null);return;}
+ if(!d.people.length){openPerson(null,'other');return;}
  const g=id?d.gifts.find(x=>x.id===id):null;
  editMode='gift';editId=g?.id||null;
- $('#editor-title').textContent=g?'Edit present':'Add a present';
- const person=g?.personId||personHint||d.people[0].id;
- $('#editor-form').innerHTML='<div class="dialog-fields">'+
- '<label class="field span-2">Present<input name="name" maxlength="140" required value="'+esc(g?.name||'')+'" placeholder="e.g. Winter jumper"></label>'+
- '<label class="field">Who is it for?<select name="personId" required>'+d.people.map(p=>'<option value="'+esc(p.id)+'"'+(person===p.id?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label>'+
- '<label class="field">Status<select name="status">'+options(g?.status||'to_buy')+'</select></label>'+
- '<label class="field">Planned price each (£)<input name="price" type="number" inputmode="decimal" min="0" step="0.01" required value="'+esc(g?.price??'0')+'"></label>'+
- '<label class="field">Quantity<input name="quantity" type="number" inputmode="numeric" min="1" max="999" step="1" required value="'+esc(g?.quantity||1)+'"></label>'+
- '<label class="field">Actual paid each (£)<input name="actualPrice" type="number" inputmode="decimal" min="0" step="0.01" value="'+esc(g?.actualPrice??'')+'" placeholder="Optional"></label>'+
- '<label class="field">Retailer<input name="shop" maxlength="100" value="'+esc(g?.shop||'')+'" placeholder="Optional"></label>'+
- '<label class="field span-2">Product link<input name="url" type="url" value="'+esc(g?.url||'')+'" placeholder="https://…"></label>'+
- '<label class="field span-2">Notes<textarea name="notes" maxlength="1500" placeholder="Size, delivery details, wrapping ideas…">'+esc(g?.notes||'')+'</textarea></label></div>'+
- '<div class="form-actions">'+(g?'<button type="button" class="danger-btn" id="delete-gift">Delete</button>':'')+
- '<button type="button" class="outline" id="cancel-editor">Cancel</button><button class="button" type="submit">'+(g?'Save changes':'Add present')+'</button></div>';
+ $('#editor-title').textContent=g?'Edit present':'Add present';
+ $('#editor-form').innerHTML='<div class="form-fields">'+
+ '<label class="field">Present<input name="name" maxlength="140" required value="'+esc(g?.name||'')+'" placeholder="e.g. Scarf, concert tickets…"></label>'+
+ '<label class="field">Who is it for?<select name="personId">'+d.people.map(p=>'<option value="'+esc(p.id)+'"'+((g?.personId||personHint||d.people[0].id)===p.id?' selected':'')+'>'+esc(p.name)+' · '+esc(GROUPS.find(gr=>gr.id===groupFor(p))?.name||'Other')+'</option>').join('')+'</select></label>'+
+ '<label class="check-label"><input type="checkbox" name="bought" '+(g&&bought(g.status)?'checked':'')+'> Already bought</label></div>'+
+ '<div class="modal-actions">'+(g?'<button class="danger" id="delete-gift" type="button">Delete</button>':'')+
+ '<button type="button" class="quiet" id="cancel-editor">Cancel</button><button type="submit" class="primary">'+(g?'Save changes':'Add present')+'</button></div>';
  $('#cancel-editor').onclick=()=>$('#editor').close();
- $('#delete-gift')?.addEventListener('click',()=>deleteGift(editId));
- $('#editor-form').onsubmit=saveGift;showDialog();$('#editor-form [name=name]').focus();
+ $('#delete-gift')?.addEventListener('click',()=>deleteGift(g.id));
+ $('#editor-form').onsubmit=saveGift;
+ showDialog();$('#editor-form [name=name]').focus();
 }
 function saveGift(ev){
  ev.preventDefault();if(blocked)return;
- const fd=new FormData(ev.currentTarget);
- const name=String(fd.get('name')||'').trim(),personId=String(fd.get('personId')||''),status=String(fd.get('status')||'to_buy');
- const price=Number(fd.get('price')),quantity=Number(fd.get('quantity')),rawPaid=String(fd.get('actualPrice')||'').trim();
- const actualPrice=rawPaid===''?'':Number(rawPaid),url=String(fd.get('url')||'').trim();
- if(!name||!yearData().people.some(p=>p.id===personId)||!statuses.some(x=>x[0]===status)||!Number.isFinite(price)||price<0||!Number.isInteger(quantity)||quantity<1||quantity>999||(actualPrice!==''&&(!Number.isFinite(actualPrice)||actualPrice<0))||(url&&!safeLink(url))){toast('Please check the present details.');return;}
- const gift={id:editId||uuid(),name,personId,status,price:currency(price),actualPrice:actualPrice===''?'':currency(actualPrice),quantity,shop:String(fd.get('shop')||'').trim(),url:safeLink(url),notes:String(fd.get('notes')||'').trim()};
- const d=yearData(),idx=d.gifts.findIndex(g=>g.id===editId);
- if(idx>=0)d.gifts[idx]=gift;else d.gifts.push(gift);
+ const form=ev.currentTarget,fd=new FormData(form);
+ const name=String(fd.get('name')||'').trim(),personId=String(fd.get('personId')||'');
+ const isDone=!!fd.get('bought');
+ if(!name||!yearData().people.some(p=>p.id===personId)){toast('Enter a present and recipient.');return;}
+ const d=yearData(),index=d.gifts.findIndex(g=>g.id===editId);
+ const old=index>=0?d.gifts[index]:null;
+ // Preserve prices, notes and retailer links saved in the previous detailed layout.
+ const gift={...(old||{}),id:old?.id||uid(),name,personId,status:isDone?(old&&bought(old.status)?old.status:'received'):'to_buy',price:old?.price||0,quantity:old?.quantity||1};
+ if(index>=0)d.gifts[index]=gift;else d.gifts.push(gift);
  $('#editor').close();changed();toast('Present saved');
 }
 function deleteGift(id){
  if(blocked)return;
- if(!confirm('Delete this present? This cannot be undone.'))return;
- yearData().gifts=yearData().gifts.filter(g=>g.id!==id);$('#editor').close();changed();toast('Present deleted');
+ if(!confirm('Delete this present?'))return;
+ yearData().gifts=yearData().gifts.filter(g=>g.id!==id);
+ $('#editor').close();changed();toast('Present deleted');
 }
-function createNextYear(){
+function toggleGift(id){
  if(blocked)return;
- const newYear=Math.max(...Object.keys(state.years).map(Number))+1;
- if(!confirm('Start Christmas '+newYear+'? Your existing years and presents will be preserved.'))return;
- const previous=yearData();
- state.years[String(newYear)]={people:previous.people.map(p=>({id:uuid(),name:p.name,budget:p.budget})),gifts:[]};
- state.activeYear=newYear;tab='overview';shoppingStatus='to_buy';shoppingPerson='all';changed();toast('Christmas '+newYear+' is ready');
+ const gift=yearData().gifts.find(g=>g.id===id);if(!gift)return;
+ gift.status=bought(gift.status)?'to_buy':'received';
+ changed();toast(bought(gift.status)?'Marked as bought':'Back on your shopping list');
 }
-document.querySelectorAll('[data-tab]').forEach(btn=>btn.onclick=()=>showTab(btn.dataset.tab));
-$('#close-editor').onclick=()=>$('#editor').close();
-$('#year-select').onchange=e=>{const year=Number(e.target.value);if(state.years[String(year)]){state.activeYear=year;shoppingPerson='all';changed();}};
-$('#app').addEventListener('click',e=>{
- const btn=e.target.closest('[data-action]');if(!btn||!ready)return;
- const a=btn.dataset.action,id=btn.dataset.id;
- if(a==='add-gift')openGift(null,btn.dataset.personId);
- else if(a==='edit-gift')openGift(id);
- else if(a==='add-person')openPerson(null);
- else if(a==='edit-person')openPerson(id);
- else if(a==='show-shopping'){shoppingStatus='to_buy';showTab('shopping');}
- else if(a==='new-year')createNextYear();
- else if(a==='export')download(state);
+function newYear(){
+ if(blocked)return;
+ const next=Math.max(...Object.keys(state.years).map(Number))+1;
+ if(!confirm('Start Christmas '+next+'? Names and groups will be copied, but presents stay in '+state.activeYear+'.'))return;
+ const previous=yearData();
+ state.years[String(next)]=blankYear(true,previous.people);
+ state.activeYear=next;
+ changed();toast('Christmas '+next+' is ready');
+}
+$('#app').addEventListener('click',event=>{
+ const button=event.target.closest('[data-action]');
+ if(!button||!ready)return;
+ const action=button.dataset.action;
+ if(action==='add-gift')openGift(null,button.dataset.personId);
+ else if(action==='edit-gift')openGift(button.dataset.id);
+ else if(action==='toggle-gift')toggleGift(button.dataset.id);
+ else if(action==='add-person')openPerson(null,button.dataset.group);
+ else if(action==='edit-person')openPerson(button.dataset.id);
+ else if(action==='new-year')newYear();
 });
-$('#app').addEventListener('change',e=>{
+$('#year-select').addEventListener('change',event=>{
  if(!ready||blocked)return;
- const el=e.target;
- if(el.matches('[data-status-gift]')){const gift=yearData().gifts.find(g=>g.id===el.dataset.statusGift);if(gift){gift.status=el.value;changed();toast('Gift status updated');}}
- else if(el.id==='status-filter'){shoppingStatus=el.value;render();}
- else if(el.id==='person-filter'){shoppingPerson=el.value;render();}
+ const year=Number(event.target.value);
+ if(!state.years[String(year)])return;
+ state.activeYear=year;changed();
 });
-$('#app').addEventListener('input',e=>{
- if(e.target.id==='gift-search'){
-  shoppingSearch=e.target.value;
-  const start=e.target.selectionStart,end=e.target.selectionEnd;
-  render();const newInput=$('#gift-search');newInput?.focus();try{newInput?.setSelectionRange(start,end);}catch{}
- }
-});
+$('#close-editor').onclick=()=>$('#editor').close();
 window.addEventListener('online',()=>{if(ready&&!blocked)sync();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')sync();});
-window.addEventListener('beforeunload',e=>{if(dirty&&saving){e.preventDefault();e.returnValue='';}});
-document.addEventListener('mytrips:authed',init);if(window._mytripsAuthed)init();
+document.addEventListener('visibilitychange',()=>{if(ready&&!blocked&&document.visibilityState==='hidden')sync();});
+window.addEventListener('beforeunload',event=>{if(dirty&&saving){event.preventDefault();event.returnValue='';}});
+document.addEventListener('mytrips:authed',init);
+if(window._mytripsAuthed)init();
 })();
