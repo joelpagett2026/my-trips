@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#A72336">
+<title>The Christmas List · Joel Pagett</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/christmas/style.css?v=1">
+<script src="/auth.js?v=4"></script>
+<script src="/db.js?v=fitness1"></script>
+<script defer src="/christmas/app.js?v=1"></script>
+</head>
+<body>
+<div id="app">
+  <div class="topbar"><a class="backlink" href="/">← Your homepage</a><span id="save-status" role="status" aria-live="polite">Connecting…</span></div>
+  <main class="shell">
+    <header class="hero">
+      <div class="hero-top"><span class="eyebrow">JOEL PAGETT · YOUR PERSONAL GIFT PLANNER</span><div class="hero-year"><label for="year-select">Christmas</label><select id="year-select" aria-label="Christmas year"><option>2026</option></select></div></div>
+      <div class="hero-main"><div><span class="hero-icon" aria-hidden="true">✧</span><h1>The Christmas List</h1><p>A little more organised this Christmas.</p></div><button class="light-btn" data-action="add-gift">＋ Add a present</button></div>
+      <div class="hero-progress"><div class="between"><span>YOUR SHOPPING PROGRESS</span><strong id="hero-percent">0%</strong></div><div class="progress-track"><span id="hero-bar" style="width:0%"></span></div><span id="hero-count">Add your first present to get started.</span></div>
+    </header>
+    <nav class="tabs" aria-label="Christmas List sections">
+      <button type="button" data-tab="overview" aria-current="page"><span aria-hidden="true">⌂</span> Overview</button>
+      <button type="button" data-tab="people"><span aria-hidden="true">♧</span> People</button>
+      <button type="button" data-tab="shopping"><span aria-hidden="true">▣</span> Shopping</button>
+      <button type="button" data-tab="budget"><span aria-hidden="true">£</span> Budget</button>
+    </nav>
+    <div id="error" class="alert" role="alert" hidden></div>
+    <div id="recovery" class="alert" hidden></div>
+    <div id="content"><section class="panel"><h2>Getting your Christmas list ready…</h2></section></div>
+  </main>
+</div>
+<dialog id="editor" aria-labelledby="editor-title"><div class="dialog-wrap"><div class="dialog-head"><h2 id="editor-title">Add a present</h2><button type="button" class="icon-btn" id="close-editor" aria-label="Close">✕</button></div><form id="editor-form"></form></div></dialog>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+</body></html>
