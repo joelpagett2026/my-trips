@@ -5,9 +5,9 @@
 <title>The Christmas List · Joel Pagett</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="/christmas/style.css?v=2">
+<link rel="stylesheet" href="/christmas/style.css?v=3">
 <script src="/auth.js?v=4"></script><script src="/db.js?v=fitness1"></script>
-<script defer src="/christmas/app.js?v=2"></script>
+<script defer src="/christmas/app.js?v=3"></script>
 </head><body>
 <div id="app">
   <div class="topbar"><a href="/" class="backlink">← Your homepage</a><span id="save-status" role="status" aria-live="polite">Connecting…</span></div>
@@ -19,14 +19,14 @@
       </div>
       <div class="progress-row">
         <div class="progress-copy"><strong id="total-progress">0 of 0 bought</strong><span id="total-left">Nothing left to buy</span></div>
-        <div class="progress-track" role="progressbar" aria-label="Presents purchased" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="total-track"><span id="total-bar" style="width:0%"></span></div>
-        <div class="legend"><span><i class="dot todo"></i> To buy</span><span><i class="dot done"></i> Bought</span><span><i class="dot blank"></i> No presents yet</span></div>
+        <div class="progress-track" role="progressbar" aria-label="Presents bought or delivered" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="total-track"><span id="total-bar" class="progress-complete" style="width:0%"></span><span id="total-ordered-bar" class="progress-ordered" style="width:0%"></span></div>
+        <div class="legend"><span><i class="dot blank"></i> Not bought</span><span><i class="dot ordered"></i> Ordered</span><span><i class="dot delivered"></i> Bought / delivered</span></div>
       </div>
     </header>
     <div id="error" role="alert" class="alert" hidden></div>
     <div id="recovery" role="alert" class="alert" hidden></div>
     <section id="group-grid" class="group-grid" aria-label="Christmas present family groups"><div class="loading">Loading family list…</div></section>
-    <footer class="footer"><span>Tap a present to mark it as bought, or tap it again to move it back to your shopping list.</span><button type="button" class="quiet" data-action="new-year">＋ Start next Christmas</button></footer>
+    <footer class="footer"><span>Single click: ordered (green). Double click or tap: bought / delivered (red). Click again to move back towards not bought (grey).</span><button type="button" class="quiet" data-action="new-year">＋ Start next Christmas</button></footer>
   </main>
 </div>
 <dialog id="editor" aria-labelledby="editor-title"><div class="dialog-inner"><div class="dialog-head"><h2 id="editor-title">Add present</h2><button type="button" id="close-editor" class="close" aria-label="Close">✕</button></div><form id="editor-form"></form></div></dialog>
