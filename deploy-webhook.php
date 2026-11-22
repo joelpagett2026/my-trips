@@ -149,7 +149,7 @@ if (!$preflight['ok']) {
 
 $directories = [
     'trips', 'holidays', 'holidays/jonathan', 'concerts', 'shows',
-    'parks', 'icons', 'private',
+    'parks', 'icons', 'private', 'christmas',
 ];
 foreach ($directories as $dir) {
     $path = PUBLIC_HTML . '/' . $dir;
@@ -231,6 +231,9 @@ $subdirFiles = [
     'fitness/style.css' => 'fitness/style.css',
     'fitness/engine.js' => 'fitness/engine.js',
     'fitness/app.js' => 'fitness/app.js',
+    'christmas/index.html' => 'christmas/index.html',
+    'christmas/style.css' => 'christmas/style.css',
+    'christmas/app.js' => 'christmas/app.js',
     'trips/index.html' => 'trips/index.html',
     'holidays/index.html' => 'holidays/index.html',
     'holidays/allowance-data.js' => 'holidays/allowance-data.js',
