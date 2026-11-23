@@ -143,7 +143,7 @@ async function main(){
  assert.equal(stored.notes,'Keep this');
  assert.equal(old.element('#total-spent').textContent,'£110.00');
  old.click('edit-person','existing-person');
- old.submit({name:'Mum',group:'other',budget:'150'});
+ old.submit({name:'Mum',group:'mums',budget:'150'});
  await old.settle();
  assert.equal(old.saved.at(-1).years[String(year)].people[0].budget,150);
  assert.match(old.element('#group-grid').innerHTML,/Budget remaining £40.00/,'Budget remaining is recalculated');
