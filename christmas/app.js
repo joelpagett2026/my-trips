@@ -79,10 +79,11 @@ function renderPerson(p){
  const allOnOrder=gifts.length>0&&!allDelivered&&gifts.every(g=>delivered(g.status)||ordered(g.status));
  const costs=spending(gifts),budget=currency(p.budget||0);
  const budgetCopy=budget>0?' <span class="budget-difference">'+(budget>=costs.spent?'Budget remaining '+money(currency(budget-costs.spent)):'Over budget '+money(currency(costs.spent-budget)))+'</span>':'';
+ const personTotal=(gifts.length||budget>0)?'<div class="person-total"><strong>Spent '+money(costs.spent)+'</strong><span>To buy '+money(costs.planned)+'</span>'+budgetCopy+'</div>':'';
  return '<div class="family-row"><div class="person-name '+(allDelivered?'complete':allOnOrder?'on-order':'')+'"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'" title="Edit '+esc(p.name)+'">'+esc(p.name)+'</button></div>'+
  '<div class="presents"><div class="gift-list">'+(gifts.length?gifts.map(renderGift).join(''):'<span class="empty-person">No presents yet</span>')+
  '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a present for '+esc(p.name)+'" title="Add a present for '+esc(p.name)+'">＋</button></div>'+
- '<div class="person-total"><strong>Spent '+money(costs.spent)+'</strong><span>To buy '+money(costs.planned)+'</span>'+budgetCopy+'</div></div></div>';
+ personTotal+'</div></div>';
 }
 function renderGroup(g){
  const d=yearData(),members=d.people.filter(p=>groupFor(p)===g.id);
