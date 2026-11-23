@@ -33,12 +33,17 @@ h1{font-size:29px;line-height:1.15;letter-spacing:-1px;margin:7px 0 7px;font-wei
 .person-name.on-order{background:var(--ordered-light)}.person-name.on-order button{color:#235C42}.person-name.complete{background:var(--delivered-light)}.person-name.complete button{color:var(--red-deep)}
 .person-name button{border:0;background:none;color:var(--ink);font-weight:750;font-size:11px;text-align:left;min-height:45px;width:100%;padding:10px 12px;overflow-wrap:anywhere}
 .person-name button:hover{text-decoration:underline;text-decoration-color:#bcb0b0}
-.presents{display:flex;align-items:stretch;gap:4px;min-width:0;padding:4px 5px;flex-wrap:wrap}
-.present{display:flex;align-items:stretch;min-width:0;flex:1 1 100px;max-width:100%;border-radius:7px;overflow:hidden;background:var(--not-bought);touch-action:manipulation}
+.presents{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:4px 5px 0;gap:5px}
+.gift-list{display:flex;align-items:stretch;flex-wrap:wrap;gap:4px;min-width:0}
+.present{display:flex;align-items:stretch;min-width:0;flex:1 1 174px;max-width:100%;border-radius:7px;overflow:hidden;background:var(--not-bought);touch-action:manipulation}
 .present.ordered{background:var(--ordered)}.present.delivered{background:var(--delivered)}
 .present-toggle{display:flex;align-items:center;justify-content:center;gap:5px;text-align:center;flex:1;min-width:0;min-height:34px;padding:7px 6px;border:0;background:transparent;color:#2D292B;font-size:10px;font-weight:750;line-height:1.35;overflow-wrap:anywhere;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .present.ordered .present-toggle,.present.delivered .present-toggle{color:#fff}
 .present-toggle:hover{filter:brightness(.96)}
+.gift-price{display:flex;align-items:center;gap:2px;flex:none;align-self:stretch;padding:0 4px;border-left:1px solid #00000016;color:#423c3d;font-size:10px;font-weight:800;white-space:nowrap;min-width:70px;justify-content:flex-end}
+.gift-price input{display:block;box-sizing:content-box;min-width:42px;width:48px;max-width:55px;min-height:32px;line-height:1.4;font-size:11px;font-weight:800;text-align:right;color:inherit;border:0;background:transparent;padding:2px 0;outline-offset:-2px;font-family:inherit;appearance:textfield;-moz-appearance:textfield}
+.gift-price input::-webkit-outer-spin-button,.gift-price input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.present.ordered .gift-price,.present.delivered .gift-price{color:#fff;border-left-color:#ffffff35}
 .present .tick{font-size:12px;flex:none;opacity:.88}
 .present-edit{border:0;border-left:1px solid #00000014;background:#ffffff17;min-width:24px;min-height:34px;color:#594D4E;font-size:15px;font-weight:750;padding:0 4px}
 .present.ordered .present-edit,.present.delivered .present-edit{color:#fff;border-left-color:#ffffff4d}
@@ -46,6 +51,16 @@ h1{font-size:29px;line-height:1.15;letter-spacing:-1px;margin:7px 0 7px;font-wei
 .add-present{align-self:center;min-height:30px;min-width:30px;border:1px dashed #D8D0CD;background:#FAF8F7;color:#9A6872;border-radius:7px;font-size:17px;line-height:1}
 .add-present:hover{border-color:var(--red);color:var(--red)}
 .empty-person{align-self:center;color:#AC9DA0;font-style:italic;font-size:10px;margin:0 5px}
+.person-total{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px 13px;margin:0 -5px;padding:7px 9px;background:#FAF7F5;border-top:1px solid #EAE3DF;font-size:10px;line-height:1.4;color:#74696B}
+.person-total strong{color:var(--red-deep);font-size:10px;font-weight:800}
+.person-total .budget-difference{color:#706166}
+.group-total{border-top:1px solid var(--line);background:#F7F3F1;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:#716367;font-size:11px}
+.group-total strong{color:var(--red-deep);font-size:11px}
+.spending-summary{display:flex;align-items:center;justify-content:flex-end;gap:24px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:13px;margin-top:13px}
+.spending-summary>span{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.spending-summary strong{font-size:14px;color:var(--red-deep)}
+.spending-summary small{font-size:10px;color:var(--muted)}
+.spending-summary output{font-variant-numeric:tabular-nums}
 .no-people{padding:18px;color:var(--muted);font-size:12px}
 .footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 3px;color:var(--muted);font-size:11px;line-height:1.7}
 .alert{padding:14px 17px;border:1px solid #E1B2B9;background:#FFF0F1;border-radius:12px;margin:0 0 14px;font-size:12px;line-height:1.6}
@@ -62,5 +77,5 @@ h1{font-size:29px;line-height:1.15;letter-spacing:-1px;margin:7px 0 7px;font-wei
 @media(max-width:1220px){.progress-row{grid-template-columns:1fr auto}.progress-track{grid-column:1/-1;grid-row:2}}
 @media(max-width:740px){.shell,.topbar{width:calc(100% - 24px)}.topbar{padding-top:16px}.page-header{padding:19px 16px 17px;border-radius:14px}.title-line{align-items:flex-start;flex-direction:column;gap:17px}h1{font-size:26px}.header-actions{width:100%;justify-content:space-between}.header-actions .primary{min-width:146px}.progress-row{grid-template-columns:1fr;gap:11px;margin-top:16px}.progress-copy{justify-content:space-between}.progress-track{grid-column:auto;grid-row:auto}.legend{justify-content:space-between;gap:6px;flex-wrap:wrap}.group-grid{grid-template-columns:1fr;gap:11px}.group-card{grid-column:auto!important;grid-row:auto!important}.family-row{grid-template-columns:minmax(98px,29%) minmax(0,1fr)}.footer{align-items:flex-start;flex-direction:column}.person-name button{font-size:12px}}
 /* Shared by mobile browsers and installed web apps at the same viewport width. */
-@media(max-width:740px){.presents{flex-direction:column;flex-wrap:nowrap}.present{flex:0 0 auto;width:100%}}
+@media(max-width:740px){.gift-list{flex-direction:column;flex-wrap:nowrap}.present{flex:0 0 auto;width:100%}.spending-summary{justify-content:flex-start;gap:7px 18px}.person-total{justify-content:flex-start}.gift-price{min-width:69px}}
 @media(max-width:390px){.presents{gap:3px}.present-toggle{font-size:10px}.year-picker{font-size:10px}.header-actions .primary{min-width:0;padding:11px}.legend{font-size:9px}}
