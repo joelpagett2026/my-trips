@@ -132,7 +132,7 @@ async function main(){
  assert.ok(legacyView.indexOf("Joel&#39;s Mums")>=0||legacyView.indexOf("Joel's Mums")>=0);
  assert.match(legacyView,/class="present delivered"/);
  assert.match(legacyView,/Spent £110.00/,'Legacy quantities multiply correctly');
- assert.match(legacyView,/Budget remaining £/,'Existing budget remains visible');
+ assert.match(legacyView,/Over budget £20\.00/,'Existing budget is compared against actual spending');
  old.click('edit-gift','existing-gift');
  old.submit({name:'Record collection updated',personId:'existing-person',status:'received',price:'55.00'});
  await old.settle();
