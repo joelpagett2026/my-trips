@@ -58,11 +58,16 @@ async function main(){
  assert.match(view,/No presents yet/);
 
  ui.click('add-gift',null,{personId:'test-1'});
- ui.submit({name:'Christmas scarf',personId:'test-1',status:'to_buy'});
+ ui.submit({name:'Christmas scarf',personId:'test-1',status:'to_buy',price:'25.50'});
  await ui.settle();
  let data=ui.saved.at(-1),gift=data.years[String(year)].gifts[0];
  assert.equal(gift.status,'to_buy');
  assert.match(ui.element('#group-grid').innerHTML,/class="present not-bought"/);
+ assert.match(ui.element('#group-grid').innerHTML,/data-price-gift=/,'Each gift has an inline price input');
+ assert.match(ui.element('#group-grid').innerHTML,/Spent £0.00/,'Unbought gifts are not spent');
+ assert.match(ui.element('#group-grid').innerHTML,/To buy £25.50/,'Planned costs appear below recipient');
+ assert.equal(ui.element('#total-spent').textContent,'£0.00');
+ assert.equal(ui.element('#total-planned').textContent,'£25.50');
 
  // One click -> ordered (not delivered). No premature state update.
  const savesBeforeClick=ui.saved.length;
@@ -73,10 +78,15 @@ async function main(){
  assert.match(ui.element('#group-grid').innerHTML,/class="present ordered"/);
  assert.match(ui.element('#group-grid').innerHTML,/class="person-name on-order"/);
  assert.match(ui.element('#total-left').textContent,/1 ordered/);
+ assert.match(ui.element('#group-grid').innerHTML,/Spent £25.50/,'Ordered gift counts as spending');
+ assert.match(ui.element('#group-grid').innerHTML,/Group spent £25.50/,'Family group shows spending');
+ assert.equal(ui.element('#total-spent').textContent,'£25.50');
+ assert.equal(ui.element('#total-planned').textContent,'£0.00');
 
  // One more click -> not bought (grey).
  ui.click('toggle-gift',gift.id);ui.flushTap();await ui.settle();
  assert.equal(ui.saved.at(-1).years[String(year)].gifts[0].status,'to_buy');
+ assert.equal(ui.element('#total-planned').textContent,'£25.50');
 
  // Double click -> delivered (red), without saving an intermediate ordered state.
  const savesBeforeDoubleClick=ui.saved.length;
@@ -90,6 +100,14 @@ async function main(){
  assert.match(ui.element('#total-left').textContent,/All presents delivered/);
  assert.match(ui.element('#total-progress').textContent,/1 of 1 completed/);
  assert.equal(ui.element('#total-track').attributes['aria-valuenow'],'100');
+ assert.equal(ui.element('#total-spent').textContent,'£25.50');
+
+ // Editing a gift's cost inline updates totals but does not change the delivery state.
+ ui.events['#app:change']({target:{value:'32.25',dataset:{priceGift:gift.id},matches:selector=>selector==='[data-price-gift]'}});
+ await ui.settle();
+ assert.equal(ui.saved.at(-1).years[String(year)].gifts[0].price,32.25);
+ assert.equal(ui.saved.at(-1).years[String(year)].gifts[0].status,'received');
+ assert.equal(ui.element('#total-spent').textContent,'£32.25');
 
  // A completed gift can be returned to ordered with one click.
  ui.click('toggle-gift',gift.id);ui.flushTap();await ui.settle();
@@ -113,15 +131,23 @@ async function main(){
  assert.match(legacyView,/Record collection/);
  assert.ok(legacyView.indexOf("Joel&#39;s Mums")>=0||legacyView.indexOf("Joel's Mums")>=0);
  assert.match(legacyView,/class="present delivered"/);
+ assert.match(legacyView,/Spent £110.00/,'Legacy quantities multiply correctly');
+ assert.match(legacyView,/Budget remaining £/,'Existing budget remains visible');
  old.click('edit-gift','existing-gift');
- old.submit({name:'Record collection updated',personId:'existing-person',status:'received'});
+ old.submit({name:'Record collection updated',personId:'existing-person',status:'received',price:'55.00'});
  await old.settle();
  const stored=old.saved.at(-1).years[String(year)].gifts[0];
  assert.equal(stored.status,'wrapped','Old wrapped status should stay completed on edit');
  assert.equal(stored.price,55);
  assert.equal(stored.url,'https://example.com');
  assert.equal(stored.notes,'Keep this');
+ assert.equal(old.element('#total-spent').textContent,'£110.00');
+ old.click('edit-person','existing-person');
+ old.submit({name:'Mum',group:'other',budget:'150'});
+ await old.settle();
+ assert.equal(old.saved.at(-1).years[String(year)].people[0].budget,150);
+ assert.match(old.element('#group-grid').innerHTML,/Budget remaining £40.00/,'Budget remaining is recalculated');
  assert.equal(old.saved.at(-1).years[String(year)].people[0].group,'other','Do not silently rewrite original group data');
- console.log('Christmas List: 2 columns, 4 groups, grey/green/red click statuses, archive and legacy data passed');
+ console.log('Christmas List: gift costs, group and person totals, budget editing, quantity totals, three statuses and archives passed');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
