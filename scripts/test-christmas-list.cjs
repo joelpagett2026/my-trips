@@ -142,12 +142,13 @@ async function main(){
  assert.equal(stored.url,'https://example.com');
  assert.equal(stored.notes,'Keep this');
  assert.equal(old.element('#total-spent').textContent,'£110.00');
+ assert.equal(old.saved.at(-1).years[String(year)].people[0].group,'other','Editing gift costs does not rewrite the family group');
  old.click('edit-person','existing-person');
  old.submit({name:'Mum',group:'mums',budget:'150'});
  await old.settle();
  assert.equal(old.saved.at(-1).years[String(year)].people[0].budget,150);
  assert.match(old.element('#group-grid').innerHTML,/Budget remaining £40.00/,'Budget remaining is recalculated');
- assert.equal(old.saved.at(-1).years[String(year)].people[0].group,'other','Do not silently rewrite original group data');
+ assert.equal(old.saved.at(-1).years[String(year)].people[0].group,'mums','Explicitly editing a legacy person updates their family group');
  console.log('Christmas List: gift costs, group and person totals, budget editing, quantity totals, three statuses and archives passed');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
