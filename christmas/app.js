@@ -67,17 +67,22 @@ function renderHeader(){
 function renderGift(g){
  const stage=giftStage(g.status),name=esc(g.name);
  const label=stage==='delivered'?'Bought / delivered':stage==='ordered'?'Ordered':'Not bought';
+ const unit=(ordered(g.status)||delivered(g.status))?paidUnitCost(g):Number(g.price)||0;
  return '<span class="present '+stage+'">' +
  '<button class="present-toggle" type="button" data-action="toggle-gift" data-id="'+esc(g.id)+'" aria-label="'+name+': '+label+'. Single click to change order status, double click for delivered." title="'+name+' — '+label+' · click: ordered / not bought · double click: delivered"><span class="tick" aria-hidden="true">'+(stage==='delivered'?'✓':stage==='ordered'?'◉':'○')+'</span><span>'+name+'</span></button>'+
+ '<label class="gift-price"><span>£</span><input type="number" inputmode="decimal" min="0" max="1000000" step="0.01" data-price-gift="'+esc(g.id)+'" aria-label="Cost per item for '+name+'" value="'+esc(currency(unit).toFixed(2))+'"></label>'+
  '<button class="present-edit" type="button" data-action="edit-gift" data-id="'+esc(g.id)+'" title="Edit '+name+'" aria-label="Edit '+name+'">···</button></span>';
 }
 function renderPerson(p){
  const gifts=yearData().gifts.filter(g=>g.personId===p.id);
  const allDelivered=gifts.length>0&&gifts.every(g=>delivered(g.status));
  const allOnOrder=gifts.length>0&&!allDelivered&&gifts.every(g=>delivered(g.status)||ordered(g.status));
+ const costs=spending(gifts),budget=currency(p.budget||0);
+ const budgetCopy=budget>0?' <span class="budget-difference">'+(budget>=costs.spent?'Budget remaining '+money(currency(budget-costs.spent)):'Over budget '+money(currency(costs.spent-budget)))+'</span>':'';
  return '<div class="family-row"><div class="person-name '+(allDelivered?'complete':allOnOrder?'on-order':'')+'"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'" title="Edit '+esc(p.name)+'">'+esc(p.name)+'</button></div>'+
- '<div class="presents">'+(gifts.length?gifts.map(renderGift).join(''):'<span class="empty-person">No presents yet</span>')+
- '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a present for '+esc(p.name)+'" title="Add a present for '+esc(p.name)+'">＋</button></div></div>';
+ '<div class="presents"><div class="gift-list">'+(gifts.length?gifts.map(renderGift).join(''):'<span class="empty-person">No presents yet</span>')+
+ '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a present for '+esc(p.name)+'" title="Add a present for '+esc(p.name)+'">＋</button></div>'+
+ '<div class="person-total"><strong>Spent '+money(costs.spent)+'</strong><span>To buy '+money(costs.planned)+'</span>'+budgetCopy+'</div></div></div>';
 }
 function renderGroup(g){
  const d=yearData(),members=d.people.filter(p=>groupFor(p)===g.id);
