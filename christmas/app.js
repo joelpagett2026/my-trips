@@ -29,7 +29,7 @@ const lookupGroup = name => {
  return GROUPS.find(g => g.people.some(n => n.toLowerCase()===text))?.id || (text === 'mum' ? 'mums' : 'personal');
 };
 const starterPeople = () => GROUPS.flatMap(g => g.people.map(name => ({id:uid(),name,group:g.id,budget:0})));
-const blankYear = (copyMembers=false,existing=[]) => ({people:copyMembers?existing.map(p=>({...p,id:uid(),group:p.group||lookupGroup(p.name)})):starterPeople(),gifts:[]});
+const blankYear = (copyMembers=false,existing=[]) => ({people:copyMembers?existing.map(p=>({...p,id:uid(),group:p.group||lookupGroup(p.name),noGiftNeeded:false})):starterPeople(),gifts:[]});
 const initialState = () => {const y=new Date().getFullYear();return {schema:1,activeYear:y,years:{[String(y)]:blankYear()}};};
 const RECORD='christmas-list-v1',PENDING='christmas-list-pending-v1';
 let state=null,ready=false,blocked=false,dirty=false,saving=false,revision=0,base='null',timer=null,toastTimer=null;
@@ -45,19 +45,22 @@ function normalise(remote){
  return data;
 }
 function groupFor(person) {return GROUPS.some(g=>g.id===person.group)?person.group:lookupGroup(person.name);}
+// This is a recipient decision for one Christmas, separate from a gift's three statuses.
+function giftNotNeeded(person){return person.noGiftNeeded===true&&!yearData().gifts.some(g=>g.personId===person.id);}
 function totals(){
  const gifts=yearData().gifts;
  const done=gifts.filter(g=>delivered(g.status)).length;
  const waiting=gifts.filter(g=>ordered(g.status)).length;
  const remaining=gifts.length-done-waiting;
- return {total:gifts.length,done,waiting,remaining,...spending(gifts),percent:gifts.length?Math.round(100*done/gifts.length):0,orderedPercent:gifts.length?Math.round(100*waiting/gifts.length):0};
+ return {total:gifts.length,done,waiting,remaining,notNeeded:yearData().people.filter(giftNotNeeded).length,...spending(gifts),percent:gifts.length?Math.round(100*done/gifts.length):0,orderedPercent:gifts.length?Math.round(100*waiting/gifts.length):0};
 }
 function yearOptions(){return Object.keys(state.years).sort((a,b)=>Number(b)-Number(a)).map(y=>'<option value="'+esc(y)+'"'+(Number(y)===state.activeYear?' selected':'')+'>'+esc(y)+'</option>').join('');}
 function renderHeader(){
  const t=totals();
  $('#year-select').innerHTML=yearOptions();
  $('#total-progress').textContent=t.done+' of '+t.total+' completed';
- $('#total-left').textContent=t.total===0?'Add your first present':t.remaining===0&&t.waiting===0?'All presents delivered!':t.waiting+' ordered · '+t.remaining+' not bought';
+ const allNotNeeded=t.notNeeded>0&&t.notNeeded===yearData().people.length;
+ $('#total-left').textContent=allNotNeeded?'No gifts needed this Christmas':(t.total===0?'Add your first present':t.remaining===0&&t.waiting===0?'All presents delivered!':t.waiting+' ordered · '+t.remaining+' not bought')+(t.notNeeded?' · '+t.notNeeded+' no gift needed':'');
  $('#total-spent').textContent=money(t.spent);
  $('#total-planned').textContent=money(t.planned);
  $('#total-bar').style.width=(t.total?100*t.done/t.total:0)+'%';
@@ -77,6 +80,7 @@ function renderGift(g){
  '<details class="overflow"><summary aria-label="Options for '+name+'" title="Gift options">⋯</summary><div class="overflow-panel"><button type="button" data-action="edit-gift" data-id="'+esc(g.id)+'">Edit gift</button><button class="delete-option" type="button" data-action="delete-gift" data-id="'+esc(g.id)+'">Delete gift</button></div></details></div>';
 }
 function personCosts(p,gifts){
+ if(giftNotNeeded(p))return '';
  const costs=spending(gifts),budget=currency(p.budget||0);
  return (costs.spent>0?'<span>Spent '+money(costs.spent)+'</span>':'')+
  (costs.planned>0?'<span>To buy '+money(costs.planned)+'</span>':'')+
@@ -84,12 +88,15 @@ function personCosts(p,gifts){
 }
 function renderPerson(p){
  const gifts=yearData().gifts.filter(g=>g.personId===p.id),done=gifts.filter(g=>delivered(g.status)).length;
+ const notNeeded=giftNotNeeded(p);
  return '<section class="family-row" aria-label="Gifts for '+esc(p.name)+'"><header class="person-head"><div class="person-heading"><h3>'+esc(p.name)+'</h3>'+
- (gifts.length?'<span class="person-progress'+(done===gifts.length?' complete':'')+'">'+done+' / '+gifts.length+' ready</span>':'')+'</div><div class="person-actions">'+
+ (gifts.length?'<span class="person-progress'+(done===gifts.length?' complete':'')+'">'+done+' / '+gifts.length+' ready</span>':notNeeded?'<span class="no-gift-badge">No gift needed</span>':'')+'</div><div class="person-actions">'+
  '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a gift for '+esc(p.name)+'">＋ <span>Add gift</span></button>'+
- '<details class="overflow"><summary aria-label="Options for '+esc(p.name)+'" title="Recipient options">⋯</summary><div class="overflow-panel"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'">Edit person / budget</button><button class="delete-option" type="button" data-action="delete-person" data-id="'+esc(p.id)+'">Remove person</button></div></details></div></header>'+
+ '<details class="overflow"><summary data-person-options="'+esc(p.id)+'" aria-label="Options for '+esc(p.name)+'" title="Recipient options">⋯</summary><div class="overflow-panel"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'">Edit person / budget</button>'+
+ (!gifts.length?'<button type="button" data-action="toggle-no-gift" data-id="'+esc(p.id)+'">'+(notNeeded?'Gift needed':'No gift needed')+'</button>':'')+
+ '<button class="delete-option" type="button" data-action="delete-person" data-id="'+esc(p.id)+'">Remove person</button></div></details></div></header>'+
  '<div class="person-total" data-person-total="'+esc(p.id)+'">'+personCosts(p,gifts)+'</div>'+
- '<div class="gift-list">'+(gifts.length?gifts.map(renderGift).join(''):'<p class="empty-person">No gifts yet</p>')+'</div></section>';
+ '<div class="gift-list">'+(gifts.length?gifts.map(renderGift).join(''):notNeeded?'':'<div class="empty-person"><span>No gifts yet</span><button class="no-gift-action" type="button" data-action="toggle-no-gift" data-id="'+esc(p.id)+'" aria-label="No gift needed for '+esc(p.name)+'">No gift needed</button></div>')+'</div></section>';
 }
 function renderGroup(g){
  const d=yearData(),members=d.people.filter(p=>groupFor(p)===g.id);
@@ -97,8 +104,9 @@ function renderGroup(g){
  const gifts=d.gifts.filter(gift=>ids.has(gift.personId));
  const done=gifts.filter(gift=>delivered(gift.status)).length;
  const waiting=gifts.filter(gift=>ordered(gift.status)).length;
+ const notNeeded=members.filter(giftNotNeeded).length,allNotNeeded=notNeeded>0&&notNeeded===members.length;
  return '<article class="group-card" data-group="'+esc(g.id)+'" aria-label="'+esc(g.name)+'">'+
- '<header class="group-head"><div><h2 class="group-heading">'+esc(g.name)+'</h2><span class="group-count">'+(gifts.length?done+' of '+gifts.length+' ready'+(waiting?' · '+waiting+' ordered':''):'No gifts planned')+'</span></div><div class="group-meta">'+
+ '<header class="group-head"><div><h2 class="group-heading">'+esc(g.name)+'</h2><span class="group-count">'+(allNotNeeded?'No gifts needed':(gifts.length?done+' of '+gifts.length+' ready'+(waiting?' · '+waiting+' ordered':''):'No gifts planned')+(notNeeded?' · '+notNeeded+' no gift needed':''))+'</span></div><div class="group-meta">'+
  '<button type="button" class="add-small" data-action="add-person" data-group="'+esc(g.id)+'" title="Add someone to '+esc(g.name)+'" aria-label="Add someone to '+esc(g.name)+'">＋</button></div></header>'+
  (members.length?members.map(renderPerson).join(''):'<div class="no-people">Nobody in this group yet. Use + to add someone.</div>')+'</article>';
 }
@@ -224,6 +232,16 @@ function deletePerson(id){
  d.people=d.people.filter(x=>x.id!==id);
  $('#editor').close();changed();toast('Family member removed');
 }
+function toggleNoGift(id){
+ if(blocked)return;
+ const d=yearData(),person=d.people.find(p=>p.id===id);if(!person)return;
+ // Never hide gifts or remove their spending from totals.
+ if(d.gifts.some(g=>g.personId===id)){toast('Move or remove their gifts before marking no gift needed.');return;}
+ person.noGiftNeeded=!giftNotNeeded(person);
+ changed();
+ $('#group-grid [data-person-options="'+esc(id)+'"]')?.focus({preventScroll:true});
+ toast(person.noGiftNeeded?'No gift needed for '+person.name+' this Christmas':'Gift needed for '+person.name);
+}
 function openGift(id,personHint){
  if(blocked)return;
  const d=yearData();
@@ -255,6 +273,8 @@ function saveGift(ev){
  const newStatus=selection==='received'&&old?.status==='wrapped'?'wrapped':selection;
  const gift={...(old||{}),id:old?.id||uid(),name,personId,status:newStatus,price,actualPrice:old?.actualPrice!==undefined&&old?.actualPrice!==null&&old.actualPrice!==''?price:old?.actualPrice??'',quantity:old?.quantity||1};
  if(index>=0)d.gifts[index]=gift;else d.gifts.push(gift);
+ const recipient=d.people.find(p=>p.id===personId);
+ if(recipient.noGiftNeeded===true)recipient.noGiftNeeded=false;
  $('#editor').close();changed();toast('Present saved');
 }
 function deleteGift(id){
@@ -313,6 +333,7 @@ $('#app').addEventListener('click',event=>{
  else if(action==='toggle-gift')toggleGift(button.dataset.id);
  else if(action==='add-person')openPerson(null,button.dataset.group);
  else if(action==='edit-person')openPerson(button.dataset.id);
+ else if(action==='toggle-no-gift')toggleNoGift(button.dataset.id);
  else if(action==='delete-person')deletePerson(button.dataset.id);
  else if(action==='new-year')newYear();
 });
