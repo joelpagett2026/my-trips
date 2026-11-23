@@ -222,7 +222,8 @@ function openGift(id,personHint){
  $('#editor-form').innerHTML='<div class="form-fields">'+
  '<label class="field">Present<input name="name" maxlength="140" required value="'+esc(g?.name||'')+'" placeholder="e.g. Scarf, concert tickets…"></label>'+
  '<label class="field">Who is it for?<select name="personId">'+d.people.map(p=>'<option value="'+esc(p.id)+'"'+((g?.personId||personHint||d.people[0].id)===p.id?' selected':'')+'>'+esc(p.name)+' · '+esc(GROUPS.find(gr=>gr.id===groupFor(p))?.name||'Personal Presents')+'</option>').join('')+'</select></label>'+
- '<label class="field">Status<select name="status">'+[['to_buy','Not bought'],['ordered','Ordered'],['received','Bought / delivered']].map(([value,label])=>'<option value="'+value+'"'+((g?giftStage(g.status):'not-bought')===(value==='received'?'delivered':value==='ordered'?'ordered':'not-bought')?' selected':'')+'>'+label+'</option>').join('')+'</select></label></div>'+
+ '<label class="field">Status<select name="status">'+[['to_buy','Not bought'],['ordered','Ordered'],['received','Bought / delivered']].map(([value,label])=>'<option value="'+value+'"'+((g?giftStage(g.status):'not-bought')===(value==='received'?'delivered':value==='ordered'?'ordered':'not-bought')?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+ '<label class="field">Cost per item (£)<input name="price" type="number" inputmode="decimal" min="0" max="1000000" step="0.01" required value="'+esc(currency(g?(ordered(g.status)||delivered(g.status)?paidUnitCost(g):g.price):0).toFixed(2))+'"></label></div>'+
  '<div class="modal-actions">'+(g?'<button class="danger" id="delete-gift" type="button">Delete</button>':'')+
  '<button type="button" class="quiet" id="cancel-editor">Cancel</button><button type="submit" class="primary">'+(g?'Save changes':'Add present')+'</button></div>';
  $('#cancel-editor').onclick=()=>$('#editor').close();
@@ -234,13 +235,13 @@ function saveGift(ev){
  ev.preventDefault();if(blocked)return;
  const form=ev.currentTarget,fd=new FormData(form);
  const name=String(fd.get('name')||'').trim(),personId=String(fd.get('personId')||'');
- const selection=String(fd.get('status')||'to_buy');
- if(!name||!yearData().people.some(p=>p.id===personId)||!['to_buy','ordered','received'].includes(selection)){toast('Enter a present and recipient.');return;}
- const d=yearData(),index=d.gifts.findIndex(g=>g.id===editId);
+ const selection=String(fd.get('status')||'to_buy'),rawPrice=String(fd.get('price')??'').trim();
+ if(!name||!yearData().people.some(p=>p.id===personId)||!['to_buy','ordered','received'].includes(selection)||!validCost(rawPrice)){toast('Enter a present, recipient and valid cost.');return;}
+ const price=currency(rawPrice),d=yearData(),index=d.gifts.findIndex(g=>g.id===editId);
  const old=index>=0?d.gifts[index]:null;
- // Preserve prices, notes and retailer links saved in the previous detailed layout.
+ // Preserve retailer links, notes, quantities, and historical delivered/wrapped status.
  const newStatus=selection==='received'&&old?.status==='wrapped'?'wrapped':selection;
- const gift={...(old||{}),id:old?.id||uid(),name,personId,status:newStatus,price:old?.price||0,quantity:old?.quantity||1};
+ const gift={...(old||{}),id:old?.id||uid(),name,personId,status:newStatus,price,actualPrice:old?.actualPrice!==undefined&&old?.actualPrice!==null&&old.actualPrice!==''?price:old?.actualPrice??'',quantity:old?.quantity||1};
  if(index>=0)d.gifts[index]=gift;else d.gifts.push(gift);
  $('#editor').close();changed();toast('Present saved');
 }
