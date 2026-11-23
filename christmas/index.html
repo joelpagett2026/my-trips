@@ -5,9 +5,9 @@
 <title>The Christmas List · Joel Pagett</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="/christmas/style.css?v=4">
+<link rel="stylesheet" href="/christmas/style.css?v=5">
 <script src="/auth.js?v=4"></script><script src="/db.js?v=fitness1"></script>
-<script defer src="/christmas/app.js?v=3"></script>
+<script defer src="/christmas/app.js?v=5"></script>
 </head><body>
 <div id="app">
   <div class="topbar"><a href="/" class="backlink">← Your homepage</a><span id="save-status" role="status" aria-live="polite">Connecting…</span></div>
@@ -21,6 +21,10 @@
         <div class="progress-copy"><strong id="total-progress">0 of 0 bought</strong><span id="total-left">Nothing left to buy</span></div>
         <div class="progress-track" role="progressbar" aria-label="Presents bought or delivered" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="total-track"><span id="total-bar" class="progress-complete" style="width:0%"></span><span id="total-ordered-bar" class="progress-ordered" style="width:0%"></span></div>
         <div class="legend"><span><i class="dot blank"></i> Not bought</span><span><i class="dot ordered"></i> Ordered</span><span><i class="dot delivered"></i> Bought / delivered</span></div>
+      </div>
+      <div class="spending-summary" aria-label="Christmas budget summary">
+        <span><strong>Spent <output id="total-spent">£0.00</output></strong><small>Ordered + delivered</small></span>
+        <span><strong>Still to buy <output id="total-planned">£0.00</output></strong><small>Planned gifts</small></span>
       </div>
     </header>
     <div id="error" role="alert" class="alert" hidden></div>
