@@ -193,7 +193,7 @@ async function init(){
   if(dirty&&!blocked)sync();
   else if(!blocked)status('Saved to your account');
  }catch(e){
-  error('Could not load your Christmas List. Please reconnect and reload. Your saved data has not been replaced.');
+  error('Could not load your Christmas Present Tracker. Please reconnect and reload. Your saved data has not been replaced.');
   status('Connection needed');
  }
 }

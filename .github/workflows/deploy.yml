@@ -234,8 +234,8 @@ jobs:
         run: |
           grep -q 'href="/christmas/"' /tmp/home.html
           curl --fail --show-error --silent "https://joelpagett.co.uk/christmas/" --output /tmp/christmas.html
-          grep -q 'The Christmas List' /tmp/christmas.html
-          grep -q '/christmas/app.js?v=7' /tmp/christmas.html
+          grep -q 'Christmas Present Tracker' /tmp/christmas.html
+          grep -q '/christmas/app.js?v=8' /tmp/christmas.html
           grep -q 'family=Montserrat' /tmp/christmas.html
 
       - name: Verify raw homepage source canonicalizes
