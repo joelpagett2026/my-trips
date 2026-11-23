@@ -290,6 +290,22 @@ function newYear(){
  state.activeYear=next;
  changed();toast('Christmas '+next+' is ready');
 }
+$('#app').addEventListener('change',event=>{
+ if(!ready||blocked)return;
+ const input=event.target;
+ if(!input||!input.matches('[data-price-gift]'))return;
+ flushGiftTap();
+ const gift=yearData().gifts.find(g=>g.id===input.dataset.priceGift);
+ if(!gift)return;
+ const raw=String(input.value??'').trim();
+ if(!validCost(raw)){toast('Enter a valid cost from £0 to £1,000,000.');render();return;}
+ const price=currency(raw);
+ const current=(ordered(gift.status)||delivered(gift.status))?paidUnitCost(gift):Number(gift.price)||0;
+ if(currency(current)===price)return;
+ gift.price=price;
+ if(gift.actualPrice!==undefined&&gift.actualPrice!==null&&gift.actualPrice!=='')gift.actualPrice=price;
+ changed();toast('Cost saved');
+});
 $('#app').addEventListener('click',event=>{
  const button=event.target.closest('[data-action]');
  if(!button||!ready)return;
