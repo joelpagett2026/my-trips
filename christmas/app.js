@@ -90,12 +90,13 @@ function renderGroup(g){
  const gifts=d.gifts.filter(gift=>ids.has(gift.personId));
  const done=gifts.filter(gift=>delivered(gift.status)).length;
  const waiting=gifts.filter(gift=>ordered(gift.status)).length;
+ const costs=spending(gifts);
  const color=gifts.length===0?'':done===gifts.length?'complete':(waiting||done)?'partial':'';
  return '<article class="group-card" data-group="'+esc(g.id)+'" aria-label="'+esc(g.name)+'">'+
  '<header class="group-head"><h2 class="group-heading">'+esc(g.name)+'</h2><div class="group-meta"><span class="count '+color+'">'+done+' / '+gifts.length+' delivered'+(waiting?' · '+waiting+' ordered':'')+'</span>'+
  '<button type="button" class="add-small" data-action="add-person" data-group="'+esc(g.id)+'" title="Add someone to '+esc(g.name)+'" aria-label="Add someone to '+esc(g.name)+'">＋</button></div></header>'+
  (members.length?members.map(renderPerson).join(''):'<div class="no-people">Nobody in this group yet. Use + to add someone.</div>')+
- '</article>';
+ '<footer class="group-total"><strong>Group spent '+money(costs.spent)+'</strong><span>Still to buy '+money(costs.planned)+'</span></footer></article>';
 }
 function render(){
  if(!ready)return;
