@@ -185,7 +185,8 @@ function openPerson(id,groupHint){
  $('#editor-title').textContent=p?'Edit person':'Add a family member';
  $('#editor-form').innerHTML='<div class="form-fields">'+
  '<label class="field">Name<input name="name" maxlength="80" required value="'+esc(p?.name||'')+'" placeholder="Name"></label>'+
- '<label class="field">Family group<select name="group">'+GROUPS.map(g=>'<option value="'+g.id+'"'+((p?groupFor(p):groupHint||'personal')===g.id?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select></label></div>'+
+ '<label class="field">Family group<select name="group">'+GROUPS.map(g=>'<option value="'+g.id+'"'+((p?groupFor(p):groupHint||'personal')===g.id?' selected':'')+'>'+esc(g.name)+'</option>').join('')+'</select></label>'+
+ '<label class="field">Optional budget (£)<input name="budget" type="number" inputmode="decimal" min="0" max="1000000" step="0.01" value="'+esc(currency(p?.budget||0).toFixed(2))+'"></label></div>'+
  '<div class="modal-actions">'+(p?'<button type="button" class="danger" id="delete-person">Remove</button>':'')+
  '<button type="button" class="quiet" id="cancel-editor">Cancel</button><button class="primary" type="submit">'+(p?'Save':'Add person')+'</button></div>';
  $('#cancel-editor').onclick=()=>$('#editor').close();
@@ -196,10 +197,11 @@ function openPerson(id,groupHint){
 function savePerson(ev){
  ev.preventDefault();if(blocked)return;
  const fd=new FormData(ev.currentTarget),name=String(fd.get('name')||'').trim(),group=String(fd.get('group')||'personal');
- if(!name||!GROUPS.some(g=>g.id===group)){toast('Please enter a name and family group.');return;}
+ const rawBudget=String(fd.get('budget')??'0').trim(),budget=currency(rawBudget);
+ if(!name||!GROUPS.some(g=>g.id===group)||!validCost(rawBudget)){toast('Please enter a name, family group and valid budget.');return;}
  const d=yearData();
- if(editId){const p=d.people.find(x=>x.id===editId);if(!p)return;p.name=name;p.group=group;}
- else d.people.push({id:uid(),name,group,budget:0});
+ if(editId){const p=d.people.find(x=>x.id===editId);if(!p)return;p.name=name;p.group=group;p.budget=budget;}
+ else d.people.push({id:uid(),name,group,budget});
  $('#editor').close();changed();toast('Family member saved');
 }
 function deletePerson(id){
