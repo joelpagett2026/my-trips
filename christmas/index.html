@@ -5,17 +5,21 @@
 <title>The Christmas List · Joel Pagett</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="/christmas/style.css?v=7">
+<link rel="stylesheet" href="/christmas/style.css?v=8">
 <script src="/auth.js?v=4"></script><script src="/db.js?v=fitness1"></script>
 <script defer src="/christmas/app.js?v=7"></script>
 </head><body>
 <div id="app">
-  <div class="topbar"><a href="/" class="backlink">Your homepage</a><span id="save-status" role="status" aria-live="polite">Connecting…</span></div>
+  <nav class="planner-nav" aria-label="Christmas planner">
+    <a href="/" class="planner-home"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>Home</span></a>
+    <h1 class="planner-title">The Christmas List</h1>
+    <button class="planner-add" type="button" data-action="add-gift" aria-label="Add a gift">+ Gift</button>
+  </nav>
   <main class="shell">
     <header class="page-header">
-      <div class="title-line">
-        <div><span class="eyebrow">JOEL PAGETT · CHRISTMAS PLANNER</span><h1>The Christmas List</h1><p>All your family presents, all in one place.</p></div>
-        <div class="header-actions"><label class="year-picker"><span>Christmas</span><select id="year-select" aria-label="Christmas year"><option>2026</option></select></label><button class="primary" type="button" data-action="add-gift">＋ Add gift</button></div>
+      <div class="planner-toolbar">
+        <label class="year-picker"><span>Christmas</span><select id="year-select" aria-label="Christmas year"><option>2026</option></select></label>
+        <span id="save-status" role="status" aria-live="polite">Connecting…</span>
       </div>
       <div class="progress-row">
         <div class="progress-copy"><strong id="total-progress">0 of 0 completed</strong><span id="total-left">Add your first gift</span></div>
