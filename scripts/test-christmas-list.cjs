@@ -182,6 +182,47 @@ async function main(){
  const unavailable=await fixture(legacy,{loadError:Error('Offline')});
  assert.equal(unavailable.element('#error').hidden,false);
  assert.equal(unavailable.saved.length,0,'A load failure must never replace account data');
- console.log('Christmas List: immediate three-status cycle, prices, totals, budgets, quantities, metadata, archives, account reload, offline recovery and conflicts passed');
+ // No-gift decisions belong to a recipient in one year, never to a pretend gift.
+ const decisionRecord={schema:1,activeYear:year,years:{[String(year)]:{
+  people:[{id:'no-gift-person',name:'Blossom',group:'mums',budget:100,notes:'Keep recipient metadata'}],gifts:[]
+ }}};
+ const decisions=await fixture(decisionRecord);
+ decisions.click('toggle-no-gift','no-gift-person');await decisions.settle();
+ let decisionData=decisions.saved.at(-1);
+ assert.equal(decisionData.years[String(year)].people[0].noGiftNeeded,true);
+ assert.equal(decisionData.years[String(year)].people[0].budget,100);
+ assert.equal(decisionData.years[String(year)].people[0].notes,'Keep recipient metadata');
+ assert.equal(decisionData.years[String(year)].gifts.length,0,'No dummy gift is created');
+ assert.equal(decisions.element('#total-progress').textContent,'0 of 0 completed','No-gift decisions do not inflate gift completion');
+ assert.equal(decisions.element('#total-left').textContent,'No gifts needed this Christmas');
+ assert.equal(decisions.element('#total-spent').textContent,'£0.00');
+ assert.match(decisions.element('#group-grid').innerHTML,/class="no-gift-badge">No gift needed/);
+ assert.doesNotMatch(decisions.element('#group-grid').innerHTML,/No gifts yet|Budget remaining/,'Settled recipients do not look unfinished');
+ const decisionReload=await fixture(decisionData);
+ assert.match(decisionReload.element('#group-grid').innerHTML,/class="no-gift-badge"/,'Decision survives account reload');
+ decisionReload.click('new-year');await decisionReload.settle();
+ assert.equal(decisionReload.saved.at(-1).years[String(year+1)].people[0].noGiftNeeded,false,'Next Christmas starts with a fresh decision');
+ assert.equal(decisionReload.saved.at(-1).years[String(year)].people[0].noGiftNeeded,true,'Previous Christmas retains its decision');
+ decisions.click('edit-person','no-gift-person');
+ decisions.submit({name:'Blossom',group:'mums',budget:'120'});await decisions.settle();
+ assert.equal(decisions.saved.at(-1).years[String(year)].people[0].noGiftNeeded,true,'Editing a budget preserves the decision');
+ decisions.click('toggle-no-gift','no-gift-person');await decisions.settle();
+ assert.equal(decisions.saved.at(-1).years[String(year)].people[0].noGiftNeeded,false,'Decision is reversible');
+ assert.match(decisions.element('#group-grid').innerHTML,/Budget remaining £120.00/,'Budget returns when a gift is needed');
+ decisions.click('toggle-no-gift','no-gift-person');await decisions.settle();
+ decisions.click('add-gift',null,{personId:'no-gift-person'});
+ decisions.submit({name:'New present',personId:'no-gift-person',status:'to_buy',price:'25'});await decisions.settle();
+ decisionData=decisions.saved.at(-1);
+ assert.equal(decisionData.years[String(year)].people[0].noGiftNeeded,false,'Adding a gift clears the decision');
+ assert.equal(decisions.element('#total-planned').textContent,'£25.00');
+ const guarded=await fixture(decisionData);
+ guarded.click('toggle-no-gift','no-gift-person');await guarded.settle();
+ assert.equal(guarded.saved.length,0,'Existing gifts cannot be hidden behind a no-gift decision');
+ assert.equal(guarded.element('#total-planned').textContent,'£25.00');
+ decisionData.years[String(year)].people[0].noGiftNeeded=true;
+ const inconsistent=await fixture(decisionData);
+ assert.equal(inconsistent.element('#total-planned').textContent,'£25.00','Existing gifts still count if a legacy decision is inconsistent');
+ assert.doesNotMatch(inconsistent.element('#group-grid').innerHTML,/class="no-gift-badge"/);
+ console.log('Christmas List: statuses, prices, totals, metadata, archives, persistence/recovery and reversible per-year no-gift decisions passed');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
