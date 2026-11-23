@@ -60,30 +60,36 @@ function renderHeader(){
  $('#total-left').textContent=t.total===0?'Add your first present':t.remaining===0&&t.waiting===0?'All presents delivered!':t.waiting+' ordered · '+t.remaining+' not bought';
  $('#total-spent').textContent=money(t.spent);
  $('#total-planned').textContent=money(t.planned);
- $('#total-bar').style.width=t.percent+'%';
- $('#total-ordered-bar').style.width=t.orderedPercent+'%';
+ $('#total-bar').style.width=(t.total?100*t.done/t.total:0)+'%';
+ $('#total-ordered-bar').style.width=(t.total?100*t.waiting/t.total:0)+'%';
  $('#total-track').setAttribute('aria-valuenow',String(t.percent));
+ $('#total-track').setAttribute('aria-valuetext',t.done+' bought or delivered, '+t.waiting+' ordered, '+t.remaining+' not bought');
 }
 function renderGift(g){
  const stage=giftStage(g.status),name=esc(g.name);
  const label=stage==='delivered'?'Bought / delivered':stage==='ordered'?'Ordered':'Not bought';
  const unit=(ordered(g.status)||delivered(g.status))?paidUnitCost(g):Number(g.price)||0;
- return '<span class="present '+stage+'">' +
- '<button class="present-toggle" type="button" data-action="toggle-gift" data-id="'+esc(g.id)+'" aria-label="'+name+': '+label+'. Single click to change order status, double click for delivered." title="'+name+' — '+label+' · click: ordered / not bought · double click: delivered"><span class="tick" aria-hidden="true">'+(stage==='delivered'?'✓':stage==='ordered'?'◉':'○')+'</span><span>'+name+'</span></button>'+
+ const next=stage==='not-bought'?'Ordered':stage==='ordered'?'Bought / delivered':'Not bought';
+ return '<div class="present '+stage+'">' +
+ '<span class="gift-name">'+name+(count(g)>1?'<small class="gift-quantity">× '+count(g)+'</small>':'')+'</span>'+
+ '<button class="present-toggle" type="button" data-action="toggle-gift" data-id="'+esc(g.id)+'" aria-label="'+name+': '+label+'. Change to '+next+'." title="Change to '+next+'"><span class="tick" aria-hidden="true">'+(stage==='delivered'?'✓':stage==='ordered'?'◷':'○')+'</span><span class="status-label">'+(stage==='delivered'?'<span class="status-full">Bought / delivered</span><span class="status-short">Bought</span>':label)+'</span></button>'+
  '<label class="gift-price"><span>£</span><input type="number" inputmode="decimal" min="0" max="1000000" step="0.01" data-price-gift="'+esc(g.id)+'" aria-label="Cost per item for '+name+'" value="'+esc(currency(unit).toFixed(2))+'"></label>'+
- '<button class="present-edit" type="button" data-action="edit-gift" data-id="'+esc(g.id)+'" title="Edit '+name+'" aria-label="Edit '+name+'">···</button></span>';
+ '<details class="overflow"><summary aria-label="Options for '+name+'" title="Gift options">⋯</summary><div class="overflow-panel"><button type="button" data-action="edit-gift" data-id="'+esc(g.id)+'">Edit gift</button><button class="delete-option" type="button" data-action="delete-gift" data-id="'+esc(g.id)+'">Delete gift</button></div></details></div>';
+}
+function personCosts(p,gifts){
+ const costs=spending(gifts),budget=currency(p.budget||0);
+ return (costs.spent>0?'<span>Spent '+money(costs.spent)+'</span>':'')+
+ (costs.planned>0?'<span>To buy '+money(costs.planned)+'</span>':'')+
+ (budget>0?'<span class="budget-difference'+(costs.spent>budget?' over-budget':'')+'" title="Budget '+money(budget)+'">'+(budget>=costs.spent?'Budget remaining '+money(currency(budget-costs.spent)):'Over budget '+money(currency(costs.spent-budget)))+'</span>':'');
 }
 function renderPerson(p){
- const gifts=yearData().gifts.filter(g=>g.personId===p.id);
- const allDelivered=gifts.length>0&&gifts.every(g=>delivered(g.status));
- const allOnOrder=gifts.length>0&&!allDelivered&&gifts.every(g=>delivered(g.status)||ordered(g.status));
- const costs=spending(gifts),budget=currency(p.budget||0);
- const budgetCopy=budget>0?' <span class="budget-difference">'+(budget>=costs.spent?'Budget remaining '+money(currency(budget-costs.spent)):'Over budget '+money(currency(costs.spent-budget)))+'</span>':'';
- const personTotal=(gifts.length||budget>0)?'<div class="person-total"><strong>Spent '+money(costs.spent)+'</strong><span>To buy '+money(costs.planned)+'</span>'+budgetCopy+'</div>':'';
- return '<div class="family-row"><div class="person-name '+(allDelivered?'complete':allOnOrder?'on-order':'')+'"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'" title="Edit '+esc(p.name)+'">'+esc(p.name)+'</button></div>'+
- '<div class="presents"><div class="gift-list">'+(gifts.length?gifts.map(renderGift).join(''):'<span class="empty-person">No presents yet</span>')+
- '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a present for '+esc(p.name)+'" title="Add a present for '+esc(p.name)+'">＋</button></div>'+
- personTotal+'</div></div>';
+ const gifts=yearData().gifts.filter(g=>g.personId===p.id),done=gifts.filter(g=>delivered(g.status)).length;
+ return '<section class="family-row" aria-label="Gifts for '+esc(p.name)+'"><header class="person-head"><div class="person-heading"><h3>'+esc(p.name)+'</h3>'+
+ (gifts.length?'<span class="person-progress'+(done===gifts.length?' complete':'')+'">'+done+' / '+gifts.length+' ready</span>':'')+'</div><div class="person-actions">'+
+ '<button type="button" class="add-present" data-action="add-gift" data-person-id="'+esc(p.id)+'" aria-label="Add a gift for '+esc(p.name)+'">＋ <span>Add gift</span></button>'+
+ '<details class="overflow"><summary aria-label="Options for '+esc(p.name)+'" title="Recipient options">⋯</summary><div class="overflow-panel"><button type="button" data-action="edit-person" data-id="'+esc(p.id)+'">Edit person / budget</button><button class="delete-option" type="button" data-action="delete-person" data-id="'+esc(p.id)+'">Remove person</button></div></details></div></header>'+
+ '<div class="person-total" data-person-total="'+esc(p.id)+'">'+personCosts(p,gifts)+'</div>'+
+ '<div class="gift-list">'+(gifts.length?gifts.map(renderGift).join(''):'<p class="empty-person">No gifts yet</p>')+'</div></section>';
 }
 function renderGroup(g){
  const d=yearData(),members=d.people.filter(p=>groupFor(p)===g.id);
@@ -91,18 +97,23 @@ function renderGroup(g){
  const gifts=d.gifts.filter(gift=>ids.has(gift.personId));
  const done=gifts.filter(gift=>delivered(gift.status)).length;
  const waiting=gifts.filter(gift=>ordered(gift.status)).length;
- const costs=spending(gifts);
- const color=gifts.length===0?'':done===gifts.length?'complete':(waiting||done)?'partial':'';
  return '<article class="group-card" data-group="'+esc(g.id)+'" aria-label="'+esc(g.name)+'">'+
- '<header class="group-head"><h2 class="group-heading">'+esc(g.name)+'</h2><div class="group-meta"><span class="count '+color+'">'+done+' / '+gifts.length+' delivered'+(waiting?' · '+waiting+' ordered':'')+'</span>'+
+ '<header class="group-head"><div><h2 class="group-heading">'+esc(g.name)+'</h2><span class="group-count">'+(gifts.length?done+' of '+gifts.length+' ready'+(waiting?' · '+waiting+' ordered':''):'No gifts planned')+'</span></div><div class="group-meta">'+
  '<button type="button" class="add-small" data-action="add-person" data-group="'+esc(g.id)+'" title="Add someone to '+esc(g.name)+'" aria-label="Add someone to '+esc(g.name)+'">＋</button></div></header>'+
- (members.length?members.map(renderPerson).join(''):'<div class="no-people">Nobody in this group yet. Use + to add someone.</div>')+
- '<footer class="group-total"><strong>Group spent '+money(costs.spent)+'</strong><span>Still to buy '+money(costs.planned)+'</span></footer></article>';
+ (members.length?members.map(renderPerson).join(''):'<div class="no-people">Nobody in this group yet. Use + to add someone.</div>')+'</article>';
 }
 function render(){
  if(!ready)return;
  renderHeader();
- $('#group-grid').innerHTML=GROUPS.map(renderGroup).join('');
+ // DOM and keyboard order match the two-column reading order.
+ $('#group-grid').innerHTML=['personal','mums','jon','dads'].map(id=>renderGroup(GROUPS.find(g=>g.id===id))).join('');
+}
+function renderCosts(){
+ renderHeader();
+ yearData().people.forEach(p=>{
+  const target=$('[data-person-total="'+esc(p.id)+'"]');
+  if(target)target.innerHTML=personCosts(p,yearData().gifts.filter(g=>g.personId===p.id));
+ });
 }
 function toast(message){
  const el=$('#toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,3000);
@@ -112,12 +123,12 @@ function error(message){$('#error').textContent=message;$('#error').hidden=false
 function snapshot(){return copy(state);}
 function readPending(){try{return JSON.parse(localStorage.getItem(PENDING)||'null');}catch{return null;}}
 function pendingCopy(){try{localStorage.setItem(PENDING,JSON.stringify({base,data:snapshot(),at:Date.now()}));return true;}catch{return false;}}
-function changed(){
+function changed(costsOnly=false){
  if(!ready||blocked)return;
  revision++;dirty=true;
  if(!pendingCopy()){error('Could not save a recovery copy on this device. Keep the page open until your account has synced.');status('Device backup unavailable');}
  else status('Saved on this device · syncing');
- render();
+ if(costsOnly)renderCosts();else render();
  clearTimeout(timer);timer=setTimeout(sync,550);
 }
 async function sync(){
@@ -252,35 +263,19 @@ function deleteGift(id){
  yearData().gifts=yearData().gifts.filter(g=>g.id!==id);
  $('#editor').close();changed();toast('Present deleted');
 }
-// Delay a single click briefly so a double click never saves an unintended Ordered state.
-let pendingGiftTap=null;
-const TAP_WINDOW_MS=360;
 function setGiftStatus(id,nextStatus){
  if(blocked)return;
  const gift=yearData().gifts.find(g=>g.id===id);
  if(!gift||gift.status===nextStatus)return;
  gift.status=nextStatus;changed();
+ // Rendering replaces the row; keep keyboard focus on the same status control.
+ $('#group-grid [data-action="toggle-gift"][data-id="'+esc(id)+'"]')?.focus({preventScroll:true});
  toast(nextStatus==='received'?'Marked bought / delivered':nextStatus==='ordered'?'Marked ordered':'Marked not bought');
-}
-function singleGiftTap(id){
- const gift=yearData().gifts.find(g=>g.id===id);if(!gift)return;
- setGiftStatus(id,ordered(gift.status)?'to_buy':'ordered');
-}
-function flushGiftTap(){
- if(!pendingGiftTap)return;
- const tap=pendingGiftTap;pendingGiftTap=null;clearTimeout(tap.timer);singleGiftTap(tap.id);
 }
 function toggleGift(id){
  if(blocked)return;
- const now=Date.now();
- if(pendingGiftTap&&pendingGiftTap.id===id&&now-pendingGiftTap.at<=TAP_WINDOW_MS){
-  clearTimeout(pendingGiftTap.timer);pendingGiftTap=null;
-  setGiftStatus(id,'received');return;
- }
- flushGiftTap();
- const tap={id,at:now,timer:null};
- tap.timer=setTimeout(()=>{if(pendingGiftTap!==tap)return;pendingGiftTap=null;singleGiftTap(id);},TAP_WINDOW_MS);
- pendingGiftTap=tap;
+ const gift=yearData().gifts.find(g=>g.id===id);if(!gift)return;
+ setGiftStatus(id,delivered(gift.status)?'to_buy':ordered(gift.status)?'received':'ordered');
 }
 function newYear(){
  if(blocked)return;
@@ -295,38 +290,46 @@ $('#app').addEventListener('change',event=>{
  if(!ready||blocked)return;
  const input=event.target;
  if(!input||!input.matches('[data-price-gift]'))return;
- flushGiftTap();
  const gift=yearData().gifts.find(g=>g.id===input.dataset.priceGift);
  if(!gift)return;
  const raw=String(input.value??'').trim();
- if(!validCost(raw)){toast('Enter a valid cost from £0 to £1,000,000.');render();return;}
+ if(!validCost(raw)){toast('Enter a valid cost from £0 to £1,000,000.');input.value=currency((ordered(gift.status)||delivered(gift.status))?paidUnitCost(gift):gift.price).toFixed(2);return;}
  const price=currency(raw);
  const current=(ordered(gift.status)||delivered(gift.status))?paidUnitCost(gift):Number(gift.price)||0;
  if(currency(current)===price)return;
  gift.price=price;
  if(gift.actualPrice!==undefined&&gift.actualPrice!==null&&gift.actualPrice!=='')gift.actualPrice=price;
- changed();toast('Cost saved');
+ input.value=price.toFixed(2);
+ changed(true);toast('Cost saved');
 });
 $('#app').addEventListener('click',event=>{
  const button=event.target.closest('[data-action]');
  if(!button||!ready)return;
  const action=button.dataset.action;
- if(action!=='toggle-gift')flushGiftTap();
+ button.closest?.('details')?.removeAttribute('open');
  if(action==='add-gift')openGift(null,button.dataset.personId);
  else if(action==='edit-gift')openGift(button.dataset.id);
+ else if(action==='delete-gift')deleteGift(button.dataset.id);
  else if(action==='toggle-gift')toggleGift(button.dataset.id);
  else if(action==='add-person')openPerson(null,button.dataset.group);
  else if(action==='edit-person')openPerson(button.dataset.id);
+ else if(action==='delete-person')deletePerson(button.dataset.id);
  else if(action==='new-year')newYear();
 });
 $('#year-select').addEventListener('change',event=>{
  if(!ready||blocked)return;
- flushGiftTap();
  const year=Number(event.target.value);
  if(!state.years[String(year)])return;
  state.activeYear=year;changed();
 });
 $('#close-editor').onclick=()=>$('#editor').close();
+document.addEventListener('click',event=>{
+ document.querySelectorAll?.('.overflow[open]').forEach(menu=>{if(!menu.contains(event.target))menu.removeAttribute('open');});
+});
+document.addEventListener('keydown',event=>{
+ if(event.key!=='Escape')return;
+ document.querySelectorAll?.('.overflow[open]').forEach(menu=>{menu.removeAttribute('open');menu.querySelector('summary')?.focus();});
+});
 window.addEventListener('online',()=>{if(ready&&!blocked)sync();});
 document.addEventListener('visibilitychange',()=>{if(ready&&!blocked&&document.visibilityState==='hidden')sync();});
 window.addEventListener('beforeunload',event=>{if(dirty&&saving){event.preventDefault();event.returnValue='';}});
