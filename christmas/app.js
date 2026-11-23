@@ -8,6 +8,16 @@ const copy = x => JSON.parse(JSON.stringify(x));
 const delivered = status => status === 'received' || status === 'wrapped';
 const ordered = status => status === 'ordered';
 const giftStage = status => delivered(status) ? 'delivered' : ordered(status) ? 'ordered' : 'not-bought';
+const money = value => new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(Number(value)||0);
+const currency = value => Math.round((Number(value)||0)*100)/100;
+const validCost = value => value !== '' && value !== null && Number.isFinite(Number(value)) && Number(value)>=0 && Number(value)<=1000000;
+const count = gift => Number.isInteger(Number(gift.quantity)) && Number(gift.quantity)>0 ? Number(gift.quantity) : 1;
+const paidUnitCost = gift => gift.actualPrice !== undefined && gift.actualPrice !== null && gift.actualPrice !== '' ? Number(gift.actualPrice) : Number(gift.price)||0;
+const giftCost = gift => currency((ordered(gift.status)||delivered(gift.status)?paidUnitCost(gift):Number(gift.price)||0)*count(gift));
+const spending = gifts => ({
+ spent:currency(gifts.filter(g=>ordered(g.status)||delivered(g.status)).reduce((sum,g)=>sum+giftCost(g),0)),
+ planned:currency(gifts.filter(g=>!ordered(g.status)&&!delivered(g.status)).reduce((sum,g)=>sum+giftCost(g),0))
+});
 const GROUPS = [
  {id:'personal',name:'Personal Presents',people:['Joel','Jon']},
  {id:'jon',name:"Jon's Family",people:['Kevin','Valerie','Mark']},
@@ -40,7 +50,7 @@ function totals(){
  const done=gifts.filter(g=>delivered(g.status)).length;
  const waiting=gifts.filter(g=>ordered(g.status)).length;
  const remaining=gifts.length-done-waiting;
- return {total:gifts.length,done,waiting,remaining,percent:gifts.length?Math.round(100*done/gifts.length):0,orderedPercent:gifts.length?Math.round(100*waiting/gifts.length):0};
+ return {total:gifts.length,done,waiting,remaining,...spending(gifts),percent:gifts.length?Math.round(100*done/gifts.length):0,orderedPercent:gifts.length?Math.round(100*waiting/gifts.length):0};
 }
 function yearOptions(){return Object.keys(state.years).sort((a,b)=>Number(b)-Number(a)).map(y=>'<option value="'+esc(y)+'"'+(Number(y)===state.activeYear?' selected':'')+'>'+esc(y)+'</option>').join('');}
 function renderHeader(){
@@ -48,6 +58,8 @@ function renderHeader(){
  $('#year-select').innerHTML=yearOptions();
  $('#total-progress').textContent=t.done+' of '+t.total+' completed';
  $('#total-left').textContent=t.total===0?'Add your first present':t.remaining===0&&t.waiting===0?'All presents delivered!':t.waiting+' ordered · '+t.remaining+' not bought';
+ $('#total-spent').textContent=money(t.spent);
+ $('#total-planned').textContent=money(t.planned);
  $('#total-bar').style.width=t.percent+'%';
  $('#total-ordered-bar').style.width=t.orderedPercent+'%';
  $('#total-track').setAttribute('aria-valuenow',String(t.percent));
